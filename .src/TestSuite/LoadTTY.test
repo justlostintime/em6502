@@ -1,0 +1,11 @@
+' Gambas test file
+
+Public Sub loadtest()
+
+  Component.Load("/tmp/brian/6502/GambasScript/plugins/TTY.gambas")
+  Class.Load("TTY")
+  Stop
+
+End
+
+

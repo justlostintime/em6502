@@ -1,0 +1,27 @@
+' Gambas module file
+
+Public Sub _init()
+
+  Print "Using DASM Assembler \nCreated by Mathew Dillion.\nCurrently supported by Andrew Davie @ https://github.com/dasm-assembler/dasm"
+  If Not Exist("/tmp/gambasAsm/dasm") Then
+    Print "Installing assembler to /tmp/gambasAsm"
+    Try Shell.MkDir("/tmp/gambasAsm")
+    Copy "dasm" To "/tmp/gambasAsm/dasm"
+    Chmod "/tmp/gambasAsm/dasm" To "rwxr-xr-x"
+  Endif
+
+
+End
+
+
+Public Sub _call(source As String, Dest As String, listing As String, symbols As String) As String
+
+  Dim Result As String
+
+  Exec ["/tmp/gambasAsm/dasm", Source, "-o" & Dest, "-l" & listing, "-s" & symbols] To result
+  Result = Replace(result, "\n", "\n\r")
+  If Exist(listing) Then Result &= "\n\r List available " & Listing & "\n\r Binary Generated " & Dest & "\n\r"
+  Return result
+
+End
+

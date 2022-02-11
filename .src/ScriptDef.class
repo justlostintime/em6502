@@ -1,0 +1,12 @@
+' Gambas class file
+
+Public iIsSub As Boolean               ' true as sub, false as class
+Public iClass As Class
+Public iScript As Object
+Public iChanged As Boolean
+Public iFirstDef As Boolean
+Public OldSOurce As String
+Public bUSEIncluded As Boolean
+Public bGuiNeeded As Boolean
+Public sFileName As String
+

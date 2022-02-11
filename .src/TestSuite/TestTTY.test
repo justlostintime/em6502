@@ -1,0 +1,17 @@
+' Gambas test file
+
+Devices As New ScriptManager(True, user.home &/ "6502/dev")
+
+Public Sub OpenTTY()
+
+  Dim Ttyclass As Class
+
+  Print "Begin"
+  ttyclass = Devices("TTY.dev")
+  Assert.Noterror("TTY create Passed")
+  Print " it is Open"
+  Wait 10.0
+
+End
+
+

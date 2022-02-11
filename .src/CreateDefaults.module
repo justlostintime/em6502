@@ -1,0 +1,62 @@
+' Gambas module file
+
+Public Sub _call()
+
+  With FMain
+    If Not Exist(.AsmComputerDefinitions) Then
+
+      Try Shell.MkDir(.AsmComputerDefinitions)
+      Dim Comp As New ComputerDef
+      Comp.Name = "Default"
+      Comp.Speed = 500
+      Comp.AutoStart = &h0200
+      Comp.AutoStartActive = True
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
+      Comp["TTYSIM"] = [&h0E000, 16, ""]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp.Save(.AsmComputerDefinitions)
+
+      Comp = New ComputerDef
+      Comp.Name = "CTMON65"
+      Comp.Speed = 500
+      Comp.AutoStart = -1
+      Comp.AutoStartActive = True
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
+      Comp["TTYSIM"] = [&h0E000, 16, ""]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp.Save(.AsmComputerDefinitions)
+
+    Endif
+
+    copyDirectory("dev", .AsmDeviceDirectory)
+    copyDirectory("asm", .AsmSourceDirectory)
+    copyDirectory("bin", .AsmBinaryDirectory)
+    copyDirectory("drives", .AsmDrivesDirectory)
+    copyDirectory("doc", .ASMDocumentDirectory)
+
+  End With
+
+End
+
+Sub copyDirectory(path As String, topath As String)
+
+  If Not Exist(toPath) Then
+    Try Shell.MkDir(ToPath)
+  Else
+    Return
+  Endif
+
+  For Each s As String In Dir(path, "*", gb.directory)
+    copyDirectory(path &/ s, ToPath &/ s)
+  Next
+
+  For Each s As String In Dir(path, "*", gb.file)
+    If Right(s, 1) = "~" Then Continue
+    Copy path &/ s To ToPath &/ s
+  Next
+
+End
+
+

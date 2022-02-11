@@ -1,0 +1,330 @@
+' Gambas module file
+
+'Fast Unsafe
+Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+
+  With TheCpu
+    On aaa Goto Grp1Case0, Grp1Case1, Grp1Case2, Grp1Case3, Grp1Case4, Grp1Case5, Grp1Case6, Grp1Case7
+    Return
+
+  Grp1Case0:
+    On addressmode Goto Grp1Case00, Grp1Case01, Grp1Case02, Grp1Case03, Grp1Case04, Grp1Case05, Grp1Case06, Grp1Case07
+    Return
+
+  Grp1Case00:'$01 ORA X,ind
+    .IndirectX
+  ora:
+    .ReadByte()
+    .ac = (.ac Or .databus)
+    .SetSR(.ac)
+    Return
+
+  Grp1Case01:'$05 ORA zpg
+    .ZeroPage()
+    Goto ora
+
+  Grp1Case02:'$09 ORA #
+    .Immediate()
+    Goto ora
+
+  Grp1Case03:'$0D ORA abs
+    .Absolute()
+    Goto ora
+
+  Grp1Case04:'$11 ORA ind,Y
+    .IndirectX()
+    Goto ora
+
+  Grp1Case05:'$15 ORA zpg,X
+    .ZeroPageX()
+    Goto ora
+
+  Grp1Case06:'$19 ORA abs,Y
+    .AbsY()
+    Goto ora
+
+  Grp1Case07:'$1D ORA abs,X
+    .AbsX()
+    Goto ora
+    '----------------------------------------------------------------------------
+  Grp1Case1:
+    On addressmode Goto Grp1Case10, Grp1Case11, Grp1Case12, Grp1Case13, Grp1Case14, Grp1Case15, Grp1Case16, Grp1Case17
+    Return
+
+  Grp1Case10:'$21 AND X,ind
+    .IndirectX()
+  DoAnd:
+    .ReadByte()
+    .ac = (.ac And .Databus)
+    .SetSR(.AC)
+    Return
+
+  Grp1Case11:' $25 AND zpg
+    .ZeroPage()
+    Goto DoAnd
+
+  Grp1Case12:' $29 AND #
+    .Immediate()
+    Goto DoAnd
+
+  Grp1Case13:' $2D AND abs
+    .Absolute()
+    Goto DoAnd
+
+  Grp1Case14:'$31 AND ind,Y
+    .IndirectY()
+    Goto DoAnd
+
+  Grp1Case15:'$35 AND zpg,X
+    .ZeroPageX()
+    Goto DoAnd
+
+  Grp1Case16:'$39 AND abs,Y
+    .AbsY()
+    Goto DoAnd
+
+  Grp1Case17:'$3D AND abs,X
+    .AbsX()
+    Goto DoAnd
+
+  Grp1Case2:
+    On addressmode Goto Grp1Case20, Grp1Case21, Grp1Case22, Grp1Case23, Grp1Case24, Grp1Case25, Grp1Case26, Grp1Case27
+    Return
+
+  Grp1Case20:'$41 EOR X,ind
+    .IndirectX()
+  EOR:
+    .ReadByte()
+    .AC = (.AC Xor .DataBus)
+    .SetSR(.AC)
+    Return
+
+  Grp1Case21:'$45 EOR zpg
+    .ZeroPage()
+    Goto EOR
+
+  Grp1Case22:'$49 EOR #
+    .Immediate()
+    Goto EOR
+
+  Grp1Case23:'$4D EOR abs
+    .Absolute()
+    Goto EOR
+
+  Grp1Case24:'$51 EOR ind, Y
+    .IndirectY()
+    Goto EOR
+
+  Grp1Case25:'$55 EOR zpg, X
+    .ZeroPageX()
+    Goto EOR
+
+  Grp1Case26:'$59 EOR abs, Y
+    .AbsY()
+    Goto EOR
+
+  Grp1Case27:'$5D EOR abs, X
+    .AbsY()
+    Goto EOR
+
+    '-------------------------------------------------------------------------------
+  Grp1Case3:
+    On addressmode Goto Grp1Case30, Grp1Case31, Grp1Case32, Grp1Case33, Grp1Case34, Grp1Case35, Grp1Case36, Grp1Case37
+    Return
+
+  Grp1Case30:'$61 ADC X, ind
+    .IndirectX()
+  AddAc:
+    .ReadByte()
+    .AdcAC()
+    Return
+
+  Grp1Case31:'$65 ADC zpg
+    .ZeroPage()
+    Goto AddAC
+
+  Grp1Case32:'$69 ADC #
+    .Immediate()
+    Goto AddAc
+
+  Grp1Case33:'$6D ADC abs
+    .Absolute()
+    Goto AddAC
+
+  Grp1Case34:'$71 ADC ind, Y
+    .IndirectY()
+    Goto AddAC
+
+  Grp1Case35:'$75 ADC zpg, X
+    .ZeroPage()
+    Goto AddAC
+
+  Grp1Case36:'$79 ADC abs, Y
+    .AbsY()
+    Goto AddAc
+
+  Grp1Case37:'$7D ADC abs, X
+    .AbsX()
+    Goto AddAc
+    '----------------------------------------------------------------------------
+  Grp1Case4:
+    On addressmode Goto Grp1Case40, Grp1Case41, Grp1Case42, Grp1Case43, Grp1Case44, Grp1Case45, Grp1Case46, Grp1Case47
+    Return
+
+  Grp1Case40: ' sta x, ind
+    .IndirectX
+    Goto StoreAC
+
+  Grp1Case41: ' sta zeropage
+    .ZeroPage
+    Goto StoreAC
+
+  Grp1Case43: ' sta $8000 abs
+    .Absolute()
+    Goto StoreAC
+
+  Grp1Case44: ' sta ind,y
+    .IndirectY()
+    Goto StoreAC
+
+  Grp1Case45: ' sta zeropage,x
+    .ZeroPageX()
+    Goto StoreAC
+
+  Grp1Case46: ' sta abs,y
+    .AbsY()
+    Goto StoreAC
+
+  Grp1Case47: ' sta abs,X
+    .AbsX()
+
+  StoreAC:
+    .DataBus = .AC
+    .WriteByte()
+    Return
+
+  Grp1Case42: 'Not Used
+    Return
+    '-------------------------------------------------------------------------------------
+  Grp1Case5:
+    On addressmode Goto Grp1Case50, Grp1Case51, Grp1Case52, Grp1Case53, Grp1Case54, Grp1Case55, Grp1Case56, Grp1Case57
+    Return
+
+  Grp1Case50:  'lda Indirect,X
+    .IndirectX()
+    Goto LoadAC
+
+  Grp1Case51:  'lda zpg
+    .ZeroPage()
+    Goto LoadAc
+
+  Grp1Case52:  'lda,#
+    .Immediate()
+    Goto LoadAC
+
+  Grp1Case53:  'lda $8000   Absolute address
+    .Absolute()
+    Goto LoadAC
+
+  Grp1Case54:
+    .IndirectY()
+    Goto LoadAC
+
+  Grp1Case55: ' lda zpg,X
+    .ZeroPageX
+    Goto LoadAC
+
+  Grp1Case56: ' lda abs,y
+    TheCpu.AbsY()
+    Goto LoadAC
+
+  Grp1Case57: ' lda abs,x
+    .AbsX()
+    Goto LoadAc
+
+  LoadAC:
+    .ReadByte()
+    .ac = .DataBus
+    .setsr(.ac)
+    Return
+
+  Grp1Case6:
+    On addressmode Goto Grp1Case60, Grp1Case61, Grp1Case62, Grp1Case63, Grp1Case64, Grp1Case65, Grp1Case66, Grp1Case67
+    Return
+
+  Grp1Case60:'$C1 CMP X, ind
+    .IndirectX()
+  cmp:
+    .ReadByte()
+    .Compare(.ac)
+    Return
+
+  Grp1Case61:'$C5 CMP zpg
+    .ZeroPage()
+    Goto cmp
+
+  Grp1Case62:'$C9 CMP #
+    .Immediate()
+    Goto Cmp
+
+  Grp1Case63:'$CD CMP abs
+    .Absolute()
+    Goto Cmp
+
+  Grp1Case64:'$D1 CMP ind, Y
+    .IndirectY()
+    Goto cmp
+
+  Grp1Case65:'$D5 CMP zpg, X
+    .ZeroPageX()
+    Goto cmp
+
+  Grp1Case66:'$D9 CMP abs, Y
+    .AbsY()
+    Goto cmp
+
+  Grp1Case67:'$DD CMP abs, X
+    .AbsX()
+    Goto cmp
+    '-------------------------------------------------------------------------------------------
+  Grp1Case7:
+    On addressmode Goto Grp1Case70, Grp1Case71, Grp1Case72, Grp1Case73, Grp1Case74, Grp1Case75, Grp1Case76, Grp1Case77
+  Grp1Case70:'$E1 SBC X, ind
+    .IndirectX()
+  sbc:
+    .ReadByte()
+    .SbcAc()
+    Return
+
+  Grp1Case71:'$E5 SBC zpg
+    .ZeroPage()
+    Goto Sbc
+
+  Grp1Case72:'$E9 SBC #
+    .Immediate()
+    Goto SBC
+
+  Grp1Case73:'$ED SBC abs
+    .Absolute()
+    Goto SBC
+
+  Grp1Case74:'$F1 SBC ind, Y
+    .IndirectY()
+    Goto sbc
+
+  Grp1Case75:'$F5 SBC zpg, X
+    .ZeroPageX()
+    Goto sbc
+
+  Grp1Case76:'$F9 SBC abs, Y
+    .AbsY()
+    Goto sbc
+
+  Grp1Case77:'$FD SBC abs, X
+    .AbsX()
+    Goto sbc
+
+  End With
+
+End
+

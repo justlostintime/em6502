@@ -1,0 +1,297 @@
+' Gambas module file
+
+'Fast Unsafe
+
+Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+
+  With TheCpu
+    On aaa Goto Grp2Case0, Grp2Case1, Grp2Case2, Grp2Case3, Grp2Case4, Grp2Case5, Grp2Case6, Grp2Case7
+    Return
+
+  Grp2Case0:
+    On addressmode Goto Grp2Case00, Grp2Case01, Grp2Case02, Grp2Case03, Grp2Case04, Grp2Case05, Grp2Case06, Grp2Case07
+    Return
+
+  Grp2Case01:'$06 ASL zpg
+    .ZeroPage()
+  DoAsl:
+    .ReadByte()
+    .ShiftLeft()
+    .WriteByte()
+    Return
+
+  Grp2Case02:'$0A ASL A
+    .DataBus = .AC
+    .ShiftLeft()
+    .AC = .DataBus
+    Return
+
+  Grp2Case03:'$0E ASL abs
+    .Absolute()
+    Goto DoAsl
+
+  Grp2Case05:'$16 ASL zpg, X
+    .ZeroPageX()
+    Goto DoAsl
+
+  Grp2Case07:'$1E ASL abs, X
+    .AbsX()
+    Goto DoAsl
+
+  Grp2Case00:' not used
+  Grp2Case04: ' Not Used
+  Grp2Case06: ' Not Used
+    Return
+    '---------------------------------------------------------------------------
+  Grp2Case1:
+    On addressmode Goto Grp2Case10, Grp2Case11, Grp2Case12, Grp2Case13, Grp2Case14, Grp2Case15, Grp2Case16, Grp2Case17
+    Return
+
+  Grp2Case11:'$26 ROL zpg
+    .ZeroPage()
+  DoRol:
+    .ReadByte()
+    .RotateLeft()
+    .WriteByte()
+    Return
+
+  Grp2Case12:'$2A ROL A
+    .DataBus = .AC
+    .RotateLeft()
+    .AC = .DataBud
+    Return
+
+  Grp2Case13:'$2E ROL abs
+    .Absolute()
+    Goto DoRol
+
+  Grp2Case15:'$36 ROL zpg, X
+    .ZeroPageX()
+    Goto DoRol
+
+  Grp2Case17:'$3E ROL abs, X
+    .AbsX()
+    Goto DoRol
+
+  Grp2Case10:'not used
+  Grp2Case14:'not used
+  Grp2Case16:'not used
+    Return
+
+  Grp2Case2:
+    On addressmode Goto Grp2Case20, Grp2Case21, Grp2Case22, Grp2Case23, Grp2Case24, Grp2Case25, Grp2Case26, Grp2Case27
+    Return
+
+  Grp2Case21:'$46 LSR zpg
+    .ZeroPage()
+  DoLsr:
+    .ReadByte
+    .ShiftRight()
+    .WriteByte()
+    Return
+
+  Grp2Case22:'$4A LSR A
+    .databus = .AC
+    .ShiftRight()
+    .AC = .DataBus
+    Return
+
+  Grp2Case23:'$4E LSR abs
+    .Absolute()
+    Goto DoLsr
+
+  Grp2Case25:'$56 LSR zpg, X
+    .ZeroPageX()
+    Goto DoLsr
+
+  Grp2Case27:'$5E LSR abs, X
+    .AbsX()
+    Goto DoLsr
+
+  Grp2Case20:' not used
+  Grp2Case24:'not used
+  Grp2Case26:'not used
+    Return
+    '----------------------------------------------------------------------------
+  Grp2Case3:
+    On addressmode Goto Grp2Case30, Grp2Case31, Grp2Case32, Grp2Case33, Grp2Case34, Grp2Case35, Grp2Case36, Grp2Case37
+    Return
+
+  Grp2Case31:'$66 ROR zpg
+    .ZeroPage()
+  DoRor:
+    .ReadByte()
+    .RotateRight()
+    .WriteByte()
+    Return
+
+  Grp2Case32:'$6A ROR A
+    .DataBus = .AC
+    .RotateRight()
+    .AC = .DataBus
+    Return
+
+  Grp2Case33:'$6E ROR abs
+    .Absolute()
+    Goto DoRor
+
+  Grp2Case35:'$76 ROR zpg, X
+    .ZeroPageX()
+    Goto DoRor
+
+  Grp2Case37:'$7E ROR abs, X
+    .AbsX()
+    Goto DoRor
+
+
+  Grp2Case30:' not used
+  Grp2Case34:' not used
+  Grp2Case36:' not used
+    Return
+
+    '-----------------------------------------------------------------------------
+
+  Grp2Case4:
+    On addressmode Goto Grp2Case40, Grp2Case41, Grp2Case42, Grp2Case43, Grp2Case44, Grp2Case45, Grp2Case46, Grp2Case47
+    Return
+  Grp2Case41:'$86 STX zpg
+    .ZeroPage()
+  storeX:
+    .DataBus = .X
+    .WriteByte()
+    Return
+
+  Grp2Case42:'$8A TXA impl
+    .ac = .X
+    .SetSR(.AC)
+    Return
+
+  Grp2Case43:'$8E STX abs
+    .Absolute()
+    Goto storeX
+
+  Grp2Case45:'$96 STX zpg, Y
+    .ZeroPageX()
+    Goto storeX
+
+  Grp2Case46:'$9A TXS impl
+    .sp = .X
+    Return
+
+  Grp2Case40:'not used
+  Grp2Case44:'not used
+  Grp2Case47:'not used
+    Return
+    '--------------------------------------------------------------------------
+  Grp2Case5:
+    On addressmode Goto Grp2Case50, Grp2Case51, Grp2Case52, Grp2Case53, Grp2Case54, Grp2Case55, Grp2Case56, Grp2Case57
+    Return
+
+  Grp2Case50:'$A2 LDX #
+    .Immediate()
+  ldx:
+    .ReadByte()
+    .X = .DataBus
+    .SetSR(.X)
+    Return
+
+  Grp2Case51:'$A6 LDX zpg
+    .ZeroPage()
+    Goto ldx
+
+  Grp2Case52:'$AA TAX impl
+    .X = .AC
+    .SetSR(.X)
+    Return
+
+  Grp2Case53:'$AE LDX abs
+    .Absolute()
+    Goto ldx
+
+  Grp2Case55:'$B6 LDX zpg, Y
+    .ZeroPageY()
+    Goto ldx
+
+  Grp2Case56:'$BA TSX impl
+    .sp = .X
+    Return
+
+  Grp2Case57:'$BE LDX abs, Y
+    .AbsY()
+    Goto Ldx
+
+  Grp2Case54:'not used
+    Return
+
+    '-------------------------------------------------------------------------------------
+  Grp2Case6:
+    On addressmode Goto Grp2Case60, Grp2Case61, Grp2Case62, Grp2Case63, Grp2Case64, Grp2Case65, Grp2Case66, Grp2Case67
+    Return
+
+  Grp2Case61:'$C6 DEC zpg
+    .ZeroPage()
+  DecMem:
+    .ReadByte()
+    Dec .DataBus
+    .WriteByte()
+    .SetSR(.DataBus)
+    Return
+
+  Grp2Case62:'$CA DEX impl
+    Dec .X
+    .SetSR(.X)
+    Return
+
+  Grp2Case63:'$CE DEC abs
+    .Absolute()
+    Goto DecMem
+
+  Grp2Case65:'$D6 DEC zpg, X
+    .ZeroPageX()
+    Goto DecMem
+
+  Grp2Case67:'$DE DEC abs, X
+    .AbsX()
+    Goto DecMem
+
+  Grp2Case60:' Not Used
+  Grp2Case64:' Not Used
+  Grp2Case66:' Not Used
+    Return
+
+    '------------------------------------------------------------------------------------------------
+  Grp2Case7:
+    On addressmode Goto Grp2Case70, Grp2Case71, Grp2Case72, Grp2Case73, Grp2Case74, Grp2Case75, Grp2Case76, Grp2Case77
+
+  Grp2Case71:'$E6 INC zpg
+    .ZeroPage()
+  IncMem:
+    .ReadByte()
+    Inc .DataBus
+    .WriteByte()
+    .SetSR(.DataBus)
+    Return
+
+  Grp2Case72:'$EA NOP impl
+    Return
+
+  Grp2Case73:'$EE INC abs
+    .Absolute()
+    Goto IncMem
+
+  Grp2Case75:'$F6 INC zpg, X
+    .ZeroPageX()
+    Goto incMem
+
+  Grp2Case77:'$FE INC abs, X
+    .AbsX()
+    Goto IncMem
+
+  Grp2Case70:' not used
+  Grp2Case74:' not used
+  Grp2Case76:' not used
+    Return
+
+  End With
+
+End

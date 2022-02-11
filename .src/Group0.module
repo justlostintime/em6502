@@ -1,0 +1,354 @@
+' Gambas module file
+
+'Fast Unsafe
+Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+
+  With TheCpu
+    Dim tempreg As Long
+    On aaa Goto Grp0Case0, Grp0Case1, Grp0Case2, Grp0Case3, Grp0Case4, Grp0Case5, Grp0Case6, Grp0Case7
+    Return
+
+  Grp0Case0:
+    On addressmode Goto Grp0Case00, Grp0Case01, Grp0Case02, Grp0Case03, Grp0Case04, Grp0Case05, Grp0Case06, Grp0Case07
+    Return
+
+  Grp0Case00: 'brk
+    Inc .pc            ' allow for extra byte to identify type of break
+    .push(.pc Shr 8)
+    .push(.pc And &h000FF)
+    .brk()
+    Return
+
+  Grp0Case02: 'php
+    .push(.sr)
+    Return
+
+  Grp0Case04: ' bpl
+    .Immediate()
+    If Not BTst(.Sr, 7) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case06: ' clc
+    .sr = BClr(.sr, 0)
+    Return
+
+  Grp0Case01:'unused
+  Grp0Case03:'unused
+  Grp0Case05:'unused
+  Grp0Case07:'unused
+    Return
+    '-------------------------------------------------------------------
+  Grp0Case1:
+    On addressmode Goto Grp0Case10, Grp0Case11, Grp0Case12, Grp0Case13, Grp0Case14, Grp0Case15, Grp0Case16, Grp0Case17
+    Return
+
+  Grp0Case10:'JSR abs
+    .Absolute()
+    tempreg = .AddressBus
+    Dec .pc
+    .push(.pc Shr 8)
+    .push(.pc And &h000FF)
+    .pc = tempreg
+    Return
+
+  Grp0Case11:'bit zpg
+    .ZeroPage()
+
+  bitDo:
+    .ReadByte()
+    Dim bittmp As Byte = (.AC And .DataBus)
+    If BTst(.DataBus, 7) Then .Sr = BSet(.SR, 7) Else .SR = BClr(.SR, 7)
+    If BTst(.DataBus, 6) Then .Sr = BSet(.SR, 6) Else .SR = BClr(.SR, 6)
+    If bittmp = 0 Then .SR = BSet(.SR, 1) Else .sr = BClr(.sr, 1)
+    Return
+
+  Grp0Case12:'plp
+    .sr = .Pop()
+    .sr = BClr(.sr, 4)           ' Brk And ignore are Not releoaded
+    .sr = BClr(.sr, 5)
+    Return
+
+  Grp0Case13:'bit abs
+    .Absolute()
+    Goto bitDo
+
+  Grp0Case14:'bmi rel
+    .Immediate()
+    If BTst(.Sr, 7) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case16:'sec impl
+    .sr = BSet(.sr, 0)
+    Return
+
+  Grp0Case15:'unused
+  Grp0Case17:'unused
+    Return
+    '-------------------------------------------------------------------
+  Grp0Case2:
+    On addressmode Goto Grp0Case20, Grp0Case21, Grp0Case22, Grp0Case23, Grp0Case24, Grp0Case25, Grp0Case26, Grp0Case27
+    Return
+
+  Grp0Case20:  ' rti
+    .sr = BClr(.pop(), 4)
+    .sr = BClr(.sr, 5)                 ' brk and ignore are not reloaded
+    Goto Grp0Case30                    ' rts
+    Return
+
+  Grp0Case22:  'pha
+    .push(.AC)
+    Return
+
+  Grp0Case23: ' jmp abs
+    .Absolute()
+    .pc = .AddressBus
+    Return
+
+  Grp0Case24: 'BVC rel
+    .Immediate()
+    If Not BTst(.Sr, 6) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case26: 'cli impl
+    .sr = BClr(.sr, 2)
+    Return
+
+  Grp0Case21: ' unused
+  Grp0Case25: ' unused
+  Grp0Case27: ' unused
+    Return
+    '-----------------------------------------------------------------------------------
+  Grp0Case3:
+    On addressmode Goto Grp0Case30, Grp0Case31, Grp0Case32, Grp0Case33, Grp0Case34, Grp0Case35, Grp0Case36, Grp0Case37
+    Return
+
+  Grp0Case30:' rts
+    Dim tmplow As Byte = .Pop()
+    .PC = .Pop()      ' Pop The high Byte
+    .Pc = .PC Shl 8
+    .PC = .PC Or tmpLow
+    Inc .PC
+    Return
+
+  Grp0Case32: 'pla
+    .ac = .pop()
+    .setsr(.ac)
+    Return
+
+  Grp0Case33:' jmp Indirect
+    .Indirect()
+    .pc = .AddressBus
+    Return
+
+  Grp0Case34:' BVS rel
+    .Immediate()
+    If BTst(.Sr, 6) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case36:'SEI impl
+    .sr = BSet(.rc, 2)
+    Return
+
+  Grp0Case31:'unused
+  Grp0Case35:'unused
+  Grp0Case37:'unused
+    Return
+    '---------------------------------------------------------------------------------------------------------------
+  Grp0Case4:
+    On addressmode Goto Grp0Case40, Grp0Case41, Grp0Case42, Grp0Case43, Grp0Case44, Grp0Case45, Grp0Case46, Grp0Case47
+    Return
+
+  Grp0Case41:' sty zpg
+    .ZeroPage()
+    .databus = .Y
+    .writebyte()
+    Return
+
+  Grp0Case42:'dey impl
+    Dec .y
+    .SetSR(.y)
+    .SetSR(.Y)
+    Return
+
+  Grp0Case43:' sty abs
+    .Absolute()
+    .databus = .Y
+    .WriteByte()
+    Return
+
+  Grp0Case44:'bcc rel
+    .Immediate()
+    If Not (BTst(.Sr, 0)) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case45:' sty zpg,x
+    .ZeroPageX()
+    .databus = .Y
+    .WriteByte()
+    Return
+
+  Grp0Case46:'tya impl
+    .ac = .Y
+    .setsr(.AC)
+    Return
+    '----------------------------------------------
+  Grp0Case40: ' Not used
+  Grp0Case47: ' not used
+    Return
+    '------------------------------------------------------------------------------------------
+  Grp0Case5:
+    On addressmode Goto Grp0Case50, Grp0Case51, Grp0Case52, Grp0Case53, Grp0Case54, Grp0Case55, Grp0Case56, Grp0Case57
+    Return
+
+  Grp0Case50:'ldy #
+    .Immediate()
+    .ReadByte()
+    .Y = .DataBus
+    .SetSR(.Y)
+    Return
+
+  Grp0Case51:'ldy zpg
+    .ZeroPage()
+    .ReadByte()
+    .y = .DataBus
+    .SetSR(.Y)
+    Return
+
+  Grp0Case52:'tay impl
+    .Y = .AC
+    .SetSR(.AC)
+    Return
+
+  Grp0Case53:'ldy abs
+    .Absolute()
+    .ReadByte()
+    .Y = .databus
+    .Setsr(.Y)
+    Return
+
+  Grp0Case54:'BCS Rel
+    .Immediate()
+    If BTst(.Sr, 0) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case55:'$B4 LDY zpg,X
+    .ZeroPageX()
+    .ReadByte()
+    .Y = .DataBus
+    .SetSR(.Y)
+    Return
+
+  Grp0Case56:'$B8 CLV impl
+    .sr = BClr(.SR, 6)
+    Return
+
+  Grp0Case57:'$BC LDY abs,X
+    .AbsX()
+    .Y = .DataBus
+    .SetSR(.Y)
+    Return
+    '--------------------------------------------------------------------------------------------------------------
+  Grp0Case6:
+    On addressmode Goto Grp0Case60, Grp0Case61, Grp0Case62, Grp0Case63, Grp0Case64, Grp0Case65, Grp0Case66, Grp0Case67
+    Return
+
+  Grp0Case60:'$C0 CPY #
+    .Immediate()
+  CmpY:
+    .ReadByte()
+    .Compare(.Y)
+    Return
+
+  Grp0Case61:'$C4 CPY zpg
+    .ZeroPage()
+    Goto CmpY
+
+  Grp0Case62:'$C8 INY impl
+    Inc .Y
+    .SetSR(.Y)
+    Return
+
+  Grp0Case63:'$CC CPY abs
+    .Absolute()
+    Goto CmpY
+
+  Grp0Case64:'$D0 BNE rel
+    .Immediate()
+    If Not BTst(.sr, 1) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case66:'$D8 CLD impl
+    .SR = BClr(.SR, 3)
+    Return
+
+  Grp0Case65:'Not Used
+  Grp0Case67:'No tUsed
+    Return
+
+    '-----------------------------------------------------------------------------------------------
+  Grp0Case7:
+    On addressmode Goto Grp0Case70, Grp0Case71, Grp0Case72, Grp0Case73, Grp0Case74, Grp0Case75, Grp0Case76, Grp0Case77
+  Grp0Case70:'$E0 CPX #
+    .Immediate()
+    .ReadByte()
+    .compare(.X)
+    Return
+
+  Grp0Case71:'$E4 CPX zpg
+    .ZeroPage()
+    .ReadByte()
+    .Compare()
+    Return
+
+  Grp0Case72:'$E8 INX impl
+    Inc .X
+    .SetSR(.X)
+    Return
+
+  Grp0Case73:' $EC CPX abs
+    .Absolute()
+    .ReadByte()
+    .compare(.X)
+    Return
+
+  Grp0Case74:' $F0 BEQ rel
+    .Immediate()
+    If BTst(.sr, 1) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case76:' $F8 SED impl
+    .SR = BSet(.SR, 3)
+    Return
+
+  Grp0Case75:' Not Used
+  Grp0Case77:' Not Used
+    Return
+
+  End With
+
+End
+

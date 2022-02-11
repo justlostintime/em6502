@@ -1,0 +1,93 @@
+' Gambas class file
+
+Fast Unsafe
+Property Read pc As Long Use $pc
+Property Read sp As Byte Use $sp
+Property Read AC As Byte Use $AC
+Property Read SR As Byte Use $sr
+Property Read X As Byte Use $X
+Property Read Y As Byte Use $Y
+Property Read TotalInstructions As Long Use $TotalInstructions
+Property Read DataBus As Byte Use $DataBus
+Property Read AddressBus As Long Use $AddressBus
+Property Read InstructionsPerSecond As Long Use $InstructionsPerSecond
+Property Read CyclesPerSecond As Long Use $CyclesPerSecond
+Property Read TotalCycles As Long Use $TotalCycles
+
+Property Read Negative As Boolean
+Property Read Overflow As Boolean
+Property Read ignored As Boolean
+Property Read Break As Boolean
+Property Read Decimal As Boolean
+Property Read irq As Boolean
+Property Read zero As Boolean
+Property Read Carry As Boolean
+
+
+
+Public Sub _new(lPc As Long, lsp As Long, iAc As Integer, iX As Integer, iy As Integer, isr As Integer, DataBus As Byte, AddressBus As Long, Total As Long, PerSecond As Long, totCycles As Long, CyclesSec As Long)
+
+
+  $pc = lPc
+  $sp = lsp
+  $ac = iAc
+  $x = ix
+  $y = iy
+  $sr = isr
+  $DataBus = DataBus
+  $AddressBus = AddressBus
+
+  $TotalInstructions = total
+  $InstructionsPerSecond = PerSecond
+  $TotalCycles = totCycles
+  $CyclesPerSecond = CyclesSec
+
+End
+
+Private Function Negative_Read() As Boolean
+
+  Return BTst($sr, 7)
+
+End
+
+Private Function Overflow_Read() As Boolean
+
+  Return BTst($sr, 6)
+
+End
+
+Private Function ignored_Read() As Boolean
+
+  Return BTst($sr, 5)
+
+End
+
+Private Function Break_Read() As Boolean
+
+  Return BTst($sr, 4)
+
+End
+
+Private Function Decimal_Read() As Boolean
+
+  Return BTst($sr, 3)
+
+End
+
+Private Function irq_Read() As Boolean
+
+  Return BTst($sr, 2)
+
+End
+
+Private Function zero_Read() As Boolean
+
+  Return BTst($sr, 1)
+
+End
+
+Private Function Carry_Read() As Boolean
+
+  Return BTst($sr, 0)
+
+End

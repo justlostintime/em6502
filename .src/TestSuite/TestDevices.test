@@ -1,0 +1,63 @@
+' Gambas test file
+
+Devices As New ScriptManager(True, user.home &/ "6502/dev")
+
+Public Sub testCrt()
+
+  Dim Crtclass As Class
+
+  Crtclass = Devices("CRT.dev")
+  Assert.Noterror("CRT create Passed")
+
+End
+
+Public Sub atestRam()
+
+  Dim ramclass As Class
+
+  ramclass = Devices("RamMemory.dev")
+  Assert.Noterror("RamMemory create Passed")
+
+End
+
+Public Sub btestRom()
+
+  Dim romclass As Class
+
+  romclass = Devices("RomMemory.dev")
+  Assert.Noterror("RomMemory create Passed")
+
+End
+
+Public Sub ctestTTY()
+
+  Dim Ttyclass As Class
+
+  ttyclass = Devices("TTY.dev")
+  Assert.Noterror("TTY create Passed")
+
+End
+
+Public Sub dTestCreateDevices()
+
+  Dim ramclass As Class
+  Dim MyRam As Object
+  Dim romclass As Class
+  Dim MyRom As Object
+
+  ramclass = Devices("RamMemory.dev")
+  MyRam = ramclass.New([&h000000, &h08000])
+  Assert.Noterror("RamMemory create object Passed - step 2")
+  romclass = Devices("RomMemory.dev")
+  MyRom = romclass.New([&h08000, &h08000, User.home &/ "6502/bin/rom.bin"])
+  Assert.Noterror("RomMemory create object Passed - step 2")
+
+  Dim dumptext As Byte
+  dumptext = MyRom[&h08000]
+  Assert.Equals(Hex(dumptext), "58", "Peek at new memory Loaded")
+
+End
+
+
+
+

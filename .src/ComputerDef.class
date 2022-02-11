@@ -1,0 +1,138 @@
+' Gambas class file
+
+Public Devices As New Collection(gb.ignorecase)
+Property Name As String Use $name                 ' Name of this configuration
+Property Speed As Float Use $Speed                ' Mghz to emulate
+Property Read key As String Use $key              ' current device for next
+Property AutoStart As Long Use $AutoStart = -1    ' the computer will automatically run at this address
+Property AutoStartActive As Boolean Use $AutoStartActive = False   ' will be set if it is active
+Property SourceDirectory As String Use $SourceDirectory = FMain.AsmComputerDefinitions  ' where the definition is located
+
+
+Public Sub _get(Index As String) As Variant
+
+  If Not Devices.Exist(Index) Then Return Null
+
+End
+
+Public Sub _put(value As Variant, index As String)
+
+  Devices[Index] = value
+
+End
+
+Public Sub Clear()
+
+  Devices.Clear()
+
+End
+
+
+
+Public Sub _next() As Variant
+
+  Static Keys As String[]
+  If Enum.Index = Null Then
+    Keys = Devices.Keys
+    If Keys.count = 0 Then
+      Enum.Stop()
+      Return
+    Endif
+    Enum.Index = 0
+  Else
+    Inc Enum.Index
+    If Enum.Index > Keys.max Then
+      Enum.Stop()
+      Return
+    Endif
+  Endif
+
+  $key = Keys[Enum.Index]
+  Return Devices[Keys[Enum.Index]]
+
+End
+
+Public Sub Save(Optional Directory As String = "")
+
+  Dim CompSettings As Settings
+
+  If Directory = "" Then
+    CompSettings = New Settings($SourceDirectory &/ $Name, "Definitions for computer " & $name & " Updated " & Str(Now))
+  Else
+    CompSettings = New Settings(Directory &/ $Name, "Definitions for computer " & $name & " Created " & Str(Now))
+  Endif
+
+  WriteInfo(CompSettings)
+
+End
+
+Public Sub _new(Optional Directory As String = "", ComputerName As String = "")
+
+  If ComputerName <> "" Then
+    Load(Directory, ComputerName)
+    Return
+  Endif
+
+End
+
+Public Sub _free()
+
+  Save()
+
+End
+
+Public Sub Load(Directory As String, CName As String) As ComputerDef
+
+  Dim CompSettings As New Settings(Directory &/ CName)
+
+  $SourceDirectory = Directory
+  ReadInfo(CompSettings)
+
+End
+
+Public Sub Assign(value As ComputerDef)
+
+  $name = value.Name
+  $Speed = value.Speed
+  For Each dev As Variant In value
+    Devices[value.key] = dev
+  Next
+
+End
+
+Public Sub WriteInfo(Comp As Settings)
+
+  Comp.Clear("Device")
+  Comp["Name"] = $Name
+  Comp["Speed"] = $Speed
+  Comp["AutoStart"] = $AutoStart
+  Comp["AutoStartActive"] = $AutoStartActive
+  Comp["Device/Count"] = Devices.count
+  Dim index As Integer = 0
+  For Each s As Variant In Devices
+    Comp["Device/" & Hex(index, 4) & "/key"] = Devices.Key
+    Comp["Device/" & Hex(index, 4) & "/StartAddress"] = s[0]
+    Comp["Device/" & Hex(index, 4) & "/Length"] = s[1]
+    Comp["Device/" & Hex(index, 4) & "/Parameter"] = s[2]
+    Inc index
+  Next
+
+End
+
+Public Sub ReadInfo(comp As Settings)
+
+  Dim DevCount As Integer
+
+  $Name = Comp["Name"]
+  $Speed = Comp["Speed", 500]
+  $AutoStart = Comp["AutoStart", $AutoStart]
+  $AutoStartActive = Comp["AutoStartActive", $AutoStartActive]
+  DevCount = Comp["Device/Count"]
+  For i As Integer = 0 To DevCount - 1
+    Dim Index As String = Hex(i, 4)
+    Devices[Comp["Device/" & index & "/key"]] = [Comp["Device/" & index & "/StartAddress"], Comp["Device/" & index & "/Length"], Comp["Device/" & index & "/Parameter"]]
+    Inc index
+  Next
+
+End
+

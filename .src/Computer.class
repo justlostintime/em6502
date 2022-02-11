@@ -1,0 +1,281 @@
+' Gambas class file
+
+'Fast Unsafe
+MyCpu As New CPU6502 As "A_CPU"
+Running As Boolean = False
+Public MonitorList As New Collection(gb.ignorecase)  ' format is [ HEXADDR:[start,end], HEXADDR:[start, end] ]
+
+Property Read SingleStep As Boolean
+Property BreakPoints As Boolean
+Property StartAddress As Long
+
+Event StatusInfo(Info As Cpustatus)
+Event NextInst(Info As String)
+Event Breakpoint(pc As Long)
+Event MemMonitor(address As Long, memDump As String)
+Event BinaryLoaded(address As Long, BinName As String, info As String)
+Event AutoStart(address As Long, speed As Integer)
+
+Public Devices As New ScriptManager(True, user.home &/ "6502/dev")
+Property Read Config As ComputerDef Use $Config
+Property SpeedScaler As Long
+Property Read CyclesPerSecond As Long
+
+
+Public Sub Configure(Configuration As ComputerDef)
+
+  $Config = Configuration
+  For Each device As Variant[] In $Config
+    Dim cDev As Class = Devices($Config.key & ".dev")
+    MyCpu.AddMAp(device[0], device[1], cDev, device[2])
+  Next
+
+  Try MyCpu.Reset()
+  If Error Then
+    Message.Warning("Reset Failed " & Error.text, "Continue")
+  Endif
+
+  If Configuration.AutoStartActive Then
+    Raise AutoStart(Configuration.AutoStart, Configuration.speed)
+  Endif
+
+End
+
+Public Sub _new()
+
+  MyCpu.SingleStep = True
+  MyCpu.DisplayInstruction = True
+  MyCpu.DisplayStatus = True
+
+End
+
+Public Sub _free()
+
+  MyCpu = Null
+
+End
+
+Public Sub Shutdown()
+
+  Try MyCpu.Halt()
+
+End
+
+
+Public Sub SetBreakPoints(Breaks As String[])
+
+  Dim BrkList As New Long[]
+
+  For Each s As String In Breaks
+    Try BrkList.Add(Eval("&H0" & Left(s, 4)))
+    If Error Then
+      Message.Error("Bad Breakpoint address format : " & s & "\n Should be 4 hex digits\nBreak Points Not Set!", "Ok")
+      Return
+    Endif
+  Next
+  BrkList.Sort()
+  mycpu.BreakPointList = BrkList
+
+End
+
+
+Public Sub LoadMemory(BinFile As String)
+
+  MyCpu.LoadMemory(BinFile)
+
+End
+
+
+Public Sub Reset()
+
+  MyCpu.SingleStep = True
+  MyCpu.reset()
+
+End
+
+Public Sub Nmi()
+
+  MyCpu.Nmi()
+
+End
+
+Public Sub IRQ()
+
+  MyCpu.IRQ()
+
+End
+
+
+Public Sub StatusOn()
+
+  MyCpu.DisplayStatus = True
+
+End
+
+Public Sub StatusOff()
+
+  MyCpu.DisplayStatus = False
+
+End
+
+
+Public Sub A_CPU_StatusInfo(info As Cpustatus)
+
+  Raise StatusInfo(info)
+
+End
+
+Public Sub A_CPU_NextInst(info As String)
+
+  DisplayMemory()                        ' update any memory monitor running
+  Raise NextInst(Info)
+
+End
+
+Public Sub A_CPU_BreakPoint(pc As Long)
+
+  Raise Breakpoint(pc)
+
+End
+
+Public Sub A_CPU_BinaryLoaded(address As Long, BinName As String, info As String)
+
+  Raise BinaryLoaded(Address, BinName, info)
+
+End
+
+
+Public Sub DisplayCurrentInst()
+
+  MyCpu.DisplayCurrentInst()
+
+End
+
+Public Sub StopRun()
+
+  MyCpu.SingleStep = True
+  Running = False
+
+End
+
+
+Public Sub run()
+
+  If Not Running Then
+    Running = True
+  Endif
+
+  MyCpu.run()
+
+End
+
+Public Sub SetSingleStep()
+
+  MyCpu.SingleStep = True
+
+End
+
+Public Sub UnsetSingleStep()
+
+  MyCpu.SingleStep = False
+
+End
+
+Sub DisplayMemory()
+
+  Dim dump As String
+
+  For Each memloc As Long[] In MonitorList
+    dump = DumpMem(memloc[0], memloc[1])
+    Raise MemMonitor(memloc[0], dump)
+  Next
+
+End
+
+
+Public Sub DumpMem(fromAdr As Long, toAdr As Long, Optional linelen As Integer = 16) As String
+
+  Dim result As String = ""
+  Dim j As Integer
+  Dim AsChrs As String = ""
+
+  For i As Long = FromAdr To ToAdr Step linelen
+    result &= Hex(i, 4) & " "
+    AsChrs = ""
+    For j As Integer = 0 To LineLen - 1
+      Dim Val As Byte = MyCpu.Peek(i + j)
+      Result &= Hex(Val, 2) & " "
+      Dim chrs As String = Chr(val)
+      If IsAscii(chrs) And If IsPunct(chrs) Or IsLetter(chrs) Or IsNumber(chrs) Then
+        AsChrs &= chrs
+      Else
+        AsChrs &= "."
+      Endif
+    Next
+    result &= " " & AsChrs & "\n"
+  Next
+  Return result
+
+End
+
+Public Sub Trace(value As Boolean)
+
+  MyCpu.DisplayInstruction = value
+
+End
+
+Public Sub TraceInfo() As String
+
+  If MyCpu.DisplayInstruction Then Return MyCpu.LastTraceInstruction
+  Return ""
+
+End
+
+Private Function SingleStep_Read() As Boolean
+
+  Return MyCpu.SingleStep
+
+End
+
+Private Function SpeedScaler_Read() As Long
+
+  Return MyCpu.$SpeedScaler
+
+End
+
+Private Sub SpeedScaler_Write(Value As Long)
+
+  MyCpu.SpeedScaler = value
+
+End
+
+
+Private Function CyclesPerSecond_Read() As Long
+
+  Return MyCpu.CyclesPerSecond
+
+End
+
+Private Function BreakPoints_Read() As Boolean
+
+  Return MyCpu.BreakPoints
+
+End
+
+Private Sub BreakPoints_Write(Value As Boolean)
+
+  MyCpu.BreakPoints = value
+
+End
+
+Private Function StartAddress_Read() As Long
+
+  Return MyCpu.pc
+
+End
+
+Private Sub StartAddress_Write(Value As Long)
+
+  MyCpu.Pc = value
+
+End

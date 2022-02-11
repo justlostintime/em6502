@@ -1,0 +1,22 @@
+# Gambas Project File 3.0
+Title=6502 CPU Emulation
+Startup=FMain
+Version=1.0.1
+Component=gb.image
+Component=gb.gui
+Component=gb.form
+Component=gb.eval
+Component=gb.eval.highlight
+Component=gb.form.dialog
+Component=gb.util
+Component=gb.form.editor
+Component=gb.settings
+Component=gb.term
+Component=gb.form.terminal
+Component=gb.pcre
+Description="6502 emulator with a few devices"
+Authors="brian g"
+TabSize=2
+Language=en_US
+Vendor=westwood
+Packager=1

@@ -1,0 +1,23 @@
+' Gambas class file
+
+Public opc As Byte
+Public Name As String
+Public Description As String
+Public Cycles As Integer
+Public Addressing As String
+Public assembler As String
+Public Bytes As Integer
+
+
+Public Sub _new(bOpc As Byte, OpName As String, opAddressing As String, opAssembler As String, opBytes As Integer, opCycles As Integer, Optional opDescription As String = "")
+
+  opc = bOpc
+  name = OpName
+  Addressing = opAddressing
+  assembler = opAssembler
+  Bytes = opBytes
+  Cycles = opCycles
+  Description = opDescription
+
+End
+

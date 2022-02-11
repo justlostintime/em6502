@@ -1,0 +1,66 @@
+' Gambas class file
+
+Public Sub Form_Open()
+
+  Me.x = Settings["ListingWin/x", Me.x]
+  Me.y = Settings["ListingWin/y", Me.y]
+
+End
+
+Public Sub Form_Close()
+
+  Settings["ListingWin/x"] = Me.x
+  Settings["ListingWin/y"] = Me.y
+
+End
+
+Public Sub Display(value As String)
+
+  Dim Source As String[]
+
+  source = Split(value, "\n")
+  For i As Integer = 0 To Source.Max
+    Source[i] = SetTabs(Source[i])
+  Next
+  AsmListing.text = Source.join("\n")
+  AsmListing.Refresh()
+  Wait
+
+End
+
+Tabstops As Integer[] = [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88]
+
+Sub NextStop(currentpos As Integer) As Integer
+
+  For i As Integer = 0 To Tabstops.Max
+    If CurrentPos < Tabstops[i] Then
+      Return Tabstops[i]
+    Endif
+  Next
+  Return CurrentPos + (CurrentPos Mod 10)
+
+End
+
+Sub SetTabs(srcline As String) As String
+
+  Dim result As String = ""
+  Dim Tabpos As Integer
+
+  For i As Integer = 0 To srcline.len - 1
+    Dim char As String = srcline[i]
+    If char = "\t" Then
+      TabPos = NextStop(result.len)
+      While result.len < TabPos
+        result &= " "
+      Wend
+    Else
+      result &= char
+    Endif
+  Next
+
+  Return result
+
+End
+
+
+

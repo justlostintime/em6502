@@ -1,0 +1,181 @@
+' Gambas module file
+
+'Fast Unsafe
+Public Instructions As New Collection(gb.ignorecase)
+CurrentIndex As Integer = 0
+Enum opAddressing, opName, opAssembler, opOpc, opBytes, opCycles
+AddressModes As Collection = ["accumulator": True, "zeropage": True, "zeropage,X": True, "absolute": True, "absolute,X": True,
+  "absolute,Y": True, "(indirect,X)": True, "(indirect),Y": True, "relative": True, "implied": True,
+  "zeropage,Y": True, "immediate": True, "indirect": True]
+Source As String[]
+Property Read version As String Use $version
+Public InstructionCycles As New Integer[256]
+Public AddrMode As New Integer[256]
+Public aaa As New Integer[256]
+Public cc As New Integer[256]
+
+Public SymbolsByName As New Collection(gb.ignoreCase)
+Public SymbolsByAddress As New Collection(gb.ignoreCase)
+
+
+Public Sub _init()
+
+  $Version = "1.0.1"
+  source = Split(File.Load("6502.inst"), "\n", "", True, True)
+
+  AddressModes.default = False
+  While CurrentIndex < source.Count
+    If source[CurrentIndex][0] = "#" Then   ' check for comment
+      Inc CurrentIndex
+      Continue
+    Endif
+    Dim DefInst As String[] = Split(source[CurrentIndex], " ", "", True, True)
+    If DefInst.count = 2 And If DefInst[0] == "inst" Then
+      Inc CurrentIndex
+      ProcessInstruction()              'DefInst[1])
+    Else
+      Error.Raise("Invalid OP Code definition as line " & CurrentIndex & " In file " & source[CurrentIndex])
+    Endif
+  Wend
+
+End
+
+Fast Unsafe Public Sub CycleCount(Instruction As Byte) As Integer
+
+  Return Instructions[Instruction].Cycles
+
+End
+
+
+Fast Unsafe Sub ProcessInstruction()
+
+  Dim Description As String
+
+  While CurrentIndex < source.count
+    If source[CurrentIndex][0] = "\'" Then
+      Description &= Right(source[CurrentIndex], -1) & "\n"
+      Inc CurrentIndex
+      Continue
+    Else If source[CurrentIndex][0] = "#" Then
+      Inc CurrentIndex
+      Continue
+    Endif
+    'Enum opAddressing, opName, opAssembler, opOpc, opBytes, opCycles
+    Dim opDef As String[] = Split(source[CurrentIndex], " ", "", True, True)
+    If opDef.count > 2 And If AddressModes[OpDef[opAddressing]] Then
+      If opDef[opAddressing] == "implied" Then
+        AddOpCode(opDef[opOpc - 1], opDef[opName], opDef[opAddressing], " ", opDef[opBytes - 1], opDef[opCycles - 1], Description)
+      Else
+        AddOpCode(opDef[opOpc], opDef[opName], opDef[opAddressing], opDef[opAssembler], opDef[opBytes], opDef[opCycles], Description)
+      Endif
+      Inc CurrentIndex
+    Else
+      Break
+    Endif
+  Wend
+
+End
+
+'making this Fast crashes the system
+Sub AddOpCode(opCode As String, sopName As String, Addressing As String, Assembler As String, Bytes As Integer, cycles As Integer, Description As String)
+
+  assembler = Replace(assembler, "oper", "&1")
+  Dim opNum As Byte = Eval("&h" & opCode)
+  Dim myOpc As New InstDef(opNum, sopName, Addressing, Assembler, bytes, cycles, description)
+  Instructions[opnum] = myOpc
+  InstructionCycles[opNum] = cycles
+  addrMode[opnum] = (opnum And &h0001c) Shr 2
+  aaa[opnum] = (opnum Shr 5)
+  cc[opnum] = (opnum And &h0003)
+
+End
+
+Fast Unsafe Public Sub Inst(TheCpu As Cpu6502, address As Long) As String
+
+  Dim result As String = ""
+  Dim bInst As Byte[] = TheCpu.ReadBytes(address, 1)
+  Dim InstNum As Integer = bInst[0]
+  Dim InstData As Instdef = Instructions[InstNum]
+
+  Dim TxtBranch As String = ""
+  Dim num As String
+
+  If InstData = Null Then
+    Return Hex(address, 4) & " Unknow Instruction [" & Hex(instNum, 2) & "]"
+  Endif
+
+  If InstData.Bytes > 1 Then
+    Dim InstInfo As Byte[] = TheCpu.ReadBytes(address + 1, InstData.Bytes - 1)
+    result &= InstData.name & " "
+    If InstInfo.count = 2 Then
+      txtBranch = Hex(InstInfo[1], 2) & Hex(InstInfo[0], 2)
+
+      num = GetSymAsName(txtBranch)
+    Else
+      If InstData.Addressing == "relative" Then
+
+        Num = GetSymAsName(Hex(CalcBranch(Address, InstInfo[0]), 4))
+      Else If InstData.addressing = "zeropage" Then
+        num = GetSymAsName("00" & Hex(InstInfo[0], 2))
+      Else
+        num = "$" & Hex(InstInfo[0], 2)
+      Endif
+    Endif
+    result &= Subst(InstData.assembler, num)
+  Else
+    result = InstData.Name
+  Endif
+  Dim TxtAddress As String = Hex(address, 4)
+  If SymbolsByAddress.Exist(TxtAddress) Then
+    TxtAddress = TxtAddress & " " & SymbolsByAddress[txtaddress]
+  Endif
+  Return Left(TxtAddress & Space(15), 15) & " " & result
+
+End
+
+Fast Unsafe Sub GetSymAsName(addr As String) As String
+
+  If SymbolsByAddress.Exist(addr) Then
+    Return SymbolsByAddress[addr] & "[$" & (addr) & "]"
+  Endif
+  Return addr
+
+End
+
+
+Fast Unsafe Sub CalcBranch(pc As Long, jmp As Byte) As Long
+
+  If BTst(jmp, 7) Then
+    Dim offset As Byte = &100 - jmp
+    pc += 2
+    pc -= offset
+  Else
+    pc += (jmp + 2)
+  Endif
+  Return pc
+
+End
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

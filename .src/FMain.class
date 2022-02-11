@@ -1,0 +1,780 @@
+' Gambas class file
+
+'Fast Unsafe
+Public MyComputer As Computer
+Public AsmRootDirectory As String = User.home &/ "6502"
+Public AsmSourceDirectory As String = User.home &/ "6502/asm"
+Public AsmBinaryDirectory As String = User.home &/ "6502/bin"
+Public AsmDeviceDirectory As String = User.home &/ "6502/dev"
+Public AsmComputerDefinitions As String = User.home &/ "6502/computer"
+Public AsmDrivesDirectory As String = User.home &/ "6502/drives"
+Public AsmDocumentDirectory As String = User.home &/ "6502/doc"
+
+Public CurrentlyOpenFile As String
+Public DefaultTemplate As String
+Public OriginalSource As String
+Public CurrentComputerDefinition As String = "Default"
+Public DefaultComputerDefinition As String = "Default"
+
+OnImage As Picture = Picture.Fromstring(File.load("OnLed.png"))
+OffImage As Picture = Picture.Fromstring(File.load("OffLed.png"))
+
+updatetimer As New Timer As "MyTimer"
+DeveloperMode As Boolean = True
+
+Public Sub Form_Open()
+
+  If developerMode Then
+    Try Shell.RmDir(AsmRootDirectory)
+    Settings.Clear()
+  Endif
+
+  SetEditDefaults()
+
+  FMain.X = Settings["FMain/Window/X", FMain.X]
+  FMain.Y = Settings["FMain/Window/Y", FMain.Y]
+  FMain.H = Settings["FMain/Window/H", FMain.H]
+  FMain.W = Settings["FMain/Window/W", FMain.W]
+
+  ''Create the default assembled source and binary directories
+
+  AsmSourceDirectory = Settings["AsmSourceDirectory", AsmSourceDirectory]
+  AsmBinaryDirectory = Settings["AsmBinaryDirectory", AsmBinaryDirectory]
+  AsmDeviceDirectory = Settings["AsmDeviceDirectory", AsmDeviceDirectory]
+  AsmComputerDefinitions = Settings["AsmComputerDefinitions", AsmComputerDefinitions]
+  AsmDrivesDirectory = Settings["AsmDrivesDirectory", AsmDrivesDirectory]
+  AsmDocumentDirectory = Settings["AsmDocumentDirectory", AsmDocumentDirectory]
+  CurrentComputerDefinition = Settings["computer/current", DefaultComputerDefinition]
+  DefaultComputerDefinition = Settings["computer/default", DefaultComputerDefinition]
+
+  CreateDefaults()
+
+  MyComputer = New Computer As "the_computer"
+  Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
+  updatetimer.delay = 500
+  updatetimer.enabled = True
+
+  LoadComputersConfig()
+
+  DeviceList.Columns.Count = 4
+  DeviceList.Rows.Count = 14
+  DeviceList.Header = GridView.Horizontal
+  DeviceList.Columns[0].text = "Device Name       "
+  DeviceList.Columns[1].Text = "Start "
+  DeviceList.Columns[2].text = "Length"
+  DeviceList.Columns[3].text = "Device Specific Parameters"
+
+  ActiveComputer.text = CurrentComputerDefinition
+  DefaultComputer.text = DefaultComputerDefinition
+
+  FMain.Show()
+
+  MyComputer.Configure(Comp)
+
+End
+
+
+Public Sub Form_Close()
+
+  SaveEditDefaults()
+
+  Settings["FMain/Window/X"] = FMain.X
+  Settings["FMain/Window/Y"] = FMain.Y
+  Settings["FMain/Window/W"] = FMain.W
+  Settings["FMain/Window/H"] = FMain.H
+
+  Settings["AsmSourceDirectory"] = AsmSourceDirectory
+  Settings["AsmBinaryDirectory"] = AsmBinaryDirectory
+  Settings["AsmDeviceDirectory"] = AsmDeviceDirectory
+  Settings["AsmComputerDefinitions"] = AsmComputerDefinitions
+  Settings["AsmDrivesDirectory"] = AsmDrivesDirectory
+  Settings["computer/current"] = CurrentComputerDefinition
+  Settings["computer/default"] = DefaultComputerDefinition
+  Settings["AsmDocumentDirectory"] = AsmDocumentDirectory
+
+  SingleStepSet_Click()
+  Wait 0.001
+
+  ShutdownMemMonitors()
+  MyComputer.shutdown()
+  SaveComputersConfig()
+  updatetimer.enabled = False
+
+End
+
+
+Public Sub The_Computer_NextInst(info As String)
+
+  Disassembly.Print(info & "\n\r")
+  Disassembly.Refresh()
+  Wait
+
+End
+
+Public Sub The_Computer_AutoStart(address As Long, Speed As Integer)
+
+  StartStop_Click()
+  If address > -1 Then
+    StartAddr.text = Hex(address, 4)
+  Endif
+  SpeedScaler.value = speed
+  SetTrace.Value = False
+  SetStatus.Value = False
+  SetTrace_Click()
+  SetStatus_Click()
+  GoNow_Click()
+
+End
+
+
+Public Sub The_Computer_BinaryLoaded(address As Long, BinName As String, info As String)
+
+  LoadedList.Add(address, info)
+  StartAddr.text = Hex(address, 2)
+  GetSymbols(AsmSourceDirectory &/ BinName & ".sym")
+
+End
+
+Public MemoryMonitors As New Collection(gb.IgnoreCase)
+
+Public Sub The_computer_MemMonitor(address As Long, data As String)
+
+  Dim txtaddr As String = Hex(address, 4)
+
+  Dim MyObject As Object = MemoryMonitors[txtaddr]
+
+  Object.Call(MyObject, "UpdateMem", [data])
+  Wait
+
+End
+
+
+Public Sub The_Computer_StatusInfo(info As Cpustatus)
+
+  pc_info.text = Hex(info.pc, 4)
+  sp_info.text = Hex(info.sp Or &h100, 4)
+  AC_info.text = Hex(info.ac, 2)
+  x_Info.text = Hex(info.x, 2)
+  Y_info.text = Hex(info.y, 2)
+  sr_info.text = Bin(info.sr, 8) & " 0x" & Hex(info.sr, 2)
+  DataBus_INFO.text = Hex(info.databus, 2)
+  AddrBus_Info.text = Hex(info.AddressBus, 6)
+  Total_inst.text = info.TotalInstructions
+  InstructionsPerSecond.text = info.InstructionsPerSecond
+  TotalCycles.text = info.TotalCycles
+  CyclesPerSecond.text = info.CyclesPerSecond
+  MHZ.text = Format(CFloat(Info.CyclesPerSecond) / 1000000.00, "#0.00000")
+  Flag_B.value = info.Break
+  Flag_C.value = info.Carry
+  Flag_D.value = info.Decimal
+  Flag_i.value = info.ignored
+  Flag_IRQ.value = info.irq
+  flag_n.value = info.Negative
+  Flag_O.value = info.Overflow
+  Flag_Z.value = info.zero
+  FMain.Refresh()
+  Wait
+
+End
+
+Public Sub StepNow_Click()
+
+  SingleStepSet.value = True
+  SingleStepSet_Click()
+  If StartAddr.text <> "" Then
+    MyComputer.StartAddress = Eval("&H0" & StartAddr.text)
+    StartAddr.text = ""
+  Endif
+  GoStop.Picture = OnImage
+  MyComputer.Run()
+  Try GoStop.Picture = OffImage
+Catch
+  Message.Warning(Error.Text & " " & Error.where, "ok")
+
+End
+
+Public Sub GoNow_Click()
+
+  RunModeSet.value = True
+  RunModeSet_Click()
+  If StartAddr.text <> "" Then
+    MyComputer.StartAddress = Eval("&H0" & StartAddr.text)
+    StartAddr.text = ""
+  Endif
+  SetNextBreak()
+  GoStop.Picture = OnImage
+  MyComputer.Run()
+  Try GoStop.Picture = OffImage
+
+
+Catch
+  Message.Warning(Error.text & " " & Error.where, "ok")
+
+End
+
+Public Sub StartStop_Click()
+
+  If StartStop.text == "start" Then
+    StartAddr.Text = ""
+    SingleStepSet.Value = True
+    SingleStepSet_Click()
+    StepNow.Enabled = True
+    GoNow.enabled = True
+    StartStop.text = "Stop"
+    If MyComputer.SingleStep Then
+      MyComputer.DisplayCurrentInst()
+    Else
+      MyComputer.Run()
+    Endif
+  Else
+    StepNow.Enabled = False
+    GoNow.enabled = False
+    StartStop.text = "Start"
+    SingleStepSet_Click()
+  Endif
+
+End
+
+
+Public Sub SingleStepSet_Click()
+
+  MyComputer.SetSingleStep()
+  FMain.Refresh()
+
+End
+
+Public Sub RunModeSet_Click()
+
+  MyComputer.UnSetSingleStep()
+  FMain.Refresh()
+
+End
+
+Sub Padnumber(Num As String) As String
+
+  Num = Upper(Num)
+  Dim s As String[] = Split(Num, "H", "", True, True)
+  If s.count = 1 Then Return Num
+  If s.count > 2 Then Return Num
+  Num = "&H" & Right("00000000" & s[1], 8)
+  Return Num
+
+End
+
+
+Public Sub DumpMem_Click()
+
+  FromAddr.text = PadNumber(FromAddr.text)
+  ToAddr.text = PadNumber(ToAddr.text)
+
+  FMain.Refresh()
+
+  Wait
+
+  Dim fromAdr As Long = Eval("&h0" & FromAddr.text)
+  Dim ToAdr As Long = Eval("&h0" & ToAddr.text)
+  If FromAdr >= ToAdr Then
+    Message.Error("The start address must be lessthan the en address", "OK")
+    Return
+  Endif
+  Dim TheDump As String = MyComputer.DumpMem(FromAdr, toAdr)
+  Dim A As New MemoryDumpOutput
+  a.title = "Memory Dump from  $" & Hex(FromAdr, 4) & " to $" & Hex(ToAdr, 4) & " Len $" & Hex(toAdr - FromAdr, 4)
+  a.Show()
+  a.Display(TheDump)
+
+End
+
+Sub ShutdownMemMonitors()
+
+  For Each mon As MemoryMonitor In MemoryMonitors
+    Mon.shutdown()
+  Next
+  MemoryMonitors.Clear()
+
+End
+
+Public Sub MoniorMemSet_Click()
+
+  FromAddr.text = Right("0000" & FromAddr.text, 4)
+  ToAddr.text = Right("0000" & ToAddr.text, 4)
+  Dim fromAdr As Long = Eval("&h0" & FromAddr.text)
+  Dim ToAdr As Long = Eval("&h0" & ToAddr.text)
+  If FromAdr >= ToAdr Then
+    Message.Error("The start address must be lessthan the en address", "OK")
+    Return
+  Endif
+
+  Dim mywin As New MemoryMonitor(FromAddr.text, ToAddr.text)
+
+  FromAddr.text = ""
+  ToAddr.text = ""
+  FMain.Refresh()
+
+End
+
+Public Sub SetTrace_Click()
+
+  MyComputer.Trace(SetTrace.value)
+  If SetTrace.value = True Then
+    SetTrace.text = "Trace"
+  Else
+    SetTrace.text = "Trace"
+  Endif
+
+End
+
+
+Public Sub SetStatus_Click()
+
+  If SetStatus.value = True Then
+    MyComputer.StatusOn()
+    SetStatus.text = "Status"
+  Else
+    MyComputer.StatusOff()
+    SetStatus.text = "Status"
+  Endif
+
+End
+
+Public Sub resetCpu_Click()
+
+  MyComputer.reset()
+
+End
+
+Public Sub SetEditDefaults()
+
+  DefaultTemplate = Settings["DefaultTemplate", "Template.asm"]
+  CurrentlyOpenFile = Settings["CurrentlyOpenFile", ""]
+  If CurrentlyOpenFile <> "" Then
+    Try EditProg.Load(CurrentlyOpenFile)
+    If Error Then
+      CurrentlyOpenFile = ""
+    Else
+      OriginalSource = EditProg.text
+      AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
+    Endif
+  Endif
+
+  Dialog.Path = AsmSourceDirectory
+
+End
+
+Public Sub SaveEditDefaults()
+
+  VerifyProgSaved()
+
+  Settings["CurrentlyOpenFile"] = CurrentlyOpenFile
+  Settings["DefaultTemplate"] = DefaultTemplate
+
+End
+
+Public Sub VerifyProgSaved()
+
+  If OriginalSource <> EditProg.text Then
+    If Message.question("The Program has not been saved\n Would you like to save it now", "Yes", "No") = 0 Then
+      SaveProg_Click()
+    Endif
+  Endif
+
+
+End
+
+Public Sub OpenProg_Click()
+
+  VerifyProgSaved()
+
+  Dialog.Filter = ["*.asm", "Assembler 6502", "*", "All Files"]
+  Dialog.path = AsmSourceDirectory
+  If Dialog.OpenFile() Then Return
+  EditProg.load(Dialog.path, True)
+  OriginalSource = EditProg.text
+  CurrentlyOpenFile = Dialog.Path
+  AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
+
+End
+
+
+Public Sub SaveAsProg_Click()
+
+  Dialog.Filter = ["*.asm", "Assembler65", "*", "All Files"]
+  Dialog.path = AsmSourceDirectory
+  If Dialog.SaveFile() Then Return
+  EditProg.Save(Dialog.path)
+  CurrentlyOpenFile = Dialog.path
+  AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
+
+End
+
+Public Sub SaveProg_Click()
+
+  If CurrentlyOpenFile = "" Then
+    SaveAsProg_Click()
+    Return
+  Endif
+  EditProg.Save(CurrentlyOpenFile)
+
+End
+
+Public Sub NewProg_Click()
+
+  CurrentlyOpenFile = ""
+  Try EditProg.Load("Template.asm")
+  OriginalSource = EditProg.text
+
+End
+
+
+Public Sub NmiCpu_Click()
+
+  MyComputer.Nmi()
+
+End
+
+Public Sub AsmbProg_Click()
+
+  SaveProg_Click()
+
+  Dim OutputPath As String = AsmBinaryDirectory
+  Dim LstPath As String = AsmSourceDirectory
+  Dim InputPath As String = File.Dir(CurrentlyOpenFile)
+  Dim FileName As String = File.Name(CurrentlyOpenFile)
+  Dim FileBase As String = File.BaseName(CurrentlyOpenFile)
+  If Exist(OutPutPath &/ FileBase & ".lst") Then
+    Kill OutPutPath &/ FileBase & ".lst"
+  Endif
+  OpenListing.enabled = False
+  asmOutput.Print(Assembler(InputPath &/ FileName, OutPutPath &/ FileBase & ".bin", LstPath &/ FileBase & ".lst", LstPath &/ FileBase & ".sym"))
+  InfoSection.Index = 3
+  If Exist(LstPath &/ FileBase & ".lst") Then
+    OpenListing.enabled = True
+    LastListingGenerated = LstPath &/ FileBase & ".lst"
+    LastBinaryGenerated = OutPutPath &/ FileBase & ".bin"
+  Endif
+
+End
+
+LastListingGenerated As String = ""
+LastBinaryGenerated As String = ""
+
+Public Sub OpenListing_Click()
+
+  Dim A As New ListingViewer
+
+  a.title = "Asm Listing " & LastListingGenerated
+  a.Show()
+  a.Display(File.Load(LastListingGenerated))
+
+End
+
+Public Sub LoadToRome_Click()
+
+  SingleStepSet.value = True
+  SingleStepSet_Click()
+  Wait
+  MyComputer.LoadMemory(LastBinaryGenerated)
+
+End
+
+Public Sub LoadToRam_Click()
+
+  SingleStepSet.value = True
+  SingleStepSet_Click()
+  Wait
+  MyComputer.LoadMemory(LastBinaryGenerated)
+
+End
+
+
+
+Public Sub MyTimer_Timer()
+
+  MHZ.text = Format(CFloat(MyComputer.CyclesPerSecond) / 1000000.00, "#0.00000")
+  MHZ.Refresh()
+
+End
+
+
+Public Sub SpeedScaler_Change()
+
+  MyComputer.SpeedScaler = speedscaler.value
+
+End
+
+' Handle break poins here ----------------------------------------------------------------
+Public Sub EnableBreakPoints_Click()
+
+  MyComputer.BreakPoints = EnableBreakPoints.value
+  SetNextBreak()
+
+End
+
+Public Sub The_Computer_BreakPoint(pc As Long)
+
+  SingleStepSet.value = True
+  LastBreakAddress.text = "$" & Hex(pc, 4)
+  InfoSection.Index = 0
+  Wait
+
+End
+
+Public Sub SetNextBreak()
+
+  MyComputer.BreakPoints = EnableBreakPoints.Value
+
+  If EnableBreakPoints.value = True Then
+    MyComputer.SetBreakPoints(BreakPointList.list)
+  Else
+
+  Endif
+
+End
+
+
+Public Sub LoadImage_DblClick()
+
+  Print "Selected"
+
+End
+
+Public Sub DoLoad_Click()
+
+  Dialog.Title = "Select the Binary File to load"
+  Dialog.path = AsmBinaryDirectory
+  If Dialog.OpenFile() Then
+    Return
+  Endif
+
+  Try MyComputer.LoadMemory(Dialog.Path)
+  If Error Then
+    Debug "ErrorLoading memory "; Error.text
+    Return
+  Endif
+
+  Dim symname As String = AsmSourceDirectory &/ File.BaseName(Dialog.path) & ".sym"
+  If Exist(symname) Then
+    GetSymbols(symname)
+  Endif
+
+End
+
+Public Sub LoadSymbols_Click()
+
+  Dialog.Title = "Select the Symbol File to load"
+  Dialog.path = AsmSourceDirectory
+  If Dialog.OpenFile() Then
+    Return
+  Endif
+
+  GetSymbols(Dialog.path)
+
+End
+
+Sub GetSymbols(filename As String)
+
+  If Not Exist(FileName) Then Return
+  Dim SymSource As String[] = Split(File.Load(filename), "\n", "", True)
+  Dim BinName As String = File.BaseName(filename)
+
+  If SymLoadedList.Exist(BinName) Then Return
+
+  For Each s As String In SymSource
+    If Left(s, 3) = "---" Then Continue
+    Dim sLine As String[] = Scan(s, "* * *")
+    If Left(sLine[1], 4) = "ffff" Then Continue
+    Disassembler.SymbolsByAddress[sLine[1]] = sLine[0]
+    Disassembler.SymbolsByName[sLine[0]] = sLine[1]
+  Next
+
+  SymbolTable.Clear()
+  SymLoadedList.Add(BinName, File.Name(filename))
+
+  For Each s In Disassembler.SymbolsByName
+    Try SymbolTable.Add(Disassembler.SymbolsByName.key & ":" & s, Left(Disassembler.SymbolsByName.key & Space(19), 20) & s)
+    If Error Then
+      Print Error.text;; s;; Disassembler.SymbolsByName.key
+    Endif
+  Next
+
+End
+
+Public Sub ClearSymbols_Click()
+
+  SymbolTable.Clear()
+  Disassembler.SymbolsByAddress.Clear()
+  Disassembler.SymbolsByName.Clear()
+
+End
+
+Public Sub AddAddress_Click()
+
+  Dim breakSet As String[] = SymbolTable.Selection
+
+  For Each s As String In BreakSet
+    Dim entry As String[] = Split(s, ":")
+    BreakPointList.Add(entry[1] & " " & entry[0])
+  Next
+
+  SetNextBreak()
+
+End
+
+Public Sub LoadedList_DblClick()
+
+  If LoadedList.Selection.count > 0 Then
+    StartAddr.text = Hex(LoadedList.Selection[0], 4)
+  Endif
+
+End
+
+Public Sub RemoveAddress_Click()
+
+  BreakPointList.Remove(BreakPointList.Index)
+
+End
+
+Public Sub NewComp_Click()
+
+  If DefaultComputerDefinition = "" Then DefaultComputerDefinition = CurrentComputerDefinition
+  SetComp(DefaultComputerDefinition)
+  ComputerName.text = ""
+
+End
+
+Public Sub LoadComputersConfig()
+
+  Computers.Clear()
+  For Each s As String In Dir(AsmComputerDefinitions, "*", gb.file)
+    Computers.Add(s, s)
+  Next
+
+End
+
+Public Sub SaveComputersConfig()
+
+  If Not CurrentCompDev Then Return
+  CurrentCompDev.name = ComputerName.text
+  CurrentCompDev.Speed = SpeedDef.value
+  CurrentCompDev.AutoStart = IIf(AutoStartAddress.text = "", -1, Eval("&H0" & AutoStartAddress.text))
+  CurrentCompDev.AutoStartActive = AutoStartActive.value
+  CurrentCompDev.Clear()
+  For i As Integer = 0 To DeviceList.Rows.Max
+    If DeviceList[i, 0].text = "" Then Continue
+    CurrentCompDev[DeviceList[i, 0].text] = [Eval("&h0" & DeviceList[i, 1].text), Eval("&h0" & DeviceList[i, 2].text), DeviceList[i, 3].text]
+    'Print DeviceList[i, 0].text, DeviceList[i, 1].text, DeviceList[i, 2].text, DeviceList[i, 3].text
+  Next
+
+  CurrentCompDev.save()
+  LoadComputersConfig()
+
+End
+
+CurrentCompDev As ComputerDef = Null
+
+Public Sub Computers_Click()
+
+  SetComp(Computers.Selection[0])
+
+End
+
+Sub SetComp(Cname As String)
+
+  If Not IsNull(CurrentCompDev) Then CurrentCompDev.save()
+  CurrentCompDev = New ComputerDef(AsmComputerDefinitions, cname)
+  ComputerName.text = CurrentCompDev.Name
+  SpeedDef.value = CurrentCompDev.Speed
+  AutoStartAddress.text = IIf(CurrentCompDev.AutoStart = -1, "", Hex(CurrentCompDev.AutoStart, 4))
+  AutoStartActive.value = CurrentCompDev.AutoStartActive
+  Dim DevIndex As Integer = 0
+  DeviceList.Clear()
+  For Each ddev As Variant[] In CurrentCompDev
+    DeviceList[DevIndex, 0].text = CurrentCompDev.key
+    DeviceList[DevIndex, 1].text = Hex(ddev[0], 4)
+    DeviceList[DevIndex, 2].text = Hex(ddev[1], 4)
+    DeviceList[DevIndex, 3].text = ddev[2]
+    Inc DevIndex
+  Next
+
+
+End
+
+
+Public Sub SaveComp_Click()
+
+  If CurrentCompDev Then
+    SaveComputersConfig()
+  Endif
+
+End
+
+Public Sub DeviceList_Click()
+
+  Dim devlist As New String[]
+
+  For Each s As String In Dir(AsmDeviceDirectory, "*", gb.file)
+    devlist.Add(File.BaseName(s))
+  Next
+  If DeviceList.Column = 0 Then
+    DeviceList.Edit(devlist)
+  Else
+    DeviceList.Edit()
+  Endif
+
+End
+
+Public Sub DeviceList_Save(Row As Integer, Column As Integer, Value As String)
+
+  DeviceList[row, column].text = Value
+  DeviceList.Refresh()
+
+
+End
+
+Public Sub SetAsDefault_Click()
+
+  DefaultComputerDefinition = Computers.Selection[0]
+
+End
+
+
+Public Sub MakeActive_Click()
+
+  If Computers.Selection.count = 0 Then Return
+  CurrentComputerDefinition = Computers.Selection[0]
+  FMain.Hide()
+  Form_Close()
+  MyComputer = New Computer As "the_computer"
+  Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
+  LoadedList.Clear()
+  SymLoadedList.Clear()
+  SymbolTable.Clear()
+  ClearSymbols_Click()
+  BreakPointList.Clear()
+  ShutdownMemMonitors()
+  FMain.Show()
+  MyComputer.Configure(Comp)
+
+End
+
+Public Sub RmDevice_Click()
+
+  Dim devlist As New Variant[]
+
+  For i As Integer = 0 To DeviceList.Rows.Max
+    If DeviceList[i, 0].text = "" Or If i = DeviceList.row Then Continue
+    devlist.Add([DeviceList[i, 0].text, DeviceList[i, 1].text, DeviceList[i, 2].text, DeviceList[i, 3].text])
+  Next
+  DeviceList.Clear()
+  Dim DevIndex As Integer = 0
+  For Each v As Variant In devlist
+    DeviceList[DevIndex, 0].text = v[0]
+    DeviceList[DevIndex, 1].text = v[1]
+    DeviceList[DevIndex, 2].text = v[2]
+    DeviceList[DevIndex, 3].text = v[3]
+    Inc DevIndex
+  Next
+  DeviceList.Refresh()
+
+
+End

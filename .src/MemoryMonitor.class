@@ -1,0 +1,51 @@
+' Gambas class file
+
+MonitorWindow As New MemoryDumpOutput As "MyForm"
+Address As String = "0000"
+
+Public Sub _new(StartAddress As String, EndAddress As String)
+
+  Address = StartAddress
+  MonitorWindow.w = 600
+  MonitorWindow.h = 400
+
+  Fmain.MyComputer.MonitorList.Add([Eval("&H0" & StartAddress), Eval("&H0" & EndAddress)], StartAddress)
+  Fmain.MemoryMonitors.Add(Me, StartAddress)
+  MonitorWindow.title = "Monitoring Memory Address $" & StartAddress & " To $" & EndAddress
+  MonitorWindow.MemDumpOut.w = MonitorWindow.w - 2
+  MonitorWindow.MemDumpOut.h = MonitorWindow.h - 2
+  MonitorWindow.MemDumpOut.text = "Memory Dump Begins"
+  MonitorWindow.Show()
+
+End
+
+Public Sub updatemem(data As String)
+
+  MonitorWindow.SetFocus()
+  MonitorWindow.MemDumpOut.text = data
+  MonitorWindow.MemDumpOut.Refresh()
+  Wait
+
+End
+
+Public Sub ShutDown()
+
+  MonitorWindow.Close()
+
+End
+
+
+Public Sub MyForm_Close()
+
+  Fmain.MyComputer.MonitorList.Remove(Address)
+  FMain.MemoryMonitors.Remove(Address)
+
+End
+
+Public Sub MyForm_Resize()
+
+  MonitorWindow.MemDumpOut.w = MonitorWindow.w - 2
+  MonitorWindow.MemDumpOut.h = MonitorWindow.h - 2
+
+End
+

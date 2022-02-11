@@ -1,0 +1,26 @@
+' Gambas class file
+
+
+Public Sub Form_Open()
+
+  Me.x = Settings["DumpWin/x", Me.x]
+  Me.y = Settings["DumpWin/y", Me.y]
+
+End
+
+Public Sub Form_Close()
+
+  Settings["DumpWin/x"] = Me.x
+  Settings["DumpWin/y"] = Me.y
+
+End
+
+Public Sub Display(value As String)
+
+  MemDumpOut.text &= value
+  MemDumpOut.Refresh()
+  Wait
+
+End
+
+

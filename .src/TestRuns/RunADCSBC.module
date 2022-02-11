@@ -1,0 +1,72 @@
+' Gambas module file
+
+SR As Byte = &h36
+
+Public Sub main()
+
+  pv(SbcAC(0, &h80))
+  pv(SbcAC(0, &h7f))
+  pv(SbcAC(&h80, &h80))
+  pv(SbcAC(&h01, &h04))
+  pv(SbcAC(&hFF, &hFE))
+  pv(SbcAC(&hFF, &h01))
+  Print "add"
+  pv(AdcAC(&h50, &h10))
+  pv(AdcAC(&h50, &h50))
+  pv(AdcAC(&h50, &h90))
+  pv(AdcAC(&h50, &hd0))
+  pv(AdcAC(&hd0, &h10))
+  pv(AdcAC(&hd0, &h50))
+  pv(AdcAC(&hd0, &h90))
+  pv(AdcAC(&hd0, &hd0))
+
+
+End
+
+Sub pv(Value As Byte)
+
+  Print Hex(Value, 2);; "SR:"; Bin(sr, 8)
+
+End
+
+
+
+Public Sub AdcAc(AC As Byte, DataBus As Byte) As Byte
+
+  Dim addone As Integer = IIf(BTst(sr, 0), 1, 0)
+  Dim tmp As Integer
+  Dim result As Byte
+  Dim v As Integer
+  Dim tac, tdb As Integer
+
+  tac = (0 Or ac)
+  tdb = (0 Or Databus)
+
+  tmp = tac + tdb + addone
+  'Print "Result="; tmp, "AC="; ac, "Databus="; Databus, "Carry = "; addone
+  If BTst(tmp, 8) Then sr = BSet(sr, 0) Else sr = BClr(sr, 0)           ' set the carry bit
+  result = (tmp And &h00ff)                                             ' set the value
+  If BTst(result, 7) Then sr = BSet(sr, 7) Else sr = BClr(sr, 7)        ' Set the negative
+  If result = 0 Then sr = BSet(sr, 1) Else sr = BClr(sr, 1)             ' set the zero flag
+  ' Print (ac Xor result), (databus Xor result), ((ac Xor result) And (databus Xor result))
+  'Print (((ac Xor result) And (databus Xor result)) And &h080)
+  'v = !!((a ^ result) & (val ^ result) & 0x80U);
+  v = (((ac Xor result) And (databus Xor result)) And &h080)
+  If v <> 0 Then sr = BSet(sr, 6) Else sr = BClr(sr, 6)
+  'Print "Overflow= "; BTst(sr, 6)
+  ac = result
+  Return ac
+
+End
+
+Public Sub SbcAc(ac As Byte, databus As Byte) As Byte
+
+  Dim tmp As Byte = (DataBus Xor &h0FF)
+
+  DataBus = tmp
+  Print "sbc ";; Hex(tmp, 2);;
+  ac = AdcAc(ac, databus)
+  Return ac
+
+End
+
