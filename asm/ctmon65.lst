@@ -1,0 +1,2603 @@
+------- FILE ctmon65.asm LEVEL 1 PASS 2
+      1  10000					       Processor	6502
+      2  10000 ????						;*********************************************************
+      3  10000 ????						; CTMON65
+      4  10000 ????						;
+      5  10000 ????						; This is the monitor for the Corsham Techologies, LLC
+      6  10000 ????						; SS-50 65C02 board.  It's a fairly generic monitor that
+      7  10000 ????						; can be ported to other 6502 based systems.
+      8  10000 ????						;
+      9  10000 ????						; Written mostly while on a family vacation in 2018, but
+     10  10000 ????						; ideas and code were taken from other Corsham Tech
+     11  10000 ????						; projects and various web pages (credit given in the
+     12  10000 ????						; code).
+     13  10000 ????						;
+     14  10000 ????						; Bob Applegate
+     15  10000 ????						; bob@corshamtech.com
+     16  10000 ????						; www.corshamtech.com
+     17  10000 ????				       mac	db
+     18  10000 ????				       .byte	{0}
+     19  10000 ????				       endm
+     20  10000 ????				       Mac	dw
+     21  10000 ????				       .word	{0}
+     22  10000 ????				       endm
+     23 Ue037 ????				      seg.U	bss
+     24 U0000					      org	$0000
+     25 U0000							;*********************************************************
+     26 U0000							;
+------- FILE config.inc LEVEL 2 PASS 2
+      0 U0000					      include	"config.inc"
+      1 U0000					      Processor	6502
+      2 U0000							;*********************************************************
+      3 U0000							; FILE: config.inc
+      4 U0000							;
+      5 U0000							; General configuration file
+      6 U0000							;*********************************************************
+      7 U0000							;
+      8 U0000		       00 00	   FALSE      equ	0
+      9 U0000		       00 01	   TRUE       equ	!FALSE
+     10 U0000							;
+     11 U0000							; SS-50 bus constants
+     12 U0000							;
+     13 U0000		       e0 00	   IO_BASE    equ	$E000
+     14 U0000		       00 10	   IO_SIZE    equ	16
+     15 U0000							;
+     16 U0000							; Memory usage
+     17 U0000							;
+     18 U0000		       00 f0	   ZERO_PAGE_START equ	$00f0
+     19 U0000		       f0 00	   ROM_START  equ	$f000
+     20 U0000		       df 00	   RAM_START  equ	$df00
+     21 U0000							;
+     22 U0000							; If enabled, turn on buffered input code.
+     23 U0000							;
+     24 U0000		       00 00	   BUFFERED_INPUT equ	FALSE
+     25 U0000							;
+     26 U0000		       00 05	   MAX_ARGC   equ	5
+     27 U0000							;
+     28 U0000							; If enabled, the debugger will display the flag register
+     29 U0000							; in ASCII.  Nice, but takes more code.
+     30 U0000							;
+     31 U0000		       00 01	   FULL_STATUS equ	TRUE
+     32 U0000							;
+     33 U0000							; Enable EXTENDED_CMDS to allow linking external commands
+     34 U0000							; to the command handler.
+     35 U0000							;
+     36 U0000		       00 00	   EXTENDED_CMDS equ	FALSE
+     37 U0000							;
+     38 U0000							; Define to enable SD related functions
+     39 U0000							;
+     40 U0000		       00 01	   SD_ENABLED equ	TRUE
+     41 U0000							;
+     42 U0000							; Size of the keyboard buffer
+     43 U0000							;
+     44 U0000		       00 84	   BUFFER_SIZE equ	132
+     45 U0000
+------- FILE ctmon65.asm
+     28 U0000							;
+     29 U0000							; Current version and revision
+     30 U0000							;
+     31 U0000		       00 00	   VERSION    equ	0
+     32 U0000		       00 03	   REVISION   equ	3
+     33 U0000							;
+     34 U0000							;---------------------------------------------------------
+     35 U0000							; ASCII constants
+     36 U0000							;
+     37 U0000		       00 07	   BELL       equ	$07
+     38 U0000		       00 08	   BS	      equ	$08
+     39 U0000		       00 0a	   LF	      equ	$0a
+     40 U0000		       00 0d	   CR	      equ	$0d
+     41 U0000							;
+     42 U0000							; Max number of bytes per line for hex dump
+     43 U0000							;
+     44 U0000		       00 10	   BYTESLINE  equ	16
+     45 U0000							;
+     46 U0000							; These are various buffer sizes
+     47 U0000							;
+     48 U0000		       00 0c	   FILENAME_SIZE equ	12
+     49 U0000							;
+     50 U0000							; Intel HEX record types
+     51 U0000							;
+     52 U0000		       00 00	   DATA_RECORD equ	$00
+     53 U0000		       00 01	   EOF_RECORD equ	$01
+     54 U0000							;
+     55 U0000							; Zero-page data
+     56 U0000							;
+     57 U0000							;		zpage
+     58 U0000					      seg.U	bss
+     59 U00f0					      org	ZERO_PAGE_START
+     60 U00f0		       00 00	   sptr       ds	2
+     61 U00f2		       00	   INL	      ds	1
+     62 U00f3		       00	   INH	      ds	1
+     63 U00f4		       00 00	   putsp      ds	2
+     64 U00f6							;
+     65 U00f6							; Non zero-page data
+     66 U00f6							;
+     67 U00f6					      Seg.u	bss
+     68 Udf00					      org	RAM_START
+     69 Udf00							;
+     70 Udf00							; The use of memory starting from here will remain
+     71 Udf00							; constant through different versions of CTMON65.
+     72 Udf00							;
+     73 Udf00		       00 00	   IRQvec     ds	2
+     74 Udf02		       00 00	   NMIvec     ds	2
+     75 Udf04							;
+     76 Udf04							; Before a L(oad) command, these are set to $FF.
+     77 Udf04							; After loading, if they are different, jump to
+     78 Udf04							; that address.
+     79 Udf04							;
+     80 Udf04		       00 00	   AutoRun    ds	2
+     81 Udf06							;
+     82 Udf06							; Pointer to the subroutine that gets the next input
+     83 Udf06							; character.  Used for doing disk/console input.
+     84 Udf06							;
+     85 Udf06		       00 00	   inputVector ds	2
+     86 Udf08							;
+     87 Udf08							; Same thing for output.
+     88 Udf08							;
+     89 Udf08		       00 00	   outputVector ds	2
+     90 Udf0a							;
+     91 Udf0a							; Buffer for GETLINE
+     92 Udf0a							;
+     93 Udf0a		       00 00 00 00*buffer     ds	BUFFER_SIZE
+     94 Udf8e							;
+     95 Udf8e							; Anything from here can be moved between versions.
+     96 Udf8e							;
+     97 Udf8e		       00	   SaveA      ds	1
+     98 Udf8f		       00	   SaveX      ds	1
+     99 Udf90		       00	   SaveY      ds	1
+    100 Udf91		       00 00	   SavePC     ds	2
+    101 Udf93		       00	   SaveC      ds	1
+    102 Udf94		       00	   SaveSP     ds	1
+    103 Udf95		       00	   SAL	      ds	1
+    104 Udf96		       00	   SAH	      ds	1
+    105 Udf97		       00	   EAL	      ds	1
+    106 Udf98		       00	   EAH	      ds	1
+    107 Udf99		       00	   tempA      ds	1
+    108 Udf9a		       00 00 00 00*filename   ds	FILENAME_SIZE+1
+    109 Udfa7		       00	   diskBufOffset ds	1
+    110 Udfa8		       00	   diskBufLength ds	1
+    111 Udfa9		       00	   CHKL       ds	1
+    112 Udfaa		       00	   ID	      ds	1
+    113 Udfab		       00	   Temp16L    ds	1
+    114 Udfac		       00	   Temp16H    ds	1
+    115 Udfad							;
+    116 Udfad							; This weird bit of DBs is to allow for the fact that
+    117 Udfad							; I'm putting a 4K monitor into the top half of an
+    118 Udfad							; 8K EEPROM.  This forces the actual code to the top
+    119 Udfad							; 4K section.
+    120 Udfad							;
+    121  e000 ????				      Seg	rcode
+    122  e000					      org	ROM_START-$1000
+    123  e000							;		db	"This space for rent.",CR,LF
+    124  e000							;		db	"Actually, this just forces the "
+    125  e000							;		db	"binary file to be 8K long."
+    126  e000
+    127  e000
+    128  10000 ????				       Seg	Code
+    129  f000					      org	ROM_START
+    130  f000							;
+    131  f000							;=========================================================
+    132  f000							; Jump table to common functions.  The entries in this
+    133  f000							; table are used by external programs, so nothing can be
+    134  f000							; moved or removed from this table.  New entries always
+    135  f000							; go at the end.  Many of these are internal functions
+    136  f000							; and I figured they might be handy for others.
+    137  f000							;
+    138  f000		       4c 48 f0    COLDvec    jmp	RESET
+    139  f003		       4c b7 f0    WARMvec    jmp	WARM
+    140  f006							;
+    141  f006							; These are the major and minor revision numbers so that
+    142  f006							; code can check to see which CTMON65 version is running.
+    143  f006							;
+      0  f006				   CTMON65ver db	VERSION
+      1  f006		       00		      .byte.b	VERSION
+      0  f007				   CTMON65rev db	REVISION
+      1  f007		       03		      .byte.b	REVISION
+      0  f008					      db	0
+      1  f008		       00		      .byte.b	0
+    147  f009							;
+    148  f009							; Console related functions
+    149  f009							;
+    150  f009		       4c 70 fb    CINvec     jmp	cin
+    151  f00c		       4c 63 fb    COUTvec    jmp	cout
+    152  f00f		       4c 7b fb    CSTATvec   jmp	cstatus
+    153  f012		       4c c6 fa    PUTSILvec  jmp	putsil
+    154  f015		       4c 04 fb    GETLINEvec jmp	getline
+    155  f018		       4c 3c fb    CRLFvec    jmp	crlf
+    156  f01b		       4c 1f fb    OUTHEXvec  jmp	HexA
+    157  f01e							;
+    158  f01e							; Low-level functions to access the SD card system
+    159  f01e							;
+    160  f01e					      if	SD_ENABLED
+    161  f01e		       4c 81 fb    XPARINITvev jmp	xParInit
+    162  f021		       4c 81 fb    XPARSETWRITEvec jmp	xParSetWrite
+    163  f024		       4c 84 fb    XPARSETREADvec jmp	xParSetRead
+    164  f027		       4c 87 fb    XPARWRITEvec jmp	xParWriteByte
+    165  f02a		       4c 8b fb    XPARREADvec jmp	xParReadByte
+    166  f02d							;
+    167  f02d							; Higher level SD card functions
+    168  f02d							;
+    169  f02d		       4c 96 fb    DISKPINGvec jmp	DiskPing
+    170  f030		       4c a9 fb    DISKDIRvec jmp	DiskDir
+    171  f033		       4c b3 fb    DISKDIRNEXTVEC jmp	DiskDirNext
+    172  f036		       4c e4 fb    DISKOPENREADvec jmp	DiskOpenRead
+    173  f039		       4c 15 fc    DISKOPENWRITvec jmp	DiskOpenWrite
+    174  f03c		       4c 1f fc    DISKREADvec jmp	DiskRead
+    175  f03f		       4c 51 fc    DISKWRITEvec jmp	DiskWrite
+    176  f042		       4c 88 fc    DISKCLOSEvec jmp	DiskClose
+    177  f045		       4c 1a fc    DISKRMvec  JMP	DiskRemoveFile
+    178  f048					      endif		;SD_ENABLED
+    179  f048							;
+    180  f048							;---------------------------------------------------------
+    181  f048							; Cold start entry point
+    182  f048							;
+    183  f048		       a2 ff	   RESET      ldx	#$ff
+    184  f04a		       9a		      txs
+    185  f04b		       20 57 fb 	      jsr	cinit
+    186  f04e		       20 81 fb 	      jsr	xParInit
+    187  f051							;
+    188  f051							; Reset the NMI and IRQ vectors
+    189  f051							;
+    190  f051		       a9 93		      lda	#DefaultNMI&$ff
+    191  f053		       8d 02 df 	      sta	NMIvec
+    192  f056		       a9 fc		      lda	#DefaultNMI>>8
+    193  f058		       8d 03 df 	      sta	NMIvec+1
+    194  f05b							;
+    195  f05b		       a9 93		      lda	#DefaultIRQ&$ff
+    196  f05d		       8d 00 df 	      sta	IRQvec
+    197  f060		       a9 fc		      lda	#DefaultIRQ>>8
+    198  f062		       8d 01 df 	      sta	IRQvec+1
+    199  f065							;
+    200  f065							; Print start-up message
+    201  f065							;
+    202  f065		       20 c6 fa 	      jsr	putsil
+      0  f068					      db	CR,LF,LF,LF,LF
+      1  f068		       0d 0a 0a 0a*	      .byte.b	CR,LF,LF,LF,LF
+      0  f06d					      db	"CTMON65 rev "
+      1  f06d		       43 54 4d 4f*	      .byte.b	"CTMON65 rev "
+      0  f079					      db	VERSION+'0,'.
+      1  f079		       30 2e		      .byte.b	VERSION+'0,'.
+      0  f07b					      db	REVISION+'0
+      1  f07b		       33		      .byte.b	REVISION+'0
+      0  f07c					      db	CR,LF
+      1  f07c		       0d 0a		      .byte.b	CR,LF
+      0  f07e					      db	"09/20/2018 by Bob Applegate K2UT"
+      1  f07e		       30 39 2f 32*	      .byte.b	"09/20/2018 by Bob Applegate K2UT"
+      0  f09e					      db	", bob@corshamtech.com"
+      1  f09e		       2c 20 62 6f*	      .byte.b	", bob@corshamtech.com"
+      0  f0b3					      db	CR,LF,LF,0
+      1  f0b3		       0d 0a 0a 00	      .byte.b	CR,LF,LF,0
+    211  f0b7							;
+    212  f0b7							;---------------------------------------------------------
+    213  f0b7							; Warm start entry point.  This is the best place to jump
+    214  f0b7							; in the code after a user program has ended.	Go through
+    215  f0b7							; the vector, of course!
+    216  f0b7							;
+    217  f0b7		       a2 ff	   WARM       ldx	#$ff
+    218  f0b9		       9a		      txs
+    219  f0ba							;
+    220  f0ba							; Prompt the user and get a line of text
+    221  f0ba							;
+    222  f0ba		       20 b2 f9    prompt     jsr	setOutputConsole
+    223  f0bd		       20 cd f9 	      jsr	setInputConsole
+    224  f0c0		       20 c6 fa 	      jsr	putsil
+      0  f0c3					      db	CR,LF
+      1  f0c3		       0d 0a		      .byte.b	CR,LF
+      0  f0c5					      db	"CTMON65> "
+      1  f0c5		       43 54 4d 4f*	      .byte.b	"CTMON65> "
+      0  f0ce					      db	0
+      1  f0ce		       00		      .byte.b	0
+    228  f0cf		       20 70 fb    prompt2    jsr	cin
+    229  f0d2		       c9 0d		      cmp	#CR
+    230  f0d4		       f0 e4		      beq	prompt
+    231  f0d6		       c9 0a		      cmp	#LF
+    232  f0d8		       f0 f5		      beq	prompt2	;don't prompt
+    233  f0da		       8d 99 df 	      sta	tempA
+    234  f0dd							;
+    235  f0dd							; Now cycle through the list of commands looking for
+    236  f0dd							; what the user just pressed.
+    237  f0dd							;
+    238  f0dd		       a9 f6		      lda	#commandTable&$ff
+    239  f0df		       85 f0		      sta	sptr
+    240  f0e1		       a9 f0		      lda	#commandTable/256
+    241  f0e3		       85 f1		      sta	sptr+1
+    242  f0e5		       20 9b f2 	      jsr	searchCmd	;try to find it
+    243  f0e8							;
+    244  f0e8							; Hmmm... wasn't one of the built in commands, so
+    245  f0e8							; see if it's an extended command.
+    246  f0e8							;
+    247  f0e8				  -	      if	EXTENDED_CMDS
+    248  f0e8				  -	      lda	ExtensionAddr
+    249  f0e8				  -	      sta	sptr
+    250  f0e8				  -	      lda	ExtensionAddr+1
+    251  f0e8				  -	      sta	sptr+1
+    252  f0e8				  -	      jsr	searchCmd	;try to find it
+    253  f0e8					      endif
+    254  f0e8							;
+    255  f0e8							; If that returns, then the command was not found.
+    256  f0e8							; Print that it's unknown.
+    257  f0e8							;
+    258  f0e8		       20 c6 fa 	      jsr	putsil
+      0  f0eb					      db	" - Huh?",0
+      1  f0eb		       20 2d 20 48*	      .byte.b	" - Huh?",0
+    260  f0f3		       4c ba f0    cmdFound   jmp	prompt
+    261  f0f6							;
+    262  f0f6							;=====================================================
+    263  f0f6							; Vector table of commands.  Each entry consists of a
+    264  f0f6							; single ASCII character (the command), a pointer to
+    265  f0f6							; the function which handles the command, and a pointer
+    266  f0f6							; to a string that describes the command.
+    267  f0f6							;
+    268  f0f6				   commandTable
+      0  f0f6					      db	'?
+      1  f0f6		       3f		      .byte.b	'?
+      0  f0f7					      dw	showHelp
+      1  f0f7		       c5 f7		      .word.w	showHelp
+      0  f0f9					      dw	quesDesc
+      1  f0f9		       33 f1		      .word.w	quesDesc
+    272  f0fb							;
+      0  f0fb					      db	'C
+      1  f0fb		       43		      .byte.b	'C
+      0  f0fc					      dw	doContinue
+      1  f0fc		       2e f7		      .word.w	doContinue
+      0  f0fe					      dw	cDesc
+      1  f0fe		       50 f1		      .word.w	cDesc
+    276  f100							;
+      0  f100					      db	'D
+      1  f100		       44		      .byte.b	'D
+      0  f101					      dw	doDiskDir
+      1  f101		       58 f9		      .word.w	doDiskDir
+      0  f103					      dw	dDesc
+      1  f103		       71 f1		      .word.w	dDesc
+    280  f105							;
+      0  f105					      db	'E	;edit memory
+      1  f105		       45		      .byte.b	'E
+      0  f106					      dw	editMemory
+      1  f106		       70 f3		      .word.w	editMemory
+      0  f108					      dw	eDesc
+      1  f108		       8e f1		      .word.w	eDesc
+    284  f10a							;
+      0  f10a					      db	'H	;hex dump
+      1  f10a		       48		      .byte.b	'H
+      0  f10b					      dw	hexDump
+      1  f10b		       e0 f2		      .word.w	hexDump
+      0  f10d					      dw	hDesc
+      1  f10d		       a8 f1		      .word.w	hDesc
+    288  f10f							;
+      0  f10f					      db	'J	;jump to address
+      1  f10f		       4a		      .byte.b	'J
+      0  f110					      dw	jumpAddress
+      1  f110		       c6 f2		      .word.w	jumpAddress
+      0  f112					      dw	jDesc
+      1  f112		       c6 f1		      .word.w	jDesc
+    292  f114							;
+      0  f114					      db	'L	;load Intel HEX file
+      1  f114		       4c		      .byte.b	'L
+      0  f115					      dw	loadHex
+      1  f115		       d1 f3		      .word.w	loadHex
+      0  f117					      dw	lDesc
+      1  f117		       e4 f1		      .word.w	lDesc
+    296  f119							;
+      0  f119					      db	'M	;perform memory test
+      1  f119		       4d		      .byte.b	'M
+      0  f11a					      dw	memTest
+      1  f11a		       18 f8		      .word.w	memTest
+      0  f11c					      dw	mDesc
+      1  f11c		       00 f2		      .word.w	mDesc
+    300  f11e							;
+      0  f11e					      db	'P	;ping remote disk
+      1  f11e		       50		      .byte.b	'P
+      0  f11f					      dw	pingDisk
+      1  f11f		       38 f9		      .word.w	pingDisk
+      0  f121					      dw	pDesc
+      1  f121		       1a f2		      .word.w	pDesc
+    304  f123							;
+      0  f123					      db	'R	;remove a file from disk
+      1  f123		       52		      .byte.b	'R
+      0  f124					      dw	rmFile
+      1  f124		       26 fa		      .word.w	rmFile
+      0  f126					      dw	rDesc
+      1  f126		       3d f2		      .word.w	rDesc
+    308  f128							;
+      0  f128					      db	'S	;save memory as hex file
+      1  f128		       53		      .byte.b	'S
+      0  f129					      dw	saveHex
+      1  f129		       17 f5		      .word.w	saveHex
+      0  f12b					      dw	sDesc
+      1  f12b		       5c f2		      .word.w	sDesc
+    312  f12d							;
+      0  f12d					      db	'T	;type a file on SD
+      1  f12d		       54		      .byte.b	'T
+      0  f12e					      dw	typeFile
+      1  f12e		       5d fa		      .word.w	typeFile
+      0  f130					      dw	tDesc
+      1  f130		       7e f2		      .word.w	tDesc
+    316  f132							;
+      0  f132					      db	0	;marks end of table
+      1  f132		       00		      .byte.b	0
+    318  f133							;
+    319  f133							;=====================================================
+    320  f133							; Descriptions for each command in the command table.
+    321  f133							; This wastes a lot of space... I'm open for any
+    322  f133							; suggestions to keep the commands clear but reducing
+    323  f133							; the amount of space this table consumes.
+    324  f133							;
+      0  f133				   quesDesc   db	"? ........... Show this help",0
+      1  f133		       3f 20 2e 2e*	      .byte.b	"? ........... Show this help",0
+      0  f150				   cDesc      db	"C ........... Continue execution",0
+      1  f150		       43 20 2e 2e*	      .byte.b	"C ........... Continue execution",0
+      0  f171				   dDesc      db	"D ........... Disk directory",0
+      1  f171		       44 20 2e 2e*	      .byte.b	"D ........... Disk directory",0
+      0  f18e				   eDesc      db	"E xxxx ...... Edit memory",0
+      1  f18e		       45 20 78 78*	      .byte.b	"E xxxx ...... Edit memory",0
+      0  f1a8				   hDesc      db	"H xxxx xxxx . Hex dump memory",0
+      1  f1a8		       48 20 78 78*	      .byte.b	"H xxxx xxxx . Hex dump memory",0
+      0  f1c6				   jDesc      db	"J xxxx ...... Jump to address",0
+      1  f1c6		       4a 20 78 78*	      .byte.b	"J xxxx ...... Jump to address",0
+      0  f1e4				   lDesc      db	"L ........... Load HEX file",0
+      1  f1e4		       4c 20 2e 2e*	      .byte.b	"L ........... Load HEX file",0
+      0  f200				   mDesc      db	"M xxxx xxxx . Memory test",0
+      1  f200		       4d 20 78 78*	      .byte.b	"M xxxx xxxx . Memory test",0
+      0  f21a				   pDesc      db	"P ........... Ping disk controller",0
+      1  f21a		       50 20 2e 2e*	      .byte.b	"P ........... Ping disk controller",0
+      0  f23d				   rDesc      db	"R ........... Remove disk file",0
+      1  f23d		       52 20 2e 2e*	      .byte.b	"R ........... Remove disk file",0
+      0  f25c				   sDesc      db	"S xxxx xxxx . Save memory to file",0
+      1  f25c		       53 20 78 78*	      .byte.b	"S xxxx xxxx . Save memory to file",0
+      0  f27e				   tDesc      db	"T ........... Type disk file",0
+      1  f27e		       54 20 2e 2e*	      .byte.b	"T ........... Type disk file",0
+    337  f29b							;
+    338  f29b							;=====================================================
+    339  f29b							; This subroutine will search for a command in a table
+    340  f29b							; and call the appropriate handler.  See the command
+    341  f29b							; table near the start of the code for what the format
+    342  f29b							; is.	If a match is found, pop off the return address
+    343  f29b							; from the stack and jump to the code.  Else, return.
+    344  f29b							;
+    345  f29b		       a0 00	   searchCmd  ldy	#0
+    346  f29d		       b1 f0	   cmdLoop    lda	(sptr),y
+    347  f29f		       f0 24		      beq	cmdNotFound
+    348  f2a1		       cd 99 df 	      cmp	tempA	;compare to user's input
+    349  f2a4		       f0 0e		      beq	cmdMatch
+    350  f2a6		       09 20		      ora	#$20	;allow lower case cmds
+    351  f2a8		       cd 99 df 	      cmp	tempA	;try users input again
+    352  f2ab		       f0 07		      beq	cmdMatch
+    353  f2ad		       c8		      iny		;start of function ptr
+    354  f2ae		       c8		      iny
+    355  f2af		       c8		      iny		;start of help
+    356  f2b0		       c8		      iny
+    357  f2b1		       c8		      iny		;move to next command
+    358  f2b2		       d0 e9		      bne	cmdLoop
+    359  f2b4							;
+    360  f2b4							; It's found!	Load up the address of the code to call,
+    361  f2b4							; pop the return address off the stack and jump to the
+    362  f2b4							; handler.
+    363  f2b4							;
+    364  f2b4		       c8	   cmdMatch   iny
+    365  f2b5		       b1 f0		      lda	(sptr),y	;handler LSB
+    366  f2b7		       48		      pha
+    367  f2b8		       c8		      iny
+    368  f2b9		       b1 f0		      lda	(sptr),y	;handler MSB
+    369  f2bb		       85 f1		      sta	sptr+1
+    370  f2bd		       68		      pla
+    371  f2be		       85 f0		      sta	sptr
+    372  f2c0		       68		      pla		;pop return address
+    373  f2c1		       68		      pla
+    374  f2c2		       6c f0 00 	      jmp	(sptr)
+    375  f2c5							;
+    376  f2c5							; Not found, so just return.
+    377  f2c5							;
+    378  f2c5		       60	   cmdNotFound rts
+    379  f2c6							;
+    380  f2c6							;=====================================================
+    381  f2c6							; Handles the command to prompt for an address and then
+    382  f2c6							; jump to it.
+    383  f2c6							;
+    384  f2c6		       20 c6 fa    jumpAddress jsr	putsil
+      0  f2c9					      db	"Jump to ",0
+      1  f2c9		       4a 75 6d 70*	      .byte.b	"Jump to ",0
+    386  f2d2		       20 82 f7 	      jsr	getStartAddr
+    387  f2d5		       b0 06		      bcs	cmdRet	;branch on bad address
+    388  f2d7		       20 3c fb 	      jsr	crlf
+    389  f2da		       6c 95 df 	      jmp	(SAL)	;else jump to address
+    390  f2dd							;
+    391  f2dd		       4c ba f0    cmdRet     jmp	prompt
+    392  f2e0							;
+    393  f2e0							;=====================================================
+    394  f2e0							; Do a hex dump of a region of memory.
+    395  f2e0							;
+    396  f2e0							; Slight bug: the starting address is rounded down to
+    397  f2e0							; a multiple of 16.  I'll fix it eventually.
+    398  f2e0							;
+    399  f2e0		       20 c6 fa    hexDump    jsr	putsil
+      0  f2e3					      db	"Hex dump ",0
+      1  f2e3		       48 65 78 20*	      .byte.b	"Hex dump ",0
+    401  f2ed		       20 a6 f7 	      jsr	getAddrRange
+    402  f2f0		       b0 eb		      bcs	cmdRet
+    403  f2f2		       20 3c fb 	      jsr	crlf
+    404  f2f5							;
+    405  f2f5							; Move start address to sptr but rounded down to the
+    406  f2f5							; 16 byte boundary.  While it's really cool to start at
+    407  f2f5							; the exact address specified by the user, it adds
+    408  f2f5							; code that really doesn't add much (any?) value.
+    409  f2f5							;
+    410  f2f5		       ad 96 df 	      lda	SAH
+    411  f2f8		       85 f1		      sta	sptr+1
+    412  f2fa		       ad 95 df 	      lda	SAL
+    413  f2fd		       29 f0		      and	#$f0	;force to 16 byte
+    414  f2ff		       85 f0		      sta	sptr
+    415  f301							;
+    416  f301							;-----------------------------------------------------
+    417  f301							; This starts each line.  Set flag to indcate we're
+    418  f301							; doing the hex portion, print address, etc.
+    419  f301							;
+    420  f301		       20 3c fb    hexdump1   jsr	crlf
+    421  f304		       a5 f1		      lda	sptr+1
+    422  f306		       20 1f fb 	      jsr	HexA	;print the address
+    423  f309		       a5 f0		      lda	sptr
+    424  f30b		       20 1f fb 	      jsr	HexA
+    425  f30e		       20 4c fb 	      jsr	space2	;two spaces after address
+    426  f311							;
+    427  f311							;-----------------------------------------------------
+    428  f311							; This loop gets the next byte, prints the value in
+    429  f311							; hex and adds the appropriate ASCII character to the
+    430  f311							; buffer.
+    431  f311							;
+    432  f311		       a0 00		      ldy	#0	;offset from sptr
+    433  f313		       a2 00	   hexdump3   ldx	#0	;bytes on line
+    434  f315		       b1 f0	   hexdump2   lda	(sptr),y	;get byte
+    435  f317		       20 1f fb 	      jsr	HexA	;print hex version of it
+    436  f31a		       20 4f fb 	      jsr	space	;space before next value
+    437  f31d							;
+    438  f31d							; Put the byte into the buffer.  If it is not printable
+    439  f31d							; ASCII then substitute a dot instead.
+    440  f31d							;
+    441  f31d		       c9 20		      cmp	#$20
+    442  f31f		       90 04		      bcc	hexdot
+    443  f321		       c9 7e		      cmp	#'~
+    444  f323		       90 02		      bcc	hexpr
+    445  f325		       a9 2e	   hexdot     lda	#'.
+    446  f327		       9d 0a df    hexpr      sta	buffer,x	;save for later
+    447  f32a							;
+    448  f32a							; See if the end of the user defined area was just dumped
+    449  f32a							;
+    450  f32a		       a5 f0	   hexdumpchk lda	sptr
+    451  f32c		       cd 97 df 	      cmp	EAL
+    452  f32f		       d0 07		      bne	hexdump4
+    453  f331		       a5 f1		      lda	sptr+1
+    454  f333		       cd 98 df 	      cmp	EAH
+    455  f336		       f0 0e		      beq	hexdumpend
+    456  f338							;
+    457  f338							; Not done yet, so see if at end of the line
+    458  f338							;
+    459  f338		       20 31 f9    hexdump4   jsr	INCPT	;move to next address
+    460  f33b		       e8		      inx
+    461  f33c		       e0 10		      cpx	#BYTESLINE
+    462  f33e		       d0 d5		      bne	hexdump2
+    463  f340							;
+    464  f340							; At end, so dump ASCII contents
+    465  f340							;
+    466  f340		       20 50 f3 	      jsr	dumpBuffer
+    467  f343		       4c 01 f3 	      jmp	hexdump1
+    468  f346							;
+    469  f346							; At the end but still need to dump the ASCII version.
+    470  f346							;
+    471  f346		       e8	   hexdumpend inx		;count last byte output
+    472  f347		       20 50 f3 	      jsr	dumpBuffer
+    473  f34a		       20 3c fb 	      jsr	crlf
+    474  f34d		       4c ba f0    ret1       jmp	prompt
+    475  f350							;
+    476  f350							;=====================================================
+    477  f350							; A helper function that prints the ASCII data in the
+    478  f350							; buffer.  On entry X contains the number of bytes
+    479  f350							; in the buffer.
+    480  f350							;
+    481  f350		       e0 10	   dumpBuffer cpx	#BYTESLINE	;is buffer full?
+    482  f352		       f0 0b		      beq	hexdump91	;jump if so
+    483  f354		       a9 20		      lda	#$20	;else fill with spaces
+    484  f356		       9d 0a df 	      sta	buffer,x
+    485  f359		       20 49 fb 	      jsr	space3	;and space over
+    486  f35c		       e8		      inx
+    487  f35d		       d0 f1		      bne	dumpBuffer
+    488  f35f							;
+    489  f35f		       20 49 fb    hexdump91  jsr	space3	;separate the two passes
+    490  f362		       a2 00		      ldx	#0
+    491  f364		       bd 0a df    hexdump99  lda	buffer,x
+    492  f367		       20 63 fb 	      jsr	cout	;print char in buffer
+    493  f36a		       e8		      inx
+    494  f36b		       e0 10		      cpx	#BYTESLINE
+    495  f36d		       d0 f5		      bne	hexdump99
+    496  f36f		       60		      rts
+    497  f370							;
+    498  f370							;=====================================================
+    499  f370							; Edit memory.  This waits for a starting address to be
+    500  f370							; entered.  It will display the current address and its
+    501  f370							; contents.  Possible user inputs and actions:
+    502  f370							;
+    503  f370							;   Two hex digits will place that value in memory
+    504  f370							;   RETURN moves to next address
+    505  f370							;   BACKSPACE moves back one address
+    506  f370							;
+    507  f370		       20 c6 fa    editMemory jsr	putsil
+      0  f373					      db	"Edit memory ",0
+      1  f373		       45 64 69 74*	      .byte.b	"Edit memory ",0
+    509  f380		       20 82 f7 	      jsr	getStartAddr
+    510  f383		       b0 c8		      bcs	ret1
+    511  f385		       ad 95 df 	      lda	SAL	;move address into...
+    512  f388		       85 f0		      sta	sptr	;...POINT
+    513  f38a		       ad 96 df 	      lda	SAH
+    514  f38d		       85 f1		      sta	sptr+1
+    515  f38f							;
+    516  f38f							; Display the current location
+    517  f38f							;
+    518  f38f		       20 3c fb    editMem1   jsr	crlf
+    519  f392		       a5 f1		      lda	sptr+1
+    520  f394		       20 1f fb 	      jsr	HexA
+    521  f397		       a5 f0		      lda	sptr
+    522  f399		       20 1f fb 	      jsr	HexA
+    523  f39c		       20 4f fb 	      jsr	space
+    524  f39f		       a0 00		      ldy	#0
+    525  f3a1		       b1 f0		      lda	(sptr),y	;get byte
+    526  f3a3		       20 1f fb 	      jsr	HexA	;print it
+    527  f3a6		       20 4f fb 	      jsr	space
+    528  f3a9							;
+    529  f3a9		       20 48 f7 	      jsr	getHex
+    530  f3ac		       b0 0d		      bcs	editMem2	;not hex
+    531  f3ae		       a0 00		      ldy	#0
+    532  f3b0		       91 f0		      sta	(sptr),y	;save new value
+    533  f3b2							;
+    534  f3b2							; Bump POINT to next location
+    535  f3b2							;
+    536  f3b2		       e6 f0	   editMem3   inc	sptr
+    537  f3b4		       d0 d9		      bne	editMem1
+    538  f3b6		       e6 f1		      inc	sptr+1
+    539  f3b8		       4c 8f f3 	      jmp	editMem1
+    540  f3bb							;
+    541  f3bb							; Not hex, so see if another command
+    542  f3bb							;
+    543  f3bb		       c9 0d	   editMem2   cmp	#CR
+    544  f3bd		       f0 f3		      beq	editMem3	;move to next
+    545  f3bf		       c9 08		      cmp	#BS
+    546  f3c1		       d0 8a		      bne	ret1	;else exit
+    547  f3c3							;
+    548  f3c3							; Move back one location
+    549  f3c3							;
+    550  f3c3		       38		      sec
+    551  f3c4		       a5 f0		      lda	sptr
+    552  f3c6		       e9 01		      sbc	#1
+    553  f3c8		       85 f0		      sta	sptr
+    554  f3ca		       b0 c3		      bcs	editMem1
+    555  f3cc		       c6 f1		      dec	sptr+1
+    556  f3ce		       4c 8f f3 	      jmp	editMem1
+    557  f3d1							;
+    558  f3d1							;=====================================================
+    559  f3d1							; This handles the Load hex command.
+    560  f3d1							;
+    561  f3d1		       a9 ff	   loadHex    lda	#$ff
+    562  f3d3		       8d 05 df 	      sta	AutoRun+1
+    563  f3d6							;
+    564  f3d6		       20 c6 fa 	      jsr	putsil
+      0  f3d9					      db	CR,LF
+      1  f3d9		       0d 0a		      .byte.b	CR,LF
+      0  f3db					      db	"Enter filename, or Enter to "
+      1  f3db		       45 6e 74 65*	      .byte.b	"Enter filename, or Enter to "
+      0  f3f7					      db	"load from console: ",0
+      1  f3f7		       6c 6f 61 64*	      .byte.b	"load from console: ",0
+    568  f40b							;
+    569  f40b		       20 45 f6 	      jsr	getFileName	;get filename
+    570  f40e		       ad 9a df 	      lda	filename	;null?
+    571  f411		       f0 2d		      beq	loadHexConsole	;load from console
+    572  f413							;
+    573  f413							; Open the file
+    574  f413							;
+    575  f413		       a0 9a		      ldy	#filename&$ff
+    576  f415		       a2 df		      ldx	#filename/256
+    577  f417		       20 e4 fb 	      jsr	DiskOpenRead
+    578  f41a		       90 1e		      bcc	loadHexOk	;opened ok
+    579  f41c							;
+    580  f41c		       20 c6 fa    openfail   jsr	putsil
+      0  f41f					      db	CR,LF
+      1  f41f		       0d 0a		      .byte.b	CR,LF
+      0  f421					      db	"Failed to open file"
+      1  f421		       46 61 69 6c*	      .byte.b	"Failed to open file"
+      0  f434					      db	CR,LF,0
+      1  f434		       0d 0a 00 	      .byte.b	CR,LF,0
+    584  f437		       4c ba f0    cmdRet3    jmp	prompt
+    585  f43a							;
+    586  f43a		       20 e1 f9    loadHexOk  jsr	setInputFile	;redirect input
+    587  f43d		       4c 6e f4 	      jmp	loadStart
+    588  f440							;
+    589  f440							; They are loading from the console
+    590  f440							;
+    591  f440		       20 c6 fa    loadHexConsole jsr	putsil
+      0  f443					      db	CR,LF
+      1  f443		       0d 0a		      .byte.b	CR,LF
+      0  f445					      db	"Waiting for file, or ESC to"
+      1  f445		       57 61 69 74*	      .byte.b	"Waiting for file, or ESC to"
+      0  f460					      db	" exit..."
+      1  f460		       20 65 78 69*	      .byte.b	" exit..."
+      0  f468					      db	CR,LF,0
+      1  f468		       0d 0a 00 	      .byte.b	CR,LF,0
+    596  f46b		       20 cd f9 	      jsr	setInputConsole
+    597  f46e							;
+    598  f46e							; The start of a line.  First character should be a
+    599  f46e							; colon, but toss out CRs, LFs, etc.  Anything else
+    600  f46e							; causes an abort.
+    601  f46e							;
+    602  f46e		       20 f4 f9    loadStart  jsr	redirectedGetch	;get start of line
+    603  f471		       c9 0d		      cmp	#CR
+    604  f473		       f0 f9		      beq	loadStart
+    605  f475		       c9 0a		      cmp	#LF
+    606  f477		       f0 f5		      beq	loadStart
+    607  f479		       c9 3a		      cmp	#':	;what we expect
+    608  f47b		       d0 34		      bne	loadAbort
+    609  f47d							;
+    610  f47d							; Get the header of the record
+    611  f47d							;
+    612  f47d		       a9 00		      lda	#0
+    613  f47f		       8d a9 df 	      sta	CHKL	;initialize checksum
+    614  f482							;
+    615  f482		       20 48 f7 	      jsr	getHex	;get byte count
+    616  f485		       b0 2a		      bcs	loadAbort
+    617  f487		       8d 8f df 	      sta	SaveX	;save byte count
+    618  f48a		       20 8b f9 	      jsr	updateCrc
+    619  f48d		       20 48 f7 	      jsr	getHex	;get the MSB of offset
+    620  f490		       b0 1f		      bcs	loadAbort
+    621  f492		       85 f1		      sta	sptr+1
+    622  f494		       20 8b f9 	      jsr	updateCrc
+    623  f497		       20 48 f7 	      jsr	getHex	;get LSB of offset
+    624  f49a		       b0 15		      bcs	loadAbort
+    625  f49c		       85 f0		      sta	sptr
+    626  f49e		       20 8b f9 	      jsr	updateCrc
+    627  f4a1		       20 48 f7 	      jsr	getHex	;get the record type
+    628  f4a4		       b0 0b		      bcs	loadAbort
+    629  f4a6		       20 8b f9 	      jsr	updateCrc
+    630  f4a9							;
+    631  f4a9							; Only handle two record types:
+    632  f4a9							;    00 = data record
+    633  f4a9							;    01 = end of file record
+    634  f4a9							;
+    635  f4a9		       c9 00		      cmp	#DATA_RECORD
+    636  f4ab		       f0 3a		      beq	loadDataRec
+    637  f4ad		       c9 01		      cmp	#EOF_RECORD
+    638  f4af		       f0 16		      beq	loadEof
+    639  f4b1							;
+    640  f4b1							; Unknown record type
+    641  f4b1							;
+    642  f4b1		       20 c6 fa    loadAbort  jsr	putsil
+      0  f4b4					      db	CR,LF
+      1  f4b4		       0d 0a		      .byte.b	CR,LF
+      0  f4b6					      db	"Aborting"
+      1  f4b6		       41 62 6f 72*	      .byte.b	"Aborting"
+      0  f4be					      db	CR,LF,0
+      1  f4be		       0d 0a 00 	      .byte.b	CR,LF,0
+    646  f4c1		       20 cd f9    loadExit   jsr	setInputConsole
+    647  f4c4		       4c ba f0 	      jmp	prompt
+    648  f4c7							;
+    649  f4c7							; EOF is easy
+    650  f4c7							;
+    651  f4c7		       20 48 f7    loadEof    jsr	getHex	;get checksum
+    652  f4ca		       20 c6 fa 	      jsr	putsil
+      0  f4cd					      db	CR,LF
+      1  f4cd		       0d 0a		      .byte.b	CR,LF
+      0  f4cf					      db	"Success!"
+      1  f4cf		       53 75 63 63*	      .byte.b	"Success!"
+      0  f4d7					      db	CR,LF,0
+      1  f4d7		       0d 0a 00 	      .byte.b	CR,LF,0
+    656  f4da							;
+    657  f4da							; If the auto-run vector is no longer $ffff, then jump
+    658  f4da							; to whatever it points to.
+    659  f4da							;
+    660  f4da		       ad 05 df 	      lda	AutoRun+1
+    661  f4dd		       c9 ff		      cmp	#$ff	;unchanged?
+    662  f4df		       f0 03		      beq	lExit1
+    663  f4e1		       6c 04 df 	      jmp	(AutoRun)	;execute!
+    664  f4e4							;
+    665  f4e4		       4c c1 f4    lExit1     jmp	loadExit
+    666  f4e7							;
+    667  f4e7							; Data records have more work.  After processing the
+    668  f4e7							; line, print a dot to indicate progress.  This should
+    669  f4e7							; be re-thought as it could slow down loading a really
+    670  f4e7							; big file if the console speed is slow.
+    671  f4e7							;
+    672  f4e7		       ae 8f df    loadDataRec ldx	SaveX	;byte count
+    673  f4ea		       a0 00		      ldy	#0	;offset
+    674  f4ec		       8e 8f df    loadData1  stx	SaveX
+    675  f4ef		       8c 90 df 	      sty	SaveY
+    676  f4f2		       20 48 f7 	      jsr	getHex
+    677  f4f5		       b0 ba		      bcs	loadAbort
+    678  f4f7		       20 8b f9 	      jsr	updateCrc
+    679  f4fa		       ac 90 df 	      ldy	SaveY
+    680  f4fd		       ae 8f df 	      ldx	SaveX
+    681  f500		       91 f0		      sta	(sptr),y
+    682  f502		       c8		      iny
+    683  f503		       ca		      dex
+    684  f504		       d0 e6		      bne	loadData1
+    685  f506							;
+    686  f506							; All the bytes were read so get the checksum and see
+    687  f506							; if it agrees.  The checksum is a twos-complement, so
+    688  f506							; just add the checksum into what we've been calculating
+    689  f506							; and if the result is zero then the record is good.
+    690  f506							;
+    691  f506		       20 48 f7 	      jsr	getHex	;get checksum
+    692  f509		       18		      clc
+    693  f50a		       6d a9 df 	      adc	CHKL
+    694  f50d		       d0 a2		      bne	loadAbort	;non-zero is error
+    695  f50f							;
+    696  f50f		       a9 2e		      lda	#'.	;sanity indicator when
+    697  f511		       20 63 fb 	      jsr	cout	;...loading from file
+    698  f514		       4c 6e f4 	      jmp	loadStart
+    699  f517							;
+    700  f517							;=====================================================
+    701  f517							; Handles the command to save a region of memory as a
+    702  f517							; file on the SD.
+    703  f517							;
+    704  f517		       20 a6 f7    saveHex    jsr	getAddrRange	;get range to dump
+    705  f51a		       b0 c8		      bcs	lExit1	;abort on error
+    706  f51c							;
+    707  f51c							; Get the filename to save to
+    708  f51c							;
+    709  f51c		       20 c6 fa 	      jsr	putsil
+      0  f51f					      db	CR,LF
+      1  f51f		       0d 0a		      .byte.b	CR,LF
+      0  f521					      db	"Enter filename, or Enter to "
+      1  f521		       45 6e 74 65*	      .byte.b	"Enter filename, or Enter to "
+      0  f53d					      db	"load from console: ",0
+      1  f53d		       6c 6f 61 64*	      .byte.b	"load from console: ",0
+    713  f551							;
+    714  f551		       20 45 f6 	      jsr	getFileName	;get filename
+    715  f554		       ad 9a df 	      lda	filename	;null?
+    716  f557		       f0 12		      beq	saveHexConsole	;dump to console
+    717  f559							;
+    718  f559							; They selected a file, so try to open it.
+    719  f559							;
+    720  f559		       a2 df		      ldx	#filename>>8
+    721  f55b		       a0 9a		      ldy	#filename&$ff
+    722  f55d		       20 15 fc 	      jsr	DiskOpenWrite	;attempt to open file
+    723  f560		       90 03		      bcc	sopenok	;branch if opened ok
+    724  f562		       4c 1c f4 	      jmp	openfail
+    725  f565							;
+    726  f565		       20 bd f9    sopenok    jsr	setOutputFile
+    727  f568		       4c 6e f5 	      jmp	savehex2
+    728  f56b							;
+    729  f56b							; They are saving to the console.  Set up the output
+    730  f56b							; vector and do the job.
+    731  f56b							;
+    732  f56b		       20 b2 f9    saveHexConsole jsr	setOutputConsole
+    733  f56e							;
+    734  f56e							; Compute the number of bytes to dump
+    735  f56e							;
+    736  f56e		       38	   savehex2   sec
+    737  f56f		       ad 97 df 	      lda	EAL
+    738  f572		       ed 95 df 	      sbc	SAL
+    739  f575		       8d ab df 	      sta	Temp16L
+    740  f578		       ad 98 df 	      lda	EAH
+    741  f57b		       ed 96 df 	      sbc	SAH
+    742  f57e		       8d ac df 	      sta	Temp16H
+    743  f581		       90 42		      bcc	SDone	;start > end
+    744  f583		       05 00		      ora	0
+    745  f585		       30 3e		      bmi	SDone	;more than 32K seems wrong
+    746  f587							;
+    747  f587							; Add one to the count
+    748  f587							;
+    749  f587		       ee ab df 	      inc	Temp16L
+    750  f58a		       d0 03		      bne	slab1
+    751  f58c		       ee ac df 	      inc	Temp16H
+    752  f58f							;
+    753  f58f							; Move pointer to zero page
+    754  f58f							;
+    755  f58f		       ad 95 df    slab1      lda	SAL
+    756  f592		       85 f0		      sta	sptr
+    757  f594		       ad 96 df 	      lda	SAH
+    758  f597		       85 f1		      sta	sptr+1
+    759  f599							;
+    760  f599							; Top of each loop.  Start by seeing if there are any bytes
+    761  f599							; left to dump.
+    762  f599							;
+    763  f599		       ad ac df    Sloop1     lda	Temp16H
+    764  f59c		       d0 2a		      bne	Sgo	;more to do
+    765  f59e		       ad ab df 	      lda	Temp16L
+    766  f5a1		       d0 25		      bne	Sgo	;more to do
+    767  f5a3							;
+    768  f5a3							; At end of the region, so output an end record.  This
+    769  f5a3							; probably looks like overkill but keep in mind this
+    770  f5a3							; might be going to a file so we can't use the normal
+    771  f5a3							; string put functions.
+    772  f5a3							;
+    773  f5a3		       a9 3a		      lda	#':
+    774  f5a5		       20 af f9 	      jsr	redirectedOutch
+    775  f5a8		       a9 00		      lda	#0
+    776  f5aa		       20 95 f9 	      jsr	HexToOutput
+    777  f5ad		       20 95 f9 	      jsr	HexToOutput
+    778  f5b0		       20 95 f9 	      jsr	HexToOutput
+    779  f5b3		       a9 01		      lda	#1
+    780  f5b5		       20 95 f9 	      jsr	HexToOutput
+    781  f5b8		       a9 ff		      lda	#$ff
+    782  f5ba		       20 95 f9 	      jsr	HexToOutput
+    783  f5bd							;
+    784  f5bd							; If output to file, flush and close the file.
+    785  f5bd							;
+    786  f5bd		       ad 9a df 	      lda	filename
+    787  f5c0		       f0 03		      beq	SDone	;it's going to console
+    788  f5c2		       20 b7 fa 	      jsr	CloseOutFile
+    789  f5c5		       4c ba f0    SDone      jmp	prompt	;back to the monitor
+    790  f5c8							;
+    791  f5c8							; This dumps the next line.  See how many bytes are left to do
+    792  f5c8							; and if more than BYTESLINE, then just do BYTESLINE.
+    793  f5c8							;
+    794  f5c8		       ad ac df    Sgo	      lda	Temp16H
+    795  f5cb		       d0 07		      bne	Sdef	;do default number of bytes
+    796  f5cd		       ad ab df 	      lda	Temp16L
+    797  f5d0		       c9 10		      cmp	#BYTESLINE
+    798  f5d2		       90 02		      bcc	Scnt	;more than max per line
+    799  f5d4		       a9 10	   Sdef       lda	#BYTESLINE
+    800  f5d6		       8d 99 df    Scnt       sta	tempA	;for decrementing
+    801  f5d9		       8d aa df 	      sta	ID	;for subtracting
+    802  f5dc							;
+    803  f5dc							; Put out the header
+    804  f5dc							;
+    805  f5dc		       a9 3a		      lda	#':
+    806  f5de		       20 af f9 	      jsr	redirectedOutch
+    807  f5e1							;
+    808  f5e1		       ad 99 df 	      lda	tempA
+    809  f5e4		       8d a9 df 	      sta	CHKL	;start checksum
+    810  f5e7		       20 95 f9 	      jsr	HexToOutput
+    811  f5ea							;
+    812  f5ea		       a5 f1		      lda	sptr+1	;starting address
+    813  f5ec		       20 8b f9 	      jsr	updateCrc
+    814  f5ef		       20 95 f9 	      jsr	HexToOutput
+    815  f5f2		       a5 f0		      lda	sptr
+    816  f5f4		       20 8b f9 	      jsr	updateCrc
+    817  f5f7		       20 95 f9 	      jsr	HexToOutput
+    818  f5fa							;
+    819  f5fa		       a9 00		      lda	#0	;record type - data
+    820  f5fc		       20 95 f9 	      jsr	HexToOutput
+    821  f5ff							;
+    822  f5ff							; Now print the proper number of bytes
+    823  f5ff							;
+    824  f5ff		       a0 00	   Sloop2     ldy	#0
+    825  f601		       b1 f0		      lda	(sptr),y	;get byte
+    826  f603		       20 8b f9 	      jsr	updateCrc
+    827  f606		       20 95 f9 	      jsr	HexToOutput
+    828  f609		       20 31 f9 	      jsr	INCPT	;increment pointer
+    829  f60c							;
+    830  f60c		       ce 99 df    sdec       dec	tempA
+    831  f60f		       d0 ee		      bne	Sloop2
+    832  f611							;
+    833  f611							; Now print checksum
+    834  f611							;
+    835  f611		       ad a9 df 	      lda	CHKL
+    836  f614		       49 ff		      eor	#$ff	;one's complement
+    837  f616		       18		      clc
+    838  f617		       69 01		      adc	#1	;two's complement
+    839  f619		       20 95 f9 	      jsr	HexToOutput
+    840  f61c							;
+    841  f61c							; Output a CR/LF
+    842  f61c							;
+    843  f61c		       a9 0d		      lda	#CR
+    844  f61e		       20 af f9 	      jsr	redirectedOutch
+    845  f621		       a9 0a		      lda	#LF
+    846  f623		       20 af f9 	      jsr	redirectedOutch
+    847  f626							;
+    848  f626							; If saving to disk, output a dot to indicate progress.
+    849  f626							;
+    850  f626		       ad 9a df 	      lda	filename
+    851  f629		       f0 05		      beq	shf2
+    852  f62b							;
+    853  f62b		       a9 2e		      lda	#'.
+    854  f62d		       20 63 fb 	      jsr	cout	;goes to console
+    855  f630							;
+    856  f630		       38	   shf2       sec
+    857  f631		       ad ab df 	      lda	Temp16L
+    858  f634		       ed aa df 	      sbc	ID
+    859  f637		       8d ab df 	      sta	Temp16L
+    860  f63a		       ad ac df 	      lda	Temp16H
+    861  f63d		       e9 00		      sbc	#0
+    862  f63f		       8d ac df 	      sta	Temp16H
+    863  f642							;
+    864  f642		       4c 99 f5 	      jmp	Sloop1
+    865  f645							;
+    866  f645							;=====================================================
+    867  f645							; Get a disk filename.
+    868  f645							;
+    869  f645		       a2 00	   getFileName ldx	#0
+    870  f647		       20 70 fb    getFilename1 jsr	cin	;get next key
+    871  f64a		       c9 0d		      cmp	#CR	;end of the input?
+    872  f64c		       f0 27		      beq	getFnDone
+    873  f64e		       c9 08		      cmp	#BS	;backspace?
+    874  f650		       f0 0d		      beq	getFnDel
+    875  f652		       e0 0c		      cpx	#FILENAME_SIZE	;check size
+    876  f654		       f0 f1		      beq	getFilename1	;at length limit
+    877  f656		       9d 9a df 	      sta	filename,x	;else save it
+    878  f659		       20 63 fb 	      jsr	cout
+    879  f65c		       e8		      inx
+    880  f65d		       d0 e8		      bne	getFilename1
+    881  f65f							;
+    882  f65f		       ca	   getFnDel   dex
+    883  f660		       30 10		      bmi	getFnU	;no charac here
+    884  f662		       a9 08		      lda	#BS
+    885  f664		       20 63 fb 	      jsr	cout
+    886  f667		       a9 20		      lda	#$20
+    887  f669		       20 63 fb 	      jsr	cout
+    888  f66c		       a9 08		      lda	#BS
+    889  f66e		       20 63 fb 	      jsr	cout
+    890  f671		       ca		      dex
+    891  f672		       e8	   getFnU     inx		;can't go past start
+    892  f673		       10 d2		      bpl	getFilename1
+    893  f675		       a9 00	   getFnDone  lda	#0	;terminate line
+    894  f677		       9d 9a df 	      sta	filename,x
+    895  f67a		       4c 3c fb 	      jmp	crlf
+    896  f67d							;
+    897  f67d							;=====================================================
+    898  f67d							; Add the byte in A to the output buffer.  If the
+    899  f67d							; buffer is full, flush it to disk.
+    900  f67d							;
+    901  f67d		       ae a7 df    putNextFileByte ldx	diskBufOffset
+    902  f680		       e0 84		      cpx	#BUFFER_SIZE	;buffer full?
+    903  f682		       d0 0d		      bne	pNFB	;no
+    904  f684							;
+    905  f684							; The buffer is full, so write it out.
+    906  f684							;
+    907  f684		       48		      pha		;save byte
+    908  f685		       a9 84		      lda	#BUFFER_SIZE
+    909  f687		       a2 df		      ldx	#buffer>>8
+    910  f689		       a0 0a		      ldy	#buffer&$ff
+    911  f68b		       20 51 fc 	      jsr	DiskWrite
+    912  f68e							;
+    913  f68e		       a2 00		      ldx	#0	;reset index
+    914  f690		       68		      pla
+    915  f691		       9d 0a df    pNFB       sta	buffer,x
+    916  f694		       e8		      inx
+    917  f695		       8e a7 df 	      stx	diskBufOffset
+    918  f698		       60		      rts
+    919  f699							;
+    920  f699							;*********************************************************
+    921  f699							; Dump the current registers based on values in the Save*
+    922  f699							; locations.
+    923  f699							;
+    924  f699				   DumpRegisters
+    925  f699		       20 c6 fa 	      jsr	putsil
+      0  f69c					      db	"PC:",0
+      1  f69c		       50 43 3a 00	      .byte.b	"PC:",0
+    927  f6a0		       ad 92 df 	      lda	SavePC+1
+    928  f6a3		       20 1f fb 	      jsr	HexA
+    929  f6a6		       ad 91 df 	      lda	SavePC
+    930  f6a9		       20 1f fb 	      jsr	HexA
+    931  f6ac							;
+    932  f6ac		       20 c6 fa 	      jsr	putsil
+      0  f6af					      db	" A:",0
+      1  f6af		       20 41 3a 00	      .byte.b	" A:",0
+    934  f6b3		       ad 8e df 	      lda	SaveA
+    935  f6b6		       20 1f fb 	      jsr	HexA
+    936  f6b9							;
+    937  f6b9		       20 c6 fa 	      jsr	putsil
+      0  f6bc					      db	" X:",0
+      1  f6bc		       20 58 3a 00	      .byte.b	" X:",0
+    939  f6c0		       ad 8f df 	      lda	SaveX
+    940  f6c3		       20 1f fb 	      jsr	HexA
+    941  f6c6							;
+    942  f6c6		       20 c6 fa 	      jsr	putsil
+      0  f6c9					      db	" Y:",0
+      1  f6c9		       20 59 3a 00	      .byte.b	" Y:",0
+    944  f6cd		       ad 90 df 	      lda	SaveY
+    945  f6d0		       20 1f fb 	      jsr	HexA
+    946  f6d3							;
+    947  f6d3		       20 c6 fa 	      jsr	putsil
+      0  f6d6					      db	" SP:",0
+      1  f6d6		       20 53 50 3a*	      .byte.b	" SP:",0
+    949  f6db		       ad 94 df 	      lda	SaveSP
+    950  f6de		       20 1f fb 	      jsr	HexA
+    951  f6e1							;
+    952  f6e1							; Last is the condition register.  For this, print the
+    953  f6e1							; actual flags.  Lower case for clear, upper for set.
+    954  f6e1							;
+    955  f6e1		       20 c6 fa 	      jsr	putsil
+      0  f6e4					      db	" Flags:",0
+      1  f6e4		       20 46 6c 61*	      .byte.b	" Flags:",0
+    957  f6ec					      if	FULL_STATUS
+    958  f6ec							;
+    959  f6ec							; N - bit 7
+    960  f6ec							;
+    961  f6ec		       a9 80		      lda	#$80	;bit to test
+    962  f6ee		       a2 4e		      ldx	#'N	;set ACII char
+    963  f6f0		       20 1f f7 	      jsr	testbit
+    964  f6f3							;
+    965  f6f3							; V - bit 6
+    966  f6f3							;
+    967  f6f3		       a9 40		      lda	#$40	;bit to test
+    968  f6f5		       a2 56		      ldx	#'V	;set ACII char
+    969  f6f7		       20 1f f7 	      jsr	testbit
+    970  f6fa							;
+    971  f6fa		       a9 2d		      lda	#'-	;unused bit
+    972  f6fc		       20 63 fb 	      jsr	cout
+    973  f6ff							;
+    974  f6ff							; B - bit 4
+    975  f6ff							;
+    976  f6ff		       a9 10		      lda	#$10	;bit to test
+    977  f701		       a2 42		      ldx	#'B	;set ACII char
+    978  f703		       20 1f f7 	      jsr	testbit
+    979  f706							;
+    980  f706							; D - bit 3
+    981  f706							;
+    982  f706		       a9 08		      lda	#$08	;bit to test
+    983  f708		       a2 44		      ldx	#'D	;set ACII char
+    984  f70a		       20 1f f7 	      jsr	testbit
+    985  f70d							;
+    986  f70d							; I - bit 2
+    987  f70d							;
+    988  f70d		       a9 04		      lda	#$04	;bit to test
+    989  f70f		       a2 49		      ldx	#'I	;set ACII char
+    990  f711		       20 1f f7 	      jsr	testbit
+    991  f714							;
+    992  f714							; Z - bit 1
+    993  f714							;
+    994  f714		       a9 02		      lda	#$02	;bit to test
+    995  f716		       a2 5a		      ldx	#'Z	;set ACII char
+    996  f718		       20 1f f7 	      jsr	testbit
+    997  f71b							;
+    998  f71b							; C - bit 0
+    999  f71b							;
+   1000  f71b		       a9 01		      lda	#$01	;bit to test
+   1001  f71d		       a2 43		      ldx	#'C	;set ACII char
+   1002  f71f							;
+   1003  f71f							; Fall through...
+   1004  f71f							;
+   1005  f71f							;*********************************************************
+   1006  f71f							; Given a bit mask in A and an upper case character
+   1007  f71f							; indicating the flag name in X, see if the flag is set or
+   1008  f71f							; not.  Output upper case if set, lower case if not.
+   1009  f71f							;
+   1010  f71f		       2d 93 df    testbit    and	SaveC	;is bit set?
+   1011  f722		       d0 06		      bne	testbit1	;yes
+   1012  f724		       8a		      txa
+   1013  f725		       09 20		      ora	#$20	;make lower case
+   1014  f727		       4c 63 fb 	      jmp	cout
+   1015  f72a		       8a	   testbit1   txa
+   1016  f72b		       4c 63 fb 	      jmp	cout
+   1017  f72e				  -	      else
+   1018  f72e				  -	      lda	SaveSP
+   1019  f72e				  -	      jmp	HexA
+   1020  f72e					      endif
+   1021  f72e							;
+   1022  f72e							;=====================================================
+   1023  f72e							; This continues executing from the last saved state,
+   1024  f72e							; such as from a call to DefaultNMI.
+   1025  f72e							;
+   1026  f72e				   doContinue
+   1027  f72e		       ae 94 df 	      ldx	SaveSP
+   1028  f731		       9a		      txs
+   1029  f732		       ad 92 df 	      lda	SavePC+1
+   1030  f735		       48		      pha
+   1031  f736		       ad 91 df 	      lda	SavePC
+   1032  f739		       48		      pha
+   1033  f73a		       ad 93 df 	      lda	SaveC
+   1034  f73d		       48		      pha
+   1035  f73e		       ae 8f df 	      ldx	SaveX
+   1036  f741		       ac 90 df 	      ldy	SaveY
+   1037  f744		       ad 8e df 	      lda	SaveA
+   1038  f747		       40		      rti
+   1039  f748							;
+   1040  f748							;=====================================================
+   1041  f748							; This gets two hex characters and returns the value
+   1042  f748							; in A with carry clear.  If a non-hex digit is
+   1043  f748							; entered, then A contans the offending character and
+   1044  f748							; carry is set.
+   1045  f748							;
+   1046  f748		       20 60 f7    getHex     jsr	getNibble
+   1047  f74b		       b0 20		      bcs	getNibBad
+   1048  f74d		       0a		      asl		; a
+   1049  f74e		       0a		      asl		; a
+   1050  f74f		       0a		      asl		; a
+   1051  f750		       0a		      asl		; a
+   1052  f751		       29 f0		      and	#$f0
+   1053  f753		       8d 99 df 	      sta	tempA
+   1054  f756		       20 60 f7 	      jsr	getNibble
+   1055  f759		       b0 12		      bcs	getNibBad
+   1056  f75b		       0d 99 df 	      ora	tempA
+   1057  f75e		       18		      clc
+   1058  f75f		       60		      rts
+   1059  f760							;
+   1060  f760							; Helper.  Gets next input char and converts to a
+   1061  f760							; value from 0-F in A and returns C clear.  If not a
+   1062  f760							; valid hex character, return C set.
+   1063  f760							;
+   1064  f760		       20 f4 f9    getNibble  jsr	redirectedGetch
+   1065  f763		       a2 0f		      ldx	#nibbleHexEnd-nibbleHex-1
+   1066  f765		       dd 72 f7    getNibble1 cmp	nibbleHex,x
+   1067  f768		       f0 05		      beq	getNibF	;got match
+   1068  f76a		       ca		      dex
+   1069  f76b		       10 f8		      bpl	getNibble1
+   1070  f76d		       38	   getNibBad  sec
+   1071  f76e		       60		      rts
+   1072  f76f
+   1073  f76f		       8a	   getNibF    txa		;index is value
+   1074  f770		       18		      clc
+   1075  f771		       60		      rts
+   1076  f772							;
+      0  f772				   nibbleHex  db	"0123456789ABCDEF"
+      1  f772		       30 31 32 33*	      .byte.b	"0123456789ABCDEF"
+   1078  f772		       f7 82	   nibbleHexEnd equ	*
+   1079  f782							;
+   1080  f782							;=====================================================
+   1081  f782							; Gets a four digit hex address amd places it in
+   1082  f782							; SAL and SAH.  Returns C clear if all is well, or C
+   1083  f782							; set on error and A contains the character.
+   1084  f782							;
+   1085  f782		       20 48 f7    getStartAddr jsr	getHex
+   1086  f785		       b0 0c		      bcs	getDone
+   1087  f787		       8d 96 df 	      sta	SAH
+   1088  f78a		       20 48 f7 	      jsr	getHex
+   1089  f78d		       b0 04		      bcs	getDone
+   1090  f78f		       8d 95 df 	      sta	SAL
+   1091  f792		       18		      clc
+   1092  f793		       60	   getDone    rts
+   1093  f794							;
+   1094  f794							;=====================================================
+   1095  f794							; Gets a four digit hex address and places it in
+   1096  f794							; EAL and EAH.  Returns C clear if all is well, or C
+   1097  f794							; set on error and A contains the character.
+   1098  f794							;
+   1099  f794		       20 48 f7    getEndAddr jsr	getHex
+   1100  f797		       b0 fa		      bcs	getDone
+   1101  f799		       8d 98 df 	      sta	EAH
+   1102  f79c		       20 48 f7 	      jsr	getHex
+   1103  f79f		       b0 f2		      bcs	getDone
+   1104  f7a1		       8d 97 df 	      sta	EAL
+   1105  f7a4		       18		      clc
+   1106  f7a5		       60		      rts
+   1107  f7a6							;
+   1108  f7a6							;=====================================================
+   1109  f7a6							; Get an address range and leave them in SAL and EAL.
+   1110  f7a6							;
+   1111  f7a6		       20 c6 fa    getAddrRange jsr	putsil
+      0  f7a9					      db	"Start: ",0
+      1  f7a9		       53 74 61 72*	      .byte.b	"Start: ",0
+   1113  f7b1		       20 82 f7 	      jsr	getStartAddr
+   1114  f7b4		       b0 dd		      bcs	getDone
+   1115  f7b6		       20 c6 fa 	      jsr	putsil
+      0  f7b9					      db	", End: ",0
+      1  f7b9		       2c 20 45 6e*	      .byte.b	", End: ",0
+   1117  f7c1		       20 94 f7 	      jsr	getEndAddr
+   1118  f7c4		       60		      rts
+   1119  f7c5							;
+   1120  f7c5							;=====================================================
+   1121  f7c5							; Command handler for the ? command
+   1122  f7c5							;
+   1123  f7c5		       20 c6 fa    showHelp   jsr	putsil
+      0  f7c8					      db	CR,LF
+      1  f7c8		       0d 0a		      .byte.b	CR,LF
+      0  f7ca					      db	"Available commands:"
+      1  f7ca		       41 76 61 69*	      .byte.b	"Available commands:"
+      0  f7dd					      db	CR,LF,LF,0
+      1  f7dd		       0d 0a 0a 00	      .byte.b	CR,LF,LF,0
+   1127  f7e1							;
+   1128  f7e1							; Print help for built-in commands...
+   1129  f7e1							;
+   1130  f7e1		       a9 f6		      lda	#commandTable&$ff
+   1131  f7e3		       85 f0		      sta	sptr
+   1132  f7e5		       a9 f0		      lda	#commandTable/256
+   1133  f7e7		       85 f1		      sta	sptr+1
+   1134  f7e9		       20 ef f7 	      jsr	displayHelp	;display help
+   1135  f7ec							;
+   1136  f7ec							; Now print help for the extension commands...
+   1137  f7ec							;
+   1138  f7ec				  -	      if	EXTENDED_CMDS
+   1139  f7ec				  -	      lda	ExtensionAddr
+   1140  f7ec				  -	      sta	sptr
+   1141  f7ec				  -	      lda	ExtensionAddr+1
+   1142  f7ec				  -	      sta	sptr+1
+   1143  f7ec				  -	      jsr	displayHelp
+   1144  f7ec				  -	      jsr	crlf
+   1145  f7ec					      endif
+   1146  f7ec		       4c ba f0 	      jmp	prompt
+   1147  f7ef							;
+   1148  f7ef							;=====================================================
+   1149  f7ef							; Given a pointer to a command table in POINT, display
+   1150  f7ef							; the help text for all commands in the table.
+   1151  f7ef							;
+   1152  f7ef		       a0 00	   displayHelp ldy	#0	;index into command table
+   1153  f7f1		       b1 f0	   showHelpLoop lda	(sptr),y	;get command
+   1154  f7f3		       f0 1c		      beq	showHelpDone	;jump if at end
+   1155  f7f5							;
+   1156  f7f5							; Display this entry's descriptive text
+   1157  f7f5							;
+   1158  f7f5		       c8		      iny		;skip over command
+   1159  f7f6		       c8		      iny		;skip over function ptr
+   1160  f7f7		       c8		      iny
+   1161  f7f8		       b1 f0		      lda	(sptr),y
+   1162  f7fa		       85 f2		      sta	INL
+   1163  f7fc		       c8		      iny
+   1164  f7fd		       b1 f0		      lda	(sptr),y
+   1165  f7ff		       85 f3		      sta	INH
+   1166  f801		       98		      tya
+   1167  f802		       48		      pha
+   1168  f803		       20 4c fb 	      jsr	space2
+   1169  f806		       20 e9 fa 	      jsr	puts	;print description
+   1170  f809		       20 3c fb 	      jsr	crlf
+   1171  f80c		       68		      pla
+   1172  f80d		       a8		      tay
+   1173  f80e		       c8		      iny		;point to next entry
+   1174  f80f		       d0 e0		      bne	showHelpLoop
+   1175  f811		       60	   showHelpDone rts
+   1176  f812							;
+   1177  f812							;=====================================================
+   1178  f812							; This does a memory test of a region of memory.
+   1179  f812							;
+   1180  f812							; Asks for the starting and ending locations.
+   1181  f812							;
+   1182  f812							; This cycles a rolling bit, then adds a ninth
+   1183  f812							; pattern to help detect shorted address bits.
+   1184  f812							; Ie: 01, 02, 04, 08, 10, 20, 40, 80, BA
+   1185  f812							;
+   1186  f812		       df 8e	   pattern    equ	SaveA	;re-use some other locations
+   1187  f812		       df 8f	   original   equ	SaveX
+   1188  f812							;
+   1189  f812							; Test patterns
+   1190  f812							;
+   1191  f812		       00 01	   PATTERN_0  equ	$01
+   1192  f812		       00 ba	   PATTERN_9  equ	$ba
+   1193  f812							;
+   1194  f812		       20 70 fb    memabort   jsr	cin	;eat pending key
+   1195  f815		       4c ba f0    cmdRet2    jmp	prompt
+   1196  f818							;
+   1197  f818		       20 c6 fa    memTest    jsr	putsil
+      0  f81b					      db	"Memory test ",0
+      1  f81b		       4d 65 6d 6f*	      .byte.b	"Memory test ",0
+   1199  f828		       20 a6 f7 	      jsr	getAddrRange	;get range
+   1200  f82b		       b0 e8		      bcs	cmdRet2	;branch if abort
+   1201  f82d							;
+   1202  f82d		       20 c6 fa 	      jsr	putsil
+      0  f830					      db	CR,LF
+      1  f830		       0d 0a		      .byte.b	CR,LF
+      0  f832					      db	"Testing memory.  Press any key to abort"
+      1  f832		       54 65 73 74*	      .byte.b	"Testing memory.  Press any key to abort"
+      0  f859					      db	0
+      1  f859		       00		      .byte.b	0
+   1206  f85a		       a9 01		      lda	#PATTERN_0	;only set initial...
+   1207  f85c		       8d 8e df 	      sta	pattern	;..pattern once
+   1208  f85f							;
+   1209  f85f							; Start of loop.  This fills/tests one complete pass
+   1210  f85f							; of memory.
+   1211  f85f							;
+   1212  f85f		       20 7b fb    memTestMain jsr	cstatus	;key pressed?
+   1213  f862		       d0 ae		      bne	memabort	;branch if yes
+   1214  f864		       ad 95 df 	      lda	SAL	;reset pointer to start
+   1215  f867		       85 f0		      sta	sptr
+   1216  f869		       ad 96 df 	      lda	SAH
+   1217  f86c		       85 f1		      sta	sptr+1
+   1218  f86e							;
+   1219  f86e							; Fill memory with the rolling pattern until the last
+   1220  f86e							; location is filled.
+   1221  f86e							;
+   1222  f86e		       a0 00		      ldy	#0
+   1223  f870		       ad 8e df 	      lda	pattern
+   1224  f873		       8d 8f df 	      sta	original
+   1225  f876		       91 f0	   memTestFill sta	(sptr),y
+   1226  f878		       c9 ba		      cmp	#PATTERN_9	;at last pattern?
+   1227  f87a		       d0 05		      bne	memFill3
+   1228  f87c		       a9 01		      lda	#PATTERN_0	;restart pattern
+   1229  f87e		       4c 86 f8 	      jmp	memFill4
+   1230  f881							;
+   1231  f881							; Rotate pattern left one bit
+   1232  f881							;
+   1233  f881		       0a	   memFill3   asl		; a
+   1234  f882		       90 02		      bcc	memFill4	;branch if not overflow
+   1235  f884		       a9 ba		      lda	#PATTERN_9	;ninth pattern
+   1236  f886							;
+   1237  f886							; The new pattern is in A.  Now see if we've reached
+   1238  f886							; the end of the area to be tested.
+   1239  f886							;
+   1240  f886		       48	   memFill4   pha		;save pattern
+   1241  f887		       a5 f0		      lda	sptr
+   1242  f889		       cd 97 df 	      cmp	EAL
+   1243  f88c		       d0 07		      bne	memFill5
+   1244  f88e		       a5 f1		      lda	sptr+1
+   1245  f890		       cd 98 df 	      cmp	EAH
+   1246  f893		       f0 07		      beq	memCheck
+   1247  f895							;
+   1248  f895							; Not done, so move to next address and keep going.
+   1249  f895							;
+   1250  f895		       20 31 f9    memFill5   jsr	INCPT
+   1251  f898		       68		      pla		;recover pattern
+   1252  f899		       4c 76 f8 	      jmp	memTestFill
+   1253  f89c							;
+   1254  f89c							; Okay, memory is filled, so now go back and test it.
+   1255  f89c							; We kept a backup copy of the initial pattern to
+   1256  f89c							; use, but save the current pattern as the starting
+   1257  f89c							; point for the next pass.
+   1258  f89c							;
+   1259  f89c		       68	   memCheck   pla
+   1260  f89d		       8d 8e df 	      sta	pattern	;for next pass
+   1261  f8a0		       ad 95 df 	      lda	SAL	;reset pointer to start
+   1262  f8a3		       85 f0		      sta	sptr
+   1263  f8a5		       ad 96 df 	      lda	SAH
+   1264  f8a8		       85 f1		      sta	sptr+1
+   1265  f8aa		       ad 8f df 	      lda	original	;restore initial pattern
+   1266  f8ad		       a0 00		      ldy	#0
+   1267  f8af		       d1 f0	   memTest2   cmp	(sptr),y
+   1268  f8b1		       d0 2c		      bne	memFail
+   1269  f8b3		       c9 ba		      cmp	#PATTERN_9
+   1270  f8b5		       d0 04		      bne	memTest3
+   1271  f8b7							;
+   1272  f8b7							; Time to reload the pattern
+   1273  f8b7							;
+   1274  f8b7		       a9 01		      lda	#PATTERN_0
+   1275  f8b9		       d0 05		      bne	memTest4
+   1276  f8bb							;
+   1277  f8bb							; Rotate pattern left one bit
+   1278  f8bb							;
+   1279  f8bb		       0a	   memTest3   asl		; a
+   1280  f8bc		       90 02		      bcc	memTest4
+   1281  f8be		       a9 ba		      lda	#PATTERN_9
+   1282  f8c0							;
+   1283  f8c0							; The new pattern is in A.
+   1284  f8c0							;
+   1285  f8c0		       48	   memTest4   pha		;save pattern
+   1286  f8c1		       a5 f0		      lda	sptr
+   1287  f8c3		       cd 97 df 	      cmp	EAL
+   1288  f8c6		       d0 07		      bne	memTest5	;not at end
+   1289  f8c8		       a5 f1		      lda	sptr+1
+   1290  f8ca		       cd 98 df 	      cmp	EAH
+   1291  f8cd		       f0 07		      beq	memDone	;at end of pass
+   1292  f8cf							;
+   1293  f8cf							; Not at end yet, so inc pointer and continue
+   1294  f8cf							;
+   1295  f8cf		       20 31 f9    memTest5   jsr	INCPT
+   1296  f8d2		       68		      pla
+   1297  f8d3		       4c af f8 	      jmp	memTest2
+   1298  f8d6							;
+   1299  f8d6							; Another pass has completed.
+   1300  f8d6							;
+   1301  f8d6		       68	   memDone    pla
+   1302  f8d7		       a9 2e		      lda	#'.
+   1303  f8d9		       20 63 fb 	      jsr	cout
+   1304  f8dc		       4c 5f f8 	      jmp	memTestMain
+   1305  f8df							;
+   1306  f8df							; Failure.  Display the failed address, the expected
+   1307  f8df							; value and what was actually there.
+   1308  f8df							;
+   1309  f8df		       48	   memFail    pha		;save pattern for error report
+   1310  f8e0		       20 c6 fa 	      jsr	putsil
+      0  f8e3					      db	CR,LF
+      1  f8e3		       0d 0a		      .byte.b	CR,LF
+      0  f8e5					      db	"Failure at address ",0
+      1  f8e5		       46 61 69 6c*	      .byte.b	"Failure at address ",0
+   1313  f8f9		       a5 f1		      lda	sptr+1
+   1314  f8fb		       20 1f fb 	      jsr	HexA
+   1315  f8fe		       a5 f0		      lda	sptr
+   1316  f900		       20 1f fb 	      jsr	HexA
+   1317  f903		       20 c6 fa 	      jsr	putsil
+      0  f906					      db	".  Expected ",0
+      1  f906		       2e 20 20 45*	      .byte.b	".  Expected ",0
+   1319  f913		       68		      pla
+   1320  f914		       20 1f fb 	      jsr	HexA
+   1321  f917		       20 c6 fa 	      jsr	putsil
+      0  f91a					      db	" but got ",0
+      1  f91a		       20 62 75 74*	      .byte.b	" but got ",0
+   1323  f924		       a0 00		      ldy	#0
+   1324  f926		       b1 f0		      lda	(sptr),y
+   1325  f928		       20 1f fb 	      jsr	HexA
+   1326  f92b		       20 3c fb 	      jsr	crlf
+   1327  f92e		       4c ba f0    cmdRet4    jmp	prompt
+   1328  f931							;
+   1329  f931							;=====================================================
+   1330  f931							; Increment sptr
+   1331  f931							;
+   1332  f931		       e6 f0	   INCPT      inc	sptr
+   1333  f933		       d0 02		      bne	incpt2
+   1334  f935		       e6 f1		      inc	sptr+1
+   1335  f937		       60	   incpt2     rts
+   1336  f938							;
+   1337  f938							;=====================================================
+   1338  f938							; Ping the Arduino disk controller.  This just sends the
+   1339  f938							; PING command gets back one character, then returns.
+   1340  f938							; Not much of a test but is sufficient to prove the
+   1341  f938							; link is working.
+   1342  f938							;
+   1343  f938		       20 c6 fa    pingDisk   jsr	putsil
+      0  f93b					      db	"Ping... ",0
+      1  f93b		       50 69 6e 67*	      .byte.b	"Ping... ",0
+   1345  f944		       20 96 fb 	      jsr	DiskPing
+   1346  f947		       20 c6 fa 	      jsr	putsil
+      0  f94a					      db	"success!"
+      1  f94a		       73 75 63 63*	      .byte.b	"success!"
+      0  f952					      db	CR,LF,0
+      1  f952		       0d 0a 00 	      .byte.b	CR,LF,0
+   1349  f955		       4c ba f0    doDiskDirEnd jmp	prompt
+   1350  f958							;
+   1351  f958							;=====================================================
+   1352  f958							; Do a disk directory of the SD card.
+   1353  f958							;
+   1354  f958		       20 c6 fa    doDiskDir  jsr	putsil
+      0  f95b					      db	"Disk Directory..."
+      1  f95b		       44 69 73 6b*	      .byte.b	"Disk Directory..."
+      0  f96c					      db	CR,LF,0
+      1  f96c		       0d 0a 00 	      .byte.b	CR,LF,0
+   1357  f96f							;		 jsr	xParInit
+   1358  f96f		       20 a9 fb 	      jsr	DiskDir
+   1359  f972							;
+   1360  f972							; Get/Display each entry
+   1361  f972							;
+   1362  f972		       a2 df	   doDiskDirLoop ldx	#filename/256	;pointer to buffer
+   1363  f974		       a0 9a		      ldy	#filename&$ff
+   1364  f976		       86 f3		      stx	INH	;save for puts
+   1365  f978		       84 f2		      sty	INL
+   1366  f97a		       20 b3 fb 	      jsr	DiskDirNext	;get next entry
+   1367  f97d		       b0 d6		      bcs	doDiskDirEnd	;carry = end of list
+   1368  f97f		       20 49 fb 	      jsr	space3
+   1369  f982		       20 e9 fa 	      jsr	puts	;else print name
+   1370  f985		       20 3c fb 	      jsr	crlf
+   1371  f988		       4c 72 f9 	      jmp	doDiskDirLoop	;do next entry
+   1372  f98b							;
+   1373  f98b							;=====================================================
+   1374  f98b							; Adds the character in A to the CRC.	Preserves A.
+   1375  f98b							;
+   1376  f98b		       48	   updateCrc  pha
+   1377  f98c		       18		      clc
+   1378  f98d		       6d a9 df 	      adc	CHKL
+   1379  f990		       8d a9 df 	      sta	CHKL
+   1380  f993		       68		      pla
+   1381  f994		       60		      rts
+   1382  f995							;
+   1383  f995							;=====================================================
+   1384  f995							; Print character in A as two hex digits to the
+   1385  f995							; current output device (console or file).
+   1386  f995							;
+   1387  f995		       48	   HexToOutput pha		;save return value
+   1388  f996		       48		      pha
+   1389  f997		       4a		      lsr		;a	;move top nibble to bottom
+   1390  f998		       4a		      lsr		;a
+   1391  f999		       4a		      lsr		;a
+   1392  f99a		       4a		      lsr		;a
+   1393  f99b		       20 a4 f9 	      jsr	hexta	;output nibble
+   1394  f99e		       68		      pla
+   1395  f99f		       20 a4 f9 	      jsr	hexta
+   1396  f9a2		       68		      pla		;restore
+   1397  f9a3		       60		      rts
+   1398  f9a4							;
+   1399  f9a4		       29 0f	   hexta      and	#%0001111
+   1400  f9a6		       c9 0a		      cmp	#$0a
+   1401  f9a8		       18		      clc
+   1402  f9a9		       30 02		      bmi	hexta1
+   1403  f9ab		       69 07		      adc	#7
+   1404  f9ad		       69 30	   hexta1     adc	#'0	;then fall into...
+   1405  f9af							;
+   1406  f9af							;=====================================================
+   1407  f9af							; This is a helper function used for redirected I/O.
+   1408  f9af							; It simply does a jump through the output vector
+   1409  f9af							; pointer to send the character in A to the proper
+   1410  f9af							; device.
+   1411  f9af							;
+   1412  f9af		       6c 08 df    redirectedOutch jmp	(outputVector)
+   1413  f9b2							;
+   1414  f9b2							;=====================================================
+   1415  f9b2							; Set up the output vector to point to the normal
+   1416  f9b2							; console output subroutine.
+   1417  f9b2							;
+   1418  f9b2				   setOutputConsole
+   1419  f9b2		       a9 63		      lda	#cout&$ff
+   1420  f9b4		       8d 08 df 	      sta	outputVector
+   1421  f9b7		       a9 fb		      lda	#cout/256
+   1422  f9b9		       8d 09 df 	      sta	outputVector+1
+   1423  f9bc		       60		      rts
+   1424  f9bd							;
+   1425  f9bd							;=====================================================
+   1426  f9bd							; Set up the output vector to point to a file write
+   1427  f9bd							; subroutine.
+   1428  f9bd							;
+   1429  f9bd				   setOutputFile
+   1430  f9bd		       a9 7d		      lda	#putNextFileByte&$ff
+   1431  f9bf		       8d 08 df 	      sta	outputVector
+   1432  f9c2		       a9 f6		      lda	#putNextFileByte/256
+   1433  f9c4		       8d 09 df 	      sta	outputVector+1
+   1434  f9c7							;
+   1435  f9c7							; Clear counts and offsets so the next read will
+   1436  f9c7							; cause the file to be read.
+   1437  f9c7							;
+   1438  f9c7		       a9 00		      lda	#0
+   1439  f9c9		       8d a7 df 	      sta	diskBufOffset
+   1440  f9cc		       60		      rts
+   1441  f9cd							;
+   1442  f9cd							;=====================================================
+   1443  f9cd							; Set up the input vector to point to the normal
+   1444  f9cd							; console input subroutine.
+   1445  f9cd							;
+   1446  f9cd				   setInputConsole
+   1447  f9cd		       a9 d8		      lda	#cinecho&$ff
+   1448  f9cf		       8d 06 df 	      sta	inputVector
+   1449  f9d2		       a9 f9		      lda	#cinecho/256
+   1450  f9d4		       8d 07 df 	      sta	inputVector+1
+   1451  f9d7		       60		      rts
+   1452  f9d8							;
+   1453  f9d8		       20 70 fb    cinecho    jsr	cin
+   1454  f9db		       48		      pha
+   1455  f9dc		       20 63 fb 	      jsr	cout
+   1456  f9df		       68		      pla
+   1457  f9e0		       60		      rts
+   1458  f9e1							;
+   1459  f9e1							;=====================================================
+   1460  f9e1							; Set up the input vector to point to a file read
+   1461  f9e1							; subroutine.
+   1462  f9e1							;
+   1463  f9e1				   setInputFile
+   1464  f9e1		       a9 f7		      lda	#getNextFileByte&$ff
+   1465  f9e3		       8d 06 df 	      sta	inputVector
+   1466  f9e6		       a9 f9		      lda	#getNextFileByte/256
+   1467  f9e8		       8d 07 df 	      sta	inputVector+1
+   1468  f9eb							;
+   1469  f9eb							; Clear counts and offsets so the next read will
+   1470  f9eb							; cause the file to be read.
+   1471  f9eb							;
+   1472  f9eb		       a9 00		      lda	#0
+   1473  f9ed		       8d a7 df 	      sta	diskBufOffset
+   1474  f9f0		       8d a8 df 	      sta	diskBufLength
+   1475  f9f3		       60		      rts
+   1476  f9f4							;
+   1477  f9f4							;=====================================================
+   1478  f9f4							; This is a helper function used for redirected I/O.
+   1479  f9f4							; It simply does a jump through the input vector
+   1480  f9f4							; pointer to get the next input character.
+   1481  f9f4							;
+   1482  f9f4		       6c 06 df    redirectedGetch jmp	(inputVector)
+   1483  f9f7							;
+   1484  f9f7							;=====================================================
+   1485  f9f7							; This gets the next byte from an open disk file.  If
+   1486  f9f7							; there are no more bytes left, this returns C set.
+   1487  f9f7							; Else, C is clear and A contains the character.
+   1488  f9f7							;
+   1489  f9f7		       ae a7 df    getNextFileByte ldx	diskBufOffset
+   1490  f9fa		       ec a8 df 	      cpx	diskBufLength
+   1491  f9fd		       d0 14		      bne	hasdata	;branch if still data
+   1492  f9ff							;
+   1493  f9ff							; There is no data left in the buffer, so read a
+   1494  f9ff							; block from the SD system.
+   1495  f9ff							;
+   1496  f9ff		       a9 84		      lda	#BUFFER_SIZE
+   1497  fa01		       a2 df		      ldx	#buffer>>8
+   1498  fa03		       a0 0a		      ldy	#buffer&$ff
+   1499  fa05		       20 1f fc 	      jsr	DiskRead
+   1500  fa08		       b0 12		      bcs	getNextEof
+   1501  fa0a							;
+   1502  fa0a							; A contains the number of bytes actually read.
+   1503  fa0a							;
+   1504  fa0a		       8d a8 df 	      sta	diskBufLength	;save length
+   1505  fa0d		       c9 00		      cmp	#0	;shouldn't happen
+   1506  fa0f		       f0 0b		      beq	getNextEof
+   1507  fa11							;
+   1508  fa11		       a2 00		      ldx	#0
+   1509  fa13		       bd 0a df    hasdata    lda	buffer,x
+   1510  fa16		       e8		      inx
+   1511  fa17		       8e a7 df 	      stx	diskBufOffset
+   1512  fa1a		       18		      clc
+   1513  fa1b		       60		      rts
+   1514  fa1c							;
+   1515  fa1c		       a9 00	   getNextEof lda	#0
+   1516  fa1e		       8d a7 df 	      sta	diskBufOffset
+   1517  fa21		       8d a8 df 	      sta	diskBufLength
+   1518  fa24		       38		      sec
+   1519  fa25		       60		      rts
+   1520  fa26
+   1521  fa26							;page
+   1522  fa26							;
+   1523  fa26							;========================================jlit 8/2/2022
+   1524  fa26							; Remove a file from the disk
+   1525  fa26							;
+   1526  fa26		       20 c6 fa    rmFile     jsr	putsil
+      0  fa29					      db	"Enter filename to rm ",0
+      1  fa29		       45 6e 74 65*	      .byte.b	"Enter filename to rm ",0
+   1528  fa3f		       20 45 f6 	      jsr	getFileName
+   1529  fa42		       a0 9a		      ldy	#filename&$ff
+   1530  fa44		       a2 df		      ldx	#filename/256
+   1531  fa46							;		jsr	xParInit
+   1532  fa46		       20 1a fc 	      jsr	DiskRemoveFile
+   1533  fa49		       90 0f		      bcc	rmOk	; removed ok
+   1534  fa4b		       20 c6 fa 	      jsr	putsil
+      0  fa4e					      db	"rm failed"
+      1  fa4e		       72 6d 20 66*	      .byte.b	"rm failed"
+      0  fa57					      db	CR,LF,0
+      1  fa57		       0d 0a 00 	      .byte.b	CR,LF,0
+   1537  fa5a		       4c ba f0    rmOk       jmp	prompt
+   1538  fa5d							;
+   1539  fa5d							;=====================================================
+   1540  fa5d							; Type the contents of an SD file to console.
+   1541  fa5d							;
+   1542  fa5d		       20 c6 fa    typeFile   jsr	putsil
+      0  fa60					      db	"Enter filename to type: ",0
+      1  fa60		       45 6e 74 65*	      .byte.b	"Enter filename to type: ",0
+   1544  fa79		       20 45 f6 	      jsr	getFileName
+   1545  fa7c		       a0 9a		      ldy	#filename&$ff
+   1546  fa7e		       a2 df		      ldx	#filename/256
+   1547  fa80							;	     jsr	xParInit
+   1548  fa80		       20 e4 fb 	      jsr	DiskOpenRead
+   1549  fa83		       90 1e		      bcc	typeFile1	;opened ok
+   1550  fa85							;
+   1551  fa85		       20 c6 fa 	      jsr	putsil
+      0  fa88					      db	CR,LF
+      1  fa88		       0d 0a		      .byte.b	CR,LF
+      0  fa8a					      db	"Failed to open file"
+      1  fa8a		       46 61 69 6c*	      .byte.b	"Failed to open file"
+      0  fa9d					      db	CR,LF,0
+      1  fa9d		       0d 0a 00 	      .byte.b	CR,LF,0
+   1555  faa0		       4c ba f0 	      jmp	prompt
+   1556  faa3							;
+   1557  faa3							; Now just keep reading in bytes and displaying them.
+   1558  faa3							;
+   1559  faa3		       20 e1 f9    typeFile1  jsr	setInputFile	;reading from file
+   1560  faa6		       20 f7 f9    typeFileLoop jsr	getNextFileByte
+   1561  faa9		       b0 06		      bcs	typeEof
+   1562  faab		       20 63 fb 	      jsr	cout	;display character
+   1563  faae		       4c a6 fa 	      jmp	typeFileLoop
+   1564  fab1							;
+   1565  fab1		       20 88 fc    typeEof    jsr	DiskClose
+   1566  fab4		       4c ba f0 	      jmp	prompt
+   1567  fab7							;
+   1568  fab7							;=====================================================
+   1569  fab7							; This flushes any data remaining in the disk buffer
+   1570  fab7							; and then closes the file.
+   1571  fab7							;
+   1572  fab7		       ad a7 df    CloseOutFile lda	diskBufOffset
+   1573  faba		       f0 07		      beq	closeonly
+   1574  fabc		       a2 df		      ldx	#buffer>>8
+   1575  fabe		       a0 0a		      ldy	#buffer&$ff
+   1576  fac0		       20 51 fc 	      jsr	DiskWrite
+   1577  fac3							;
+   1578  fac3		       4c 88 fc    closeonly  jmp	DiskClose
+   1579  fac6							;
+------- FILE io.asm LEVEL 2 PASS 2
+      0  fac6					      include	"io.asm"
+      1  fac6					      Processor	6502
+      2  fac6							;*********************************************************
+      3  fac6							; FILE: io.asm
+      4  fac6							;
+      5  fac6							; This contains slightly higher level console related
+      6  fac6							; functions like text output, reading a line, etc.
+      7  fac6							;*********************************************************
+      8  fac6							;
+      9  fac6							;		zpage
+     10  fac6							;putsp		ds	2
+     11  fac6							;
+     12  fac6		       00 00	   EnableGetline equ	0	;Disable the Getline function
+     13  fac6		       00 00	   EnableParse equ	0	;Disable the parse line function
+     14  fac6
+     15 Udfad					      SEG.U	bss
+     16 Udfad		       00 00 00 00*BUFFER     ds	BUFFER_SIZE
+     17 Ue031		       00	   argc       ds	1
+     18 Ue032		       00 00 00 00*argv       ds	MAX_ARGC
+     19 Ue037							;
+     20  fac6					      Seg	Code
+     21  fac6							;
+     22  fac6							;*********************************************************
+     23  fac6							; Print the string that follows the JSR to this code.
+     24  fac6							; Taken from http://www.6502.org/source/io/primm.htm
+     25  fac6							; The last example by Ross Archer.
+     26  fac6							;
+     27  fac6		       68	   putsil     pla		;Get the low part of "return" address
+     28  fac7							;(data start address)
+     29  fac7		       85 f4		      sta	putsp
+     30  fac9		       68		      pla
+     31  faca		       85 f5		      sta	putsp+1	;Get the high part of "return" address
+     32  facc							;(data start address)
+     33  facc							;Note: actually we're pointing one short
+     34  facc		       a0 01	   PSINB      ldy	#1
+     35  face		       b1 f4		      lda	(putsp),y	;Get the next string character
+     36  fad0		       e6 f4		      inc	putsp	;update the pointer
+     37  fad2		       d0 02		      bne	PSICHO	;if not, we're pointing to next character
+     38  fad4		       e6 f5		      inc	putsp+1	;account for page crossing
+     39  fad6		       09 00	   PSICHO     ora	#0	;Set flags according to contents of
+     40  fad8							;   Accumulator
+     41  fad8		       f0 06		      beq	PSIX1	;don't print the final NULL
+     42  fada		       20 63 fb 	      jsr	cout	;write it out
+     43  fadd		       4c cc fa 	      jmp	PSINB	;back around
+     44  fae0		       e6 f4	   PSIX1      inc	putsp
+     45  fae2		       d0 02		      bne	PSIX2
+     46  fae4		       e6 f5		      inc	putsp+1	;account for page crossing
+     47  fae6		       6c f4 00    PSIX2      jmp	(putsp)	;return to byte following final NULL
+     48  fae9							;
+     49  fae9							;=====================================================
+     50  fae9							; This prints the null terminated string pointed to by
+     51  fae9							; INL and INH.  Modifies those locations to point to
+     52  fae9							; the end of the string.
+     53  fae9							;
+     54  fae9		       a0 00	   puts       ldy	#0
+     55  faeb		       b1 f2	   putsy      lda	(INL),y
+     56  faed		       e6 f2		      inc	INL
+     57  faef		       d0 02		      bne	puts1
+     58  faf1		       e6 f3		      inc	INH
+     59  faf3		       09 00	   puts1      ora	#0
+     60  faf5		       f0 0c		      beq	putsdone
+     61  faf7		       8c 90 df 	      sty	SaveY
+     62  fafa		       20 63 fb 	      jsr	cout	;print character
+     63  fafd		       ac 90 df 	      ldy	SaveY
+     64  fb00		       4c eb fa 	      jmp	putsy
+     65  fb03		       60	   putsdone   rts
+     66  fb04							;
+     67  fb04							;*********************************************************
+     68  fb04							; Get a line of text from the console and put it into
+     69  fb04							; BUFFER.  This only allows printable characters, will
+     70  fb04							; limit the amount of text to BUFFER_SIZE-1 characters,
+     71  fb04							; and allows some editing.  Returns the string with a null
+     72  fb04							; byte at the end and the length in A.  If the length is
+     73  fb04							; zero, return Z set.
+     74  fb04							;
+     75  fb04				   getline
+     76  fb04				  -	      if	EnableGetline
+     77  fb04				  -	      ldx	#0
+     78  fb04				  -	      beq	getline1
+     79  fb04				  -			;
+     80  fb04				  -			; This outputs a bell.  Used when the user
+     81  fb04				  -			; does something bad, like non-printable
+     82  fb04				  -			; characters or exceeding line length.
+     83  fb04				  -			;
+     84  fb04				  -getline2   lda	#BELL
+     85  fb04				  -	      jsr	cout
+     86  fb04				  -			;
+     87  fb04				  -			; Get the next character
+     88  fb04				  -			;
+     89  fb04				  -getline1   jsr	cin	;get character
+     90  fb04				  -	      cmp	#' '
+     91  fb04				  -	      bcc	getline2	;not printable
+     92  fb04				  -	      cmp	#'~'+1
+     93  fb04				  -	      bcs	getline2	;not printable
+     94  fb04				  -	      cmp	#CR	;end of input?
+     95  fb04				  -	      beq	getline3
+     96  fb04				  -	      cpx	#BUFFER_SIZE-1
+     97  fb04				  -	      beq	getline1	;too long
+     98  fb04				  -	      sta	BUFFER,x
+     99  fb04				  -	      jsr	cout	;echo, echo, echo...
+    100  fb04				  -	      inx
+    101  fb04				  -	      bne	getline1
+    102  fb04				  -			;
+    103  fb04				  -			; Got a CR, so terminate the string.
+    104  fb04				  -			;
+    105  fb04				  -getline3   lda	#0
+    106  fb04				  -	      sta	BUFFER,x
+    107  fb04				  -	      txa		;will set/clear Z
+    108  fb04					      endif
+    109  fb04		       60		      rts
+    110  fb05							;
+    111  fb05							;*********************************************************
+    112  fb05							; This converts the buffer to all lower case.
+    113  fb05							;
+    114  fb05		       a2 00	   ToLower    ldx	#0
+    115  fb07		       bd ad df    ToLower1   lda	BUFFER,x
+    116  fb0a		       f0 11		      beq	ToLowerDone
+    117  fb0c							;
+    118  fb0c		       c9 61		      cmp	#'a
+    119  fb0e		       90 0a		      bcc	ToLower2
+    120  fb10		       c9 7b		      cmp	#'z+1
+    121  fb12		       b0 06		      bcs	ToLower2
+    122  fb14		       18		      clc
+    123  fb15		       e9 20		      sbc	#$20	;convert
+    124  fb17		       9d ad df 	      sta	BUFFER,x
+    125  fb1a		       e8	   ToLower2   inx
+    126  fb1b		       d0 ea		      bne	ToLower1
+    127  fb1d							;
+    128  fb1d		       60	   ToLowerDone rts
+    129  fb1e							;
+    130  fb1e							;*********************************************************
+    131  fb1e							; This parses the current contents of BUFFER.	It scans
+    132  fb1e							; until finding whitespace, terminates the string (puts a
+    133  fb1e							; null), then scans until finding the next non-whitespace
+    134  fb1e							; and repeats the process again.  Saves the offset to each
+    135  fb1e							; word in argc, and has a total count in argv.  Yes, I am
+    136  fb1e							; a C programmer.
+    137  fb1e							;
+    138  fb1e				   parse
+    139  fb1e				  -	      if	EnableParse
+    140  fb1e				  -	      ldx	#0
+    141  fb1e				  -	      stx	argc	;clear count
+    142  fb1e				  -	      dex
+    143  fb1e				  -			;
+    144  fb1e				  -			; Skip whitespace
+    145  fb1e				  -			;
+    146  fb1e				  -parse1     inx
+    147  fb1e				  -	      lda	BUFFER,x
+    148  fb1e				  -	      beq	parse2	;at EOL
+    149  fb1e				  -	      cmp	#' '
+    150  fb1e				  -	      beq	parse1	;whitespace
+    151  fb1e				  -			;
+    152  fb1e				  -			; Not whitespace
+    153  fb1e				  -			;
+    154  fb1e				  -	      ldy	argc
+    155  fb1e				  -	      stx	argv,y
+    156  fb1e				  -	      iny
+    157  fb1e				  -	      cpy	#MAX_ARGC
+    158  fb1e				  -	      beq	parse2
+    159  fb1e				  -	      sty	argv
+    160  fb1e				  -			;
+    161  fb1e				  -			; Now skip until whitespace found again
+    162  fb1e				  -			;
+    163  fb1e				  -parse3     inx
+    164  fb1e				  -	      lda	BUFFER,x
+    165  fb1e				  -	      beq	parse2
+    166  fb1e				  -	      cmp	#' '
+    167  fb1e				  -	      bne	parse3
+    168  fb1e				  -	      lda	#0
+    169  fb1e				  -	      sta	BUFFER,x	;terminate
+    170  fb1e				  -	      jmp	parse1
+    171  fb1e				  -			;
+    172  fb1e					      endif
+    173  fb1e		       60	   parse2     rts
+    174  fb1f							;
+    175  fb1f							;*********************************************************
+    176  fb1f							; Dump the contents of A as two hex digits.  Preserves
+    177  fb1f							; all registers.
+    178  fb1f							;
+    179  fb1f		       48	   HexA       pha		;save value
+    180  fb20		       48		      pha
+    181  fb21		       4a		      lsr		;a
+    182  fb22		       4a		      lsr		;a
+    183  fb23		       4a		      lsr		;a
+    184  fb24		       4a		      lsr		;a
+    185  fb25		       20 2e fb 	      jsr	HexDigit
+    186  fb28		       68		      pla
+    187  fb29		       20 2e fb 	      jsr	HexDigit
+    188  fb2c		       68		      pla		;restore value
+    189  fb2d		       60		      rts
+    190  fb2e							;
+    191  fb2e		       29 0f	   HexDigit   and	#$0f
+    192  fb30		       c9 0a		      cmp	#$0a
+    193  fb32		       18		      clc
+    194  fb33		       30 02		      bmi	HexDigit1
+    195  fb35		       69 07		      adc	#7
+    196  fb37		       69 30	   HexDigit1  adc	#'0
+    197  fb39		       4c 63 fb 	      jmp	cout
+    198  fb3c							;
+    199  fb3c							;*********************************************************
+    200  fb3c							; Output a CR/LF combination to the console.  Preserves
+    201  fb3c							; all registers.
+    202  fb3c							;
+    203  fb3c		       48	   crlf       pha
+    204  fb3d		       a9 0d		      lda	#CR
+    205  fb3f		       20 63 fb 	      jsr	cout
+    206  fb42		       a9 0a		      lda	#LF
+    207  fb44		       20 63 fb 	      jsr	cout
+    208  fb47		       68		      pla
+    209  fb48		       60		      rts
+    210  fb49							;
+    211  fb49							;*********************************************************
+    212  fb49							; Output one, two or three spaces.  Preserves all
+    213  fb49							; register.
+    214  fb49							;
+    215  fb49		       20 4f fb    space3     jsr	space
+    216  fb4c		       20 4f fb    space2     jsr	space
+    217  fb4f		       48	   space      pha
+    218  fb50		       a9 20		      lda	#$20
+    219  fb52		       20 63 fb 	      jsr	cout
+    220  fb55		       68		      pla
+    221  fb56		       60		      rts
+    222  fb57
+    223  fb57
+------- FILE ctmon65.asm
+------- FILE acia.asm LEVEL 2 PASS 2
+      0  fb57					      include	"acia.asm"
+      1  fb57					      processor	6502
+      2  fb57					      Seg	Code
+      3  fb57							;*********************************************************
+      4  fb57							; FILE: acia.asm
+      5  fb57							;*********************************************************
+      6  fb57							;
+      7  fb57		       00 00	   CONSOLE_SLOT equ	0
+      8  fb57							;
+      9  fb57		       e0 00	   ACIA       equ	(CONSOLE_SLOT*IO_SIZE)+IO_BASE
+     10  fb57		       00 01	   RDRF       equ	%00000001
+     11  fb57		       00 02	   TDRE       equ	%00000010
+     12  fb57							;
+     13  fb57							;*********************************************************
+     14  fb57							; Initialize the ACIA
+     15  fb57							;
+     16  fb57		       a9 03	   cinit      lda	#%00000011	;reset
+     17  fb59		       8d 00 e0 	      sta	ACIA
+     18  fb5c		       ea		      nop
+     19  fb5d		       a9 11		      lda	#%00010001	;8N2
+     20  fb5f		       8d 00 e0 	      sta	ACIA
+     21  fb62		       60		      rts
+     22  fb63							;
+     23  fb63							;*********************************************************
+     24  fb63							; Output the character in A to the console.  This will
+     25  fb63							; block until the character is queued.  Preserves all
+     26  fb63							; registers.
+     27  fb63							;
+     28  fb63		       48	   cout       pha
+     29  fb64		       ad 00 e0    cout1      lda	ACIA
+     30  fb67		       29 02		      and	#TDRE
+     31  fb69		       f0 f9		      beq	cout1	;not empty
+     32  fb6b		       68		      pla
+     33  fb6c		       8d 01 e0 	      sta	ACIA+1
+     34  fb6f		       60		      rts
+     35  fb70							;
+     36  fb70							;*********************************************************
+     37  fb70							; Gets a character from the console and returns it in A.
+     38  fb70							; Modifies no other registers.  This blocks until a
+     39  fb70							; character is available.
+     40  fb70							;
+     41  fb70		       ad 00 e0    cin	      lda	ACIA
+     42  fb73		       29 01		      and	#RDRF
+     43  fb75		       f0 f9		      beq	cin
+     44  fb77		       ad 01 e0 	      lda	ACIA+1
+     45  fb7a		       60		      rts
+     46  fb7b							;
+     47  fb7b							;*********************************************************
+     48  fb7b							; Get the status of the console.  Returns Z set if no
+     49  fb7b							; characters are available, Z clear if a character is
+     50  fb7b							; ready.
+     51  fb7b							;
+     52  fb7b		       ad 00 e0    cstatus    lda	ACIA
+     53  fb7e		       29 01		      and	#RDRF
+     54  fb80		       60		      rts
+------- FILE ctmon65.asm
+   1582  fb81
+   1583  fb81					      if	SD_ENABLED
+------- FILE parproto.inc LEVEL 2 PASS 2
+      0  fb81					      include	"parproto.inc"
+      1  fb81					      Processor	6502
+      2  fb81							;*****************************************************
+      3  fb81							; Parallel port protocol
+      4  fb81							;
+      5  fb81							; This is the header file for making applications
+      6  fb81							; compliant with The Remote Disk Protocol Guide which
+      7  fb81							; is on the Corsham Technologies web page somewhere:
+      8  fb81							;
+      9  fb81							;    www.corshamtech.com
+     10  fb81							;
+     11  fb81							; This was updated 06/13/2015 to be compliant with the
+     12  fb81							; official specification, so the opcode values changed.
+     13  fb81							;
+     14  fb81							; Another update on 09/04/2017
+     15  fb81							;
+     16  fb81							;=====================================================
+     17  fb81							; Commands from host to Arduino
+     18  fb81							;
+     19  fb81		       00 01	   PC_GET_VERSION equ	$01
+     20  fb81		       00 05	   PC_PING    equ	$05	;ping Arduino
+     21  fb81		       00 06	   PC_LED_CONTROL equ	$06	;LED control
+     22  fb81		       00 10	   PC_GET_DIR equ	$10	;Get directory
+     23  fb81		       00 11	   PC_GET_MOUNTED equ	$11	;Get mounted drive list
+     24  fb81		       00 12	   PC_MOUNT   equ	$12	;Mount drive
+     25  fb81		       00 13	   PC_UNMOUNT equ	$13	;Unmount drive
+     26  fb81		       00 14	   PC_GET_STATUS equ	$14	;Get status for one drive
+     27  fb81		       00 15	   PC_DONE    equ	$15	;Stop data
+     28  fb81		       00 15	   PC_ABORT   equ	PC_DONE
+     29  fb81		       00 16	   PC_READ_FILE equ	$16	;Read regular file (non-DSK)
+     30  fb81		       00 17	   PC_READ_BYTES equ	$17	;Read sequential bytes
+     31  fb81		       00 18	   PC_RD_SECTOR equ	$18	;Read FLEX sector
+     32  fb81		       00 19	   PC_WR_SECTOR equ	$19	;Write FLEX sector
+     33  fb81		       00 1a	   PC_GET_MAX equ	$1a	;Get maximum drives
+     34  fb81		       00 1b	   PC_WRITE_FILE equ	$1b	;Open file for writing
+     35  fb81		       00 1c	   PC_WRITE_BYTES equ	$1c	;Data to be written
+     36  fb81		       00 1d	   PC_SAVE_CONFIG equ	$1d	;Save SD.CFG with current values
+     37  fb81		       00 1e	   PC_SET_TIMER equ	$1e	;Set RTC timer
+     38  fb81		       00 1f	   PC_WR_SEC_LONG equ	$1f	;Write sector with long sec num
+     39  fb81		       00 20	   PC_RD_SEC_LONG equ	$20	;Read sector with long sec num
+     40  fb81		       00 21	   PC_RM_FILE equ	$21	;remove a file non-dsk
+     41  fb81							;
+     42  fb81							;=====================================================
+     43  fb81							; Responses from Arduino to host
+     44  fb81							;
+     45  fb81		       00 81	   PR_VERSION_INFO equ	$81	;Contains version information
+     46  fb81		       00 82	   PR_ACK     equ	$82	;ACK (no additional information)
+     47  fb81		       00 83	   PR_NAK     equ	$83	;NAK - one status byte follows
+     48  fb81		       00 85	   PR_PONG    equ	$85	;Reply to a ping
+     49  fb81		       00 90	   PR_DIR_ENTRY equ	$90	;Directory entry
+     50  fb81		       00 91	   PR_DIR_END equ	$91	;End of directory entries
+     51  fb81		       00 92	   PR_FILE_DATA equ	$92	;File data
+     52  fb81		       00 93	   PR_STATUS  equ	$93	;Drive status
+     53  fb81		       00 94	   PR_SECTOR_DATA equ	$94	;Sector data
+     54  fb81		       00 95	   PR_MOUNT_INFO equ	$95	;Mount entry
+     55  fb81		       00 96	   PR_MAX_DRIVES equ	$96	;Maximum number of drives
+     56  fb81							;
+     57  fb81							;=====================================================
+     58  fb81							; Error codes for NAK events.	Yes, these are in
+     59  fb81							; decimal due to an error in the original
+     60  fb81							; documentation.
+     61  fb81							;
+     62  fb81		       00 00	   ERR_NONE   equ	0
+     63  fb81		       00 0a	   ERR_NOT_MOUNTED equ	10
+     64  fb81		       00 0b	   ERR_MOUNTED equ	11
+     65  fb81		       00 0c	   ERR_NOT_FOUND equ	12
+     66  fb81		       00 0d	   ERR_READ_ONLY equ	13
+     67  fb81		       00 0e	   ERR_BAD_DRIVE equ	14
+     68  fb81		       00 0f	   ERR_BAD_TRACK equ	15
+     69  fb81		       00 10	   ERR_BAD_SECTOR equ	16
+     70  fb81		       00 11	   ERR_READ_ERROR equ	17
+     71  fb81		       00 12	   ERR_WRITE_ERROR equ	18
+     72  fb81		       00 13	   ERR_NOT_PRESENT equ	19
+     73  fb81		       00 14	   ERR_NOT_IMPL equ	20	;Command not implemented
+     74  fb81
+------- FILE ctmon65.asm
+------- FILE pario.asm LEVEL 2 PASS 2
+      0  fb81					      include	"pario.asm"
+      1  fb81					      Processor	6502
+      2  fb81							;CTMON65 version using a 6821
+      3  fb81
+      4  fb81							;*****************************************************
+      5  fb81							; These are the low-level I/O routines to talk to the
+      6  fb81							; Arduino processor connected to the KIM's I/O port.
+      7  fb81							;
+      8  fb81							; August 2014, Bob Applegate K2UT, bob@corshamtech.com
+      9  fb81							;
+     10  fb81							; Which port bits are used for what:
+     11  fb81							;
+     12  fb81							; A0 = Data 0, alternates input/output
+     13  fb81							; A1 = Data 1, alternates input/output
+     14  fb81							; A2 = Data 2, alternates input/output
+     15  fb81							; A3 = Data 3, alternates input/output
+     16  fb81							; A4 = Data 4, alternates input/output
+     17  fb81							; A5 = Data 5, alternates input/output
+     18  fb81							; A6 = Data 6, alternates input/output
+     19  fb81							; A7 = Data 7, alternates input/output
+     20  fb81							;
+     21  fb81							; B0 = Direction bit, always output
+     22  fb81							; B1 = Write strobe or ACK, always output
+     23  fb81							; B2 = Read strobe or ACK, always input
+     24  fb81							;
+     25  fb81							;----------------------------------------------------
+     26  fb81							; Bits in the B register
+     27  fb81							;
+     28  fb81		       00 01	   DIRECTION  equ	%00000001
+     29  fb81		       00 02	   PSTROBE    equ	%00000010
+     30  fb81		       00 04	   ACK	      equ	%00000100
+     31  fb81							;
+     32  fb81							;----------------------------------------------------
+     33  fb81							; Which slot the parallel board is in.  This needs to
+     34  fb81							; be set for the system in use.  As long as the user
+     35  fb81							; programs only call functions in here, no other
+     36  fb81							; file/application should know which slot the board
+     37  fb81							; is in.
+     38  fb81							;
+     39  fb81		       00 01	   PIASLOT    equ	1
+     40  fb81							;
+     41  fb81							; Computed addresses of 6821 registers
+     42  fb81							;
+     43  fb81		       e0 10	   PIABASE    equ	IO_BASE+(PIASLOT*IO_SIZE)
+     44  fb81		       e0 10	   PIAREGA    equ	PIABASE	;data reg A
+     45  fb81		       e0 10	   PIADDRA    equ	PIABASE	;data dir reg A
+     46  fb81		       e0 11	   PIACTLA    equ	PIABASE+1	;control reg A
+     47  fb81		       e0 12	   PIAREGB    equ	PIABASE+2	;data reg B
+     48  fb81		       e0 12	   PIADDRB    equ	PIABASE+2	;data dir reg B
+     49  fb81		       e0 13	   PIACTLB    equ	PIABASE+3	;control reg B
+     50  fb81
+     51  fb81					      Seg	Code
+     52  fb81							;page
+     53  fb81							;
+     54  fb81							;*****************************************************
+     55  fb81							; This is the initialization function.  Call before
+     56  fb81							; doing anything else with the parallel port.
+     57  fb81							;
+     58  fb81				   xParInit
+     59  fb81							;
+     60  fb81							; Set up the data direction register for port B so that
+     61  fb81							; the DIRECTION and PSTROBE bits are output.
+     62  fb81							;
+     63  fb81							;		  lda	#0		       ;select DDR
+     64  fb81							;		  sta	PIACTLB		       ;...for port B
+     65  fb81							;		  lda	#DIRECTION | PSTROBE
+     66  fb81							;		  sta	PIADDRB
+     67  fb81							;		  lda	#4		       ;select data reg
+     68  fb81							;		  sta	PIACTLB
+     69  fb81							;
+     70  fb81							; Fall through to set up for writes...
+     71  fb81							;
+     72  fb81							;page
+     73  fb81							;*****************************************************
+     74  fb81							; This sets up for writing to the Arduino.  Sets up
+     75  fb81							; direction registers, drives the direction bit, etc.
+     76  fb81							;
+     77  fb81		       a9 00	   xParSetWrite lda	#0	;select DDR
+     78  fb83							;		 sta	PIACTLA	     ;...for port A
+     79  fb83							;		 lda	#$ff		     ;set bits for output
+     80  fb83							;		 sta	PIADDRA
+     81  fb83							;		 lda	#4		     ;select data reg
+     82  fb83							;		 sta	PIACTLA
+     83  fb83							;
+     84  fb83							; Set direction flag to output, clear ACK bit
+     85  fb83							;
+     86  fb83							;		lda	#DIRECTION
+     87  fb83							;		sta	PIAREGB
+     88  fb83		       60		      rts
+     89  fb84							;page
+     90  fb84							;*****************************************************
+     91  fb84							; This sets up for reading from the Arduino.  Sets up
+     92  fb84							; direction registers, clears the direction bit, etc.
+     93  fb84							;
+     94  fb84		       a9 00	   xParSetRead lda	#0	;select DDR
+     95  fb86							;		 sta	PIACTLA		 ;...for port A
+     96  fb86							;		 lda	#$00		 ;set bits for input
+     97  fb86							;		 sta	PIADDRA
+     98  fb86							;		 lda	#4		 ;select data reg
+     99  fb86							;		 sta	PIACTLA
+    100  fb86							;
+    101  fb86							; Set direction flag to input, clear ACK bit
+    102  fb86							;
+    103  fb86							;		lda	#0
+    104  fb86							;		sta	PIAREGB
+    105  fb86		       60		      rts
+    106  fb87							;page
+    107  fb87							;*****************************************************
+    108  fb87							; This writes a single byte to the Arduino.  On entry,
+    109  fb87							; the byte to write is in A.  This assumes ParSetWrite
+    110  fb87							; was already called.
+    111  fb87							;
+    112  fb87							; Destroys A, all other registers preserved.
+    113  fb87							;
+    114  fb87							; Write cycle:
+    115  fb87							;
+    116  fb87							;    1. Wait for other side to lower ACK.
+    117  fb87							;    2. Put data onto the bus.
+    118  fb87							;    3. Set DIRECTION and PSTROBE to indicate data
+    119  fb87							;	 is valid and ready to read.
+    120  fb87							;    4. Wait for ACK line to go high, indicating the
+    121  fb87							;	 other side has read the data.
+    122  fb87							;    5. Lower PSTROBE.
+    123  fb87							;    6. Wait for ACK to go low, indicating end of
+    124  fb87							;	 transfer.
+    125  fb87							;messed up for emulator, we need to protocols
+    126  fb87				   xParWriteByte
+    127  fb87							;		  pha		      ;save data
+    128  fb87							;Parwl22	  lda	PIAREGB	 ;check status
+    129  fb87							;		  and	#ACK
+    130  fb87							;		  bne	Parwl22	 ;wait for ACK to go low
+    131  fb87							;
+    132  fb87							; Now put the data onto the bus
+    133  fb87							;
+    134  fb87							;		 pla
+    135  fb87		       8d 10 e0 	      sta	PIAREGA
+    136  fb8a							;
+    137  fb8a							; Raise the strobe so the Arduino knows there is
+    138  fb8a							; new data.
+    139  fb8a							;
+    140  fb8a							;		  lda	PIAREGB
+    141  fb8a							;		  ora	#PSTROBE
+    142  fb8a							;		  sta	PIAREGB
+    143  fb8a							;
+    144  fb8a							; Wait for ACK to go high, indicating the Arduino has
+    145  fb8a							; pulled the data and is ready for more.
+    146  fb8a							;
+    147  fb8a							;Parwl33	  lda	PIAREGB
+    148  fb8a							;		  and	#ACK
+    149  fb8a							;		  beq	Parwl33
+    150  fb8a							;
+    151  fb8a							; Now lower the strobe, then wait for the Arduino to
+    152  fb8a							; lower ACK.
+    153  fb8a							;
+    154  fb8a							;		  lda	PIAREGB
+    155  fb8a							;		  and	#~PSTROBE
+    156  fb8a							;		  sta	PIAREGB
+    157  fb8a							;Parwl44	  lda	PIAREGB
+    158  fb8a							;		  and	#ACK
+    159  fb8a							;		  bne	Parwl44
+    160  fb8a		       60		      rts
+    161  fb8b							;page
+    162  fb8b							;*****************************************************
+    163  fb8b							; This reads a byte from the Arduino and returns it in
+    164  fb8b							; A.  Assumes ParSetRead was called before.
+    165  fb8b							;
+    166  fb8b							; This does not have a time-out.
+    167  fb8b							;
+    168  fb8b							; Preserves all other registers.
+    169  fb8b							;
+    170  fb8b							; Read cycle:
+    171  fb8b							;
+    172  fb8b							;    1. Wait for other side to raise ACK, indicating
+    173  fb8b							;	 data is ready.
+    174  fb8b							;    2. Read data.
+    175  fb8b							;    3. Raise PSTROBE indicating data was read.
+    176  fb8b							;    4. Wait for ACK to go low.
+    177  fb8b							;    5. Lower PSTROBE.
+    178  fb8b							;
+    179  fb8b		       ad 12 e0    xParReadByte lda	PIAREGB
+    180  fb8e		       29 04		      and	#ACK	;is their strobe high?
+    181  fb90		       f0 f9		      beq	xParReadByte	;nope, no data
+    182  fb92							;
+    183  fb92							; Data is available, so grab and save it.
+    184  fb92							;
+    185  fb92		       ad 10 e0 	      lda	PIAREGA
+    186  fb95							;		  pha
+    187  fb95							;
+    188  fb95							; Now raise our strobe (their ACK), then wait for
+    189  fb95							; them to lower their strobe.
+    190  fb95							;
+    191  fb95							;		  lda	PIAREGB
+    192  fb95							;		  ora	#PSTROBE
+    193  fb95							;		  sta	PIAREGB
+    194  fb95							;Parrlp1	  lda	PIAREGB
+    195  fb95							;		  and	#ACK
+    196  fb95							;		  bne	Parrlp1		    ;still active
+    197  fb95							;
+    198  fb95							; Lower our ack, then we’re done.
+    199  fb95							;
+    200  fb95							;		  lda	PIAREGB
+    201  fb95							;		  and	#~PSTROBE
+    202  fb95							;		  sta	PIAREGB
+    203  fb95							;		  pla
+    204  fb95		       60		      rts
+------- FILE ctmon65.asm
+------- FILE diskfunc.asm LEVEL 2 PASS 2
+      0  fb96					      include	"diskfunc.asm"
+      1  fb96					      Processor	6502
+      2  fb96							;=====================================================
+      3  fb96							; This is a collection of functions for performing
+      4  fb96							; higher level disk functions.  This hides the nasty
+      5  fb96							; details of communications with the remote disk
+      6  fb96							; system.
+      7  fb96							;
+      8  fb96							; August 20, 2014 - Bob Applegate
+      9  fb96							;		     bob@corshamtech.com
+     10  fb96							;
+     11  fb96							; 06/14/2015 - Bob Applegate
+     12  fb96							;		Now that there is an official standard
+     13  fb96							;		for the protocol between the host (this
+     14  fb96							;		code) and the DCP (Arduino code), this
+     15  fb96							;		code has been updated to be compliant.
+     16  fb96							;
+     17  fb96							; 01/14/2016 - Bob Applegate
+     18  fb96							;		Finally converted to 6502.
+     19  fb96							;
+     20  fb96							; 02/8/2022  - JustLostInTime
+     21  fb96							;		added ability to remove disk file non-dsk
+     22  fb96							;
+     23  fb96							;		include	"parproto.inc"
+     24  fb96							;
+     25  fb96							; Number of drives emulated
+     26  fb96							;
+     27  fb96					      Seg	Code
+     28  fb96		       00 04	   DRIVES     equ	4
+     29  fb96							;
+     30  fb96							;=====================================================
+     31  fb96							; This is a sanity check to verify connectivity to the
+     32  fb96							; Arduino code is working.  Returns C clear if all is
+     33  fb96							; good, or C set if not.
+     34  fb96							;
+     35  fb96		       20 81 fb    DiskPing   jsr	xParSetWrite
+     36  fb99		       a9 05		      lda	#PC_PING	;command
+     37  fb9b		       20 87 fb 	      jsr	xParWriteByte	;send to Arduino
+     38  fb9e		       20 84 fb 	      jsr	xParSetRead
+     39  fba1		       20 8b fb 	      jsr	xParReadByte	;read their reply
+     40  fba4		       20 81 fb    DiskRetGood jsr	xParSetWrite
+     41  fba7		       18		      clc		;assume it's good
+     42  fba8		       60		      rts
+     43  fba9							;page
+     44  fba9							;=====================================================
+     45  fba9							; This starts a directory read of the raw drive, not
+     46  fba9							; the mounted drive.  No input parameters.  This simply
+     47  fba9							; sets up for reading the entries, then the user must
+     48  fba9							; read each entry.
+     49  fba9							;
+     50  fba9							; Returns with C clear on success.  If error, C is set
+     51  fba9							; and A contains the error code.
+     52  fba9							;
+     53  fba9		       20 81 fb    DiskDir    jsr	xParSetWrite
+     54  fbac		       a9 10		      lda	#PC_GET_DIR	;send command
+     55  fbae		       20 87 fb 	      jsr	xParWriteByte
+     56  fbb1		       18		      clc		;assume it works
+     57  fbb2		       60		      rts
+     58  fbb3							;page
+     59  fbb3							;=====================================================
+     60  fbb3							; Read the next directory entry.  On input, X (MSB)
+     61  fbb3							; and Y (LSB) point to a 13 byte area to receive the
+     62  fbb3							; drive data.
+     63  fbb3							;
+     64  fbb3							; Returns C set if end of directory (ie, attempt to
+     65  fbb3							; read and there are none left).  Else, C is clear
+     66  fbb3							; and X/Y point to the null at end of filename.
+     67  fbb3							;
+     68  fbb3		       86 f1	   DiskDirNext stx	sptr+1
+     69  fbb5		       84 f0		      sty	sptr
+     70  fbb7		       20 84 fb 	      jsr	xParSetRead	;read results
+     71  fbba		       20 8b fb 	      jsr	xParReadByte	;get response code
+     72  fbbd		       c9 83		      cmp	#PR_NAK	;error?
+     73  fbbf		       f0 1e		      beq	DDNErr
+     74  fbc1		       c9 91		      cmp	#PR_DIR_END	;end?
+     75  fbc3		       f0 1a		      beq	DDNErr
+     76  fbc5							;
+     77  fbc5							; This contains a directory entry.
+     78  fbc5							;
+     79  fbc5		       a0 00		      ldy	#0
+     80  fbc7		       20 8b fb    DDNloop    jsr	xParReadByte
+     81  fbca		       91 f0		      sta	(sptr),y
+     82  fbcc		       c9 00		      cmp	#0	;end?
+     83  fbce		       f0 06		      beq	DDNEnd
+     84  fbd0		       20 31 f9 	      jsr	INCPT
+     85  fbd3		       4c c7 fb 	      jmp	DDNloop
+     86  fbd6		       20 81 fb    DDNEnd     jsr	xParSetWrite
+     87  fbd9		       a6 f1		      ldx	sptr+1
+     88  fbdb		       a4 f0		      ldy	sptr
+     89  fbdd		       18		      clc		;not end of files
+     90  fbde		       60		      rts
+     91  fbdf							;
+     92  fbdf							; Error.  Set C and return.  This is not really
+     93  fbdf							; proper, since this implies a simple end of the
+     94  fbdf							; directory rather than an error.
+     95  fbdf							;
+     96  fbdf		       20 81 fb    DDNErr     jsr	xParSetWrite
+     97  fbe2		       38		      sec
+     98  fbe3		       60		      rts
+     99  fbe4							;page
+    100  fbe4							;=====================================================
+    101  fbe4							; This opens a file on the SD for reading.  On entry,
+    102  fbe4							; X (MSB) and Y (LSB) point to a null-terminated
+    103  fbe4							; filename to open.  On return, C is clear if the file
+    104  fbe4							; is open, or C set if an error (usually means the
+    105  fbe4							; file does not exist.
+    106  fbe4							;
+    107  fbe4							; Assumes write mode has been set.  Returns with it set.
+    108  fbe4							;
+    109  fbe4		       a9 16	   DiskOpenRead lda	#PC_READ_FILE
+    110  fbe6		       84 f2	   DiskOpen   sty	INL	;save ptr to filename
+    111  fbe8		       86 f3		      stx	INH
+    112  fbea		       48		      pha
+    113  fbeb		       20 81 fb 	      jsr	xParSetWrite
+    114  fbee		       68		      pla
+    115  fbef		       20 87 fb 	      jsr	xParWriteByte
+    116  fbf2		       a0 ff		      ldy	#-1
+    117  fbf4		       c8	   DiskOpenLoop iny
+    118  fbf5		       b1 f2		      lda	(INL),y
+    119  fbf7		       20 87 fb 	      jsr	xParWriteByte
+    120  fbfa		       b1 f2		      lda	(INL),y
+    121  fbfc		       d0 f6		      bne	DiskOpenLoop
+    122  fbfe		       20 84 fb 	      jsr	xParSetRead
+    123  fc01		       20 8b fb 	      jsr	xParReadByte	;get response
+    124  fc04		       c9 82		      cmp	#PR_ACK
+    125  fc06		       d0 05		      bne	DiskOpenErr
+    126  fc08		       20 81 fb 	      jsr	xParSetWrite	;back to write mode
+    127  fc0b		       18		      clc
+    128  fc0c		       60		      rts
+    129  fc0d							;
+    130  fc0d							; Got an error.
+    131  fc0d							;
+    132  fc0d		       20 8b fb    DiskOpenErr jsr	xParReadByte	;get error code
+    133  fc10		       20 81 fb 	      jsr	xParSetWrite	;back to write mode
+    134  fc13		       38		      sec
+    135  fc14		       60		      rts
+    136  fc15							;=====================================================
+    137  fc15							; This opens a file on the SD for writing.  On entry,
+    138  fc15							; X (MSB) and Y (LSB) point to a null-terminated
+    139  fc15							; filename to open.  On return, C is clear if the file
+    140  fc15							; is open, or C set if an error.
+    141  fc15							;
+    142  fc15							; Assumes write mode has been set.  Returns with it set.
+    143  fc15							;
+    144  fc15		       a9 1b	   DiskOpenWrite lda	#PC_WRITE_FILE
+    145  fc17		       4c e6 fb 	      jmp	DiskOpen	;jump into common code
+    146  fc1a							;=====================================================
+    147  fc1a							; This Removes a file from the SD for writing.  On entry,
+    148  fc1a							; X (MSB) and Y (LSB) point to a null-terminated
+    149  fc1a							; filename to remove.	On return, C is clear if the file
+    150  fc1a							; is removed, or C set if an error.
+    151  fc1a							;
+    152  fc1a							; Assumes write mode has been set.  Returns with it set.
+    153  fc1a							;
+    154  fc1a		       a9 21	   DiskRemoveFile lda	#PC_RM_FILE
+    155  fc1c		       4c e6 fb 	      jmp	DiskOpen
+    156  fc1f							;
+    157  fc1f							;=====================================================
+    158  fc1f							; On entry, A contains the number of bytes to read
+    159  fc1f							; from the file, X (MSB) and Y (LSB) point to the
+    160  fc1f							; buffer where to put the data.  On return, C will
+    161  fc1f							; be set if EOF was reached (and no data read), or
+    162  fc1f							; C will be clear and A contains the number of bytes
+    163  fc1f							; actually read into the buffer.
+    164  fc1f							;
+    165  fc1f							; Modifies A, X and Y.  Also modifies INL and INH
+    166  fc1f							; (00F8 and 00F9).
+    167  fc1f							;
+    168  fc1f		       48	   DiskRead   pha
+    169  fc20		       84 f2		      sty	INL	;save ptr to buffer
+    170  fc22		       86 f3		      stx	INH
+    171  fc24		       a9 17		      lda	#PC_READ_BYTES
+    172  fc26		       20 87 fb 	      jsr	xParWriteByte	;command
+    173  fc29		       68		      pla		;number of bytes to get
+    174  fc2a		       20 87 fb 	      jsr	xParWriteByte
+    175  fc2d		       20 84 fb 	      jsr	xParSetRead	;get ready for response
+    176  fc30		       20 8b fb 	      jsr	xParReadByte	;assume PR_FILE_DATA
+    177  fc33		       20 8b fb 	      jsr	xParReadByte	;length
+    178  fc36		       48		      pha
+    179  fc37		       aa		      tax		;count
+    180  fc38		       f0 11		      beq	DiskReadEof	;zero = EOF
+    181  fc3a		       a0 00		      ldy	#0	;offset
+    182  fc3c		       20 8b fb    DiskReadLoop jsr	xParReadByte
+    183  fc3f		       91 f2		      sta	(INL),y
+    184  fc41		       c8		      iny		;next offset
+    185  fc42		       ca		      dex
+    186  fc43		       d0 f7		      bne	DiskReadLoop
+    187  fc45		       20 81 fb 	      jsr	xParSetWrite
+    188  fc48		       68		      pla		;retrieve byte count
+    189  fc49		       18	   DiskOk     clc
+    190  fc4a		       60		      rts
+    191  fc4b		       20 81 fb    DiskReadEof jsr	xParSetWrite
+    192  fc4e		       68		      pla
+    193  fc4f		       38		      sec
+    194  fc50		       60		      rts
+    195  fc51							;
+    196  fc51							;=====================================================
+    197  fc51							; On entry, A contains the number of bytes to write
+    198  fc51							; to the file, X (MSB) and Y (LSB) point to the
+    199  fc51							; buffer where to get the data.  On return, C will
+    200  fc51							; be set if an error was detected, or C will be clear
+    201  fc51							; if no error.  Note that if A contains 0 on entry,
+    202  fc51							; no bytes are written.
+    203  fc51							;
+    204  fc51							; Modifies A, X and Y.  Also modifies INL and INH
+    205  fc51							; (00F8 and 00F9).
+    206  fc51							;
+    207  fc51		       c9 00	   DiskWrite  cmp	#0
+    208  fc53		       f0 f4		      beq	DiskOk
+    209  fc55		       84 f2		      sty	INL	;save ptr to filename
+    210  fc57		       86 f3		      stx	INH
+    211  fc59		       48		      pha
+    212  fc5a		       a9 1c		      lda	#PC_WRITE_BYTES
+    213  fc5c		       20 87 fb 	      jsr	xParWriteByte	;command
+    214  fc5f		       68		      pla		;number of bytes to write
+    215  fc60		       48		      pha		;save again
+    216  fc61		       20 87 fb 	      jsr	xParWriteByte
+    217  fc64		       68		      pla
+    218  fc65		       aa		      tax		;count
+    219  fc66		       a0 00		      ldy	#0	;offset
+    220  fc68		       b1 f2	   DiskWriteLoop lda	(INL),y	;get next byte
+    221  fc6a		       20 87 fb 	      jsr	xParWriteByte
+    222  fc6d		       c8		      iny		;next offset
+    223  fc6e		       ca		      dex
+    224  fc6f		       d0 f7		      bne	DiskWriteLoop
+    225  fc71		       20 84 fb 	      jsr	xParSetRead	;read the status
+    226  fc74		       20 8b fb 	      jsr	xParReadByte
+    227  fc77		       c9 82		      cmp	#PR_ACK
+    228  fc79		       f0 08		      beq	DiskOk1	;all good
+    229  fc7b		       20 8b fb 	      jsr	xParReadByte	;read error code
+    230  fc7e		       20 81 fb 	      jsr	xParSetWrite
+    231  fc81		       38		      sec
+    232  fc82		       60		      rts
+    233  fc83							;
+    234  fc83		       20 81 fb    DiskOk1    jsr	xParSetWrite
+    235  fc86		       18		      clc
+    236  fc87		       60		      rts
+    237  fc88							;
+    238  fc88							;=====================================================
+    239  fc88							; Call this to close any open file.  No parameters
+    240  fc88							; and no return status.
+    241  fc88							;
+    242  fc88		       a9 15	   DiskClose  lda	#PC_DONE
+    243  fc8a		       4c 87 fb 	      jmp	xParWriteByte
+    244  fc8d
+    245  fc8d
+------- FILE ctmon65.asm
+   1587  fc8d					      endif
+   1588  fc8d							;
+   1589  fc8d							;*********************************************************
+   1590  fc8d							; Handlers for the interrupts.  Basiclly just jump
+   1591  fc8d							; through the vectors and hope they are set up properly.
+   1592  fc8d							;
+   1593  fc8d		       6c 02 df    HandleNMI  jmp	(NMIvec)
+   1594  fc90		       6c 00 df    HandleIRQ  jmp	(IRQvec)
+   1595  fc93							;
+   1596  fc93							;*********************************************************
+   1597  fc93							; Default handler.  Save the state of the machine for
+   1598  fc93							; debugging.  This is taken from the KIM monitor SAVE
+   1599  fc93							; routine.
+   1600  fc93							;
+   1601  fc93				   DefaultNMI
+   1602  fc93		       8d 8e df    DefaultIRQ sta	SaveA
+   1603  fc96		       68		      pla
+   1604  fc97		       8d 93 df 	      sta	SaveC
+   1605  fc9a		       68		      pla
+   1606  fc9b		       8d 91 df 	      sta	SavePC
+   1607  fc9e		       68		      pla
+   1608  fc9f		       8d 92 df 	      sta	SavePC+1
+   1609  fca2		       8c 90 df 	      sty	SaveY
+   1610  fca5		       8e 8f df 	      stx	SaveX
+   1611  fca8		       ba		      tsx
+   1612  fca9		       8e 94 df 	      stx	SaveSP
+   1613  fcac		       20 99 f6 	      jsr	DumpRegisters
+   1614  fcaf		       20 3c fb 	      jsr	crlf
+   1615  fcb2		       4c b7 f0 	      jmp	WARM
+   1616  fcb5							;
+   1617  fcb5							;*********************************************************
+   1618  fcb5							; 6502 vectors
+   1619  fcb5							;
+   1620  fffa					      org	$fffa
+      0  fffa					      dw	HandleNMI
+      1  fffa		       8d fc		      .word.w	HandleNMI
+      0  fffc					      dw	RESET
+      1  fffc		       48 f0		      .word.w	RESET
+      0  fffe					      dw	HandleIRQ
+      1  fffe		       90 fc		      .word.w	HandleIRQ
+   1624  10000

@@ -1,0 +1,85 @@
+' Gambas class file
+'' Rom Memory
+'' This emulates a rom memory
+'' You me load as many Rom Memory blocks as you wish
+'' it is possible and required to provide
+'' a rom image for the defined block as the device parameter
+'' when deving this device
+
+Fast Unsafe
+Public MemoryStart As Long = 0                ' Start of this block of memory
+Public MemoryEnd As Long = 0
+Public MemoryLen As Long = 0                  ' Length of this memory block
+
+Public Mem As Byte[]                       ' The actual memory
+Property read Name as string use $name
+Property read BinLoaded as string use $BinLoaded
+
+Public Sub _New(Start As Long, Length As Long, BinRom as variant)
+
+  MemoryStart = Start
+  MemoryEnd = MemoryStart + Length - 1
+  MemoryLen = Length
+  Mem = New Byte[Length]
+  $Name = "ROM"
+  debug "Rom Defined at : "; Hex(Start, 6); " For length("; length; ")"; Hex(length)
+  If binRom <> "" Then
+    if not exist(BinRom) Then
+      error.raise("Binary rom image "&BinRom&" not found")
+    else
+      Load(BinRom)
+    endif
+  Endif
+
+End
+
+fast unsafe Public Sub _get(memoryAddress As Long) As Byte
+
+  'dim result as byte
+
+  'Try result =  Mem[memoryAddress - MemoryStart]
+  'If Error Then
+  '  print Subst("Memory access error at (&1 - &2) offset &3", Hex(memoryAddress), Hex(MemoryStart), Hex(MemoryAddress - MemoryStart))
+  '  Return &hff
+  'Endif
+
+  return Mem[memoryAddress - MemoryStart]
+
+End
+
+fast unsafe Public Sub _put(memoryAddress As Long, value As Byte)
+
+  Error.Raise("Invalid Write Request to rom " & Hex(MemoryAddress, 6) & "Of Value " & Hex(value, 2))
+
+End
+
+fast unsafe Public Sub _InRange(Address As Long) As Boolean
+
+  ' Print "Check "; Hex(Address, 6); " is between "; Hex(MemoryStart);; "and";; Hex(MemoryEnd)
+  If Address >= MemoryStart And if Address <= MemoryEnd Then Return True
+  Return False
+
+End
+
+'' We expect any binary image to contain the first two byte the load origin address
+'' Using dasm as the assembler of choice
+
+Public Sub Load(BinSource As String) as long
+
+  Dim BinInfo As File
+
+  Try BinInfo = Open BinSource For Read
+  Dim al, ah As Byte
+  Read #BinInfo, al
+  Read #BinInfo, ah
+  Dim Address As Long = ((CInt(ah) Shl 8) Or al)
+  If address <> MemoryStart Then
+    Error.Raise(Subst("Rom address and image start address do not match ROM START: &1, Image Start:&2", Hex(MemoryStart, 6), Hex(address, 6)))
+  Endif
+  If Error Then Error.Raise("Missing Rom Source file")
+  Try mem.Read(BinInfo)
+  If Error Then Error.Raise("Error reading Rom Source :" & Error.text)
+  Print "Rom Image loaded from "; BinSource
+  $BinLoaded = BinSource & ":"&hex(address,4)
+  return address
+End

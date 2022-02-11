@@ -1,0 +1,144 @@
+' Gambas class file
+'' Device TTY
+'' this simulates a tty device Ansi complient
+'' This open a seperate window and allos the entry
+'' of text to the cpu, it acts like a rs232 connected
+'' device. This is configured to work with the
+'' CTMON65 default rom, but may be used more generally
+
+fast unsafe
+use "gb.form"
+use "gb.form.terminal"
+
+Public MemoryStart As Long = 0
+Public MemoryEnd As Long = 0
+Public MemoryLen As Long = 0
+Public TermOut As TerminalView
+Public LastValue As Byte
+Public Databuffer As Byte[]
+Public EchoChar As Boolean = false
+Public MyObs As Observer
+
+Property read name as string use $name
+
+TTYFORM As Form
+
+Public Sub _new(Start As Long, len As Long, StartMessage As string)
+
+  openTTYWindow()
+
+  MemoryStart = Start
+  MemoryEnd = Start
+  MemoryLen = 16
+  TermOut.Print("Ready at " & Hex(Start, 6) & "\n\r")
+  error "TTY Defined at : "; Hex(Start, 6); " For length("; len; ")"; Hex(len)
+  if StartMessage <> "" then
+  TermOut.Print(StartMessage & "\n\r")
+  endif
+  DataBuffer = New Byte[]
+  $name = "TTY"
+End
+
+Public sub halt()
+   TTYFORM.close()
+end
+
+Public Sub _Put(address As Long, Value As Byte)
+   'print "TTY: Write Request Address=$";hex(address,4);;"With Data=$";hex(Value,2)
+  if address = MemoryStart+1 then         'put the data
+    LastValue = value
+    'if value = 10 or value = 13 then
+   '   TermOut.Print("\n\r")
+   ' else
+      TermOut.Print(Chr(Value))
+      TermOut.refresh()
+   ' endif
+  else                                              'Write Status and config stuff
+    'print "Status set ACIA"&bin(Value)
+  endif
+End
+
+Public Sub _get(address As Long) As Byte
+ 'print "TTY: Read Request Address=$";hex(address,4)
+ If address = MemoryStart + 1 Then          'Then Read A byte
+         if DataBuffer.count > 0 Then
+           Return DataBuffer.Pop()
+        Else
+           Return 0
+        Endif
+ else                                               'Read The Status register
+   dim status as byte = 0
+   Status = bset(status,1)                          'Can Always write something
+   if DataBuffer.count > 0 then
+      'print "TTY : Byte Avaiable for read COUNT = ";DataBuffer.count
+      Status = bset(status,0)                       ' set if something to be read
+    else
+      Status = bclr(status,0)
+    ENDIF
+  endif
+  return status
+
+End
+
+Public Sub KeyPress(bkeypress As Byte)
+
+ 'if bkeypress = 13 then bKeyPress = 10
+ DataBuffer.Add(bKeypress, 0)
+ If EchoChar Then
+    TermOut.Print(Chr(bKeyPress))
+    If bkeypress = 13 Then
+      TermOut.Print("\n")
+    Endif
+ Endif
+
+End
+
+
+Public Sub _InRange(Address As Long) As Boolean
+
+  If Address >= MemoryStart And Address <= MemoryEnd Then Return True
+  Return False
+
+End
+
+Sub openTTYWindow()
+
+  TTYForm = New Form As "MyTerminal"
+  TTYFORM.W = 600
+  TTYFORM.H = 600
+  TTYFORM.title = " 6502 tty "
+
+  TTYFORM.show()
+  TermOut = New TerminalView(TTYForm) As "MyView"
+  TermOut.Enabled = True
+  TermOut.ReadOnly = False
+  TermOut.Width = TTYForm.width - 2
+  TermOut.Height = TTYForm.Height - 2
+
+End
+
+Public Sub MyTerminal_open()
+
+  TTYForm.x = Settings["TTYForm/Window/X", 100]
+  TTYForm.y = Settings["TTYForm/Window/Y", 100]
+
+End
+
+Public Sub MyTerminal_close()
+
+  Settings["TTYForm/Window/X"] = TTYForm.X
+  Settings["TTYForm/Window/Y"] = TTYForm.y
+
+End
+
+
+Public Sub MyView_KeyPress()
+ dim mykey as string = key.text
+ 'print key.text;
+ if isAscii(mykey)          'isletter(mykey) or isnumber(mykey) or ispunct(mykey) or mykey = "\n" or mykey = "\r" OR isSpace(mykey) Then
+      KeyPress(Asc(Key.text))
+ endif
+
+End
+
+

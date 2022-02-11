@@ -1,0 +1,443 @@
+' Gambas class file
+FAST UNSAFE
+'' PIA Disk Drive
+'' Emulates a PIA to a degree as used by the ctmon65 Interface
+'' reads on port A data, writes date thru port a
+'' Port b sets a but high when the PIA has data for the program
+'' It Implements a minimum set to the Remote disk emulation bellow here
+'' As required by ctmon65
+'' CTMON65 is a open sourced monitor for 6502 system
+'' 09/20/2018 by Bob Applegate K2UT bob@corshamtech.com"
+
+'lets define the directory to be used as user.home &/6502/drives/Disk0
+drives As String[] = ["disk0", "disk1", "disk2", "disk3"]
+ActiveDrive As Integer = 0
+CurrentFile As File = Null
+
+
+IO_BASE As Long = &H0E000
+piaslot As Integer = 1
+IO_SIZE As Integer = 16
+PIABASE As Long = io_base + 16
+PIAREGA As Long = PIABASE                     'data reg A
+PIADDRA As Long = PIABASE                     'data dir reg A
+PIACTLA As Long = PIABASE + 1                 'control reg A
+PIAREGB As Long = PIABASE + 2                 'data reg B
+PIADDRB As Long = PIABASE + 2                 'data dir reg B
+PIACTLB As Long = PIABASE + 3                 'control reg B
+
+Public MemoryStart As Long = 0                      ' Start of this block of memory
+Public MemoryEnd As Long = 0
+Public MemoryLen As Long = 0                        ' Length of this memory block
+
+Property Read Name As String Use $Name              ' Every device gets a name
+Property Read DiskDriveLocation As String Use $DiskDriveLocation
+
+InputBuffer As New Byte[]                           ' Data from the cpu           a reg
+OutPutBuffer As New Byte[]                          ' Data to be sent to the cpu  a reg
+
+'' We are going to ignore all the direction stuff and init stuff except for
+'' this can be fully parallel in direction as well and we just want to look
+'' like the disk drive
+
+'' reg b bit 0 Direction bit                always output
+'' reg b bit 1 write PSTrobe  or ack,       always output
+'' reg b Bit 2 read strobe or ack,          always input
+
+'' Masks for iobits for b register
+Const DIRECTION As Byte = &h01
+Const PSTROBE As Byte = &h02
+Const ACK As Byte = &h04
+
+Public Sub _New(Start As Long, Length As Long, DiskDriveLocation As String)
+
+  MemoryStart = Start
+  MemoryEnd = start + Length - 1
+  MemoryLen = 16
+  $Name = "PIADISK"
+  dim LocationAndDrives as string[] = split(DiskDriveLocation,":","\"\"",true,false)
+  $DiskDriveLocation = LocationAndDrives[0]
+  if LocationAndDrives.count > 1 Then
+     drives = new string[]
+     for i as integer = 1 to LocationAndDrives.Max
+       if not exist($DiskDriveLocation &/ LocationAndDrives[i]) Then
+          shell.mkdir($DiskDriveLocation &/ LocationAndDrives[i])
+       Endif
+       drives.add(LocationAndDrives[i])
+     next
+  endif
+  Debug "PiaDisk Port Defined at : "; Hex(Start, 6); " For length("; length; ")"; Hex(length);; "Disk Drive location:"; $DiskDriveLocation
+
+End
+' * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+' This reads a byte From the Arduino And returns it In
+' A.Assumes ParSetRead was called before.
+'
+' This does Not have a Time - out.
+'
+' Preserves all other registers.
+'
+' Read cycle: calls the _get function
+'
+' 1. Wait For other side To Raise ACK, indicating data Is Ready.
+' 2. Read data.
+' 3. Raise PSTROBE indicating data was read.
+' 4. Wait For ACK To go low.
+' 5. Lower PSTROBE.
+
+
+fast unsafe Public Sub _get(Address As Long) As Byte
+  'dim result as byte
+
+  Select Case Address
+    Case PIAREGA
+      If OutPutBuffer.count > 0 Then
+        'print "Pia Reg a Request Data, reply with data"
+        Return OutPutBuffer.pop()
+      ELSE
+        print "Pia Invalid data read request "
+        return 0
+      Endif
+
+    Case PiaRegb
+      'print "Pia Reg B Request Data"
+      If OutPutBuffer.count > 0 Then
+        'print "Pia Reg B Request Data, reply ACK"
+        Return ACK
+      Else
+       'print "Pia Reg B Request Data, reply NONE"
+        Return 0
+      Endif
+
+    Case PiaDdrA
+      Print "PIA DDR message port a  query"
+      Return
+    Case PIADDRB
+      Print "PIA DDR message port b query"
+      Return
+    Case PIACTLA
+      Print "PIA Ctrl message port a query"
+      Return
+    Case Piactlb
+      Print "PIA Ctrl message port b query"
+      Return
+
+    Case Else
+      Print "Parallel: Read Request Unknow port Address=$"; Hex(address, 4);;"Expected";;hex(PIABASE,4)
+
+  End Select
+
+  Return 0
+
+End
+
+' * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+' This writes a single byte To the Arduino.On entry,
+' the byte To Write Is In A.This assumes ParSetWrite
+' was already called.
+'
+' Destroys A, all other registers preserved.
+'
+' Write cycle: sent to this _Put function
+'
+' 1. Wait For other side To lower ACK.
+' 2. Put data onto the bus.
+' 3. Set DIRECTION And PSTROBE To indicate data
+' Is Valid And ready To read.
+' 4. Wait For ACK Line To go high, indicating the other side has Read the data.
+' 5. Lower PSTROBE.
+' 6. Wait For ACK To go low, indicating End Of transfer
+
+'-------------------------------------------------------------------------------------------------------
+fast unsafe Sub CompleteMsg() As Boolean
+  'print "PIA Complete Message, checking for complete message ";DiskCmdText[InputBuffer.last]
+  Select Case InputBuffer.last
+    Case PC_PING, PC_GET_DIR, PC_DONE
+      Return True
+
+    Case PC_READ_FILE, PC_WRITE_FILE ,PC_RM_FILE       ' this requires as string
+      If InputBuffer.first = 0 Then
+        Return True
+      Endif
+
+    Case PC_READ_BYTES                      ' this requires one more byte length
+      If InputBuffer.count >= 2 Then
+        Return True
+      Endif
+
+    Case PC_WRITE_BYTES
+      If InputBuffer.count >= 2 Then
+        If InputBuffer.count >= (InputBuffer[InputBuffer.Max - 1] + 2) Then
+          'Print "Pia Write Bytes Block Recieved request len = ";InputBuffer[InputBuffer.Max - 1] ; " Buffer len = ";InputBuffer.count
+          Return True
+        Endif
+      Endif
+
+    Case Else
+      print "Pia Waiting for unknown command : ";hex(InputBuffer.last);" Buffer len = ";InputBuffer.count
+
+  End Select
+  Return False
+
+End
+
+fast unsafe Public Sub _put(Address As Long, value As Byte)
+
+  Select Case Address
+    Case PIAREGA
+      'print "Pia Reg a Message  Data=$";hex(value,2)
+      InputBuffer.add(value, 0)
+      'Print "Pia Recieved ";hex(value)
+      If CompleteMsg() Then DiskCmdProcess()
+      Return
+
+    Case PiaRegb
+      Print "PIA Data message port b $"; Hex(value, 2)
+      Return
+
+    Case PiaDdrA
+      Print "PIA DDR message port a $"; Hex(value, 2)
+      Return
+    Case PIADDRB
+      Print "PIA DDR message port b $"; Hex(value, 2)
+      Return
+    Case PIACTLA
+      Print "PIA Ctrl message port a $"; Hex(value, 2)
+      Return
+    Case Piactlb
+      Print "PIA Ctrl message port b $"; Hex(value, 2)
+      Return
+
+  End Select
+
+ ' Print "Parallel: Write Request Address=$"; Hex(address, 4);; "With Data=$"; Hex(value, 2)
+
+End
+
+fast unsafe Public Sub _InRange(Address As Long) As Boolean
+
+  If Address >= MemoryStart And if Address <= MemoryEnd Then Return True
+  Return False
+
+End
+
+'---------------------------------------------------------------------------------------------------------
+'Remote disk emulation bellow here
+' == == == == == == == == == == == == == == == == == == == == == == == == == == =
+' Commands From host To Arduino
+'
+DiskCmdText as collection = [str(&H01):"PC_GET_VERSION",
+                             str(&H05):"PC_PING",str(&H06):"PC_LED_CONTROL",str(&H10):"PC_GET_DIR",str(&H11):"PC_GET_MOUNTED",str(&H12):"PC_MOUNT",str(&H13):"PC_UNMOUNT",
+                             str(&H14):"PC_GET_STATUS",str(&H15):"PC_DONE/PC_ABORT",str(&H16):"PC_READ_FILE",str(&H17):"PC_READ_BYTES",str(&H18):"PC_RD_SECTOR",str(&H19):"PC_WR_SECTOR",
+                             str(&H1a):"PC_GET_MAX",str(&H1b):"PC_WRITE_FILE",str(&H1c):"PC_WRITE_BYTES",str(&H1d):"PC_SAVE_CONFIG",str(&H1e):"PC_SET_TIMER",str(&H1f):"PC_WR_SEC_LONG",
+                             str(&H20):"PC_RD_SEC_LONG",str(&H81):"PR_VERSION_INFO",str(&H82):"PR_ACK",str(&H83):"PR_NAK",str(&H85):"PR_PONG",str(&H90):"PR_DIR_ENTRY",str(&H91):"PR_DIR_END",
+                             str(&H92):"PR_FILE_DATA",str(&H93):"PR_STATUS",str(&H94):"PR_SECTOR_DATA",str(&H95):"PR_MOUNT_INFO",str(&H96):"PR_MAX_DRIVES"]
+
+Const PC_GET_VERSION As Byte = &H01
+Const PC_PING As Byte = &H05                     ' ping Arduino
+Const PC_LED_CONTROL As Byte = &H06              ' LED control
+Const PC_GET_DIR As Byte = &H10                  ' Get directory
+Const PC_GET_MOUNTED As Byte = &H11              ' Get mounted drive list
+Const PC_MOUNT As Byte = &H12                    ' Mount drive
+Const PC_UNMOUNT As Byte = &H13                  ' Unmount drive
+Const PC_GET_STATUS As Byte = &H14               ' Get status For one drive
+Const PC_DONE As Byte = &H15                     ' Stop data
+Const PC_ABORT As Byte = PC_DONE
+Const PC_READ_FILE As Byte = &H16                ' Read regular file(non - DSK)
+Const PC_READ_BYTES As Byte = &H17               ' Read sas byte = ential bytes
+Const PC_RD_SECTOR As Byte = &H18                ' Read FLEX sector
+Const PC_WR_SECTOR As Byte = &H19                ' Write FLEX sector
+Const PC_GET_MAX As Byte = &H1a                  ' Get maximum drives
+Const PC_WRITE_FILE As Byte = &H1b               ' Open file For writing
+Const PC_WRITE_BYTES As Byte = &H1c              ' Data To be written
+Const PC_SAVE_CONFIG As Byte = &H1d              ' Save SD.CFG With current values
+Const PC_SET_TIMER As Byte = &H1e                ' Set RTC Timer
+Const PC_WR_SEC_LONG As Byte = &H1f              ' Write sector With long sec num
+Const PC_RD_SEC_LONG As Byte = &H20              ' Read sector With long sec num
+Const PC_RM_FILE as byte = &H21                  ' Remove a file from disk
+'
+' == == == == == == == == == == == == == == == == == == == == == == == == == == =
+' Responses From Arduino To host
+'
+Const PR_VERSION_INFO As Byte = &H81             ' Contains version information
+Const PR_ACK As Byte = &H82                      ' ACK(no additional information)
+Const PR_NAK As Byte = &H83                      ' NAK - one status byte follows
+Const PR_PONG As Byte = &H85                     ' Reply To a ping
+Const PR_DIR_ENTRY As Byte = &H90                ' Directory entry
+Const PR_DIR_END As Byte = &H91                  ' End Of directory entries
+Const PR_FILE_DATA As Byte = &H92                ' File data
+Const PR_STATUS As Byte = &H93                   ' Drive status
+Const PR_SECTOR_DATA As Byte = &H94              ' Sector data
+Const PR_MOUNT_INFO As Byte = &H95               ' Mount entry
+Const PR_MAX_DRIVES As Byte = &H96               ' Maximum number Of drives
+'
+' == == == == == == == == == == == == == == == == == == == == == == == == == == =
+' Error codes For NAK events.Yes, these are In
+' decimal due To an Error In the original
+' documentation.
+'
+Const ERR_NONE As Byte = 0
+Const ERR_NOT_MOUNTED As Byte = 10
+Const ERR_MOUNTED As Byte = 11
+Const ERR_NOT_FOUND As Byte = 12
+Const ERR_READ_ONLY As Byte = 13
+Const ERR_BAD_DRIVE As Byte = 14
+Const ERR_BAD_TRACK As Byte = 15
+Const ERR_BAD_SECTOR As Byte = 16
+Const ERR_READ_ERROR As Byte = 17
+Const ERR_WRITE_ERROR As Byte = 18
+Const ERR_NOT_PRESENT As Byte = 19
+Const ERR_NOT_IMPL As Byte = 20                 ' Command Not implemented
+'=============================================================================
+
+' send PR_NAK If a file Error occurs
+
+fast unsafe Sub DiskCmdProcess()
+   Dim FileName as string = ""
+  If InputBuffer.count = 0 Then Return
+  Select Case InputBuffer.pop()
+
+    Case PC_PING
+      'print "Pia Respond to Ping Request"
+      OutPutBuffer.add(PR_PONG, 0)
+      Return
+
+    Case PC_GET_DIR                             'q all entries, Each name terminated With a 0 value
+
+      dim directoryPath as string = $DiskDriveLocation &/ drives[ActiveDrive]
+      'print "Pia Respond to Get Dir ";directoryPath
+      dim Directories as string[] =  Dir(directoryPath, "*", gb.File)
+
+      For Each s As String In Directories
+       ' print "Pia DIrectory entry added :";;s
+        OutPutBuffer.add(PR_DIR_ENTRY, 0)
+        For i As Integer = 0 To s.Len - 1
+          OutPutBuffer.add(Asc(s[i]), 0)
+        Next
+        OutputBuffer.add(0, 0)
+      Next
+      'Print "Pia : End of Directory sent"
+      OutPutBuffer.add(PR_DIR_END, 0)           'send this after the last directory entry was sent
+      Return
+
+    Case PC_RM_FILE
+      FileName = $DiskDriveLocation &/ drives[ActiveDrive] &/ GetFileName()
+      'print "Pia Respond to remove File  : "&Filename
+      Try kill filename
+      If Error Then
+        PRINT "Pia Disk remove file error : ";error.text, error.where
+        OutputBuffer.add(PR_NAK,0)
+        OutPutBuffer.add(ERR_NOT_FOUND,0)
+      Else
+        OutputBuffer.add(PR_ACK, 0)
+        'PRINT "Pia Disk Queue remove Ack, Queue Len=";OutputBuffer.count
+      Endif
+
+    Case PC_READ_FILE                            ' Open a file for reading
+
+      FileName = $DiskDriveLocation &/ drives[ActiveDrive] &/ GetFileName()
+      'print "Pia Respond to Open File for read : "&Filename
+      Try CurrentFile = Open filename For Read
+      If Error Then
+        PRINT "Pia Disk open file error : ";error.text, error.where
+        OutputBuffer.add(PR_NAK,0)
+        OutPutBuffer.add(ERR_NOT_FOUND,0)
+      Else
+
+        OutputBuffer.add(PR_ACK, 0)
+        'PRINT "Pia Disk Queue Open Ack, Queue Len=";OutputBuffer.count
+      Endif
+
+    Case PC_READ_BYTES                            ' send this to get some byte from the open file
+     ' print "Pia Respond to read file information Request"
+      Dim len As Integer = 0
+      len = (len Or InputBuffer.pop())
+      Dim fileReadBuf As New Byte[len]
+
+      If Eof(CurrentFile) Then
+        OutPutBuffer.add(PR_FILE_DATA, 0)
+        OutPutBuffer.add(0, 0)                   ' Length of zero means end of file
+      '  PRINT "Pia Disk End of file reached Output Queue len=";outputbuffer.count
+        return
+      Endif
+
+      Dim CurrentPos As Long = Seek(CurrentFile)
+      Dim LengthOfFile As Long = Lof(CurrentFile)
+      Dim Toread As Long = LengthOfFile - CurrentPos
+
+      If ToRead < len Then len = toread
+      Try fileReadBuf.Read(CurrentFile, 0, len)
+      If Error Then
+        Print "PiaDisk read error : "; Error.text, error.where
+        OutPutBuffer.add(PR_NAK, 0)
+        Return
+      Endif
+
+      OutPutBuffer.add(PR_FILE_DATA, 0)
+      OutputBuffer.add(len, 0)
+      for ii as integer = 0 TO len-1
+        OutputBuffer.add(filereadbuf[ii],0)
+      next
+      'print "Pia Disk Read send ";len;" bytes, Queue Len = ";OutputBuffer.count
+
+    Case PC_WRITE_FILE                           ' open a file for writing
+      FileName = $DiskDriveLocation &/ drives[ActiveDrive] &/ GetFileName()
+      'print "Pia Respond to Open File for write :";;filename
+      Try CurrentFile = Open filename For write Create
+      If Error Then
+        Print "Open for write error : ";error.text, error.where
+        OutputBuffer.add(PR_NAK, 0)
+        OutPutBuffer.add(ERR_NOT_FOUND,0)
+      Else
+        OutputBuffer.add(PR_ACK, 0)
+      Endif
+
+    Case PC_WRITE_BYTES                          ' Send this with the data to put in file
+
+      Dim WriteLen, count  As Integer
+      WriteLen = (WriteLen Or InputBuffer.pop())
+      'print "Pia Respond to write file information Request len="; WriteLen
+      Dim writeBuffer As New Byte[]
+      count = 0
+      While InputBuffer.count > 0
+        WriteBuffer.Add(InputBuffer.pop())
+        Inc Count
+      Wend
+      'Print "Pia Write length given ";WriteLen;" Sent Length recieved ";count
+      Try WriteBuffer.Write(CurrentFile)
+      If Error Then
+        Print "Pia error write to disk : ";error.text,error.where
+        OutputBuffer.add(PR_NAK, 0)                   ' Nak each block of error data
+        OutputBuffer.add(ERR_WRITE_ERROR,0)
+      Else
+        OutputBuffer.add(PR_ACK, 0)                   ' ack each block of data
+        'Print "Pia Write Ack - Complete Buffer len = ";OutputBuffer.count
+      Endif
+
+    Case PC_DONE                                 'close the open file send no response
+      'print "Pia Respond to close file Request, Output Queue Len=";OutputBuffer.count
+      If CurrentFile <> Null Then
+        Close CurrentFile
+        CurrentFile = Null
+      Endif
+
+   Case Else
+     Print "Pia Unknown command ";hex(InputBuffer.last);" buffer len = ";InputBuffer.count
+
+  End Select
+
+End
+
+Sub GetFileName() As String
+
+  Dim filename As String = ""
+  Dim val As Byte = InputBuffer.pop()
+
+  While val <> 0 And InputBuffer.count > 0
+
+    FileName &= Chr(val)
+    val = InputBuffer.pop()
+  Wend
+  return filename
+End
+

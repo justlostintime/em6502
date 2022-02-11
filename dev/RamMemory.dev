@@ -1,0 +1,96 @@
+' Gambas class file
+'' Ram Memory
+'' You may add as memny ram memory devices as required
+'' if the ram has spaced between addresses you will need to
+'' define a ram device for each block
+'' when defining ram memory block you may also have binaries loaded
+'' automatically by adding the parameter in the format "bin1,bin2,.."
+'' Just make sure the load points don't overlap
+
+Fast Unsafe
+Public MemoryStart As Long = 0                    ' Start of this block of memory
+Public MemoryEnd As Long = 0
+Public MemoryLen As Long = 0                      ' Length of this memory block
+
+Public Mem As Byte[]                              ' The actual memory
+Property read Name as string use $Name            ' Every device gets a name
+Property read BinLoaded as string use $BinLoaded  ' coma seperated list of all loaded binaries
+
+Public Sub _New(Start As Long, Length As Long, LoadImages As String)
+
+  MemoryStart = Start
+  MemoryEnd = start + Length - 1
+  MemoryLen = Length
+  Mem = New Byte[Length]
+  $Name = "RAM"
+  Debug "Ram Defined at : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length)
+  If LoadImages <> ""  Then
+    Load(LoadImages)
+  Endif
+
+End
+
+Public Sub _get(memoryAddress As Long) As Byte
+ 'dim result as byte
+
+  'result =  Mem[memoryAddress - MemoryStart]
+  'If Error Then
+  '  debug Subst("Memory access error at (&1 - &2) offset &3", Hex(memoryAddress), Hex(MemoryStart), Hex(MemoryAddress - MemoryStart))
+  '  Return &hff
+  'Endif
+
+  return Mem[memoryAddress - MemoryStart]
+
+End
+
+Public Sub _put(memoryAddress As Long, value As Byte)
+  'print "Store to "; hex(MemoryAddress,6) ;; "Value = ";Hex(value,2);; "Read = ";
+  Mem[memoryAddress - MemoryStart] = value
+  'print hex(Mem[memoryAddress - MemoryStart],2)
+End
+
+Public Sub _InRange(Address As Long) As Boolean
+
+  If Address >= MemoryStart And if Address <= MemoryEnd Then 
+      Return True
+  endif
+  Return False
+
+End
+
+'' We expect any binary image to contain in the first two byte the origin address
+'' Using dasm as the assembler of choice
+
+Public Sub Load(sBinSources As string ) as long ' For ram we can load a number Of files into Memory
+  dim binsources as string[] = split(sBinSources,",","\"\"",true,false)
+  print "Ram Load Request ";sBinSources
+  For Each BinSource As String In BinSources
+    Dim BinInfo As File
+    Dim al as byte 
+    Dim ah As Byte
+
+    Try BinInfo = Open BinSource For Read
+
+    Read #BinInfo, al
+    Read #BinInfo, ah
+
+    Dim address As Long = 0
+    Address = Address or ah
+    Address = (Address shl 8) or al
+    Print "Loading Image to address "; hex(address,4)
+    Dim Length As Integer = Lof(BinInfo) - 2
+
+    If (Address < MemoryStart) Or If (Address + length - 1) > MemoryEnd Then
+      Error.Raise(Subst("Invalid Memory Address Scope for &1, Starts at $&2 for length of $&3", BinSOurce, Hex(address, 6), Hex(Length, 4)))
+    Endif
+    If Error Then Error.Raise("Missing Ram Source file")
+    Try mem.Read(BinInfo, Address, Length)
+    If Error Then Error.Raise(subst("Error reading Ram Source at address &1 for length &2 :&3",hex(address,4),length,  Error.text))
+    Debug "Binary Ram Image "; BinSource; " at Address:"; Hex(address, 6)
+  Next
+ dim bindef as string = BinSource &":"&hex(address,4)
+ $BinLoaded &= iif($binLoaded = "",BinDef,","&BinDef)
+ return address
+End
+
+

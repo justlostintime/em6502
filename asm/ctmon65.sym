@@ -1,0 +1,342 @@
+--- Symbol List (sorted by symbol)
+ACIA                     e000              (R )
+ACK                      0004              (R )
+argc                     e031                  
+argv                     e032                  
+AutoRun                  df04              (R )
+BELL                     0007                  
+BS                       0008              (R )
+buffer                   df0a              (R )
+BUFFER                   dfad              (R )
+BUFFER_SIZE              0084              (R )
+BUFFERED_INPUT           0000                  
+BYTESLINE                0010              (R )
+cDesc                    f150              (R )
+CHKL                     dfa9              (R )
+cin                      fb70              (R )
+cinecho                  f9d8              (R )
+cinit                    fb57              (R )
+CINvec                   f009                  
+closeonly                fac3              (R )
+CloseOutFile             fab7              (R )
+cmdFound                 f0f3                  
+cmdLoop                  f29d              (R )
+cmdMatch                 f2b4              (R )
+cmdNotFound              f2c5              (R )
+cmdRet                   f2dd              (R )
+cmdRet2                  f815              (R )
+cmdRet3                  f437                  
+cmdRet4                  f92e                  
+COLDvec                  f000                  
+commandTable             f0f6              (R )
+CONSOLE_SLOT             0000              (R )
+cout                     fb63              (R )
+cout1                    fb64              (R )
+COUTvec                  f00c                  
+CR                       000d              (R )
+crlf                     fb3c              (R )
+CRLFvec                  f018                  
+cstatus                  fb7b              (R )
+CSTATvec                 f00f                  
+CTMON65rev               f007                  
+CTMON65ver               f006                  
+DATA_RECORD              0000              (R )
+dDesc                    f171              (R )
+DDNEnd                   fbd6              (R )
+DDNErr                   fbdf              (R )
+DDNloop                  fbc7              (R )
+DefaultIRQ               fc93              (R )
+DefaultNMI               fc93              (R )
+DIRECTION                0001                  
+diskBufLength            dfa8              (R )
+diskBufOffset            dfa7              (R )
+DiskClose                fc88              (R )
+DISKCLOSEvec             f042                  
+DiskDir                  fba9              (R )
+DiskDirNext              fbb3              (R )
+DISKDIRNEXTVEC           f033                  
+DISKDIRvec               f030                  
+DiskOk                   fc49              (R )
+DiskOk1                  fc83              (R )
+DiskOpen                 fbe6              (R )
+DiskOpenErr              fc0d              (R )
+DiskOpenLoop             fbf4              (R )
+DiskOpenRead             fbe4              (R )
+DISKOPENREADvec          f036                  
+DiskOpenWrite            fc15              (R )
+DISKOPENWRITvec          f039                  
+DiskPing                 fb96              (R )
+DISKPINGvec              f02d                  
+DiskRead                 fc1f              (R )
+DiskReadEof              fc4b              (R )
+DiskReadLoop             fc3c              (R )
+DISKREADvec              f03c                  
+DiskRemoveFile           fc1a              (R )
+DiskRetGood              fba4                  
+DISKRMvec                f045                  
+DiskWrite                fc51              (R )
+DiskWriteLoop            fc68              (R )
+DISKWRITEvec             f03f                  
+displayHelp              f7ef              (R )
+doContinue               f72e              (R )
+doDiskDir                f958              (R )
+doDiskDirEnd             f955              (R )
+doDiskDirLoop            f972              (R )
+DRIVES                   0004                  
+dumpBuffer               f350              (R )
+DumpRegisters            f699              (R )
+EAH                      df98              (R )
+EAL                      df97              (R )
+eDesc                    f18e              (R )
+editMem1                 f38f              (R )
+editMem2                 f3bb              (R )
+editMem3                 f3b2              (R )
+editMemory               f370              (R )
+EnableGetline            0000              (R )
+EnableParse              0000              (R )
+EOF_RECORD               0001              (R )
+ERR_BAD_DRIVE            000e                  
+ERR_BAD_SECTOR           0010                  
+ERR_BAD_TRACK            000f                  
+ERR_MOUNTED              000b                  
+ERR_NONE                 0000                  
+ERR_NOT_FOUND            000c                  
+ERR_NOT_IMPL             0014                  
+ERR_NOT_MOUNTED          000a                  
+ERR_NOT_PRESENT          0013                  
+ERR_READ_ERROR           0011                  
+ERR_READ_ONLY            000d                  
+ERR_WRITE_ERROR          0012                  
+EXTENDED_CMDS            0000              (R )
+FALSE                    0000              (R )
+filename                 df9a              (R )
+FILENAME_SIZE            000c              (R )
+FULL_STATUS              0001              (R )
+getAddrRange             f7a6              (R )
+getDone                  f793              (R )
+getEndAddr               f794              (R )
+getFileName              f645              (R )
+getFilename1             f647              (R )
+getFnDel                 f65f              (R )
+getFnDone                f675              (R )
+getFnU                   f672              (R )
+getHex                   f748              (R )
+getline                  fb04              (R )
+GETLINEvec               f015                  
+getNextEof               fa1c              (R )
+getNextFileByte          f9f7              (R )
+getNibBad                f76d              (R )
+getNibble                f760              (R )
+getNibble1               f765              (R )
+getNibF                  f76f              (R )
+getStartAddr             f782              (R )
+HandleIRQ                fc90              (R )
+HandleNMI                fc8d              (R )
+hasdata                  fa13              (R )
+hDesc                    f1a8              (R )
+HexA                     fb1f              (R )
+HexDigit                 fb2e              (R )
+HexDigit1                fb37              (R )
+hexdot                   f325              (R )
+hexDump                  f2e0              (R )
+hexdump1                 f301              (R )
+hexdump2                 f315              (R )
+hexdump3                 f313                  
+hexdump4                 f338              (R )
+hexdump91                f35f              (R )
+hexdump99                f364              (R )
+hexdumpchk               f32a                  
+hexdumpend               f346              (R )
+hexpr                    f327              (R )
+hexta                    f9a4              (R )
+hexta1                   f9ad              (R )
+HexToOutput              f995              (R )
+ID                       dfaa              (R )
+INCPT                    f931              (R )
+incpt2                   f937              (R )
+INH                      00f3              (R )
+INL                      00f2              (R )
+inputVector              df06              (R )
+IO_BASE                  e000              (R )
+IO_SIZE                  0010              (R )
+IRQvec                   df00              (R )
+jDesc                    f1c6              (R )
+jumpAddress              f2c6              (R )
+lDesc                    f1e4              (R )
+lExit1                   f4e4              (R )
+LF                       000a              (R )
+loadAbort                f4b1              (R )
+loadData1                f4ec              (R )
+loadDataRec              f4e7              (R )
+loadEof                  f4c7              (R )
+loadExit                 f4c1              (R )
+loadHex                  f3d1              (R )
+loadHexConsole           f440              (R )
+loadHexOk                f43a              (R )
+loadStart                f46e              (R )
+MAX_ARGC                 0005              (R )
+mDesc                    f200              (R )
+memabort                 f812              (R )
+memCheck                 f89c              (R )
+memDone                  f8d6              (R )
+memFail                  f8df              (R )
+memFill3                 f881              (R )
+memFill4                 f886              (R )
+memFill5                 f895              (R )
+memTest                  f818              (R )
+memTest2                 f8af              (R )
+memTest3                 f8bb              (R )
+memTest4                 f8c0              (R )
+memTest5                 f8cf              (R )
+memTestFill              f876              (R )
+memTestMain              f85f              (R )
+nibbleHex                f772              (R )
+nibbleHexEnd             f782                  
+NMIvec                   df02              (R )
+openfail                 f41c              (R )
+original                 df8f              (R )
+OUTHEXvec                f01b                  
+outputVector             df08              (R )
+parse                    fb1e                  
+parse2                   fb1e                  
+pattern                  df8e              (R )
+PATTERN_0                0001              (R )
+PATTERN_9                00ba              (R )
+PC_ABORT                 0015                  
+PC_DONE                  0015              (R )
+PC_GET_DIR               0010              (R )
+PC_GET_MAX               001a                  
+PC_GET_MOUNTED           0011                  
+PC_GET_STATUS            0014                  
+PC_GET_VERSION           0001                  
+PC_LED_CONTROL           0006                  
+PC_MOUNT                 0012                  
+PC_PING                  0005              (R )
+PC_RD_SEC_LONG           0020                  
+PC_RD_SECTOR             0018                  
+PC_READ_BYTES            0017              (R )
+PC_READ_FILE             0016              (R )
+PC_RM_FILE               0021              (R )
+PC_SAVE_CONFIG           001d                  
+PC_SET_TIMER             001e                  
+PC_UNMOUNT               0013                  
+PC_WR_SEC_LONG           001f                  
+PC_WR_SECTOR             0019                  
+PC_WRITE_BYTES           001c              (R )
+PC_WRITE_FILE            001b              (R )
+pDesc                    f21a              (R )
+PIABASE                  e010              (R )
+PIACTLA                  e011                  
+PIACTLB                  e013                  
+PIADDRA                  e010                  
+PIADDRB                  e012                  
+PIAREGA                  e010              (R )
+PIAREGB                  e012              (R )
+PIASLOT                  0001              (R )
+pingDisk                 f938              (R )
+pNFB                     f691              (R )
+PR_ACK                   0082              (R )
+PR_DIR_END               0091              (R )
+PR_DIR_ENTRY             0090                  
+PR_FILE_DATA             0092                  
+PR_MAX_DRIVES            0096                  
+PR_MOUNT_INFO            0095                  
+PR_NAK                   0083              (R )
+PR_PONG                  0085                  
+PR_SECTOR_DATA           0094                  
+PR_STATUS                0093                  
+PR_VERSION_INFO          0081                  
+prompt                   f0ba              (R )
+prompt2                  f0cf              (R )
+PSICHO                   fad6              (R )
+PSINB                    facc              (R )
+PSIX1                    fae0              (R )
+PSIX2                    fae6              (R )
+PSTROBE                  0002                  
+putNextFileByte          f67d              (R )
+puts                     fae9              (R )
+puts1                    faf3              (R )
+putsdone                 fb03              (R )
+putsil                   fac6              (R )
+PUTSILvec                f012                  
+putsp                    00f4              (R )
+putsy                    faeb              (R )
+quesDesc                 f133              (R )
+RAM_START                df00              (R )
+rDesc                    f23d              (R )
+RDRF                     0001              (R )
+redirectedGetch          f9f4              (R )
+redirectedOutch          f9af              (R )
+RESET                    f048              (R )
+ret1                     f34d              (R )
+REVISION                 0003              (R )
+rmFile                   fa26              (R )
+rmOk                     fa5a              (R )
+ROM_START                f000              (R )
+SAH                      df96              (R )
+SAL                      df95              (R )
+SaveA                    df8e              (R )
+SaveC                    df93              (R )
+saveHex                  f517              (R )
+savehex2                 f56e              (R )
+saveHexConsole           f56b              (R )
+SavePC                   df91              (R )
+SaveSP                   df94              (R )
+SaveX                    df8f              (R )
+SaveY                    df90              (R )
+Scnt                     f5d6              (R )
+SD_ENABLED               0001              (R )
+sdec                     f60c                  
+Sdef                     f5d4              (R )
+sDesc                    f25c              (R )
+SDone                    f5c5              (R )
+searchCmd                f29b              (R )
+setInputConsole          f9cd              (R )
+setInputFile             f9e1              (R )
+setOutputConsole         f9b2              (R )
+setOutputFile            f9bd              (R )
+Sgo                      f5c8              (R )
+shf2                     f630              (R )
+showHelp                 f7c5              (R )
+showHelpDone             f811              (R )
+showHelpLoop             f7f1              (R )
+slab1                    f58f              (R )
+Sloop1                   f599              (R )
+Sloop2                   f5ff              (R )
+sopenok                  f565              (R )
+space                    fb4f              (R )
+space2                   fb4c              (R )
+space3                   fb49              (R )
+sptr                     00f0              (R )
+tDesc                    f27e              (R )
+TDRE                     0002              (R )
+Temp16H                  dfac              (R )
+Temp16L                  dfab              (R )
+tempA                    df99              (R )
+testbit                  f71f              (R )
+testbit1                 f72a              (R )
+ToLower                  fb05                  
+ToLower1                 fb07              (R )
+ToLower2                 fb1a              (R )
+ToLowerDone              fb1d              (R )
+TRUE                     0001              (R )
+typeEof                  fab1              (R )
+typeFile                 fa5d              (R )
+typeFile1                faa3              (R )
+typeFileLoop             faa6              (R )
+updateCrc                f98b              (R )
+VERSION                  0000              (R )
+WARM                     f0b7              (R )
+WARMvec                  f003                  
+xParInit                 fb81              (R )
+XPARINITvev              f01e                  
+xParReadByte             fb8b              (R )
+XPARREADvec              f02a                  
+xParSetRead              fb84              (R )
+XPARSETREADvec           f024                  
+xParSetWrite             fb81              (R )
+XPARSETWRITEvec          f021                  
+xParWriteByte            fb87              (R )
+XPARWRITEvec             f027                  
+ZERO_PAGE_START          00f0              (R )
+--- End of Symbol List.

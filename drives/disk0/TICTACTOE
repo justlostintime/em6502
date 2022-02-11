@@ -1,0 +1,192 @@
+1 REM
+2 REM Tiny BASIC Interpreter and Compiler Project
+3 REM Tic-tac-toe Sample Game
+4 REM
+5 REM Released as public domain by Damian Gareth Walker, 2019
+6 REM Created: 21-Sep-2019
+7 REM
+8 REM --- Variables
+9 REM     A   - first square in line examined
+10 REM     B   - second square in line examined
+11 REM     C   - third square in line examined
+12 REM     D   - player whose pieces to count
+13 REM     E   - number of D's pieces on a line
+14 REM     F   - first square of line to examine
+15 REM     G   - game winner
+16 REM     H   - which side the human takes
+18 REM     I   - increment for line to examine
+19 REM     L   - line to examine
+20 REM     M   - where to move (various uses)
+21 REM     N   - piece found in a square
+22 REM     P   - player currently playing
+23 REM     Q   - square to examine
+24 REM     R-Z - contents of the board
+25 REM --- Main Program
+26 GOSUB 40
+27 GOSUB 60
+28 GOSUB 80
+29 END
+30 REM --- Subroutine to initialise the game
+31 REM     Outputs: H - Human play order
+32 REM              P - Whose turn it is
+40 PRINT "Tic tac toe. Board positions are:"
+41 PRINT " 1  2  3"
+42 PRINT " 4  5  6"
+43 PRINT " 7  8  9"
+44 PRINT "Play first or second (1/2)?"
+45 INPUT H
+46 IF H<1 THEN GOTO 40
+47 IF H>2 THEN GOTO 40
+48 LET P=1
+49 RETURN
+50 REM --- Subroutine to take turns
+51 REM     Inputs:  H - who is the human
+52 REM              P - whose turn it is
+53 REM     Outputs: G - who won the game
+60 IF P=H THEN GOSUB 100
+61 IF P<>H THEN GOSUB 120
+62 GOSUB 200
+63 IF G>0 THEN RETURN
+64 LET P=3-P
+65 IF R=0 THEN GOTO 60
+66 IF S=0 THEN GOTO 60
+67 IF T=0 THEN GOTO 60
+68 IF U=0 THEN GOTO 60
+69 IF V=0 THEN GOTO 60
+70 IF W=0 THEN GOTO 60
+71 IF X=0 THEN GOTO 60
+72 IF Y=0 THEN GOTO 60
+73 IF Z=0 THEN GOTO 60
+74 RETURN
+75 REM --- Victory
+76 REM Inputs: H   - which side was the human
+77 REM         P   - player who won
+80 IF G=H THEN PRINT "You win!"
+81 IF G<>0 THEN IF G<>H THEN PRINT "Computer wins"
+82 IF G=0 THEN PRINT "A draw"
+83 RETURN
+84 REM --- Subroutine to allow the player to move
+85 REM     Inputs:  P   - player number
+86 REM     Outputs: M   - where the player wishes to move
+100 PRINT "Move? "
+101 INPUT Q
+102 IF Q<1 THEN GOTO 100
+103 IF Q>9 THEN GOTO 100
+104 GOSUB 220
+105 IF N<>0 THEN GOTO 100
+106 LET M=Q
+107 GOSUB 240
+108 RETURN
+109 REM --- Subroutine to make the computer's move
+110 REM     Inputs:  P   - player number
+111 REM     Outputs: M   - the move chosen
+120 LET M=0
+121 LET D=3-H
+122 GOSUB 145
+123 IF M>0 THEN GOTO 136
+124 LET D=H
+125 GOSUB 145
+126 IF M=0 THEN IF V=0 THEN LET M=5
+127 IF M=0 THEN IF R=0 THEN LET M=1    
+128 IF M=0 THEN IF T=0 THEN LET M=3    
+129 IF M=0 THEN IF X=0 THEN LET M=7    
+130 IF M=0 THEN IF Z=0 THEN LET M=9
+131 IF M=0 THEN IF S=0 THEN LET M=2    
+132 IF M=0 THEN IF U=0 THEN LET M=4    
+134 IF M=0 THEN IF Y=0 THEN LET M=8    
+135 IF M=0 THEN IF W=0 THEN LET M=6    
+136 GOSUB 240
+137 PRINT "Computer move ",M
+138 RETURN
+139 REM --- Identify moves to win or avoid a loss
+140 REM     Inputs:  D   - player whose pieces we're counting
+141 REM     Changes: E   - number of pieces on line being scanned
+142 REM              F   - first square in winning line
+143 REM              I   - increment of winning line
+144 REM              L   - line being scanned (counter)
+145 LET L=1
+146 GOSUB 170
+147 IF E<2 THEN GOTO 152
+148 IF A=0 THEN LET M=F
+149 IF B=0 THEN LET M=F+I
+150 IF C=0 THEN LET M=F+I+I
+151 IF M>0 THEN RETURN
+152 LET L=L+1
+153 IF L<9 THEN GOTO 146
+154 RETURN
+156 REM --- Count a player's pieces on a line
+157 REM     Inputs:  D   - player whose pieces we're counting
+158 REM              L   - line number
+159 REM     Changes: F   - first square on the line
+160 REM              I   - increment of the line
+161 REM              Q   - individual squares to examine
+162 REM     Outputs: A   - contents of first square
+163 REM              B   - contents of second square
+164 REM              C   - contents of third square
+165 REM              E   - number of the player's pieces
+170 IF L>3 THEN GOTO 174
+171 LET F=3*L-2
+172 LET I=1
+173 GOTO 180
+174 IF L>6 THEN GOTO 178
+175 LET F=L-3
+176 LET I=3
+177 GOTO 180
+178 LET F=1+2*(L-7)
+179 LET I=4-2*(L-7)
+180 LET E=0
+181 LET Q=F
+182 GOSUB 220
+183 LET A=N
+184 IF N=D THEN LET E=E+1
+185 LET Q=Q+I
+186 GOSUB 220
+187 LET B=N
+188 IF N=D THEN LET E=E+1
+189 LET Q=Q+I
+190 GOSUB 220
+191 LET C=N
+192 IF N=D THEN LET E=E+1
+193 RETURN
+194 REM --- Subroutine to check for a win
+195 REM     Inputs:  R-Z - board squares
+196 REM     Outputs: G   - the winning player (0 for neither)
+200 LET G=0
+201 IF R>0 THEN IF R=S THEN IF S=T THEN LET G=R
+202 IF U>0 THEN IF U=V THEN IF V=W THEN LET G=U
+203 IF X>0 THEN IF X=Y THEN IF Y=Z THEN LET G=X
+204 IF R>0 THEN IF R=U THEN IF U=X THEN LET G=R
+205 IF S>0 THEN IF S=V THEN IF V=Y THEN LET G=S
+206 IF T>0 THEN IF T=W THEN IF W=Z THEN LET G=T
+207 IF R>0 THEN IF R=V THEN IF V=Z THEN LET G=R
+208 IF T>0 THEN IF T=V THEN IF V=X THEN LET G=T
+209 RETURN
+210 REM --- Subroutine to see what piece is in a square
+211 REM     Inputs:  Q   - the square to check
+212 REM              R-Z - the contents of the squares
+213 REM     Outputs: N   - the piece in that square
+220 LET N=0
+221 IF Q=1 THEN LET N=R
+222 IF Q=2 THEN LET N=S
+223 IF Q=3 THEN LET N=T
+224 IF Q=4 THEN LET N=U
+225 IF Q=5 THEN LET N=V
+226 IF Q=6 THEN LET N=W
+227 IF Q=7 THEN LET N=X
+228 IF Q=8 THEN LET N=Y
+229 IF Q=9 THEN LET N=Z
+230 RETURN
+231 REM --- Subroutine to put a piece in a square
+232 REM     Inputs:  P   - the player whose piece should be placed
+233 REM              M   - the square to put the piece in
+234 REM     Changes: R-Z - the contents of the squares
+240 IF M=1 THEN LET R=P
+241 IF M=2 THEN LET S=P
+242 IF M=3 THEN LET T=P
+243 IF M=4 THEN LET U=P
+244 IF M=5 THEN LET V=P
+245 IF M=6 THEN LET W=P
+246 IF M=7 THEN LET X=P
+247 IF M=8 THEN LET Y=P
+248 IF M=9 THEN LET Z=P
+250 RETURN
