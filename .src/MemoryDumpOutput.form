@@ -1,12 +1,9 @@
 # Gambas Form File 3.0
 
 { Form Form
-  MoveScaled(0,0,103,95)
-  { !MemDumpOut TextEditor
-    MoveScaled(1,2,101,92)
-    #Public = True
+  MoveScaled(0,0,127,95)
+  { MemDumpOut TextArea
+    MoveScaled(1,1,124,93)
     Font = Font["Monospace"]
-    ScrollBar = Scroll.Vertical
-    ReadOnly = True
   }
 }

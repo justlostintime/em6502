@@ -1,0 +1,12 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,162,97)
+  { Info TerminalView
+    MoveScaled(0,0,160,96)
+    Font = Font["Monospace"]
+    Background = Color.TextBackground
+    Foreground = Color.Foreground
+    ReadOnly = True
+  }
+}

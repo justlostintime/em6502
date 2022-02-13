@@ -23,4 +23,10 @@ Public Sub Display(value As String)
 
 End
 
+Public Sub FORM_Resize()
+
+  MemDumpOut.w = Me.w - 2
+  MemDumpOut.h = Me.h - 2
+
+End
 

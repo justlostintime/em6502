@@ -7,8 +7,6 @@
 ; the IL code.
 ;=====================================================
 ;=====================================================
-	Seg.U bss
-PrtTerm		ds 1
 	Seg code
 ;=====================================================
 ; This gets the next two bytes pointed to by ILPC and
@@ -26,11 +24,11 @@ getILWord	jsr	getILByte	;LSB
 ;
 getILByte	ldy	#0
 		lda	(ILPC),y	;get byte
-		php		;save status
-		inc	ILPC	;inc LSB
-		bne	getILb2	;branch if no overflow
-		inc	ILPC+1	;inc MSB
-getILb2		plp		;restore status
+		php			;save status
+		inc	ILPC		;inc LSB
+		bne	getILb2		;branch if no overflow
+		inc	ILPC+1		;inc MSB
+getILb2		plp			;restore status
 		rts
 ;
 ;=====================================================
@@ -52,10 +50,10 @@ pushILPC	ldy	retStackPtr
 		clc
 		adc	#2
 		sta	retStack,y
-		php		;save C bit
+		php			;save C bit
 		iny
 		lda	ILPC+1
-		plp		;restore C
+		plp			;restore C
 		adc	#0
 		sta	retStack,y
 		iny
@@ -79,6 +77,9 @@ popILPC		ldy	retStackPtr
 ;=====================================================
 ; This searches for a specific line number that is in
 ; R0.  There are three possible return conditions:
+; Line numbers are now the third byte, the first byte is now **************
+; a pointer to the next line, of course no longer that 53 byte
+; per line.
 ;
 ; Exact match was found:
 ;    * Z set
@@ -100,46 +101,46 @@ popILPC		ldy	retStackPtr
 ; A, X, and Y are all undefined on return.
 ;
 
-findLine	lda	#ProgramStart&$ff
+findLine	lda	#ProgramStart&$ff  ;Start of program -> CURPTR
 		sta	CURPTR
 		lda	#ProgramStart>>8
 		sta	CURPTR+1
 ;
 ; At end of code?
 ;
-iXFER1		lda	CURPTR
-		cmp	PROGRAMEND
-		bne	xfer2	;not end
+iXFER1		lda	CURPTR 		   ; chk CURPTR = END PROGRAM
+		cmp	PROGRAMEND       
+		bne	xfer2		   ;not end
 		lda	CURPTR+1
 		cmp	PROGRAMEND+1
-		bne	xfer2
+		bne	xfer2              ;Not at end 
 ;
 ; Line not found and the end of the program was
 ; reached.  Return Z and C both clear.
 ;
-		lda	#1	;clear Z
-		clc		;clear C
+		lda	#1		;clear Z
+		clc			;clear C
 		rts
 ;
-; Check for an exact match first
+; Check for an exact line number match
 ;
 xfer2		lda	R0
-		ldy	#0
+		ldy	#1                ; changed to skip extra length byte
 		cmp	(CURPTR),y
 		bne	xfernotit
 		iny
 		lda	R0+1
 		cmp	(CURPTR),y
-		bne	xfernotit
+		bne	xfernotit         ; not a matching line number
 ;
 ; This is exactly the line we want.
 ;
-		rts
+		rts                       ;it matches exactly
 ;
 ; See if this line is greater than the one we're
 ; searching for.
 ;
-xfernotit	ldy	#1
+xfernotit	ldy	#2              ;Changed from to skip leading length and lesat significat digit
 		lda	(CURPTR),y	;compare MSB first
 		cmp	R0+1
 		bcc	xfer3
@@ -152,7 +153,7 @@ xfernotit	ldy	#1
 ; This line is greater than the one we want, so
 ; return Z clear and C set.
 ;
-xfer4:		sec
+xfer4:		sec             ;We found a line number greater
 		rts		;both conditions set
 ;
 ; Not the line (or droid) we're looking for.  Move to
@@ -167,17 +168,13 @@ xfer3		jsr	FindNextLine
 ; ProgramEnd.  Returns CUROFF set to 2.  This assumes
 ; CURPTR is pointing to a valid line on entry.  This
 ; pointer points to the two-byte line number.
+; Update this points to the 1 byte line length  ****************
 ;
-FindNextLine	
-		ldy	#2	;skip line number
-		sty	CUROFF	;this is the new offset
-;
-FindNext2	lda	(CURPTR),y
-		beq	FindNext3	;found end
-		iny
-		bne	FindNext2
-FindNext3	iny			;skip null byte
-		tya
+FindNextLine	            
+		ldy	#3		;skip line number and length byte
+		sty	CUROFF		;this is the new offset
+		ldy     #0
+		lda     (CURPTR),y       ;Get the length
 		clc
 		adc	CURPTR
 		sta	CURPTR
@@ -201,83 +198,83 @@ atendexit	rts
 ; Does leading zero suppression.
 ;
 PrintDecimal	
-            lda	R0+1	;MSB has sign
-            bpl	pplus		;it's a positive number
+		lda	R0+1	;MSB has sign
+		bpl	pplus		;it's a positive number
 ;
 ; Negative numbers need more work.  Invert all the bits,
 ; then add one.
 ;
-            lda	#'-
-            jsr	VOUTCH		;print the negative sign
+		lda	#'-
+		jsr	VOUTCH		;print the negative sign
 ;
-            lda	R0		;invert bits
-            eor	#$ff
-            sta	R0
-            lda	R0+1
-            eor	#$ff
-            sta	R0+1
-            inc	R0		;add one
-            bne	pplus
-            inc	R0+1
+		lda	R0		;invert bits
+		eor	#$ff
+		sta	R0
+		lda	R0+1
+		eor	#$ff
+		sta	R0+1
+		inc	R0		;add one
+		bne	pplus
+		inc	R0+1
 ;
 ; Print the value in R0 as a positive number.
 ;
 pplus		ldx	#0	;start of subtraction table
-            stx	diddigit	;no digits yet
+		stx	diddigit	;no digits yet
 pploop		ldy	#0		;result of division
 pploop2		lda	R0		;LSB
-            sec
-            sbc	dectable,x
-            sta	R0
-            lda	R0+1
-            sbc	dectable+1,x
-            bpl	pplusok	;no underflow
+		sec
+		sbc	dectable,x
+		sta	R0
+		lda	R0+1
+		sbc	dectable+1,x
+		bpl	pplusok	;no underflow
 ;
 ; Else, underflow.  Add back in the LSB of the
 ; table to R0.
 ;
-            clc
-            lda	R0
-            adc	dectable,x
-            sta	R0
+		clc
+		lda	R0
+		adc	dectable,x
+		sta	R0
 ;
 ; Print the value in Y.  Actually, see if Y is zero and
 ; whether any digit has been printed yet.  If Y isn't
 ; zero or we've printed a digit, go ahead and print.
 ;
-            stx	printtx
-            tya
-            ora	#0		;set flags
-            bne	pprintit	;non-zero, print
+		stx	printtx
+		tya
+		ora	#0		;set flags
+		bne	pprintit	;non-zero, print
 ;
-            lda	diddigit
-            beq	pprintno	;don't print
+		lda	diddigit
+		beq	pprintno	;don't print
 ;
 pprintit	tya
-            ora	#'0
-            sta	diddigit
-            jsr	VOUTCH
+		ora	#'0
+		sta	diddigit
+		jsr	VOUTCH
 pprintno	ldx	printtx
 ;
 ; Move to the next table entry
 ;
-            inx
-            inx
-            cpx	#dectableend-dectable
-            bne	pploop	;not at end
+		inx
+		inx
+		cpx	#dectableend-dectable
+		bne	pploop	;not at end
 ;
 ; At the end.  R0 contains the final value
 ; to print.
 ;
-            lda	R0
-            ora	#'0
-            jmp	VOUTCH
+		lda	R0
+		ora	#'0
+		jmp	VOUTCH
 ;
 ; Finish doing the subtraction.
 ;
 pplusok		sta	R0+1
-            iny
-            bne	pploop2
+		iny
+		bne	pploop2
 ;
 ; Table of powers-of-ten
 ;
@@ -498,6 +495,7 @@ getlinebs	ldx	getlinx
 ; starting offset in Y should point past the ASCII
 ; line number.  Also counts the trailing NULL and two
 ; extra bytes for where the line number will be.
+; Update must now include leading length byte not the null at end ****************
 ;
 getLineLength	
 		ldx	#0	;size
@@ -509,6 +507,7 @@ getLineL2	lda	LINBUF,y
 getLineL3	inx		;count null at end
 		inx		;line number LSB
 		inx		;MSB
+		inx             ;change: count new leading line length
 		stx	lineLength
 		rts
 ;
@@ -522,15 +521,17 @@ getLineL3	inx		;count null at end
 ; Another way of looking at it: add the return value
 ; to the CURPTR and it'll point to the next line's
 ; line number.  Returns the value in Y.
+; Update to ject get the leading byte length ********************
 ;
-getCURPTRLength
-		ldy	#2	;skip line number
-getCLineL2  	lda	(CURPTR),y
-		beq	getCLineL3
-		iny
-		bne	getCLineL2
-getCLineL3	iny		;count null at end
-		rts
+;getCURPTRLength
+;		ldy	CURPTR
+;		ldy	#3	;change: skip line number and leading length byte
+;getCLineL2  	lda	(CURPTR),y
+;		beq	getCLineL3
+;		iny
+;		bne	getCLineL2
+;getCLineL3	iny		;count null at end
+;		rts
 ;
 ;=====================================================
 ; This saves ILPC.  This saves to a single save area,
@@ -565,17 +566,18 @@ pushR0		ldx	mathStackPtr
 		rts
 		
 ;=====================================================
-; This pushes line number onto the call stack.
-; The line number to return to is in R0
+; This pushes curptr basic current line onto the call stack.
 
-pushLN		ldx	callStackPtr
+pushLN		sty	rtemp1
+		ldy	GoSubStackPtr
 		lda	CURPTR
-		sta	callStack,x
-		inx
+		sta	(GOSUBSTACK),y
+		iny
 		lda	CURPTR+1
-		sta	callStack,x
-		inx
-		stx	callStackPtr
+		sta	(GOSUBSTACK),y
+		iny
+		sty	GoSubStackPtr
+		ldy	rtemp1
 		rts
 ;
 ;=====================================================
@@ -604,17 +606,19 @@ popR0		ldx	mathStackPtr
 		stx	mathStackPtr
 		rts
 ;=====================================================
-; This pops Top Of line number call Stack and
-; laces it in R0.
+; This pops Top Of gosub call Stack and
+; laces it in CURPTR.
 ; 
-popLN		ldx	callStackPtr
-		dex
-		lda	callStack,x
+popLN		sty	rtemp1
+                ldy	GoSubStackPtr
+		dey
+		lda	(GOSUBSTACK),y
 		sta	CURPTR+1
-		dex
-		lda	callStack,x
+		dey
+		lda	(GOSUBSTACK),y
 		sta	CURPTR
-		stx	callStackPtr
+		sty	GoSubStackPtr
+		ldy	rtemp1
 		rts
 ;
 ;=====================================================
@@ -774,7 +778,7 @@ GetSizes
 	if ProgramStart < $2000
 		lda	#$ff
 		sta	HighMem	;$13ff for KIM-1
-		lda	#$80    ;#$13
+		lda	#$DF    ;#$13
 		sta	HighMem+1
 	else
 		lda	#$ff
@@ -823,12 +827,23 @@ SetOutConsole
 VOUTCH		jmp	(BOutVec)
 
 ;====================================================
-; Print a string pointed to by x,y terminated by a
-; Return y as the offset
+PrtTerm		equ     rtemp1
+
+; Print Y has the offset to use
+PrtQuoted	lda	CURPTR
+		sta     PrtFrom
+		lda	CURPTR+1
+		sta     PrtFrom+1
+		lda	#'"
+		sta     PrtTerm
+		jmp	PrtLoop
+; Print a string pointed to by x= h, y=l terminated by a
+; Return y as the length
 PrtStr		stx	PrtFrom+1
 		sty	PrtFrom
 		sta	PrtTerm
 		ldy	#0
+		
 PrtLoop		lda	(PrtFrom),y
 		cmp	PrtTerm
 		beq	PrtEnd
@@ -837,7 +852,8 @@ PrtLoop		lda	(PrtFrom),y
 		jsr	OUTCH
 		iny
 		jmp	PrtLoop
-PrtEnd		rts
+PrtEnd		iny                     ;return byte after the copy
+		rts
 
 ;====================================================
 ;Clear the terminal assume it is ansii or vt100

@@ -1,13 +1,15 @@
 ' Gambas class file
 
 'Fast Unsafe
-MyCpu As New CPU6502 As "A_CPU"
-Running As Boolean = False
-Public MonitorList As New Collection(gb.ignorecase)  ' format is [ HEXADDR:[start,end], HEXADDR:[start, end] ]
+MyCpu As CPU6502
+Running As Boolean
+Public MonitorList As Collection  ' format is [ HEXADDR:[start,end], HEXADDR:[start, end] ]
 
 Property Read SingleStep As Boolean
 Property BreakPoints As Boolean
 Property StartAddress As Long
+Property SetMemoryProtection As Boolean
+
 
 Event StatusInfo(Info As Cpustatus)
 Event NextInst(Info As String)
@@ -16,7 +18,8 @@ Event MemMonitor(address As Long, memDump As String)
 Event BinaryLoaded(address As Long, BinName As String, info As String)
 Event AutoStart(address As Long, speed As Integer)
 
-Public Devices As New ScriptManager(True, user.home &/ "6502/dev")
+
+Public Devices As ScriptManager
 Property Read Config As ComputerDef Use $Config
 Property SpeedScaler As Long
 Property Read CyclesPerSecond As Long
@@ -24,9 +27,15 @@ Property Read CyclesPerSecond As Long
 
 Public Sub Configure(Configuration As ComputerDef)
 
+  Dim cDev As Class
+
   $Config = Configuration
   For Each device As Variant[] In $Config
-    Dim cDev As Class = Devices($Config.key & ".dev")
+    Try cDev = Devices($Config.key & ".dev")
+    If Error Then
+      Message.Error("Unable to start computer error found In configuration\nSee Error display panel for details", "ok")
+      Return
+    Endif
     MyCpu.AddMAp(device[0], device[1], cDev, device[2])
   Next
 
@@ -43,9 +52,15 @@ End
 
 Public Sub _new()
 
+  MyCpu = New CPU6502 As "A_CPU"
   MyCpu.SingleStep = True
   MyCpu.DisplayInstruction = True
   MyCpu.DisplayStatus = True
+  Running = False
+  MonitorList = New Collection(gb.ignorecase)
+  Devices = New ScriptManager(True, user.home &/ "6502/dev")
+
+
 
 End
 
@@ -277,5 +292,17 @@ End
 Private Sub StartAddress_Write(Value As Long)
 
   MyCpu.Pc = value
+
+End
+
+Private Function SetMemoryProtection_Read() As Boolean
+
+  Return MyCpu.ChkBadMemAccess
+
+End
+
+Private Sub SetMemoryProtection_Write(Value As Boolean)
+
+  mycpu.ChkBadMemAccess = value
 
 End

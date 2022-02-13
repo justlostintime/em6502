@@ -778,3 +778,16 @@ Public Sub RmDevice_Click()
 
 
 End
+
+Public Sub MemAccessReports_Click()
+
+  MyComputer.SetMemoryProtection = MemAccessReports.value
+
+End
+
+Public Sub devtest_Click()
+
+  DeviceDevelopement.Show()
+
+End
+

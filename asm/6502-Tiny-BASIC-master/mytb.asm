@@ -89,7 +89,8 @@ FIXED		equ	FALSE
 ; Sets the arithmetic stack depth.  This is *TINY*
 ; BASIC, so keep this small!
 ;
-STACKSIZE	equ	20	;number of entries
+STACKSIZE	equ	8	;number of entries
+GOSUBSTACKSIZE  equ     10      ;Depth of gosub nesting
 ;
 ; Common ASCII constants
 ;
@@ -132,8 +133,6 @@ tempIL		        ds	2
 tempIlY             	ds	1
 offset		        ds	1
 lineLength          	ds	1
-lastln			ds	2		; the line number of the last line in program space
-
 ;
 ; CURPTR is a pointer to curent BASIC line being
 ; executed.  Always points to start of line, CUROFF
@@ -142,10 +141,9 @@ lastln			ds	2		; the line number of the last line in program space
 CURPTR			ds	2
 CUROFF			ds	1
 ;
-; THE ADDRESS USED BY THE PRINTER FUNCTION
-; TO PRINT A GENERIC STRING X,Y ADDRESS, Ac = TERMINATOR
+GOSUBSTACK              ds      2  ;pointer to gosub stack
 ;
-PrtFrom			ds	2
+
 ;
 ; R0 and R1 are used for arithmetic operations and
 ; general use.
@@ -158,11 +156,16 @@ R1			ds	2	;arithmetic register 1
 ; the main loop clears this, and the XFER IL
 ; statement will set it.
 ;
-RunMode             ds  1
+RunMode             	ds  1
 ;
 ; Used for line insertion/removal.
 ;
-FROM                ds  2
+FROM                	ds  2
+
+; THE ADDRESS USED BY THE PRINTER FUNCTION
+; TO PRINT A GENERIC STRING X,Y ADDRESS, Ac = TERMINATOR
+;
+PrtFrom		    	EQU	FROM
 ;
 ;=====================================================
 ;
@@ -212,39 +215,46 @@ puts		equ	putsil
 ;
 cold2		jsr	puts
 		db	CR,LF
-		db	"Bob's Tiny BASIC v1.0"
+		db	"Bob's Tiny BASIC v1.0.1"
 		db	CR,LF	
 		db	"https://github.com/CorshamTech/6502-Tiny-BASIC"
 		db	CR,LF,0
 ;
-            lda	#IL&$ff
-            sta	ILPC
-            lda	#IL>>8
-            sta	ILPC+1
+                jsr     GetSizes           ;setup the free space available
+                lda	HighMem
+                sbc	#GOSUBSTACKSIZE*2
+                sta     GOSUBSTACK
+                lda     HighMem+1
+                sbc	#0
+                sta     GOSUBSTACK+1
+		lda	#IL&$ff
+		sta	ILPC
+		lda	#IL>>8
+		sta	ILPC+1
 ;
-            lda	#ProgramStart&$ff	;user prog
-            sta	PROGRAMEND
-            lda	#ProgramStart>>8
-            sta	PROGRAMEND+1
+		lda	#ProgramStart&$ff	;user prog
+		sta	PROGRAMEND
+		lda	#ProgramStart>>8
+		sta	PROGRAMEND+1
 ;
 ; Initialize the pseudo-random number sequence...
 ;
-            lda	#$5a
-            sta	rtemp1
-            lda	#%10011101
-            sta	random
-            lda	#%01011011
-            sta	random+1
+		lda	#$5a
+		sta	rtemp1
+		lda	#%10011101
+		sta	random
+		lda	#%01011011
+		sta	random+1
 ;
-            jmp	coldtwo
+		jmp	coldtwo
 ;
 ; This is the warm start entry point
 ;	
 warm2		jsr	CRLF
-            lda	errGoto
-            sta	ILPC
-            lda	errGoto+1
-            sta	ILPC+1
+		lda	errGoto
+		sta	ILPC
+		lda	errGoto+1
+		sta	ILPC+1
 ;
 ; And continue with both starts here
 ;
@@ -252,16 +262,21 @@ coldtwo		jsr	SetOutConsole
 ;
 ; The ILTrace flag is now run-time settable.
 ;
-            lda	#ILTRACE&$ff
-            sta	ILTrace
+		lda	#ILTRACE&$ff
+		sta	ILTrace
 ;
-            lda	#0
-            sta	RunMode
-            sta	LINBUF
-            lda	#LINBUF&$ff
-            sta	CURPTR
-            lda	#LINBUF>>8
-            sta	CURPTR+1	;fall through...
+		lda	#0
+		sta	RunMode
+		sta	LINBUF
+; Clear everything from the stacks
+		sta     mathStackPtr
+		sta     retStackPtr
+		sta     GoSubStackPtr
+;
+		lda	#LINBUF&$ff
+		sta	CURPTR
+		lda	#LINBUF>>8
+		sta	CURPTR+1	;fall through...
 ;
 ;=====================================================
 ; This is the top of the IL interpreter.  This fetches
@@ -270,13 +285,13 @@ coldtwo		jsr	SetOutConsole
 ; instruction to execute.
 ;
 NextIL		lda	ILTrace
-            beq	NextIL2
-            jsr	dbgLine
+		beq	NextIL2
+		jsr	dbgLine
 NextIL2		ldy	CUROFF
-            jsr	SkipSpaces
-            sty	CUROFF
+		jsr	SkipSpaces
+		sty	CUROFF
 ;
-            jsr	getILByte
+		jsr	getILByte
 ;
 ; When the handler is called, these are the conditions
 ; of several important items:
@@ -288,45 +303,45 @@ NextIL2		ldy	CUROFF
 ;    next word in the input buffer.  Ie, the next word
 ;    in the user program.
 ;
-            asl
-            cmp	#ILTBLend-ILTBL+2
-            bcc	ILgood
+		asl
+		cmp	#ILTBLend-ILTBL+2
+		bcc	ILgood
 ;
 ; This handles an illegal IL opcode.  This is serious
 ; and there's no way to recover.
 ;
 ILbad		jsr	puts
-            db	CR,LF
-            db	"Illegal IL "
-            db	0
+		db	CR,LF
+		db	"Illegal IL "
+		db	0
 ;
 ; Well this is awkward, we need to back up the IL
 ; by one since it no longer points to the current
 ; opcode.
 ;
-            jsr	decIL
+		jsr	decIL
 ;
-            ldy	#0
-            lda	(ILPC),y
-            jsr	OUTHEX
-            jsr	puts
-            db	" at ",0
-            lda	ILPC+1
-            jsr	OUTHEX
-            lda	ILPC
-            jsr	OUTHEX
-            jsr	CRLF
-            jmp	MONITOR
+		ldy	#0
+		lda	(ILPC),y
+		jsr	OUTHEX
+		jsr	puts
+		db	" at ",0
+		lda	ILPC+1
+		jsr	OUTHEX
+		lda	ILPC
+		jsr	OUTHEX
+		jsr	CRLF
+		jmp	MONITOR
 ;
 ; Just jump to the address (ILPC),y.  Have to do
 ; some goofy stuff.
 ;
 ILgood		tay		       ;move index into Y
-            lda	ILTBL,y
-            sta	dpl
-            lda	ILTBL+1,y
-            sta	dpl+1
-            jmp	(dpl)	   ;go to handler
+		lda	ILTBL,y
+		sta	dpl
+		lda	ILTBL+1,y
+		sta	dpl+1
+		jmp	(dpl)	   ;go to handler
 ;
 ;=====================================================
 ; This is the IL jump table.  The IL opcode is 
@@ -336,7 +351,7 @@ ILgood		tay		       ;move index into Y
 ; same speed.  However the entry number must match the
 ; values in IL.inc.
 ;
-ILTBL		dw	iXINIT	;0
+ILTBL	    dw	iXINIT	;0
             dw	iDONE	;1
             dw	iPRS	;2
             dw	iPRN	;3
@@ -359,7 +374,7 @@ ILTBL		dw	iXINIT	;0
             dw	iIND	;20
             dw	iLST	;21
             dw	iINIT	;22
-            dw	iGETLINE
+            dw	iGETLINE;23
             dw	iINSRT	;24
             dw	iRTN	;25
             dw	MONITOR	;26
@@ -367,7 +382,7 @@ ILTBL		dw	iXINIT	;0
             dw	iCALL	;28
             dw	iJMP	;29
             dw	iVINIT	;30
-            dw	iERRGOTO
+            dw	iERRGOTO;31
             dw	iTST	;32
             dw	iTSTV	;33
             dw	iTSTL	;34
@@ -384,8 +399,8 @@ ILTBL		dw	iXINIT	;0
             dw	iOPENREAD      ;39
             dw	iOPENWRITE     ;40
             dw	iDCLOSE        ;41
-            dw	iDGETLINE      ;Life, universe, everything
-            dw	iDLIST         ;43
+            dw	iDGETLINE      ;42 Life, universe, everything(hitch hiker)
+            dw	iDLIST         ;43 Did you remeber your towel?
             dw  iDDIR          ;44
             dw	iRMFILE	       ;45
 	else
@@ -405,6 +420,8 @@ ILTBL		dw	iXINIT	;0
 	    dw	iTSTDONE      ;50	Test if we are at the end of a line
 	    dw	iGETCHAR      ;51       Get a character from the terminal
 	    dw	iPUTCHAR      ;52       Put a char to the terminal
+	    dw  iCallFunc     ;53       call a machine rtn accumulator
+	    dw  iCallFunc2    ;54       call system rtn with value in a
 	 
 ILTBLend	equ	*
 ;
@@ -419,7 +436,7 @@ ILTBLend	equ	*
 ;
 iINIT		lda	#0                       ;clear IL stack pointer,gosub stack
 		sta	retStackPtr
-		sta  	callStackPtr
+		sta     GoSubStackPtr
 ;
 		lda	#ProgramStart&$ff        ;user prog
 		sta	CURPTR
@@ -465,24 +482,9 @@ iPRS		ldy	CUROFF
 ; whitespace inside the quoted text, so move back to
 ; the quote, then move forward again.
 ;
-		lda	#'"		;pre-load with char to find
-iPRS3		dey			;move back one
-		cmp	(CURPTR),y	;quote?
-		bne	iPRS3
-		iny
+		jsr	PrtQuoted
 		sty	CUROFF
-;
-iPRS2		lda	(CURPTR),y
-		beq	PRSend2		;end of line!
-		cmp	#'"
-		beq	PRSend
-		jsr	OUTCH
-		inc	CUROFF
-		ldy	CUROFF
-		bne	iPRS2
-PRSend		iny			;skip closing quote
-		sty	CUROFF
-PRSend2		jmp	NextIL
+		jmp	NextIL
 ;
 ;=====================================================
 ; Pop the top off the stack and print it as a signed
@@ -498,8 +500,8 @@ iPRN		jsr	popR0
 ; just print a tab.
 ;
 iSPC		lda	#TAB
-            jsr	OUTCH
-            jmp	NextIL
+		jsr	OUTCH
+		jmp	NextIL
 ;
 ;=====================================================
 ; If in immediate mode, jump to the address following
@@ -507,11 +509,11 @@ iSPC		lda	#TAB
 ; user code and continue.
 ;
 iNXT		lda	RunMode
-            bne	iNxtRun	    ;in run mode
+		bne	iNxtRun	    ;in run mode
 ;
 ; Get address and jump to it.
 ;
-            jmp	iJMP
+		jmp	iJMP
 ;
 iNxtRun		jsr	FindNextLine
 		jsr	AtEnd
@@ -535,7 +537,7 @@ iXFER		jsr	popR0
 		jsr	findLine
 iXFER2		jsr	AtEnd	      ;at end of user program?
 		beq	iFINv
-		ldy	#2            ;point to start of text
+		ldy	#3            ;Change: 2->3 to skip length byte, point to start of text
 		sty	CUROFF
 		lda	#$ff
 		sta	RunMode
@@ -716,27 +718,27 @@ iERR		jsr	getILWord	;get err code
 ; Enter here with the error code in X (LSB) and A (MSB).
 ;
 iErr2		stx	R0
-            sta	R0+1
+		sta	R0+1
 ;
-            jsr	puts
-            db	"Error ",0
-            jsr	PrintDecimal
+		jsr	puts
+		db	"Error ",0
+		jsr	PrintDecimal
 ;
-            lda	RunMode	;running?
-            beq	iERR2	;nope
-            jsr	puts
-            db	" at line ",0
-            ldy	#0
-            lda	(CURPTR),y
-            sta	R0
-            iny
-            lda	(CURPTR),y
-            sta	R0+1
-            jsr	PrintDecimal
+		lda	RunMode	;running?
+		beq	iERR2	;nope
+		jsr	puts
+		db	" at line ",0
+		ldy	#1               ;Changed: Skip the leading length byte
+		lda	(CURPTR),y
+		sta	R0
+		iny
+		lda	(CURPTR),y
+		sta	R0+1
+		jsr	PrintDecimal
 ;
 iERR2		jsr	CRLF
-            lda	#0
-            sta	RunMode	;fall through...
+		lda	#0
+		sta	RunMode	;fall through...
 ;
 ;=====================================================
 ; Reset the IL to be back at the idle loop.  Does not
@@ -744,12 +746,12 @@ iERR2		jsr	CRLF
 ; the program is in.
 ;
 ResetIL		lda	#0
-            sta	retStackPtr
-            lda	errGoto
-            sta	ILPC
-            lda	errGoto+1
-            sta	ILPC+1
-            jmp	NextIL
+		sta	retStackPtr
+		lda	errGoto
+		sta	ILPC
+		lda	errGoto+1
+		sta	ILPC+1
+		jmp	NextIL
 ;
 ;=====================================================
 ; Pop two items off stack, add them, then place the
@@ -803,39 +805,39 @@ iNEG2		jmp	pushR0nextIl
 ; Hobbyists" by Neill Graham.
 ;
 iMUL		jsr	popR0	;AC
-            jsr	popR1	;OP
+		jsr	popR1	;OP
 ;
-            lda	R0
-            sta	MQ
-            lda	R0+1
-            sta	MQ+1
-            lda	#0	         ;clear result
-            sta	R0
-            sta	R0+1
+		lda	R0
+		sta	MQ
+		lda	R0+1
+		sta	MQ+1
+		lda	#0	         ;clear result
+		sta	R0
+		sta	R0+1
 ;
-            ldx	#16	        ;number of bits in value
+		ldx	#16	        ;number of bits in value
 multloop	asl	R0
-            rol	R0+1
-            asl	MQ
-            rol	MQ+1
-            bcc	multno	     ;skip add if no carry
+		rol	R0+1
+		asl	MQ
+		rol	MQ+1
+		bcc	multno	     ;skip add if no carry
 ;
 ; Add R1 back into R0
 ;
-            clc
-            lda	R0
-            adc	R1
-            sta	R0
-            lda	R0+1
-            adc	R1+1
-            sta	R0+1
+		clc
+		lda	R0
+		adc	R1
+		sta	R0
+		lda	R0+1
+		adc	R1+1
+		sta	R0+1
 ;
 multno		dex		       ;did all bits yet?
-            bne	multloop
+		bne	multloop
 ;
 pushR0nextIl	
-            jsr	pushR0	     ;OP
-            jmp	NextIL
+		jsr	pushR0	     ;OP
+		jmp	NextIL
 ;
 ;=====================================================
 ; Divide the top of stack into the next to top item.
@@ -846,40 +848,40 @@ pushR0nextIl
 ; Remainder is in R0
 ;
 iDIV		jsr	popR1
-            jsr	popR0
+		jsr	popR0
 ;
 ; Check for divide by zero
 ;
-            lda	R1
-            ora	R1+1
-            beq	divby0
+		lda	R1
+		ora	R1+1
+		beq	divby0
 ;
-            jsr	SaveSigns
-            lda	#0              ;preset remainder to 0
-            sta	MQ
-            sta	MQ+1
-            ldx	#16             ;repeat for each bit: ...
+		jsr	SaveSigns
+		lda	#0              ;preset remainder to 0
+		sta	MQ
+		sta	MQ+1
+		ldx	#16             ;repeat for each bit: ...
 
 divloop		asl	R0              ;dividend lb & hb*2, msb -> Carry
-            rol	R0+1
-            rol MQ              ;remainder lb & hb * 2 + msb from carry
-            rol	MQ+1
-            lda	MQ
-            sec
-            sbc	R1              ;substract divisor to see if it fits in
-            tay                 ;lb result -> Y, for we may need it later
-            lda	MQ+1
-            sbc	R1+1
-            bcc	skip            ;if carry=0 then divisor didn't fit in yet
+		rol	R0+1
+		rol MQ              ;remainder lb & hb * 2 + msb from carry
+		rol	MQ+1
+		lda	MQ
+		sec
+		sbc	R1              ;substract divisor to see if it fits in
+		tay                 ;lb result -> Y, for we may need it later
+		lda	MQ+1
+		sbc	R1+1
+		bcc	skip            ;if carry=0 then divisor didn't fit in yet
 
-            sta	MQ+1            ;else save substraction result as new remainder,
-            sty	MQ	
-            inc	R0              ;and INCrement result cause divisor fit in 1 times
+		sta	MQ+1            ;else save substraction result as new remainder,
+		sty	MQ	
+		inc	R0              ;and INCrement result cause divisor fit in 1 times
 
 skip		dex
-            bne	divloop
-            jsr	RestoreSigns	
-            jmp	pushR0nextIl
+		bne	divloop
+		jsr	RestoreSigns	
+		jmp	pushR0nextIl
 ;
 ; Indicate divide-by-zero error
 ;
@@ -933,7 +935,7 @@ iLSTloop	lda	dpl
 		cmp	PROGRAMEND+1
 		beq	iLstdone
 ;
-iLstNotEnd	ldy	#0
+iLstNotEnd	ldy	#1    ;Change:  Skip first byte length
 		lda	(dpl),y	;line number LSB
 		sta	R0
 		iny
@@ -957,36 +959,36 @@ iLSTl2		lda	(dpl),y
 ; next line.
 ;
 iLST3		iny
-            clc
-            tya
-            adc	dpl
-            sta	dpl
-            lda	dpl+1
-            adc	#0
-            sta	dpl+1
+		clc
+		tya
+		adc	dpl
+		sta	dpl
+		lda	dpl+1
+		adc	#0
+		sta	dpl+1
 ;
 ; Have to manually do CR/LF so it uses the vectored
 ; output function.
 ;
-            lda	#CR
-            jsr	VOUTCH
-            lda	#LF
-            jsr	VOUTCH
-            jmp	iLSTloop	;do next line
+		lda	#CR
+		jsr	VOUTCH
+		lda	#LF
+		jsr	VOUTCH
+		jmp	iLSTloop	;do next line
 ;
 iLstdone	jsr	SetOutConsole
-            jmp	NextIL
+		jmp	NextIL
 ;
 ;=====================================================
 ; Get a line of text into LINBUF.  Terminate with a
 ; null byte.
 ;
 iGETLINE	lda	#'>	;prompt character
-            jsr	GetLine
+		jsr	GetLine
 ;
-            lda	#0
-            sta	RunMode
-            jmp	NextIL
+		lda	#0
+		sta	RunMode
+		jmp	NextIL
 ;
 ;=====================================================
 ; This is called when the input buffer contains a line
@@ -994,123 +996,140 @@ iGETLINE	lda	#'>	;prompt character
 ; Insert the line into the program or delete the line
 ; if there is nothing after the line number,
 ;
-iINSRT		ldy	#0
+iINSRT		ldy	#0              
 		jsr	getDecimal	;convert line #
-		jsr	SkipSpaces
-		sty	offset		;save for now
+		jsr	SkipSpaces      ;Ignore any spaces after the line number
+		sty	offset		;Save the start of the program line text
 ;
 ; Now find the line OR the next higher line OR the
 ; end of the program.
 ;
-		jsr	findLine
+		jsr	findLine        ; Look for the line number in the current program
+					; Returns Z and curptr point to the line if found
+					; Returns C and curptr at next higher line if not found and there is a higher line
+					; Returns ZC clear and curptr to end of program if higher than all other lines
 ;
 ; If the line exists, it needs to be removed.
 ;
-		bne	insert2		;jump if not found
+		bne	insert2		;jump if no line found higer or a higher line number found, at end of program curptr points to program end
 ;
-; Get length of line to be removed
+; Get length of line to be removed, we fall thru to here if we find a matching line
 ;
-		jsr	getCURPTRLength	;results in Y
-		sty	lineLength
+;		jsr	getCURPTRLength	;results in Y , curptr is pointing to point we need to insert the line
+                ldy	#0
+		lda	(CURPTR),y	;Change the length is now at beginning of the line
+		tay
+					;If it is equal we delete the line and replace it, get length
+					;then adjust all program line after up or down depending on len of line
+					;If next higher then just move everythimg down by length bytes
+					;This call will return how many bytes in the line we found
+		sty	lineLength      ;Save the length of the line we found
 ;
 ; Compute the new end of the program first.
 ;
-		sec
-		lda	PROGRAMEND
-		sbc	lineLength
-		sta	PROGRAMEND
-		lda	PROGRAMEND+1
-		sbc	#0
-		sta	PROGRAMEND+1
+		sec                     ;Set the carry bit 
+		lda	PROGRAMEND      ;Get low byte of program end
+		sbc	lineLength      ;Subtract the length of the current line
+		sta	PROGRAMEND      ;save it
+		lda	PROGRAMEND+1    
+		sbc	#0              ;Process the carry 
+		sta	PROGRAMEND+1    ;We now have the new end of program with the line removed
 ;
 ; Copy CURPTR into R1 for working
 ;
-		lda	CURPTR
+		lda	CURPTR          ;Save the current position to r1 copy destination
 		sta	R1
 		lda	CURPTR+1
 		sta	R1+1
 ;
 ; See if we're at the end.
 ;
-InsDelChk	lda	R1
+InsDelChk	lda	R1             ;Compare the copy dest to end of memory to check if we are finished copy
 		cmp	PROGRAMEND
 		bne	InsDelLoop
 		lda	R1+1
 		cmp	PROGRAMEND+1
-		beq	insert2
+		beq	insert2       ;Now the existing line was removed lets go insert the new line 
 ;
 ; Move one byte, move to next location.
 ;
-InsDelLoop  	ldy	lineLength
+InsDelLoop  	ldy	lineLength    ;Move a byte up to remove the space
+		beq	insert2       ;if this is zero it is a big oops  
 		lda	(R1),y
 		ldy	#0
 		sta	(R1),y
 		inc	R1
 		bne	InsDelChk
 		inc	R1+1
-		jmp	InsDelChk
+		jmp	InsDelChk     ; Check if we have moved the last byte
 ;
 ; Deletion is done.
-; If the new line is empty we're done.
+; If the new line is empty we're done.  Now we have to open a space for the line we are inserting
 ;
-insert2		ldy	offset		;get back ptr
-		lda	LINBUF,y	;next byte
-		beq	mvUpFini	;empty line
+insert2		ldy	offset		;get back ptr  Get the current offset
+		lda	LINBUF,y	;next byte     Get the next byte o be stored
+		beq	mvUpFini	;empty line    if there is a null then we were deleting a line, no content
 ;
 ; CURPTR points to where the line will be inserted.
 ;
-		jsr	getLineLength	;get bytes needed
+		jsr	getLineLength	;get bytes needed Reload the number of bytes required for the new line
 ;
-		lda	PROGRAMEND
+		lda	PROGRAMEND      ;Load the start address for the copy
+		                        ;At this point curptr still contains the location we will insert data
 		sta	FROM
 		lda	PROGRAMEND+1
 		sta	FROM+1
 ;
-mvup1		ldy	#0
-		lda	(FROM),y
-		ldy	lineLength
-		sta	(FROM),y
+mvup1		ldy	#0		;always zero from From copy position to use indirect addressing
+		lda	(FROM),y    
+		ldy	lineLength      ;Now load y with new offset downward to store the byte
+		sta	(FROM),y        ;Save the new byte
 ;
-		lda	FROM
+		lda	FROM            ;Check if we have copies the last byte
 		cmp	CURPTR
 		bne	mvUpMore
 		lda	FROM+1
 		cmp	CURPTR+1
-		beq	mvUpDone
+		beq	mvUpDone        ; yes from now equals curptr where we insert the new line
 ;
 ; Not done yet
 ;
-mvUpMore	lda	FROM	    ;decrement FROM
+mvUpMore	lda	FROM	    	;decrement FROM to copy the next byte
 		bne	mvUpMore2
 		dec	FROM+1
 mvUpMore2	dec	FROM
-		jmp	mvup1
+		jmp	mvup1           ;Loop until everything is moved
 ;
 ; All done with copy.
 ;
-mvUpDone	clc
-		lda	lineLength
-		adc	PROGRAMEND
+mvUpDone	clc                     ;Ok, We are now ready to copy the new line to the program
+		lda	lineLength      ;Number of bytes to copy from line buff
+		adc	PROGRAMEND      ;Now pdate the end of program address for space we just opened
 		sta	PROGRAMEND
 		lda	PROGRAMEND+1
 		adc	#0
-		sta	PROGRAMEND+1
+		sta	PROGRAMEND+1    ;Program end now points to the correct enpty space
 ;
-		ldy	#0	;copy line number first
-		lda	R0
+;===================jlit use length before line newline
+
+		ldy	#0		;Set offset of copy
+                lda     lineLength      ;We will insert the actual length of the line first
+                sta     (CURPTR),y      ;Store the length
+                iny
+		lda	R0              ;Store the line number next
 		sta	(CURPTR),y
 		iny
 		lda	R0+1
 		sta	(CURPTR),y
 		iny
 ;
-		ldx	offset
-mvUpLoop2	lda	LINBUF,x
-		sta	(CURPTR),y
-		beq	mvUpFini
+		ldx	offset         ;Load the offset into line buffer in page zero
+mvUpLoop2	lda	LINBUF,x       ;get a byte
+		sta	(CURPTR),y     ;Store into Space opened, copies the closing null as well
+		beq	mvUpFini       ;hit the null at end of line then we are done
 		inx
 		iny
-		bne	mvUpLoop2
+		bne	mvUpLoop2      ;in case y wraps past 256 bytes stop
 ;
 mvUpFini	jmp	NextIL
 ;
@@ -1137,29 +1156,29 @@ iCALL		jsr	pushILPC	;save ILPC
 ; address immediately follows the opcode.
 ;
 iJMP		jsr	getILWord
-            stx	ILPC
-            sta	ILPC+1
-            jmp	NextIL
+		stx	ILPC
+		sta	ILPC+1
+		jmp	NextIL
 ;
 ;=====================================================
 ; Push the next two bytes onto the arithmetic stack.
 ;
 iLIT		jsr	getILWord
-            stx	R0
-            sta	R0+1
-            jsr	pushR0
-            jmp	NextIL
+		stx	R0
+		sta	R0+1
+		jsr	pushR0
+		jmp	NextIL
 ;
 ;=====================================================
 ; Initialize all variables.  Ie, set to zero.
 ;
 iVINIT		lda	#0
-            ldx	#0
+		ldx	#0
 Vinit2		sta	variables,x
-            inx
-            cpx	#variablesEnd-variables
-            bne	Vinit2
-            jmp	NextIL
+		inx
+		cpx	#variablesEnd-variables
+		bne	Vinit2
+		jmp	NextIL
 ;
 ;=====================================================
 ; Set the address of the error handler.  After any
@@ -1280,6 +1299,7 @@ iTSTV		jsr	getILByte	;offset
 ;=====================================================
 ; TSTL seems basically the same as TSTN, but leave the
 ; value in R0 instead of pushing onto stack.
+; This tests for a valid line number
 ;
 iTSTL		jsr	getILByte
 		sta	offset
@@ -1322,7 +1342,7 @@ iTSTN_1		jsr	getDecimal
 		sty	CUROFF
 		jsr	pushR0		;save onto stack
 		jmp	NextIL
-
+		
 ;
 ; Common jump point for all TSTx instructions that
 ; fail to meet the requirements.  This takes the
@@ -1366,35 +1386,35 @@ iRANDOM		jsr	popR1	;mod value
 ;
 ; If the value is zero, just return a one.
 ;
-            lda	R0
-            ora	R0+1
-            beq	irandom1
+		lda	R0
+		ora	R0+1
+		beq	irandom1
 ;
-            lda	random+1
-            sta	rtemp1
-            lda	random
-            asl
-            rol	rtemp1
-            asl
-            rol	rtemp1
-            clc
-            adc	random
-            pha
-            lda	rtemp1
-            adc	random+1
-            sta	random+1
-            pla
-            adc	#$11
-            sta	random
-            lda	random+1
-            adc	#$36
-            sta	random+1
+		lda	random+1
+		sta	rtemp1
+		lda	random
+		asl
+		rol	rtemp1
+		asl
+		rol	rtemp1
+		clc
+		adc	random
+		pha
+		lda	rtemp1
+		adc	random+1
+		sta	random+1
+		pla
+		adc	#$11
+		sta	random
+		lda	random+1
+		adc	#$36
+		sta	random+1
 
-            lda	random
-            sta	R0
-            lda	random+1
-            and	#$7f	;make positive
-            sta	R0+1
+		lda	random
+		sta	R0
+		lda	random+1
+		and	#$7f	;make positive
+		sta	R0+1
 ;
 ; R0 contains the number and R1 contains the max value.
 ;
@@ -1433,30 +1453,35 @@ irandom1	inc	R0
 		inc	R0+1
 iRANDOM_3   	jsr	pushR0	;return value
 		jmp	NextIL
-            
+;
+; Poke a value into a memory location
 iPOKEMEMORY	jsr	popR0
 		jsr	popR1
-		lda	R1
-		sta     PrtFrom    ; free pointer in zeropage lol
-		lda	R1+1
-		sta     PrtFrom+1
-		lda	R0
 		ldy     #0
-		sta     (PrtFrom),y
-		jmp     NextIL
-
-iPEEKMEMORY	jsr	popR0
 		lda	R0
-		sta     PrtFrom    ; free pointer in zeropage lol
-		lda	R0+1
-		sta     PrtFrom+1
+		sta     (R1),y
+		jmp     NextIL
+;
+; Get a value from a memory location
+;
+iPEEKMEMORY	jsr	popR0
 		ldy	#0
-		lda	(PrtFrom),y
+		lda	(R0),y
+		jmp     iPutStack
+;
+; Call to address return what ever is in a to the stack
+; func2 will load a value into a before the call
+iCallFunc2      jsr	popR1
+		lda	R1
+iCallFunc	jsr	iCallRtn
 		sta     R0
-		lda	#0
-		sta	R0+1
+		lda     #0
+		sta     R0+1
 		jsr	pushR0
 		jmp     NextIL
+iCallRtn        jsr 	popR0
+		jmp     (R0)
+
 		
 ;===========================================jlit======
 ;Get a character from the terminal convert to value
@@ -1468,7 +1493,7 @@ iGETCHAR:	jsr	GETCH
 		jsr	cout   ;echo echo echo
 		pla
 	    endif
-		sta     R0
+iPutStack	sta     R0
 		lda	#0
 		sta     R0+1
 		jsr	pushR0
@@ -1498,6 +1523,7 @@ iABS		jsr	popR0
 		inc	R0+1
 iABS_1		jsr	pushR0
 		jmp	NextIL
+;================================================================
 ;
             include	"support.asm"
 	if	DISK_ACCESS
@@ -1516,16 +1542,16 @@ PROGEND		equ	*
 ;=====================================================
 ; These are storage items not in page zero.
 ;
-		SEG.U bss
+		SEG.U   NotZeroPG
 		org	PROGEND
 		
 mathStack	ds	STACKSIZE*2
 mathStackPtr	ds	1
 retStack	ds	STACKSIZE*2
 retStackPtr	ds	1
-callStack	ds	STACKSIZE*2
-callStackPtr	ds	1
-LINBUF		ds	80
+;callStack	ds	GOSUBSTACKSIZE*2
+GoSubStackPtr	ds	1
+LINBUF		ds	132
 getlinx		ds	1
 printtx		ds	1	          ;temp X for print funcs
 diddigit	ds	1	          ;for leading zero suppression

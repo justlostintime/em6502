@@ -1,0 +1,18 @@
+public sub _new(address as long, len as long, parameters as string)
+
+  print address, len, parameters
+  
+end
+
+public sub _get(address as long) as byte
+  
+   print "read ", address
+   return 0
+   
+end
+
+public sub _put(Value as byte, address as long)
+
+  print "write",address, Value
+  
+end

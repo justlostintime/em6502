@@ -8,7 +8,7 @@
 ;
 		include	"config.inc"
 ;
-		SEG.U rom
+		SEG.U   rom
 		org	ROM_START
 ;
 ;=========================================================
@@ -61,7 +61,7 @@ DiskRmFile	ds	3
 	endif	             ;SD_ENABLED
 	
 ;
-        SEG.U bss
+		SEG.U   bss
 		org	RAM_START
 ;
 ; The use of memory starting from here will remain

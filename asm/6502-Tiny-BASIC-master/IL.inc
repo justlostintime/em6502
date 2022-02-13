@@ -277,3 +277,11 @@
 	macro	PUTCHAR
 		db	52
 		endm
+; Call		Call a machine function return a to stack
+	macro	CALLFUNC
+		db	53
+		endm
+; Call		Call a machine function return a to stack
+	macro	CALLFUNC2
+		db	54
+		endm

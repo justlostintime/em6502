@@ -1,0 +1,28 @@
+' Gambas class file
+
+testdev As Object = Null
+
+
+Public Sub SetDevice(devName As String)
+
+  DeviceInTest.text = devName
+
+End
+
+Public Sub LoadDevice_Click()
+
+  If DevAddress.text <> "" And DevLength.text <> "" Then
+    Dim address As Long = Eval("&h0" & DevAddress.text)
+    Dim Length As Long = Eval("&H0" & DevLength.text)
+    Dim ParmString As String = "" & DevParameters.text
+    Try testdev = DeviceDevelopement.CurrentDeviceClass.New([address, length, ParmString])
+    If Error Then
+      Message.Error("Unable to start the device\n" & Error.text)
+      DevStatus.text = "Failed to initiate"
+      Return
+    Else
+      DevStatus.text = "Loaded And Ready"
+    Endif
+  Endif
+
+End

@@ -13,7 +13,7 @@ Public Sub _call()
       Comp.AutoStartActive = True
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
       Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, ""]
+      Comp["TTYSIM"] = [&h0E000, 16, "Tiny Basic running with CTMON65 monitor"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp.Save(.AsmComputerDefinitions)
 
@@ -24,7 +24,7 @@ Public Sub _call()
       Comp.AutoStartActive = True
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
       Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, ""]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Basic at $0200"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp.Save(.AsmComputerDefinitions)
 

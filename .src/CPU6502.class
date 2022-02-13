@@ -15,6 +15,8 @@ Public DataBus As Integer = &h0          ' Data on databus
 Public AddressBus As Long = &h0          ' Address Bus current address
 Property BreakPoints As Boolean Use $BreakPoints  ' turn on breakpoint checking
 Public BreakPointList As Long[]          ' an array of breakpoints
+'When the following Is False just Return $ff On a bad Memory Read Or Write
+Property ChkBadMemAccess As Boolean Use $ChkBadMemAccess = True ' turn on or off catching bad read or writes
 
 Public AddressMap As New Object[]        ' Address bus map object pointers
 maphigh As New Long[]
@@ -26,7 +28,7 @@ Public LastTraceInstruction As String    ' When trace is on this will contain th
 Public TotalInstructions As Long = 0     ' Number of instructions executed
 Property Read InstructionsPerSecond As Long Use $InstructionsPerSecond ' Number of instructions executed per second
 
-Public CpuClock As New Timer As "MyClock"       ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
+Public CpuClock As Timer       ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
 
 Property Read CyclesPerSecond As Long Use $CyclesPerSecond               ' will track the actual number of cycles per second
 Property Read TotalCycles As Long Use $TotalCycles                       ' Total Number of Cycles executed
@@ -45,11 +47,13 @@ Public Sub _new()
   $TotalCycles = 0
   $CyclesPerSecond = 0
   $InstructionsPerSecond = 0
+  CpuClock = New Timer As "MyClock"
   CpuClock.Delay = 10
   CpuClock.enabled = True
   $SpeedScaler = 2
   $BreakPoints = False
   BreakPointList = New Long[]
+
 
 End
 
@@ -77,7 +81,7 @@ Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
 
 End
 
-Fast Unsafe Public Sub Halt()
+Public Sub Halt()
 
   CpuClock.Enabled = False
   For Each o As Object In AddressMap
@@ -147,7 +151,7 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
 
   Address = Address Or ah
   Address = (Address Shl 8) Or al
-  Print "Loading Image to address "; Hex(address, 4)
+  Debug "Loading Image to address "; Hex(address, 4)
 
   Dim Length As Integer = Lof(BinInfo) - 2
   buffer = New Byte[length]
@@ -156,7 +160,7 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
   If Error Then
     Raise BinaryLoaded(address, "", "Fail Writing bytes:" & BinName & ":" & Error.text)
   Endif
-  Raise BinaryLoaded(address, BinName, "$" & Hex(address, 4) & " - " & BinName)
+  Raise BinaryLoaded(address, BinName, "$" & Hex(address, 4) & "-" & Hex(Length, 4) & " - " & BinName)
 
 End
 
@@ -345,7 +349,10 @@ Fast Unsafe Public Sub IndirectY()
   ReadByte()
   addrTemp = DataBus
   Inc AddressBus
-  ReadByte()
+  Try ReadByte()
+  If Error Then
+    Stop
+  Endif
   AddressBus = (DataBus Shl 8) Or addrTemp
   AddressBus += Y
   Inc PC
@@ -396,7 +403,7 @@ Fast Unsafe Public Sub GetDevice(Address As Long) As Object
     If AddressMap[i]._InRange(Address) Then Return AddressMap[i]
   Next
 
-  Error.Raise("Invalid Memory Address [" & Hex(Address, 4) & "]")
+  If $ChkBadMemAccess Then Error.Raise("Invalid Memory Address [" & Hex(Address, 4) & "]")
 
 End
 
@@ -404,7 +411,6 @@ Fast Unsafe Public Sub ReadByte()
 
   Dim dev As Object = Null
 
-  'dev = GetDevice(AddressBus)
   For i As Integer = 0 To maplow.Max
     If AddressBus >= maplow[i] And If AddressBus <= maphigh[i] Then
       dev = AddressMap[i]
@@ -414,7 +420,11 @@ Fast Unsafe Public Sub ReadByte()
   If dev Then
     DataBus = dev._get(AddressBus)
   Else
-    Error.Raise("Invalid Read Memory Address [" & Hex(AddressBus, 4) & "]")
+    If $ChkBadMemAccess Then
+      Error.Raise("Invalid Read Memory Address [" & Hex(AddressBus, 4) & "]")
+    Else
+      DataBus = &HFF
+    Endif
   Endif
 
 End
@@ -433,7 +443,9 @@ Fast Unsafe Public Sub WriteByte()
   If dev Then
     dev._put(AddressBus, DataBus)
   Else
-    Error.Raise("Invalid Write Memory Address [" & Hex(AddressBus, 4) & "]")
+    If $ChkBadMemAccess Then
+      Error.Raise("Invalid Write Memory Address [" & Hex(AddressBus, 4) & "]")
+    Endif
   Endif
 
 End
@@ -453,8 +465,7 @@ Fast Unsafe Public Sub Reset()
   PC = (PC Or (DataBus Shl 8))
 
   If SingleStep Then
-    Print "PC Reset " & Hex(pc)
-    'Raise NextInst(Disassembler.Inst(Me, Pc))
+    Debug "PC Reset " & Hex(pc)
     StepInfo()
   Endif
 
@@ -612,7 +623,51 @@ Fast Unsafe Public Sub AndAc()
 
 End
 
+Public Sub AdcDecMode()
+
+  Dim carry As Integer = IIf(BTst(sr, 0), 1, 0)
+
+  Dim dac As Integer = (AC And &h0F) + (((AC And &hf0) Shr 4) * 10)
+  Dim ddc As Integer = (databus And &h0F) + (((databus And &hf0) Shr 4) * 10)
+
+  dac += ddc + carry
+  If dac > 99 Then sr = BSet(sr, 0) Else sr = BClr(sr, 0) ' set the carry bit
+  SetBcd(dac)
+
+End
+
+Public Sub SbcDecMode()
+
+  Dim carry As Integer = IIf(BTst(sr, 0), 1, 0)
+
+  Dim dac As Integer = (AC And &h0F) + (((AC And &hf0) Shr 4) * 10)
+  Dim ddc As Integer = (databus And &h0F) + (((databus And &hf0) Shr 4) * 10)
+
+  dac -= ddc - carry
+  If dac < -1 Then sr = BSet(sr, 0) Else sr = BClr(sr, 0)  ' set the carry bit If above - 1
+  If dac < 0 Then
+    dac = 100 - Abs(dac)
+    sr = BSet(sr, 7)
+  Endif
+  SetBcd(Dac)
+
+End
+
+Sub SetBcd(Value As Integer) ' ignore the extra 100's value
+
+  Dim ones As Integer = Value Mod 10
+  Dim tens As Integer = (value \ 10) Mod 10
+
+  ac = (tens Shl 4) Or ones
+
+End
+
 Fast Unsafe Public Sub AdcAc()
+
+  If BTst(SR, 3) Then
+    AdcDecMode()
+    Return
+  Endif
 
   Dim addone As Integer = IIf(BTst(sr, 0), 1, 0)
   Dim tmp As Integer
@@ -640,6 +695,11 @@ Fast Unsafe Public Sub AdcAc()
 End
 
 Fast Unsafe Public Sub SbcAc()
+
+  If BTst(SR, 3) Then
+    SbcDecMode()
+    Return
+  Endif
 
   Dim tmp As Byte = (DataBus Xor &h0FF)
 

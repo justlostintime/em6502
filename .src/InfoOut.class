@@ -1,0 +1,23 @@
+' Gambas class file
+
+
+Public Sub Display(infotext As String)
+
+  infoText = Replace(Infotext, "\n", "\n\r")
+  Info.Print(infoText)
+
+End
+
+Public Sub clear()
+
+  Info.Print("\e[2J")
+
+End
+
+
+Public Sub Form_Resize()
+
+  Info.h = Me.H - 2
+  Info.w = Me.w - 2
+
+End

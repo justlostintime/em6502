@@ -193,7 +193,7 @@ DiskDirEnd	jmp	NextIL
 	endif
 ;
 ;=====================================================
-; Does a LIST to a file file.
+; Does a LIST to a Disk file.
 ;
 iDLIST
 	if	XKIM || CTMON65

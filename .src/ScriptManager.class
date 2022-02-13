@@ -1,13 +1,12 @@
 ' Gambas class file
 
-' Gambas module file
-
 Public SubsAndClasses As New Collection(gb.ignorecase)
 Private DotProject As String = "# Gambas Project File 3.0\nTitle=$NAME\nStartup=$NAME\nVersion=1.1.2\n$COMPLIST\n"
 Private DotComponent As String = "[Component]\nKey=$NAME\nVersion=1.1.2"
 Private ProjectDot As String = ""
 Static Private OverloadCount As Integer = 0
 Property ReturnClasses As Boolean Use $ReturnClasses
+Property ReturnResult As Boolean Use $ReturnResult = False    'if true it will not print errors but return to calling program
 
 Property ScriptDirectory As String Use $ScriptDirectory
 Property PluginPath As String Use $sPluginPath
@@ -181,9 +180,10 @@ Public Function _Call(sname As String, Optional newParms As Variant[] = [], Comp
   Return "OK"
 
 Catch
-
+  Dim ErrorMessage As String = ""
   Dim s As String[] = Split(Error.text, ":", "", True)
-  Error "\n\x1b[33mCompiler Error -";; Error.Text;; "\x1b[0m";; If(s.count < 3, Error.where, "")
+
+  ErrorMessage &= "\n\x1b[33mCompiler Error - " & Error.Text & "\x1b[0m" & IIf(s.count < 3, Error.where, "") & "\n"
   If Not compileonly Then
     If cObject And If cObject.iFirstDef Then
       SubsAndClasses.Remove(cname)
@@ -191,11 +191,19 @@ Catch
   Endif
 
   If s.count > 2 Then
-    DoListing(SourceFile, s[1], s[2])
+    ErrorMessage &= DoListing(SourceFile, s[1], s[2], s[0])
     Print
   Endif
-
-  Error.Raise("Script Compile completed with errors")
+  If Not $ReturnResult Then
+    Dim deverrors As New InfoOut
+    deverrors.title = "Errors for : " & s[0]
+    deverrors.Show()
+    deverrors.Display(ErrorMessage)
+    Wait
+    Error.Raise("Script Compile completed with errors\n")
+  Else
+    Error.Raise("Script Compile completed with errors\n" & ErrorMessage)
+  Endif
 
 End
 
@@ -269,9 +277,10 @@ Public Sub changed(index As String) As Boolean
 
 End
 
-Public Sub DoListing(thefile As Variant, Optional errorline As Integer = 0, errorposition As Integer = 0)
+Public Sub DoListing(thefile As Variant, Optional errorline As Integer = 0, errorposition As Integer = 0, Errmsg As String = "") As String
 
   Dim list As String[]
+  Dim InfoOutput As String = ""
 
   Print TypeOf(thefile)
   If TypeOf(thefile) = gb.string Then
@@ -284,15 +293,18 @@ Public Sub DoListing(thefile As Variant, Optional errorline As Integer = 0, erro
 
   Dim i As Integer = 1
   For Each s As String In List
-    Error "[" & Format(i, "###0") & "]:";
+    InfoOutput &= "[" & Format(i, "###0") & "]:"
     If errorline > 0 And If errorline = i Then
-      Print "\x1b[32m"; s; "\x1b[0m"
-      Print Space(errorposition + 6); "\x1b[31m^\x1b[0m"
+      InfoOutput &= "\e[32m" & s & "\e[0m\n"
+      InfoOutput &= Space(errorposition + 6) & "\e[31m^\e[0m\n"
     Else
-      Print s
+      s = TextHighlighter["gambas"].ToANSI(s)
+      InfoOutput &= s & "\n"
     Endif
     Inc i
   Next
+
+  Return InfoOutput
 
 End
 

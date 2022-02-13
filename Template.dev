@@ -1,0 +1,82 @@
+' Gambas class file
+'' Memory maped io or memory
+'' Anything with two leading '' will
+'' dedisplayed as part of the help system
+'' so be verbose here
+'' any function you see here are manditory to
+'' correctly interface to the virtual machine
+'' These are written in gambas and you may want to visit the site
+'' http://gambas.sourceforge.net or https://gambaswiki.org/wiki
+
+'Fast Unsafe                                       ' use this to compile to binary
+
+' These are the memory constraints this device will occupy in the 6502 memory map 
+Public MemoryStart As Long = 0                    ' Start of this block of memory
+Public MemoryEnd As Long = 0                      ' End of valid memory
+Public MemoryLen As Long = 0                      ' Length of this memory block
+
+' Define an actual memory block, only needed if you device emulates some type of memory 
+Public Mem As new Byte[100]                              ' The actual memory
+
+'These are required and provided by you .. see _new()
+Property read Name as string use $Name            ' Every device gets a name
+
+'This is expected to contain the text parameter list passed to your device
+'during configuration
+Property read Parameters as string use $Parameters  ' coma seperated list of all loaded binaries
+
+'The emulator will pass the following information when your device is loaded
+' Start    This is the start location your device will occupy
+' Length   This is the number of memory mapped bytes required by your device
+' UserDefinedParameters - This is any configuration information your device requires at startup
+Public Sub _New(Start As Long, Length As Long, UserDefinedParameters As String)
+
+  MemoryStart = Start
+  MemoryEnd = start + Length - 1
+  MemoryLen = Length
+  'Mem = New Byte[Length]                ' this is an example of needing memory, see the TTYSIM for ther example
+  $Name = "Widgit"                      ' this may be anything you like, but should be unique to your device
+  $Parameters = UserDefinedParameters   ' save the config parameters
+  'Debug $Name;;"Defined at : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length)
+
+End
+
+' the get is used by the emulater to request a byte from your device
+' this is an example of ram interface 
+' The emulater validates the address for your device before it is called
+Public Sub _get(memoryAddress As Long) As Byte
+
+  'return Mem[memoryAddress - MemoryStart]
+
+End
+
+' This is called by the emulater to pass a byte to your device
+' This is an example of simple memory
+Public Sub _put(memoryAddress As Long, value As Byte)
+  'Debug "Store to "; hex(MemoryAddress,6) ;; "Value = ";Hex(value,2);; "Read = ";
+  'Mem[memoryAddress - MemoryStart] = value
+  'Debug hex(Mem[memoryAddress - MemoryStart],2)
+End
+
+' This is required, and does not need to be changed
+' It validates the address before reads or writes
+' Not used in most cases during emulation
+' the emulator validates early
+Public Sub _InRange(Address As Long) As Boolean
+
+  If Address >= MemoryStart And if Address <= MemoryEnd Then
+      Return True
+  endif
+  Return False
+
+End
+
+'' The emulator looks for this when the defined computer tries to load device specific
+'' files
+Public Sub Load(Parameters As string ) as long ' For ram we can load a number Of files into Memory
+  
+ return MemoryStart
+ 
+End
+
+

@@ -1,0 +1,51 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,170,119)
+  { devfile Menu
+    Text = ("File")
+    { NewDev Menu
+      Text = ("New")
+    }
+    { OpenDev Menu
+      Text = ("Open")
+    }
+    { Savedev Menu
+      Text = ("Save")
+    }
+    { SAVEASDEV Menu
+      Text = ("Save AS")
+    }
+  }
+  { EditDev Menu
+    Text = ("Edit")
+    { CutDev Menu
+      Text = ("Cut")
+    }
+    { Pastedev Menu
+      Text = ("Paste")
+    }
+    { Selectalldev Menu
+      Text = ("Select All")
+    }
+  }
+  { DeviceEditor TextEditor
+    MoveScaled(1,1,166,106)
+    PopupMenu = "EditDev"
+    Mode = "Gambas"
+    TabSize = 4
+    ShowPosition = True
+    ShowCurrent = True
+    ShowLineNumber = True
+    ShowModified = True
+    ShowBraces = True
+  }
+  { devcompile Button
+    MoveScaled(3,109,16,4)
+    Text = ("Compile")
+  }
+  { TestDev Button
+    MoveScaled(25,109,19,4)
+    Text = ("Test")
+  }
+}

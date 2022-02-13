@@ -56,8 +56,9 @@ S2:
 	XFER                       ;AND JUMP
 S2b:
 	TST        S3,"RE"
-	TST        S2a,"TURN"      ;RETURN STATEMENT
-	DONE                       ;MUST BE CR
+	TST        S2a,"T"
+	TST        S2aa,"URN"      ;RETURN STATEMENT
+S2aa:	DONE                       ;MUST BE CR
 	RSTR                       ;RESTORE LINE NUMBER OF CALL
 	NXT        CO              ;SEQUENCE TO NEXT STATEMENT
 	IJMP       STMT
@@ -286,12 +287,22 @@ F2B:
 	RTN
 
 F2B1:
-        TST	   F2C,"PEEK("      ;Return a value from memory
+        TST	   F2B2,"PEEK("     ;Return a value from memory
         CALL 	   EXPR             ;Get the address to write to
         TST        UNKNOWN,")"      ;Closing bracket
         PEEKMEM
         RTN
-
+F2B2:
+        TST       F2C,"CALL("       ;call machine function
+        CALL	  EXPR
+        TST       F2B2A,COMMA
+        CALL      EXPR
+        TST       UNKNOWN,")"
+        CALLFUNC2
+        RTN
+F2B2A   TST       UNKNOWN,")"
+        CALLFUNC
+        RTN
 F2C:
 	TSTV       F0
 	IND                        ;YES, GET THE VALUE.

@@ -1,0 +1,94 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,89,80)
+  { DevAddress TextBox
+    MoveScaled(2,9,14,4)
+  }
+  { DevLength TextBox
+    MoveScaled(19,9,13,4)
+  }
+  { DevParameters TextBox
+    MoveScaled(35,9,51,4)
+  }
+  { WriteData Button
+    MoveScaled(70,25,14,4)
+    Text = ("Write Data")
+  }
+  { DataToSend TextBox
+    MoveScaled(2,25,48,4)
+  }
+  { AddrToSendTo TextBox
+    MoveScaled(51,25,16,4)
+  }
+  { ReadData TextBox
+    MoveScaled(2,39,15,4)
+    Text = ("Read Data")
+    Alignment = Align.Center
+  }
+  { DataRecieved TextBox
+    MoveScaled(58,36,27,41)
+  }
+  { AddrToReadFrom TextBox
+    MoveScaled(19,39,14,4)
+  }
+  { NumberOfBytesToRead TextBox
+    MoveScaled(41,39,12,4)
+  }
+  { ReadAutoInc CheckBox
+    MoveScaled(2,45,34,4)
+    Text = ("Auto Increment on reading data")
+  }
+  { LoadDevice Button
+    MoveScaled(2,15,14,4)
+    Text = ("Load Device")
+  }
+  { WriteAutoInc CheckBox
+    MoveScaled(2,31,46,3)
+    Text = ("Auto Increment on sending data")
+  }
+  { Label1 Label
+    MoveScaled(2,5,14,4)
+    Text = ("Device StartAdr")
+  }
+  { Label2 Label
+    MoveScaled(19,5,14,4)
+    Alignment = Align.Center
+    Text = ("Mem Length")
+  }
+  { Label3 Label
+    MoveScaled(36,5,35,4)
+    Text = ("Device Specific parameters")
+  }
+  { Label4 Label
+    MoveScaled(3,21,43,3)
+    Text = ("Hex bytes to be send to Address")
+  }
+  { Label5 Label
+    MoveScaled(50,21,19,3)
+    Alignment = Align.Center
+    Text = ("Address to send to")
+  }
+  { Label6 Label
+    MoveScaled(17,35,19,3)
+    Text = ("Read Data From Addr")
+  }
+  { Label7 Label
+    MoveScaled(38,35,20,3)
+    Text = ("Number Bytes to read")
+  }
+  { DeviceInTest TextBox
+    MoveScaled(4,57,43,5)
+    Background = Color.Transparent
+    ReadOnly = True
+    Border = False
+  }
+  { DevStatus TextBox
+    MoveScaled(4,65,42,4)
+    ReadOnly = True
+  }
+  { Label8 Label
+    MoveScaled(2,1,78,4)
+    Text = ("All Information is entered in hex format")
+  }
+}

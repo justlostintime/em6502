@@ -6,7 +6,7 @@
 '' device. This is configured to work with the
 '' CTMON65 default rom, but may be used more generally
 
-fast unsafe
+'fast unsafe
 use "gb.form"
 use "gb.form.terminal"
 
@@ -20,6 +20,7 @@ Public EchoChar As Boolean = false
 Public MyObs As Observer
 
 Property read name as string use $name
+Property Read hidden as boolean use $hidden = false
 
 TTYFORM As Form
 
@@ -45,6 +46,10 @@ end
 
 Public Sub _Put(address As Long, Value As Byte)
    'print "TTY: Write Request Address=$";hex(address,4);;"With Data=$";hex(Value,2)
+  if $hidden then
+      TTYForm.Show()
+      $hidden = false
+  endif
   if address = MemoryStart+1 then         'put the data
     LastValue = value
     'if value = 10 or value = 13 then
@@ -60,6 +65,10 @@ End
 
 Public Sub _get(address As Long) As Byte
  'print "TTY: Read Request Address=$";hex(address,4)
+ if $hidden then
+      TTYForm.Show()
+      $hidden = false
+  endif
  If address = MemoryStart + 1 Then          'Then Read A byte
          if DataBuffer.count > 0 Then
            Return DataBuffer.Pop()
@@ -104,23 +113,24 @@ End
 Sub openTTYWindow()
 
   TTYForm = New Form As "MyTerminal"
-  TTYFORM.W = 600
-  TTYFORM.H = 600
   TTYFORM.title = " 6502 tty "
+  TTYForm.persistent = true
 
-  TTYFORM.show()
   TermOut = New TerminalView(TTYForm) As "MyView"
   TermOut.Enabled = True
   TermOut.ReadOnly = False
   TermOut.Width = TTYForm.width - 2
   TermOut.Height = TTYForm.Height - 2
-
+  TTYFORM.show()
+  TermOut.print("\e[32m")
 End
 
 Public Sub MyTerminal_open()
 
   TTYForm.x = Settings["TTYForm/Window/X", 100]
   TTYForm.y = Settings["TTYForm/Window/Y", 100]
+  TTYForm.h = Settings["TTYForm/Window/H", 700]
+  TTYForm.w = Settings["TTYForm/Window/w", 600]
 
 End
 
@@ -128,8 +138,20 @@ Public Sub MyTerminal_close()
 
   Settings["TTYForm/Window/X"] = TTYForm.X
   Settings["TTYForm/Window/Y"] = TTYForm.y
-
+  Settings["TTYForm/Window/H"] = TTYForm.h
+  Settings["TTYForm/Window/w"] = TTYForm.w
+  
+  
 End
+
+Public sub MyTerminal_resize()
+    TermOut.h = TTYForm.h
+    TermOut.w = TTYForm.w
+end
+
+Public Sub MyTerminal_hide()
+    $Hidden = true
+END
 
 
 Public Sub MyView_KeyPress()

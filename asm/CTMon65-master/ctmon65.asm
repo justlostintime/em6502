@@ -64,7 +64,7 @@ putsp		ds	2
 ;
 ; Non zero-page data
 ;
-		Seg.u bss
+		Seg.u   bss
 		org	RAM_START
 ;
 ; The use of memory starting from here will remain

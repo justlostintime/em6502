@@ -1,0 +1,125 @@
+' Gambas class file
+
+CurrentFile As String = ""
+MyScript As New ScriptManager(True, FMain.AsmDeviceDirectory)
+Originaltext As String = ""
+
+Public Sub OpenDev_Click()
+
+  Dialog.path = FMain.AsmDeviceDirectory & "/"
+  Dialog.filter = ["*.dev", "Device File"]
+  Dialog.AutoExt = True
+  If Dialog.openFile() Then Return
+  DeviceEditor.load(Dialog.path)
+  CurrentFile = Dialog.Path
+  OriginalText = DeviceEditor.text
+
+End
+
+Public Sub NewDev_Click()
+
+  DeviceEditor.text = File.Load("Template.dev")
+
+End
+
+Public Sub SAVEASDEV_Click()
+
+  Dialog.path = FMain.AsmDeviceDirectory & "/"
+  Dialog.filter = ["*.dev", "Device File"]
+  Dialog.AutoExt = True
+  If Dialog.SaveFile() Then Return
+  DeviceEditor.Save(Dialog.path)
+  CurrentFile = Dialog.Path
+
+End
+
+Public Sub Savedev_Click()
+
+  If CurrentFile = "" Then
+    SAVEASDEV_Click()
+    Return
+  Endif
+
+  DeviceEditor.Save(CurrentFile)
+
+End
+
+Public Sub Form_Close()
+
+  If DeviceEditor.text <> OriginalText Then
+    Savedev_Click()
+  Endif
+
+  Settings["devEditor/lastfile"] = CurrentFile
+  Settings["deveditor/Top"] = DeviceDevelopement.Top
+  Settings["deveditor/left"] = DeviceDevelopement.Left
+  Settings["deveditor/width"] = DeviceDevelopement.Width
+  Settings["deveditor/height"] = DeviceDevelopement.Height
+
+End
+
+Public Sub Form_Open()
+
+  DeviceDevelopement.Top = Settings["deveditor/Top", DeviceDevelopement.Top]
+  DeviceDevelopement.Left = Settings["deveditor/left", DeviceDevelopement.Left]
+  DeviceDevelopement.Width = Settings["deveditor/width", DeviceDevelopement.Width]
+  DeviceDevelopement.Height = Settings["deveditor/height", DeviceDevelopement.Height]
+  CurrentFile = Settings["devEditor/lastfile"]
+
+  If currentfile <> "" Then
+    DeviceEditor.Load(CurrentFile)
+  Endif
+
+End
+
+Public Sub CutDev_Click()
+
+  DeviceEditor.Cut()
+
+End
+
+Public Sub Pastedev_Click()
+
+  DeviceEditor.Paste()
+
+End
+
+Public Sub Selectalldev_Click()
+
+  DeviceEditor.SelectAll()
+
+End
+
+Public CurrentDeviceClass As Class = Null
+
+Public Sub devcompile_Click()
+
+  Dim DispInfo As String = "Compile Errors\n"
+
+  If CurrentFile = "" And DeviceEditor.text = OriginalText Then
+    Return
+  Endif
+
+  Savedev_Click()
+  Try CurrentDeviceClass = MyScript(CurrentFile)
+  If Error Then
+    DispInfo &= Error.text
+    Dim deverrors As New InfoOut
+    deverrors.title = "Errors for : " & CurrentFile
+    deverrors.Show()
+    deverrors.Display(DispInfo)
+    CurrentDeviceClass = Null
+  Else
+    Message.Info("No Compile errors!", "OK")
+  Endif
+
+End
+
+Public Sub TestDev_Click()
+
+  If CurrentDeviceClass = Null Then Return
+  Dim atest As New DeviceTester
+  DeviceTester.SetDevice(File.BaseName(CurrentFile))
+  atest.Show()
+
+End

@@ -9,7 +9,7 @@
 ;
 		include	"config.inc"
 ;
-		seg bss
+		seg     bss
 		org	ROM_START
 ;
 ;=========================================================
