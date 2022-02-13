@@ -2,19 +2,25 @@
 
 { Form Form
   MoveScaled(0,0,195,99)
-  { helpme Menu
+  { helpMe Menu
     Text = ("Help")
-    { Dasminfo Menu
-      Text = ("Dasm")
+    { ToolsIncluded Menu
+      Text = ("Tools Included")
+      { Dasminfo Menu
+        Text = ("6502 assembler Dasm")
+      }
     }
-    { CTMON65Info Menu
-      Text = ("CTmon65")
-    }
-    { tbinfo Menu
-      Text = ("Tiny Basic")
+    { SampleSoftware Menu
+      Text = ("Sample Software")
+      { CTMON65Info Menu
+        Text = ("CTmon65")
+      }
+      { tbinfo Menu
+        Text = ("Tiny Basic")
+      }
     }
     { m6502help Menu
-      Text = ("6502 emulation")
+      Text = ("6502 Emulation")
     }
   }
   { AboutIt Menu
@@ -27,9 +33,12 @@
     }
   }
   { DeviceInfo Menu
-    Text = ("Device")
+    Text = ("Device Management")
     { devtest Menu
-      Text = ("Develop/Test")
+      Text = ("Develope and Test")
+    }
+    { DeleteDevice Menu
+      Text = ("Delete Device")
     }
   }
   { SingleStepSet RadioButton

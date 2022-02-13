@@ -12,6 +12,7 @@ Public Sub OpenDev_Click()
   If Dialog.openFile() Then Return
   DeviceEditor.load(Dialog.path)
   CurrentFile = Dialog.Path
+  Me.title = "6502 Device Editor - " & CurrentFile
   OriginalText = DeviceEditor.text
 
 End
@@ -30,6 +31,7 @@ Public Sub SAVEASDEV_Click()
   If Dialog.SaveFile() Then Return
   DeviceEditor.Save(Dialog.path)
   CurrentFile = Dialog.Path
+  Me.title = "6502 Device Editor - " & CurrentFile
 
 End
 
@@ -65,7 +67,7 @@ Public Sub Form_Open()
   DeviceDevelopement.Width = Settings["deveditor/width", DeviceDevelopement.Width]
   DeviceDevelopement.Height = Settings["deveditor/height", DeviceDevelopement.Height]
   CurrentFile = Settings["devEditor/lastfile"]
-
+  Me.title = "6502 Device Editor - " & CurrentFile
   If currentfile <> "" Then
     DeviceEditor.Load(CurrentFile)
   Endif
@@ -101,13 +103,16 @@ Public Sub devcompile_Click()
   Endif
 
   Savedev_Click()
+  MyScript.ReturnResult = True
   Try CurrentDeviceClass = MyScript(CurrentFile)
   If Error Then
     DispInfo &= Error.text
     Dim deverrors As New InfoOut
     deverrors.title = "Errors for : " & CurrentFile
     deverrors.Show()
+    Wait
     deverrors.Display(DispInfo)
+    Wait
     CurrentDeviceClass = Null
   Else
     Message.Info("No Compile errors!", "OK")
@@ -119,7 +124,10 @@ Public Sub TestDev_Click()
 
   If CurrentDeviceClass = Null Then Return
   Dim atest As New DeviceTester
-  DeviceTester.SetDevice(File.BaseName(CurrentFile))
   atest.Show()
+  Wait
+
+  DeviceTester.SetDevice(CurrentFile)
+
 
 End

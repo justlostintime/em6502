@@ -2,7 +2,6 @@
 
 testdev As Object = Null
 
-
 Public Sub SetDevice(devName As String)
 
   DeviceInTest.text = devName
@@ -16,13 +15,123 @@ Public Sub LoadDevice_Click()
     Dim Length As Long = Eval("&H0" & DevLength.text)
     Dim ParmString As String = "" & DevParameters.text
     Try testdev = DeviceDevelopement.CurrentDeviceClass.New([address, length, ParmString])
+    object.attach(testdev, Me, "TestDevice")
     If Error Then
       Message.Error("Unable to start the device\n" & Error.text)
       DevStatus.text = "Failed to initiate"
       Return
     Else
+      DeviceInTest.text &= " " & testdev.name
       DevStatus.text = "Loaded And Ready"
+      WriteData.enabled = True
+      ReadData.Enabled = True
     Endif
   Endif
 
 End
+
+Sub GetPrintable(value As Byte) As String
+
+  Dim result As String = Chr(value)
+
+  If IsLetter(result) Or If IsNumber(result) Or If IsPunct(result) Then
+    Return result
+  Else
+    Return "."
+  Endif
+
+End
+
+
+Public Sub WriteData_Click()
+
+  Dim address As Long = 0
+  Dim sending As New Byte[]
+  Dim inputbytes As String[] = Split(DataToSend.text, " ", "", True)
+
+  For Each s As String In inputbytes
+    Try sending.add(Eval("&h0" & s))
+    If Error Then
+      Message.Error("Invalid input byte specified $" & s)
+      Return
+    Endif
+  Next
+  Try Address = Eval("&h0" & AddrToSendTo.text)
+  If Error Then
+    Message.Error("Invalid write address specified $" & AddrToSendTo.text)
+  Endif
+
+  For Each b As Byte In sending
+    DataTransmitted.text &= "" & Hex(address, 4) & " - " & Hex(b, 2) & " - " & Quote(GetPrintable(b)) & "\n"
+
+    DataTransmitted.refresh()
+    Wait
+    Try testdev[address] = b
+    If Error Then
+      message.Error("Error while writing to device:" & Error.text, "OK")
+      Return
+    Endif
+    If WriteAutoInc.value Then Inc address
+    Wait 0.25
+  Next
+
+End
+
+Public Sub ReadData_Click()
+
+  Dim address As Long = 0
+  Dim b As Byte
+  Dim counter As Integer = 1
+
+  If NumberOfBytesToRead.text <> "" Then
+    Try counter = Val(NumberOfBytesToRead.Text)
+    If Error Then
+      Message.Error("Invalid Read count entered " & NumberOfBytesToRead.text)
+      Return
+    Endif
+  Endif
+
+  Try Address = Eval("&h0" & AddrToSendTo.text)
+  If Error Then
+    Message.Error("Invalid Read address specified $" & AddrToSendTo.text)
+  Endif
+
+  While counter > 0
+    Try b = testdev[address]
+    If Error Then
+      message.Error("Error while Reading from  device at " & Hex(address, 4) & ":" & Error.text, "OK")
+      Return
+    Endif
+
+    DataRecieved.text &= "" & Hex(address, 4) & " - " & Hex(b, 2) & " - " & Quote(GetPrintable(b)) & "\n"
+    DataRecieved.refresh()
+    Wait
+
+    If ReadAutoInc.value Then Inc address
+    Wait 0.25
+    Dec counter
+  Wend
+
+End
+
+Public Sub TestDevice_IRQ()
+
+  StatusInfo.text &= "IRQ Recieved\n"
+  StatusInfo.Refresh()
+
+End
+
+Public Sub TestDevice_NMI()
+
+  StatusInfo.text &= "NMI Recieved\n"
+  StatusInfo.Refresh()
+
+End
+
+Public Sub TestDevice_Reset()
+
+  StatusInfo.text &= "IRQ Recieved\n"
+  StatusInfo.Refresh()
+
+End
+

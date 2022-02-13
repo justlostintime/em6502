@@ -378,6 +378,7 @@ Fast Unsafe Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optio
 
   Dim dev As Object = Device.New(params)
 
+  object.attach(dev, Me, "MyDevice")
 
   AddressMap.Add(Dev)
   mapLow.Add(Start)
@@ -753,3 +754,20 @@ Private Sub SpeedScaler_Write(Value As Long)
 
 End
 
+Public Sub MyDevice_IRQ()
+
+  IRQ()
+
+End
+
+Public Sub MyDevice_NMI()
+
+  Nmi()
+
+End
+
+Public Sub MyDevice_Reset()
+
+  Reset()
+
+End

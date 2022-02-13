@@ -181,7 +181,7 @@ Public Function _Call(sname As String, Optional newParms As Variant[] = [], Comp
 
 Catch
   Dim ErrorMessage As String = ""
-  Dim s As String[] = Split(Error.text, ":", "", True)
+  Dim s As String[] = Split(Replace(Error.text, "\n", ""), ":", "", True)
 
   ErrorMessage &= "\n\x1b[33mCompiler Error - " & Error.Text & "\x1b[0m" & IIf(s.count < 3, Error.where, "") & "\n"
   If Not compileonly Then
@@ -191,9 +191,9 @@ Catch
   Endif
 
   If s.count > 2 Then
-    ErrorMessage &= DoListing(SourceFile, s[1], s[2], s[0])
-    Print
+    ErrorMessage &= DoListing(SourceFile, s[1], s[2], s.Extract(3, -1).Join(" "))
   Endif
+
   If Not $ReturnResult Then
     Dim deverrors As New InfoOut
     deverrors.title = "Errors for : " & s[0]
@@ -282,9 +282,8 @@ Public Sub DoListing(thefile As Variant, Optional errorline As Integer = 0, erro
   Dim list As String[]
   Dim InfoOutput As String = ""
 
-  Print TypeOf(thefile)
   If TypeOf(thefile) = gb.string Then
-    list = Split(thefile, "\n", "\"\"", True, True)
+    list = Split(thefile, "\n", "\"\"", False, True)
   Else If TypeOf(thefile) = gb.object And Object.Class(thefile).name = "String[]" Then
     list = thefile
   Else
@@ -296,10 +295,10 @@ Public Sub DoListing(thefile As Variant, Optional errorline As Integer = 0, erro
     InfoOutput &= "[" & Format(i, "###0") & "]:"
     If errorline > 0 And If errorline = i Then
       InfoOutput &= "\e[32m" & s & "\e[0m\n"
-      InfoOutput &= Space(errorposition + 6) & "\e[31m^\e[0m\n"
+      InfoOutput &= Space(errorposition + 6) & "\e[31m^\e[0m" & Errmsg & "\n"
     Else
       s = TextHighlighter["gambas"].ToANSI(s)
-      InfoOutput &= s & "\n"
+      InfoOutput &= s
     Endif
     Inc i
   Next

@@ -791,3 +791,80 @@ Public Sub devtest_Click()
 
 End
 
+
+Public Sub Dasminfo_Click()
+
+  Dim a As New WebInfoViewer
+
+  a.Show()
+  Wait
+  a.SetUrl("https://dasm-assembler.github.io/", "The user manual can be found in the ~/6502/doc directory")
+
+End
+
+Public Sub CTMON65Info_Click()
+
+  Dim a As New WebInfoViewer
+
+  a.Show()
+  Wait
+  a.SetUrl("https://github.com/CorshamTech/CTMon65", "This project extended with  R - remove file")
+
+
+End
+
+Public Sub tbinfo_Click()
+
+  Dim a As New WebInfoViewer
+
+  a.Show()
+  Wait
+  a.SetUrl("https://github.com/CorshamTech/6502-Tiny-BASIC", "This project extended with new keywords, see ~/6502/doc")
+
+End
+
+Public Sub AboutInfo_Click()
+
+  Dim a As New WebInfoViewer
+
+  a.Show()
+  Wait
+  a.SetUrl("https://github.com/justlostintime/6502Emulator-DevEnv/wiki", "This is the first Pass using sample 6502 Software")
+
+End
+
+
+Public Sub creditDue_Click()
+
+  Dim a As New WebInfoViewer
+
+  a.Show()
+  Wait
+  a.SetUrl("https://github.com/justlostintime/6502Emulator-DevEnv/wiki", "Developed by JustLostInTime@gmail.com")
+
+
+End
+
+Public Sub m6502help_Click()
+
+  Dim a As New WebInfoViewer
+
+  a.Show()
+  Wait
+  a.SetUrl("https://github.com/justlostintime/6502Emulator-DevEnv/wiki", "Developed by JustLostInTime@gmail.com")
+
+
+End
+
+Public Sub DeleteDevice_Click()
+
+  Dialog.path = AsmDeviceDirectory & "/"
+  Dialog.filter = ["*.dev", "Device File"]
+  Dialog.AutoExt = True
+  If Dialog.openfile() Then Return
+  Try Kill Dialog.path
+  If Error Then
+    Message.Error("Unable to delete device " & Dialog.path, "OK")
+  Endif
+
+End

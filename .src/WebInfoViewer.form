@@ -1,0 +1,21 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,140,106)
+  { webinfo WebView
+    MoveScaled(1,5,137,99)
+  }
+  { DetailedInfo TextBox
+    MoveScaled(17,0,121,4)
+    Background = Color.LightBackground
+    ReadOnly = True
+  }
+  { Button1 Button
+    MoveScaled(1,1,6,3)
+    Text = ("<-")
+  }
+  { Button2 Button
+    MoveScaled(8,1,6,3)
+    Text = ("->")
+  }
+}

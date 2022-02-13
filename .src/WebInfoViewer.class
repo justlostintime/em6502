@@ -1,0 +1,30 @@
+' Gambas class file
+
+
+Public Sub Form_Resize()
+
+  webinfo.h = Me.H - 2
+  webinfo.w = Me.w - 2
+
+End
+
+Public Sub SetUrl(url As String, details As String)
+
+  DetailedInfo.text = details
+  webinfo.url = url
+  webinfo.Refresh()
+  Wait
+
+End
+
+Public Sub Button1_Click()
+
+  webinfo.Back()
+
+End
+
+Public Sub Button2_Click()
+
+  webinfo.Forward()
+
+End

@@ -10,6 +10,14 @@
 
 'Fast Unsafe                                       ' use this to compile to binary
 
+' These are the possible interupts the device may raise to the cpu
+' Example usage:
+' if ButtonPress then Raise IRQ()
+'
+event RESET()
+event IRQ()
+event NMI()
+
 ' These are the memory constraints this device will occupy in the 6502 memory map
 Public MemoryStart As Long = 0                    ' Start of this block of memory
 Public MemoryEnd As Long = 0                      ' End of valid memory
@@ -34,7 +42,7 @@ Public Sub _New(Start As Long, Length As Long, UserDefinedParameters As String)
   MemoryStart = Start
   MemoryEnd = start + Length - 1
   MemoryLen = Length
-  'Mem = New Byte[Length]                ' this is an example of needing memory, see the TTYSIM for ther example
+  Mem = New Byte[Length]                ' this is an example of needing memory, see the TTYSIM for ther example
   $Name = "Widgit"                      ' this may be anything you like, but should be unique to your device
   $Parameters = UserDefinedParameters   ' save the config parameters
   'Debug $Name;;"Defined at : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length)
@@ -46,7 +54,7 @@ End
 ' The emulater validates the address for your device before it is called
 Public Sub _get(memoryAddress As Long) As Byte
 
-  'return Mem[memoryAddress - MemoryStart]
+  return Mem[memoryAddress - MemoryStart]
 
 End
 
@@ -54,7 +62,7 @@ End
 ' This is an example of simple memory
 Public Sub _put(value As Byte, memoryAddress as long)
   'Debug "Store to "; hex(MemoryAddress,6) ;; "Value = ";Hex(value,2);; "Read = ";
-  'Mem[memoryAddress - MemoryStart] = value
+  Mem[memoryAddress - MemoryStart] = value
   'Debug hex(Mem[memoryAddress - MemoryStart],2)
 End
 

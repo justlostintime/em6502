@@ -306,3 +306,4 @@ Private Sub SetMemoryProtection_Write(Value As Boolean)
   mycpu.ChkBadMemAccess = value
 
 End
+

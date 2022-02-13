@@ -1,7 +1,7 @@
 # Gambas Form File 3.0
 
 { Form Form
-  MoveScaled(0,0,89,80)
+  MoveScaled(0,0,97,97)
   { DevAddress TextBox
     MoveScaled(2,9,14,4)
   }
@@ -12,28 +12,25 @@
     MoveScaled(35,9,51,4)
   }
   { WriteData Button
-    MoveScaled(70,25,14,4)
+    MoveScaled(75,25,14,4)
+    Enabled = False
     Text = ("Write Data")
   }
   { DataToSend TextBox
     MoveScaled(2,25,48,4)
+    ToolTip = ("Enter the data to be sent.\neach character as a pair of hex digits followed by a space\neg\nFF EA 20 31 32 33 34 35 36 37 38")
   }
   { AddrToSendTo TextBox
     MoveScaled(51,25,16,4)
-  }
-  { ReadData TextBox
-    MoveScaled(2,39,15,4)
-    Text = ("Read Data")
-    Alignment = Align.Center
-  }
-  { DataRecieved TextBox
-    MoveScaled(58,36,27,41)
+    ToolTip = ("4 digit Hex address to send data to")
   }
   { AddrToReadFrom TextBox
-    MoveScaled(19,39,14,4)
+    MoveScaled(6,39,14,4)
+    ToolTip = ("4 digit hex address to read data from")
   }
   { NumberOfBytesToRead TextBox
-    MoveScaled(41,39,12,4)
+    MoveScaled(26,39,12,4)
+    ToolTip = ("decimal number of bytes to read")
   }
   { ReadAutoInc CheckBox
     MoveScaled(2,45,34,4)
@@ -44,7 +41,7 @@
     Text = ("Load Device")
   }
   { WriteAutoInc CheckBox
-    MoveScaled(2,31,46,3)
+    MoveScaled(2,30,32,4)
     Text = ("Auto Increment on sending data")
   }
   { Label1 Label
@@ -67,28 +64,55 @@
   { Label5 Label
     MoveScaled(50,21,19,3)
     Alignment = Align.Center
-    Text = ("Address to send to")
+    Text = ("Hex Address")
   }
   { Label6 Label
-    MoveScaled(17,35,19,3)
-    Text = ("Read Data From Addr")
+    MoveScaled(7,35,11,3)
+    Text = ("Hex Address")
   }
   { Label7 Label
-    MoveScaled(38,35,20,3)
+    MoveScaled(24,35,20,3)
     Text = ("Number Bytes to read")
   }
   { DeviceInTest TextBox
-    MoveScaled(4,57,43,5)
+    MoveScaled(2,56,43,5)
     Background = Color.Transparent
     ReadOnly = True
     Border = False
   }
   { DevStatus TextBox
-    MoveScaled(4,65,42,4)
+    MoveScaled(2,60,40,4)
+    Background = Color.Transparent
     ReadOnly = True
+    Border = False
   }
   { Label8 Label
     MoveScaled(2,1,78,4)
     Text = ("All Information is entered in hex format")
+  }
+  { DataTransmitted TextArea
+    MoveScaled(72,35,22,59)
+    ReadOnly = True
+  }
+  { Label10 Label
+    MoveScaled(72,31,21,3)
+    Alignment = Align.Center
+    Text = ("Written data")
+  }
+  { Label11 Label
+    MoveScaled(46,44,23,3)
+    Alignment = Align.Center
+    Text = ("Read Data")
+  }
+  { ReadData Button
+    MoveScaled(51,39,14,4)
+    Enabled = False
+    Text = ("Read Data")
+  }
+  { StatusInfo TextArea
+    MoveScaled(2,69,43,25)
+  }
+  { DataRecieved TextArea
+    MoveScaled(48,47,22,47)
   }
 }
