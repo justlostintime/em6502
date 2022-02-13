@@ -24,3 +24,5 @@ The basic and monitor have been modified and extended\
 by me. Both are open sourced!\
 It also provides emulators for ct65 devices including the sd interface.\
 for now.\
+This environment will emulate a clock speed of about 3-4mhz at best on a 1.2ghz cpu
+
