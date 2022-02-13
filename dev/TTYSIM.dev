@@ -6,7 +6,7 @@
 '' device. This is configured to work with the
 '' CTMON65 default rom, but may be used more generally
 
-'fast unsafe
+fast unsafe
 use "gb.form"
 use "gb.form.terminal"
 
@@ -44,7 +44,7 @@ Public sub halt()
    TTYFORM.close()
 end
 
-Public Sub _Put(address As Long, Value As Byte)
+Public Sub _Put(Value As Byte, address as long)
    'print "TTY: Write Request Address=$";hex(address,4);;"With Data=$";hex(Value,2)
   if $hidden then
       TTYForm.Show()
@@ -140,8 +140,8 @@ Public Sub MyTerminal_close()
   Settings["TTYForm/Window/Y"] = TTYForm.y
   Settings["TTYForm/Window/H"] = TTYForm.h
   Settings["TTYForm/Window/w"] = TTYForm.w
-  
-  
+
+
 End
 
 Public sub MyTerminal_resize()

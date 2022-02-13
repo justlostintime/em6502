@@ -181,7 +181,7 @@ fast unsafe Sub CompleteMsg() As Boolean
 
 End
 
-fast unsafe Public Sub _put(Address As Long, value As Byte)
+fast unsafe Public Sub _put(value As Byte, address as long)
 
   Select Case Address
     Case PIAREGA

@@ -1,6 +1,6 @@
 ' Gambas class file
 
-'Fast Unsafe
+'
 Public PC As Long = &H0000                ' Program counter
 Public SP As Byte = &HFF                   ' Stack Pointer 0x100-0x1ff 256 bytes fifo
 
@@ -39,7 +39,6 @@ Event StatusInfo(information As Cpustatus)
 Event NextInst(Inst As String)
 Event breakpoint(pc As Long)
 Event BinaryLoaded(address As Long, BinName As String, info As String)
-
 
 Public Sub _new()
 
@@ -81,7 +80,7 @@ Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
 
 End
 
-Public Sub Halt()
+Fast Unsafe Public Sub Halt()
 
   CpuClock.Enabled = False
   For Each o As Object In AddressMap
@@ -208,7 +207,7 @@ Fast Unsafe Public Sub Run()
 End
 
 '' Create an event with all the information needed to display the next Instruction with status
-Fast Unsafe Sub StepInfo()
+Sub StepInfo()
 
   LastTraceInstruction = Left(Disassembler.Inst(Me, pc) & Space(40), 40) & "->[" & SRText() & "] " & Hex(ac, 2) & " " & Hex(X, 2) & " " & Hex(Y, 2) & " " & "1" & Hex(sp, 2)
   Raise NextInst(LastTraceInstruction)
@@ -218,7 +217,7 @@ End
 FlagsOn As String[] = ["C", "Z", "I", "D", "B", "-", "V", "N"]
 FlagsOff As String[] = ["c", "z", "i", "d", "b", "-", "v", "n"]
 
-Fast Unsafe Sub SRText() As String
+Sub SRText() As String
 
   Dim flag As String = ""
 
@@ -418,7 +417,7 @@ Fast Unsafe Public Sub ReadByte()
   Next
 
   If dev Then
-    DataBus = dev._get(AddressBus)
+    DataBus = dev[AddressBus]
   Else
     If $ChkBadMemAccess Then
       Error.Raise("Invalid Read Memory Address [" & Hex(AddressBus, 4) & "]")
@@ -441,7 +440,7 @@ Fast Unsafe Public Sub WriteByte()
   Next
 
   If dev Then
-    dev._put(AddressBus, DataBus)
+    dev[AddressBus] = Databus
   Else
     If $ChkBadMemAccess Then
       Error.Raise("Invalid Write Memory Address [" & Hex(AddressBus, 4) & "]")
@@ -623,7 +622,7 @@ Fast Unsafe Public Sub AndAc()
 
 End
 
-Public Sub AdcDecMode()
+Fast Unsafe Public Sub AdcDecMode()
 
   Dim carry As Integer = IIf(BTst(sr, 0), 1, 0)
 
@@ -636,7 +635,7 @@ Public Sub AdcDecMode()
 
 End
 
-Public Sub SbcDecMode()
+Fast Unsafe Public Sub SbcDecMode()
 
   Dim carry As Integer = IIf(BTst(sr, 0), 1, 0)
 
@@ -742,13 +741,13 @@ Fast Unsafe Public Sub Poke(addr As Long, value As Integer)
 
 End
 
-Fast Unsafe Private Function SpeedScaler_Read() As Long
+Private Function SpeedScaler_Read() As Long
 
   Return $SpeedScaler
 
 End
 
-Fast Unsafe Private Sub SpeedScaler_Write(Value As Long)
+Private Sub SpeedScaler_Write(Value As Long)
 
   $SpeedScaler = value
 

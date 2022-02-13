@@ -1,6 +1,6 @@
 ' Gambas class file
 
-'Fast Unsafe
+Fast Unsafe
 MyCpu As CPU6502
 Running As Boolean
 Public MonitorList As Collection  ' format is [ HEXADDR:[start,end], HEXADDR:[start, end] ]

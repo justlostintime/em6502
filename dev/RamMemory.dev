@@ -43,7 +43,7 @@ Public Sub _get(memoryAddress As Long) As Byte
 
 End
 
-Public Sub _put(memoryAddress As Long, value As Byte)
+Public Sub _put(value As Byte, memoryAddress as long)
   'print "Store to "; hex(MemoryAddress,6) ;; "Value = ";Hex(value,2);; "Read = ";
   Mem[memoryAddress - MemoryStart] = value
   'print hex(Mem[memoryAddress - MemoryStart],2)

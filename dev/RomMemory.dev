@@ -33,7 +33,7 @@ Public Sub _New(Start As Long, Length As Long, BinRom as variant)
 
 End
 
-fast unsafe Public Sub _get(memoryAddress As Long) As Byte
+Public Sub _get(memoryAddress As Long) As Byte
 
   'dim result as byte
 
@@ -47,7 +47,7 @@ fast unsafe Public Sub _get(memoryAddress As Long) As Byte
 
 End
 
-fast unsafe Public Sub _put(memoryAddress As Long, value As Byte)
+Public Sub _put(value As Byte, memoryAddress as long)
 
   Error.Raise("Invalid Write Request to rom " & Hex(MemoryAddress, 6) & "Of Value " & Hex(value, 2))
 

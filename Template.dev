@@ -10,12 +10,12 @@
 
 'Fast Unsafe                                       ' use this to compile to binary
 
-' These are the memory constraints this device will occupy in the 6502 memory map 
+' These are the memory constraints this device will occupy in the 6502 memory map
 Public MemoryStart As Long = 0                    ' Start of this block of memory
 Public MemoryEnd As Long = 0                      ' End of valid memory
 Public MemoryLen As Long = 0                      ' Length of this memory block
 
-' Define an actual memory block, only needed if you device emulates some type of memory 
+' Define an actual memory block, only needed if you device emulates some type of memory
 Public Mem As new Byte[100]                              ' The actual memory
 
 'These are required and provided by you .. see _new()
@@ -42,7 +42,7 @@ Public Sub _New(Start As Long, Length As Long, UserDefinedParameters As String)
 End
 
 ' the get is used by the emulater to request a byte from your device
-' this is an example of ram interface 
+' this is an example of ram interface
 ' The emulater validates the address for your device before it is called
 Public Sub _get(memoryAddress As Long) As Byte
 
@@ -52,7 +52,7 @@ End
 
 ' This is called by the emulater to pass a byte to your device
 ' This is an example of simple memory
-Public Sub _put(memoryAddress As Long, value As Byte)
+Public Sub _put(value As Byte, memoryAddress as long)
   'Debug "Store to "; hex(MemoryAddress,6) ;; "Value = ";Hex(value,2);; "Read = ";
   'Mem[memoryAddress - MemoryStart] = value
   'Debug hex(Mem[memoryAddress - MemoryStart],2)
@@ -74,9 +74,9 @@ End
 '' The emulator looks for this when the defined computer tries to load device specific
 '' files
 Public Sub Load(Parameters As string ) as long ' For ram we can load a number Of files into Memory
-  
+
  return MemoryStart
- 
+
 End
 
 
