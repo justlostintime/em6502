@@ -16,7 +16,7 @@ It includes a portable system monitor and tiny basic.\
 Corsham Techologies, LLC 6502 monitor CTMON65\
 CTMON65 rev 0.3\
 09/20/2018 by Bob Applegate K2UT, bob@corshamtech.com\
-Bob's Tiny BASIC v1.0.1\
+Bob's Tiny BASIC v1.0.1
 
 https://github.com/CorshamTech/6502-Tiny-BASIC
 
