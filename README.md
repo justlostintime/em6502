@@ -25,5 +25,6 @@ by me. Both are open sourced!\
 It also provides emulators for ct65 devices including the sd interface.\
 for now.\
 This environment will emulate a clock speed of about 3-4mhz at best on a 1.2ghz cpu
+![6502emulator](https://user-images.githubusercontent.com/2708327/154163068-837ff439-4a15-4a51-9040-f2183fc6d24f.png)
 
-![6502Emulator](https://user-images.githubusercontent.com/2708327/154162741-a5479201-9aef-44a3-ac79-8bf3bab45559.png)
+
