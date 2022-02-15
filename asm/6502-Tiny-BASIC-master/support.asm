@@ -6,8 +6,9 @@
 ; the IL opcodes.  These are support functions, NOT
 ; the IL code.
 ;=====================================================
+GOSUBSTACKSIZE  equ     20      ;Depth of gosub nesting
 ;=====================================================
-	Seg code
+	Seg Code
 ;=====================================================
 ; This gets the next two bytes pointed to by ILPC and
 ; returns them; X contains LSB, A contains MSB.  ILPC
@@ -479,7 +480,7 @@ getlind		lda	#0
 		jsr	SkipSpaces
 		lda	(CURPTR),y
 		beq	GetLinePr	;empty line
-		pla		;get rid of prompt char
+		pla		        ;get rid of prompt char
 		rts
 ;
 ; Backspace was hit
@@ -487,6 +488,8 @@ getlind		lda	#0
 getlinebs	ldx	getlinx
 		beq	getline1	;at start of line
 		dex
+		jsr     puts
+		db      27,"[K",0
 		jmp	getline1
 ;
 ;=====================================================
@@ -570,6 +573,9 @@ pushR0		ldx	mathStackPtr
 
 pushLN		sty	rtemp1
 		ldy	GoSubStackPtr
+		tya	
+		cmp 	#GOSUBSTACKSIZE*2
+		beq	pusherr
 		lda	CURPTR
 		sta	(GOSUBSTACK),y
 		iny
@@ -578,6 +584,10 @@ pushLN		sty	rtemp1
 		iny
 		sty	GoSubStackPtr
 		ldy	rtemp1
+		clc
+		rts
+		
+pusherr:	sec
 		rts
 ;
 ;=====================================================
@@ -612,6 +622,9 @@ popR0		ldx	mathStackPtr
 popLN		sty	rtemp1
                 ldy	GoSubStackPtr
 		dey
+		tya
+		cmp	#$FF
+		beq	poperr
 		lda	(GOSUBSTACK),y
 		sta	CURPTR+1
 		dey
@@ -619,7 +632,10 @@ popLN		sty	rtemp1
 		sta	CURPTR
 		sty	GoSubStackPtr
 		ldy	rtemp1
+		clc
 		rts
+poperr		sec
+		rtn
 ;
 ;=====================================================
 ; This pops TOS and places it in R1.
@@ -778,7 +794,7 @@ GetSizes
 	if ProgramStart < $2000
 		lda	#$ff
 		sta	HighMem	;$13ff for KIM-1
-		lda	#$DF    ;#$13
+		lda	#$DE    ;#$13
 		sta	HighMem+1
 	else
 		lda	#$ff

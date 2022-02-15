@@ -1,4 +1,6 @@
    Processor 6502
+		seg.U 	ZEROPAGE
+		org 	$0000
 ;*********************************************************
 ; CTMON65
 ;
@@ -20,8 +22,7 @@
    Mac dw
      .word {0}
    endm
-     seg.U bss
-     org $0000
+		
 ;*********************************************************
 ;
 		include	"config.inc"
@@ -55,7 +56,7 @@ EOF_RECORD	equ	$01
 ; Zero-page data
 ;
 ;		zpage
-            seg.U bss
+            seg.U ZEROPAGE
             org	ZERO_PAGE_START
 sptr		ds	2
 INL         	ds	1
@@ -64,7 +65,7 @@ putsp		ds	2
 ;
 ; Non zero-page data
 ;
-		Seg.u   bss
+		Seg.u   RomScratch
 		org	RAM_START
 ;
 ; The use of memory starting from here will remain
@@ -118,14 +119,14 @@ Temp16H		ds	1
 ; 8K EEPROM.  This forces the actual code to the top
 ; 4K section.
 ;
-		Seg  rcode
-		org	ROM_START-$1000
+;		Seg  rcode
+;		org	ROM_START-$1000
 ;		db	"This space for rent.",CR,LF
 ;		db	"Actually, this just forces the "
 ;		db	"binary file to be 8K long."
 		
 		
-        Seg Code
+		Seg 	Code
 		org	ROM_START
 ;
 ;=========================================================

@@ -20,7 +20,7 @@ OnImage As Picture = Picture.Fromstring(File.load("OnLed.png"))
 OffImage As Picture = Picture.Fromstring(File.load("OffLed.png"))
 
 updatetimer As New Timer As "MyTimer"
-DeveloperMode As Boolean = False
+DeveloperMode As Boolean = True
 
 Public Sub Form_Open()
 
@@ -129,6 +129,14 @@ End
 
 Public Sub The_Computer_BinaryLoaded(address As Long, BinName As String, info As String)
 
+  If LoadedList.Exist(address) Then
+    Dim result As Integer = Message.Warning("Image already loaded to " & Hex(address), "Replace", "Cancel")
+    If result = 0 Then
+      LoadedList.Remove(address)
+    Else
+      Return
+    Endif
+  Endif
   LoadedList.Add(address, info)
   StartAddr.text = Hex(address, 2)
   GetSymbols(AsmSourceDirectory &/ BinName & ".sym")
@@ -386,7 +394,7 @@ Public Sub OpenProg_Click()
   VerifyProgSaved()
 
   Dialog.Filter = ["*.asm", "Assembler 6502", "*", "All Files"]
-  Dialog.path = AsmSourceDirectory
+  Dialog.path = AsmSourceDirectory & "/"
   If Dialog.OpenFile() Then Return
   EditProg.load(Dialog.path, True)
   OriginalSource = EditProg.text
@@ -399,7 +407,7 @@ End
 Public Sub SaveAsProg_Click()
 
   Dialog.Filter = ["*.asm", "Assembler65", "*", "All Files"]
-  Dialog.path = AsmSourceDirectory
+  Dialog.path = AsmSourceDirectory & "/"
   If Dialog.SaveFile() Then Return
   EditProg.Save(Dialog.path)
   CurrentlyOpenFile = Dialog.path

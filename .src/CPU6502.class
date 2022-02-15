@@ -159,7 +159,7 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
   If Error Then
     Raise BinaryLoaded(address, "", "Fail Writing bytes:" & BinName & ":" & Error.text)
   Endif
-  Raise BinaryLoaded(address, BinName, "$" & Hex(address, 4) & "-" & Hex(Length, 4) & " - " & BinName)
+  Raise BinaryLoaded(address, BinName, "$" & Hex(address, 4) & "-" & Hex(Address + Length - 1, 4) & " - " & BinName)
 
 End
 

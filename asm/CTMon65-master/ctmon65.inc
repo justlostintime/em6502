@@ -9,7 +9,7 @@
 ;
 		include	"config.inc"
 ;
-		seg     bss
+		seg     Vectors
 		org	ROM_START
 ;
 ;=========================================================
@@ -61,6 +61,7 @@ DiskClose	ds	3
 DiskRmFile	ds	3
 	endif	;SD_ENABLED
 ;
+		seg.u	RomScratch
 		org	RAM_START
 ;
 ; The use of memory starting from here will remain

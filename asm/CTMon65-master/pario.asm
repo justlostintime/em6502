@@ -27,7 +27,7 @@
 ;
 DIRECTION	equ	%00000001
 PSTROBE		equ	%00000010
-ACK         equ	%00000100
+ACK         	equ	%00000100
 ;
 ;----------------------------------------------------
 ; Which slot the parallel board is in.  This needs to

@@ -24,7 +24,7 @@
 ;
 ; Number of drives emulated
 ;
-            Seg Code
+		Seg 	Code
 DRIVES		equ	4
 ;
 ;=====================================================

@@ -61,7 +61,7 @@ DiskRmFile	ds	3
 	endif	             ;SD_ENABLED
 	
 ;
-		SEG.U   bss
+		SEG.U   Data
 		org	RAM_START
 ;
 ; The use of memory starting from here will remain

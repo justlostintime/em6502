@@ -1,5 +1,9 @@
-       processor 6502
+;assum for this test that the default computer config is used
+;assumes that the TTYSIM is loaded at $e000
+
+  processor 6502
   .org $8000
+portout   equ $e000
 loop:
   cli
   lda #$12
@@ -21,7 +25,7 @@ loop:
   cmp #$00
   nop
   beq loop
-    jmp loop
+  jmp $0200             ; jump to the tiny basic
 
 subcall:
   lda $3000
@@ -35,34 +39,34 @@ subcall:
   nop
   nop
   lda #$31
-  sta $7000
+  sta outport
   lda #$32
-  sta $7000
+  sta outport
   rts
-  
+
 sayhello:
   ldx #0
 hloop:
       lda  hello,x
  beq done
- sta $7000
+ sta outport
  inx
  bne hloop
 done: rts
 
-hello: .byte "HELLO, WORLD!", 13,0
+hello: .byte "HELLO, WORLD!", 13,10,0
  MAC print
 	ldx #0
-.loop:	
+.loop:
        lda {1},x
        beq  .done
-       sta $7000
+       sta outport               ; assume here running in the default computer
        inx
        bne .loop
 .done:
  ENDM
 
- MAC  greet 
+ MAC  greet
 	print hello1
 	print {1}
 	print hello2
@@ -70,7 +74,7 @@ hello: .byte "HELLO, WORLD!", 13,0
 
 sayhello2:
 	lda #147
-	sta $7000
+	sta outport
 	greet target1
 	greet target2
 	greet target3
@@ -84,7 +88,7 @@ sayhello2:
 	rts
 
 hello1: .byte "HELLO, ",0
-hello2: .byte "!", 13, 0
+hello2: .byte "!", 13, 10, 0
 
 target1:  .byte "PROGRAMMER",0
 target2:  .byte "ROOM",0
@@ -96,8 +100,3 @@ target7:  .byte "WORLD", 0
 target8:  .byte "SOLAR SYSTEM", 0
 target9:  .byte "GALAXY", 0
 target10: .byte "UNIVERSE",0
-
-
- .org $fffc
- .word $8000
- .word $0000

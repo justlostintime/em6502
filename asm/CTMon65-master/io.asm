@@ -6,18 +6,16 @@
 ; functions like text output, reading a line, etc.
 ;*********************************************************
 ;
-;		zpage
-;putsp		ds	2
 ;
 EnableGetline   equ 0       ;Disable the Getline function
 EnableParse     equ 0       ;Disable the parse line function
-
-		SEG.U  bss
+	    if EnableGetline 
+		SEG.U   RomScratch
 BUFFER		ds	BUFFER_SIZE
 argc		ds	1
 argv		ds	MAX_ARGC
-;
-        Seg Code 
+            endif
+		Seg	Code 
 ;
 ;*********************************************************
 ; Print the string that follows the JSR to this code.
@@ -26,25 +24,25 @@ argv		ds	MAX_ARGC
 ;
 putsil		pla             ;Get the low part of "return" address
                             ;(data start address)
-            sta	putsp
-            pla
-            sta putsp+1     ;Get the high part of "return" address
+		sta	putsp
+		pla
+		sta putsp+1     ;Get the high part of "return" address
                             ;(data start address)
                             ;Note: actually we're pointing one short
 PSINB		ldy	#1
-            lda	(putsp),y	;Get the next string character
-            inc	putsp       ;update the pointer
-            bne	PSICHO      ;if not, we're pointing to next character
-            inc	putsp+1     ;account for page crossing
+		lda	(putsp),y	;Get the next string character
+		inc	putsp       ;update the pointer
+		bne	PSICHO      ;if not, we're pointing to next character
+		inc	putsp+1     ;account for page crossing
 PSICHO		ora	#0          ;Set flags according to contents of
                             ;   Accumulator
-            beq	PSIX1       ;don't print the final NULL
-            jsr	cout        ;write it out
-            jmp	PSINB       ;back around
+		beq	PSIX1       ;don't print the final NULL
+		jsr	cout        ;write it out
+		jmp	PSINB       ;back around
 PSIX1		inc	putsp
-            bne	PSIX2
-            inc	putsp+1	    ;account for page crossing
-PSIX2       jmp (putsp)     ;return to byte following final NULL
+		bne	PSIX2
+		inc	putsp+1	    ;account for page crossing
+PSIX2       	jmp (putsp)     ;return to byte following final NULL
 ;
 ;=====================================================
 ; This prints the null terminated string pointed to by
@@ -53,15 +51,15 @@ PSIX2       jmp (putsp)     ;return to byte following final NULL
 ;
 puts		ldy	#0
 putsy		lda	(INL),y
-            inc	INL
-            bne	puts1
-            inc	INH
+		inc	INL
+		bne	puts1
+		inc	INH
 puts1		ora	#0
-            beq	putsdone
-            sty	SaveY
-            jsr	cout	;print character
-            ldy	SaveY
-            jmp	putsy
+		beq	putsdone
+		sty	SaveY
+		jsr	cout	;print character
+		ldy	SaveY
+		jmp	putsy
 putsdone	rts
 ;
 ;*********************************************************
@@ -111,20 +109,22 @@ getline3	lda	#0
 ;*********************************************************
 ; This converts the buffer to all lower case.
 ;
-ToLower		ldx	#0
+ToLower		
+             if EnableParse
+		ldx	#0
 ToLower1	lda	BUFFER,x
-            beq	ToLowerDone
+		beq	ToLowerDone
 ;
-            cmp	#'a
-            bcc	ToLower2
-            cmp	#'z+1
-            bcs	ToLower2
-            clc
-            sbc	#$20	;convert
-            sta	BUFFER,x
+		cmp	#'a
+		bcc	ToLower2
+		cmp	#'z+1
+		bcs	ToLower2
+		clc
+		sbc	#$20	;convert
+		sta	BUFFER,x
 ToLower2	inx
-            bne	ToLower1
-;
+		bne	ToLower1
+            endif
 ToLowerDone	rts
 ;
 ;*********************************************************

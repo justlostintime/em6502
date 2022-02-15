@@ -1,4 +1,4 @@
-LET;
+;LET
 ;=====================================================
 ;=====================================================
 ;=====================================================
@@ -32,7 +32,10 @@ XEC:
 ;STATEMENT EXECUTOR
 
 STMT:
-	TST        S1a,"LET"       ;IS STATEMENT A LET
+        TSTLET	   LET		   ;Test if second field is =
+	IJMP       DOLET           ;allow the default to be let
+LET:
+        TST        S1,"LET"       ;IS STATEMENT A LET
 DOLET:	TSTV       ERRVEC          ;YES, PLACE VAR ADDRESS ON AESTK
 	TST        ERRVEC,"="      ;(This line originally omitted)
 	CALL       EXPR            ;PLACE EXPR VALUE ON AESTK
@@ -40,8 +43,6 @@ DOLET:	TSTV       ERRVEC          ;YES, PLACE VAR ADDRESS ON AESTK
 	STORE                      ;STORE RESULT
 	NXT        CO              ;AND SEQUENCE TO NEXT
 	IJMP       STMT
-S1a:    TSTLET	   S1		   ;Test if second field is =
-	IJMP       DOLET           ;allow the default to be let
 S1:
 	TST        S2b,"GO"        ;GOTO OT GOSUB?
 	TST        S2,"TO"         ;YES...TO, OR...SUB
@@ -55,7 +56,7 @@ S2:
 	SAV                        ;SAVE RETURN LINE
 	XFER                       ;AND JUMP
 S2b:
-	TST        S3,"RE"
+	TST        S3,"RE"	   ;Speed up pocessing but more memory
 	TST        S2a,"T"
 	TST        S2aa,"URN"      ;RETURN STATEMENT
 S2aa:	DONE                       ;MUST BE CR
@@ -77,7 +78,7 @@ S4:
 	TSTDONE    S4a		   ;Test if we just want crlf printed
 	IJMP	   S6
 	
-S4a:	TST        S7,QUOTE        ;TEST FOR QUOTE
+S4a:	TSTSTR     S7              ;TEST FOR QUOTED String
 	PRS                        ;PRINT STRING
 S5:
 	TST        S6A,COMMA       ;IS THERE MORE?
@@ -122,17 +123,24 @@ S8a:
         CALL	   EXPR		     ;Get the value to poke
         TST        UNKNOWN,")"
         POKEMEM
-        IJMP	   CO
+        DONE
+        NXT        CO              ;AND SEQUENCE TO NEXT
+	IJMP       STMT
+
 S8b:
 	TST       S8c,"PUTCH("     ;Put a char to the terminal
 	CALL      EXPR
 	TST       UNKNOWN,")"      
 	PUTCHAR
-	IJMP	   CO
+	DONE
+        NXT        CO              ;AND SEQUENCE TO NEXT
+	IJMP       STMT
 S8c
 	TST	   S9,"CLS"	   ;Clear the screen
 	CLEARSCREEN
-	IJMP       CO
+	DONE
+        NXT        CO              ;AND SEQUENCE TO NEXT
+	IJMP       STMT
 S9:
 	TST        S13,"INPUT"     ;INPUT STATEMENT
 S10:
@@ -202,7 +210,7 @@ S18:	TST 	S19,"DIR"
 	endif
 	
 S19:	TST 	UNKNOWN,"ERASE"
-	RMFILE			;Display the directory content
+	RMFILE			   ;Erase the file from the disk
 	IJMP	CO
 	endif
 	
@@ -260,9 +268,15 @@ FACT:
 	FREE
 	RTN
 F1A:
-	TST        F2A,"GETCH()"   ; read char from the terminal
+	TST        F1A2,"GETCH()"   ; read char from the terminal
 	GETCHAR
 	RTN
+F1A2:
+        TST	   F2A,"PEEK("     ;Return a value from memory
+        CALL 	   EXPR             ;Get the address to write to
+        TST        UNKNOWN,")"      ;Closing bracket
+        PEEKMEM
+        RTN
 ;
 ; RND() is supposed to have an argument but if none
 ; was provided, just assume a large value.
@@ -280,18 +294,12 @@ F2A1:
 	RTN
 
 F2B:
-	TST        F2B1,"ABS("
+	TST        F2B2,"ABS("
 	CALL       FACT            ;get value
 	TST        UNKNOWN,")"
 	ABS
 	RTN
 
-F2B1:
-        TST	   F2B2,"PEEK("     ;Return a value from memory
-        CALL 	   EXPR             ;Get the address to write to
-        TST        UNKNOWN,")"      ;Closing bracket
-        PEEKMEM
-        RTN
 F2B2:
         TST       F2C,"CALL("       ;call machine function
         CALL	  EXPR
@@ -300,6 +308,7 @@ F2B2:
         TST       UNKNOWN,")"
         CALLFUNC2
         RTN
+        
 F2B2A   TST       UNKNOWN,")"
         CALLFUNC
         RTN

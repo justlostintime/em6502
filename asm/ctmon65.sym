@@ -1,21 +1,18 @@
 --- Symbol List (sorted by symbol)
 ACIA                     e000              (R )
 ACK                      0004              (R )
-argc                     e031                  
-argv                     e032                  
 AutoRun                  df04              (R )
 BELL                     0007                  
 BS                       0008              (R )
 buffer                   df0a              (R )
-BUFFER                   dfad              (R )
 BUFFER_SIZE              0084              (R )
 BUFFERED_INPUT           0000                  
 BYTESLINE                0010              (R )
 cDesc                    f150              (R )
 CHKL                     dfa9              (R )
-cin                      fb70              (R )
+cin                      fb58              (R )
 cinecho                  f9d8              (R )
-cinit                    fb57              (R )
+cinit                    fb3f              (R )
 CINvec                   f009                  
 closeonly                fac3              (R )
 CloseOutFile             fab7              (R )
@@ -30,52 +27,52 @@ cmdRet4                  f92e
 COLDvec                  f000                  
 commandTable             f0f6              (R )
 CONSOLE_SLOT             0000              (R )
-cout                     fb63              (R )
-cout1                    fb64              (R )
+cout                     fb4b              (R )
+cout1                    fb4c              (R )
 COUTvec                  f00c                  
 CR                       000d              (R )
-crlf                     fb3c              (R )
+crlf                     fb24              (R )
 CRLFvec                  f018                  
-cstatus                  fb7b              (R )
+cstatus                  fb63              (R )
 CSTATvec                 f00f                  
 CTMON65rev               f007                  
 CTMON65ver               f006                  
 DATA_RECORD              0000              (R )
 dDesc                    f171              (R )
-DDNEnd                   fbd6              (R )
-DDNErr                   fbdf              (R )
-DDNloop                  fbc7              (R )
-DefaultIRQ               fc93              (R )
-DefaultNMI               fc93              (R )
+DDNEnd                   fbbe              (R )
+DDNErr                   fbc7              (R )
+DDNloop                  fbaf              (R )
+DefaultIRQ               fc7b              (R )
+DefaultNMI               fc7b              (R )
 DIRECTION                0001                  
 diskBufLength            dfa8              (R )
 diskBufOffset            dfa7              (R )
-DiskClose                fc88              (R )
+DiskClose                fc70              (R )
 DISKCLOSEvec             f042                  
-DiskDir                  fba9              (R )
-DiskDirNext              fbb3              (R )
+DiskDir                  fb91              (R )
+DiskDirNext              fb9b              (R )
 DISKDIRNEXTVEC           f033                  
 DISKDIRvec               f030                  
-DiskOk                   fc49              (R )
-DiskOk1                  fc83              (R )
-DiskOpen                 fbe6              (R )
-DiskOpenErr              fc0d              (R )
-DiskOpenLoop             fbf4              (R )
-DiskOpenRead             fbe4              (R )
+DiskOk                   fc31              (R )
+DiskOk1                  fc6b              (R )
+DiskOpen                 fbce              (R )
+DiskOpenErr              fbf5              (R )
+DiskOpenLoop             fbdc              (R )
+DiskOpenRead             fbcc              (R )
 DISKOPENREADvec          f036                  
-DiskOpenWrite            fc15              (R )
+DiskOpenWrite            fbfd              (R )
 DISKOPENWRITvec          f039                  
-DiskPing                 fb96              (R )
+DiskPing                 fb7e              (R )
 DISKPINGvec              f02d                  
-DiskRead                 fc1f              (R )
-DiskReadEof              fc4b              (R )
-DiskReadLoop             fc3c              (R )
+DiskRead                 fc07              (R )
+DiskReadEof              fc33              (R )
+DiskReadLoop             fc24              (R )
 DISKREADvec              f03c                  
-DiskRemoveFile           fc1a              (R )
-DiskRetGood              fba4                  
+DiskRemoveFile           fc02              (R )
+DiskRetGood              fb8c                  
 DISKRMvec                f045                  
-DiskWrite                fc51              (R )
-DiskWriteLoop            fc68              (R )
+DiskWrite                fc39              (R )
+DiskWriteLoop            fc50              (R )
 DISKWRITEvec             f03f                  
 displayHelp              f7ef              (R )
 doContinue               f72e              (R )
@@ -130,13 +127,13 @@ getNibble                f760              (R )
 getNibble1               f765              (R )
 getNibF                  f76f              (R )
 getStartAddr             f782              (R )
-HandleIRQ                fc90              (R )
-HandleNMI                fc8d              (R )
+HandleIRQ                fc78              (R )
+HandleNMI                fc75              (R )
 hasdata                  fa13              (R )
 hDesc                    f1a8              (R )
-HexA                     fb1f              (R )
-HexDigit                 fb2e              (R )
-HexDigit1                fb37              (R )
+HexA                     fb07              (R )
+HexDigit                 fb16              (R )
+HexDigit1                fb1f              (R )
 hexdot                   f325              (R )
 hexDump                  f2e0              (R )
 hexdump1                 f301              (R )
@@ -174,7 +171,7 @@ loadHex                  f3d1              (R )
 loadHexConsole           f440              (R )
 loadHexOk                f43a              (R )
 loadStart                f46e              (R )
-MAX_ARGC                 0005              (R )
+MAX_ARGC                 0005                  
 mDesc                    f200              (R )
 memabort                 f812              (R )
 memCheck                 f89c              (R )
@@ -197,8 +194,8 @@ openfail                 f41c              (R )
 original                 df8f              (R )
 OUTHEXvec                f01b                  
 outputVector             df08              (R )
-parse                    fb1e                  
-parse2                   fb1e                  
+parse                    fb06                  
+parse2                   fb06                  
 pattern                  df8e              (R )
 PATTERN_0                0001              (R )
 PATTERN_9                00ba              (R )
@@ -304,9 +301,9 @@ slab1                    f58f              (R )
 Sloop1                   f599              (R )
 Sloop2                   f5ff              (R )
 sopenok                  f565              (R )
-space                    fb4f              (R )
-space2                   fb4c              (R )
-space3                   fb49              (R )
+space                    fb37              (R )
+space2                   fb34              (R )
+space3                   fb31              (R )
 sptr                     00f0              (R )
 tDesc                    f27e              (R )
 TDRE                     0002              (R )
@@ -316,9 +313,7 @@ tempA                    df99              (R )
 testbit                  f71f              (R )
 testbit1                 f72a              (R )
 ToLower                  fb05                  
-ToLower1                 fb07              (R )
-ToLower2                 fb1a              (R )
-ToLowerDone              fb1d              (R )
+ToLowerDone              fb05                  
 TRUE                     0001              (R )
 typeEof                  fab1              (R )
 typeFile                 fa5d              (R )
@@ -328,15 +323,15 @@ updateCrc                f98b              (R )
 VERSION                  0000              (R )
 WARM                     f0b7              (R )
 WARMvec                  f003                  
-xParInit                 fb81              (R )
+xParInit                 fb69              (R )
 XPARINITvev              f01e                  
-xParReadByte             fb8b              (R )
+xParReadByte             fb73              (R )
 XPARREADvec              f02a                  
-xParSetRead              fb84              (R )
+xParSetRead              fb6c              (R )
 XPARSETREADvec           f024                  
-xParSetWrite             fb81              (R )
+xParSetWrite             fb69              (R )
 XPARSETWRITEvec          f021                  
-xParWriteByte            fb87              (R )
+xParWriteByte            fb6f              (R )
 XPARWRITEvec             f027                  
 ZERO_PAGE_START          00f0              (R )
 --- End of Symbol List.

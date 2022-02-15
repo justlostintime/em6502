@@ -285,3 +285,9 @@
 	macro	CALLFUNC2
 		db	54
 		endm
+; TSTSTR        Tests for the open quote in a string
+	macro	TSTSTR
+                db      55
+                db	({1}-*)-1           ;(addr-*)-1
+                endm
+

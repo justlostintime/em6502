@@ -27,6 +27,18 @@ input            processor 6502
 ;		* No more error 5 when a program
 ;		  reaches the end without an END.
 ;
+; 02/15/2022 v0.5 JustLostInTime@gmail.compare
+;               * Add some usefull system level functions
+;               * allow a larger number of tiny basic formats
+;               * Add byte at start of line holding length
+;                 for faster execution of goto and gosub
+;               * Re-added gosub
+;               * allow ; or , at end if print stmt
+;                 without CRLF being added.
+;               * Added extended function erase to
+;                 use the extended ctmon65 rm file
+;               * Fix quoted text to not have to backtrack
+;
 ; www.corshamtech.com
 ; bob@corshamtech.com
 ;
@@ -90,7 +102,7 @@ FIXED		equ	FALSE
 ; BASIC, so keep this small!
 ;
 STACKSIZE	equ	8	;number of entries
-GOSUBSTACKSIZE  equ     10      ;Depth of gosub nesting
+GOSUBSTACKSIZE  equ     20      ;Depth of gosub nesting max is 128
 ;
 ; Common ASCII constants
 ;
@@ -117,11 +129,13 @@ ERR_READ_FAIL	     	equ	7	;error loading file
 ERR_WRITE_FAIL	     	equ	8	;error saving file
 ERR_NO_FILENAME	     	equ	9       ;Forgot to include the file name
 ERR_FILE_NOT_FOUND	equ     10	;The file name provided not found
+ERR_STACK_UNDER_FLOW    equ     11      ;the gosub stack underflow
+ERR_STACK_OVER_FLOW	equ     12      ;Stack overflow
 ;
 ;=====================================================
 ; Zero page storage.
 ;
-            SEG.U  bss
+            SEG.U  Data
             org	$0040
 		
 ILTrace             	ds	1	       	;non-zero means tracing
@@ -169,7 +183,7 @@ PrtFrom		    	EQU	FROM
 ;
 ;=====================================================
 ;
-            SEG code
+            SEG Code
             org	$0200
 ;
 ; Cold start is at $0200.  Warm start is at $0203.
@@ -191,7 +205,7 @@ MONITOR		jmp	$1c4f	;return to monitor
 	endif
 	if 	XKIM
 		include	"xkim.inc"
-		SEG code
+		SEG Code
 OUTCH		jmp	$1ea0
 GETCH		jmp	xkGETCH
 CRLF		jmp	$1e2f	;print CR/LF
@@ -203,7 +217,7 @@ BUFFER_SIZE	equ	132
 	
 	if	CTMON65
 		include	"ctmon65.inc"
-		SEG code
+		SEG Code
 		
 OUTCH		jmp	cout
 GETCH		jmp	cin
@@ -291,7 +305,7 @@ NextIL2		ldy	CUROFF
 		jsr	SkipSpaces
 		sty	CUROFF
 ;
-		jsr	getILByte
+NextILStr	jsr	getILByte
 ;
 ; When the handler is called, these are the conditions
 ; of several important items:
@@ -422,6 +436,7 @@ ILTBL	    dw	iXINIT	;0
 	    dw	iPUTCHAR      ;52       Put a char to the terminal
 	    dw  iCallFunc     ;53       call a machine rtn accumulator
 	    dw  iCallFunc2    ;54       call system rtn with value in a
+	    dw  iTSTStr       ;55       Test Specifically for the start of a quoted string
 	 
 ILTBLend	equ	*
 ;
@@ -568,18 +583,22 @@ iXferok
 ;=====================================================
 ; Save the pointer to the next line to the call stack.
 ;
-iSAV
-		jsr pushLN
+iSAV		jsr pushLN
+		bcs iSAVErr
 		jmp NextIL
+iSAVErr		ldx #12
+iSAVErr2        lda #0
+		jmp iErr2
             
 ;
 ;=====================================================
 ; Pop the next line from the call stack.
 ;
-iRSTR		
-		jsr popLN
+iRSTR		jsr popLN
+		bcs iSAVErr
 		jmp NextIL
-            ;jmp	ILbad
+iRSTRErr	ldx #11
+		bne iSAVErr2
 ;
 ;=====================================================
 ; Compare items on stack.  Okay, so on input there are
@@ -1220,6 +1239,17 @@ iTSTUpper	iny
 iTSTm		ldy	dpl
 		sty	CUROFF
 		jmp	NextIL
+; Test for a single quote
+iTSTStr 	jsr	getILByte
+		sta     offset
+		jsr     saveIL
+		ldy     CUROFF
+		lda     #'"
+		cmp    (CURPTR),y
+		bne    iTSTfail
+		iny    
+		sty    CUROFF
+		jmp    NextILStr
 ;
 ; Not a match, reset ILPC and then move to the
 ; offset.
@@ -1386,8 +1416,8 @@ iRANDOM		jsr	popR1	;mod value
 ;
 ; If the value is zero, just return a one.
 ;
-		lda	R0
-		ora	R0+1
+		lda	R1
+		ora	R1+1
 		beq	irandom1
 ;
 		lda	random+1
@@ -1451,22 +1481,27 @@ iRANDOM_4	bpl	iRANDOM_sub
 irandom1	inc	R0
 		bne	iRANDOM_3
 		inc	R0+1
-iRANDOM_3   	jsr	pushR0	;return value
+iRANDOM_3
+                jsr	pushR0	;return value
 		jmp	NextIL
 ;
 ; Poke a value into a memory location
-iPOKEMEMORY	jsr	popR0
+iPOKEMEMORY	sty	tempy
+		jsr	popR0
 		jsr	popR1
 		ldy     #0
 		lda	R0
 		sta     (R1),y
+		ldy	tempy
 		jmp     NextIL
 ;
 ; Get a value from a memory location
 ;
-iPEEKMEMORY	jsr	popR0
+iPEEKMEMORY	sty	tempy
+		jsr	popR0
 		ldy	#0
 		lda	(R0),y
+		ldy     tempy
 		jmp     iPutStack
 ;
 ; Call to address return what ever is in a to the stack
@@ -1542,7 +1577,7 @@ PROGEND		equ	*
 ;=====================================================
 ; These are storage items not in page zero.
 ;
-		SEG.U   NotZeroPG
+		seg.u	Data
 		org	PROGEND
 		
 mathStack	ds	STACKSIZE*2
@@ -1562,6 +1597,7 @@ sign		ds	1	          ;0 = positive, else negative
 rtemp1		ds	1
 random		ds	2
 BOutVec		ds	2
+tempy		ds	1                 ;temp y storage
 	if XKIM
 buffer		ds	BUFFER_SIZE
 	endif
@@ -1592,7 +1628,7 @@ FreeMem		ds	2	;amount of free memory
 ProgramStart	equ	*
 /*
 	if	CTMON65 || XKIM
-		SEG code
+		SEG Code
 		org	AutoRun
 		dw	TBasicCold
 	endif
