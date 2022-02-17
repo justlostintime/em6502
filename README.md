@@ -11,6 +11,8 @@ ppa:gambas-team/gambas-daily to your system's Software Sources. (Read about inst
    
    sudo apt install gambas3
 ```
+Symbolic debugging, memory monitoring etc.
+
 Everything one needs to develope 6502 applications\
 It includes a portable system monitor and tiny basic.\
 Corsham Techologies, LLC 6502 monitor CTMON65\
