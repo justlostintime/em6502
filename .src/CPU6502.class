@@ -34,6 +34,10 @@ Property Read CyclesPerSecond As Long Use $CyclesPerSecond               ' will 
 Property Read TotalCycles As Long Use $TotalCycles                       ' Total Number of Cycles executed
 
 Property SpeedScaler As Long Use $SpeedScaler                     ' use this as each cpu we run on may have a different clock
+Property InteruptPending As Boolean Use $InteruptPending = False
+Property IRQPending As Boolean Use $IRQPending = False
+Property NMIPending As Boolean Use $NMIPending = False
+Property ResetPending As Boolean Use $ResetPending = False
 
 Event StatusInfo(information As Cpustatus)
 Event NextInst(Inst As String)
@@ -42,7 +46,7 @@ Event BinaryLoaded(address As Long, BinName As String, info As String)
 
 Public Sub _new()
 
-  Print Disassembler.version
+  Debug Disassembler.version
   $TotalCycles = 0
   $CyclesPerSecond = 0
   $InstructionsPerSecond = 0
@@ -149,7 +153,7 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
   Read #BinInfo, ah
 
   Address = Address Or ah
-  Address = (Address Shl 8) Or al
+  Address = ((Address Shl 8) Or al)
   Debug "Loading Image to address "; Hex(address, 4)
 
   Dim Length As Integer = Lof(BinInfo) - 2
@@ -177,6 +181,20 @@ Fast Unsafe Public Sub Run()
         'Raise NextInst(Disassembler.Inst(Me, pc))
         StepInfo()
         Return
+      Endif
+    Endif
+
+    If $InteruptPending Then
+      $InteruptPending = False
+      If $ResetPending Then
+        Reset()
+        CycleCount += 9
+      Else If $NMIPending Then
+        NMI()
+        CycleCount += 5
+      Else If $IRQPending Then
+        IRQ()
+        CycleCount += 5
       Endif
     Endif
 
@@ -233,11 +251,11 @@ Sub SRText() As String
 
 End
 
+CycleCount As Integer
 
 Fast Unsafe Public Sub ExecuteInstruction()
 
   Dim inst As Integer
-  Dim CycleCount As Integer
   Dim addrMode, aaa, cc As Integer
 
   AddressBus = pc
@@ -453,6 +471,10 @@ End
 
 Fast Unsafe Public Sub Reset()
 
+  $NMIPending = False
+  $IRQPending = False
+  $ResetPending = False
+
   SR = (1 Shl 2)                ' set the irq disabled bit
   ac = 0
   SetSR(AC)
@@ -549,6 +571,7 @@ End
 
 Fast Unsafe Public Sub NMI()
 
+  $NMIPending = False
   interupt(&H0FFFA)
   SR = BSet(sr, 2)
 
@@ -556,6 +579,7 @@ End
 
 Fast Unsafe Public Sub IRQ()
 
+  $IRQPending = False
   If BTst(sr, 2) Then Return                          ' Ignore this if the irq is disabled
   interupt(&h0FFFE)
   SR = BSet(sr, 2)
@@ -756,18 +780,21 @@ End
 
 Public Sub MyDevice_IRQ()
 
-  IRQ()
+  $IRQPending = True
+  $InteruptPending = True
 
 End
 
 Public Sub MyDevice_NMI()
 
-  Nmi()
+  $NMIPending = True
+  $InteruptPending = True
 
 End
 
 Public Sub MyDevice_Reset()
 
-  Reset()
+  $ResetPending = True
+  $InteruptPending = True
 
 End

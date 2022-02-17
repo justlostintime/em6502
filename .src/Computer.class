@@ -104,19 +104,22 @@ End
 Public Sub Reset()
 
   MyCpu.SingleStep = True
-  MyCpu.reset()
+  MyCpu.ResetPending = True
+  MyCpu.InteruptPending = True
 
 End
 
 Public Sub Nmi()
 
-  MyCpu.Nmi()
+  MyCpu.NMIPending = True
+  MyCpu.InteruptPending = True
 
 End
 
 Public Sub IRQ()
 
-  MyCpu.IRQ()
+  MyCpu.IRQPending = True
+  MyCpu.InteruptPending = True
 
 End
 
