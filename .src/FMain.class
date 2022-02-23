@@ -20,7 +20,7 @@ OnImage As Picture = Picture.Fromstring(File.load("OnLed.png"))
 OffImage As Picture = Picture.Fromstring(File.load("OffLed.png"))
 
 updatetimer As New Timer As "MyTimer"
-DeveloperMode As Boolean = False
+DeveloperMode As Boolean = True
 
 Public Sub Form_Open()
 
@@ -92,13 +92,13 @@ Public Sub Form_Close()
   Settings["computer/default"] = DefaultComputerDefinition
   Settings["AsmDocumentDirectory"] = AsmDocumentDirectory
 
-  SingleStepSet_Click()
-  Wait 0.001
-
   ShutdownMemMonitors()
+
+  If StartStop.text = "Stop" Then StartStop_Click()
+  updatetimer.enabled = False
+  Wait 0.01
   MyComputer.shutdown()
   SaveComputersConfig()
-  updatetimer.enabled = False
 
 End
 

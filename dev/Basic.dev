@@ -1,6 +1,19 @@
+
 'Fast Unsafe
+
+Property MemoryStart As Long use $MemoryStart = 0                    ' Start of this block of memory
+Property MemoryEnd As Long use $MemoryEnd = 0                        ' If this is zero then the device has no mapped memory
+Property MemoryLen As Long use $MemoryLen = 0                        ' Length of this memory block
+
+Property read Name as string use $name
+
+Event IRQ()           ' Device can create an IRQ
+Event NMI()           ' Device can create an NMI
+Event Reset()         ' Device can force a reset of the CPU
+
 public sub _new(address as long, len as long, parameters as string)
 
+  $Name = "MyDevName"
   print address, len, parameters
 
 end
@@ -16,4 +29,24 @@ public sub _put(Value as byte, address as long)
 
   print "write",address, Value
 
+end
+
+'this can be called by other devices or the computer
+'the cpu keeps its own dictionary of device addresses
+Public Sub _InRange(Address As Long) As Boolean
+
+  If Address >= MemoryStart And Address <= MemoryEnd Then Return True
+  Return False
+
+End
+
+' This will be called as the computer shuts down
+' Can be implemented if required
+Public sub halt()
+   ' close any open windows etc
+end
+
+'The following is optional and will be called if the cpu calls to load a bin source
+'Sould be a comma seperated list of files to be loaded
+public sub load(Filelist as string)
 end

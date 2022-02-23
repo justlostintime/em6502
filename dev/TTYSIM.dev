@@ -41,6 +41,7 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
 End
 
 Public sub halt()
+   TTYFORM.persistent = false
    TTYFORM.close()
 end
 

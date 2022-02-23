@@ -38,6 +38,7 @@ Property InteruptPending As Boolean Use $InteruptPending = False
 Property IRQPending As Boolean Use $IRQPending = False
 Property NMIPending As Boolean Use $NMIPending = False
 Property ResetPending As Boolean Use $ResetPending = False
+Property Halted As Boolean Use $Halted = False
 
 Event StatusInfo(information As Cpustatus)
 Event NextInst(Inst As String)
@@ -84,8 +85,11 @@ Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
 
 End
 
-Fast Unsafe Public Sub Halt()
+Public Sub Halt()
 
+  SingleStep = True
+  $Halted = True
+  Wait 0.01
   CpuClock.Enabled = False
   For Each o As Object In AddressMap
     If Object.Class(o).Exist("halt") Then
@@ -167,12 +171,11 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
 
 End
 
-
 Fast Unsafe Public Sub Run()
 
   Dim counter As Long = 0
 
-  While True
+  While Not $halted
     If $BreakPoints Then
       If BreakPointList.ExistSorted(pc) Then
         SingleStep = True
@@ -399,6 +402,8 @@ Fast Unsafe Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optio
   object.attach(dev, Me, "MyDevice")
 
   AddressMap.Add(Dev)
+  If len = 0 Then Return dev            ' allow devices which require no memory, such as buttons and switches
+
   mapLow.Add(Start)
   mapHigh.Add(Start + len - 1)
   ' now let the computer know what binary images were loaded when the device was created
@@ -796,5 +801,17 @@ Public Sub MyDevice_Reset()
 
   $ResetPending = True
   $InteruptPending = True
+
+End
+
+Private Function ResetPending_Read() As Boolean
+
+
+
+End
+
+Private Sub ResetPending_Write(Value As Boolean)
+
+
 
 End

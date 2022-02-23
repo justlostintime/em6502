@@ -1,0 +1,91 @@
+' Gambas class file
+'' Device TTY
+'' this simulates a tty device Ansi complient
+'' This open a seperate window and allos the entry
+'' of text to the cpu, it acts like a rs232 connected
+'' device. This is configured to work with the
+'' CTMON65 default rom, but may be used more generally
+
+fast unsafe
+use "gb.form"
+
+Public MemoryStart As Long = 0
+Public MemoryEnd As Long = 0
+Public MemoryLen As Long = 0
+Public MyObs As Observer
+
+Property read name as string use $name
+Property Read hidden as boolean use $hidden = false
+
+ResetFORM As Form
+ResetButton as button
+
+event reset()
+event irq()
+event nmi()
+
+public sub _new(address as long, len as long, parameters as string)
+
+  $NAME="ResetButton"
+  OpenResetWindow(parameters)
+
+end
+
+Public sub _get() as variant
+   return 0
+end
+
+Public sub _put(value as variant)
+end
+
+Public sub halt()
+
+   print "closing the reset button"
+   ResetForm.Persistent = false
+   ResetFORM.close()
+  
+end
+
+Sub openResetWindow(optional thetitle as string = "6502 Big Reset Button")
+
+  ResetForm = New Form As "MyResetButton"
+  ResetForm.title = TheTitle
+  ResetForm.persistent = true
+  ResetButton = new button(ResetForm) as "MyButton"
+  ResetForm.h = 200
+  ResetForm.w = 200
+  ResetButton.text = "Reset!"
+  ResetForm.show()
+
+End
+
+Public Sub MyButton_click()
+    raise reset()
+end
+
+Public sub MyResetButton_resize()
+    ResetButton.h = ResetForm.h
+    ResetButton.w = ResetForm.w
+end
+
+Public Sub MyResetButton_hide()
+    ResetForm.show()
+END
+
+Public Sub MyResetButton_open()
+
+  ResetForm.x = Settings["ResetForm/Window/X", 200]
+  ResetForm.y = Settings["ResetForm/Window/Y", 60]
+  ResetForm.h = Settings["ResetForm/Window/H", 200]
+  ResetForm.w = Settings["ResetForm/Window/w", 200]
+
+End
+
+Public Sub MyResetButton_close()
+
+  Settings["ResetForm/Window/X"] = ResetForm.X
+  Settings["ResetForm/Window/Y"] = ResetForm.y
+  Settings["ResetForm/Window/H"] = ResetForm.h
+  Settings["ResetForm/Window/w"] = ResetForm.w
+
+End

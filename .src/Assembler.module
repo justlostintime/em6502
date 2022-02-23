@@ -10,7 +10,6 @@ Public Sub _init()
     Chmod "/tmp/gambasAsm/dasm" To "rwxr-xr-x"
   Endif
 
-
 End
 
 
