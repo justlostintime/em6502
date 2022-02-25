@@ -48,6 +48,7 @@ End
 Sub fmtPtrVal(value As Pointer) As String
 
   Dim Counter As String = Space(12) & Hex(value)
+
   Return Right(Counter, 12)
 
 End
