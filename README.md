@@ -17,7 +17,7 @@ ppa:gambas-team/gambas-daily to your system's Software Sources. (Read about inst
 ```
 Symbolic debugging, memory monitoring etc.
 
-Everything one needs to develope 6502 applications\
+Everything one needs to develop 6502 applications\
 It includes a portable system monitor and tiny basic.\
 Corsham Techologies, LLC 6502 monitor CTMON65\
 CTMON65 rev 0.3\
