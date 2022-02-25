@@ -40,13 +40,14 @@ Public Sub _init()
 
 End
 
+'Return the number of cycles used by the instruction
 Fast Unsafe Public Sub CycleCount(Instruction As Byte) As Integer
 
   Return Instructions[Instruction].Cycles
 
 End
 
-
+' Process the file being read which defines all the valid 6502 instructions
 Fast Unsafe Sub ProcessInstruction()
 
   Dim Description As String

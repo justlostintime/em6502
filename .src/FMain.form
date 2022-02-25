@@ -41,6 +41,12 @@
       Text = ("Delete Device")
     }
   }
+  { DebugMenu Menu
+    Text = ("Debugging")
+    { Profilemenu Menu
+      Text = ("Profiling")
+    }
+  }
   { SingleStepSet RadioButton
     MoveScaled(84,79,14,3)
     Text = ("Single Step")

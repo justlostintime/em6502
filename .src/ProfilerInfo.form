@@ -1,0 +1,62 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,155,121)
+  { enableProfile RadioButton
+    MoveScaled(3,1,24,4)
+    Text = ("Enable Profiling")
+  }
+  { disableProfile1 RadioButton
+    MoveScaled(31,1,20,4)
+    Text = ("Disable Profiling")
+    Value = True
+  }
+  { ShowInfo Button
+    MoveScaled(58,1,21,4)
+    Enabled = False
+    ToolTip = ("Display Current profile Information\nYou do not need to stop profiling to\nget the current information from the profiler.\n")
+    Text = ("Show Profile Info")
+  }
+  { Label1 Label
+    MoveScaled(82,1,20,4)
+    Visible = False
+    Enabled = False
+    Text = ("Profile From Address")
+  }
+  { ProfileAddress TextBox
+    MoveScaled(103,1,16,4)
+    Visible = False
+    Enabled = False
+    ToolTip = ("Starting address in hex for profile reporting\nIf ommitted then all traed address space is reported")
+  }
+  { ProfileLength TextBox
+    MoveScaled(135,1,16,4)
+    Visible = False
+    Enabled = False
+    ToolTip = ("The length in hex of address space to report for profile\nthis is only valid if a start address is provided.")
+  }
+  { ProfileDisplay TerminalView
+    MoveScaled(1,10,151,110)
+    Expand = True
+    ShowScrollBar = True
+    ReadOnly = True
+  }
+  { Label2 Label
+    MoveScaled(122,1,11,4)
+    Visible = False
+    Enabled = False
+    Text = ("For Length")
+  }
+  { Label3 Label
+    MoveScaled(1,5,15,5)
+    Background = Color.LightBackground
+    Alignment = Align.Center
+    Text = ("Cycle Count\n in hex")
+  }
+  { Label4 Label
+    MoveScaled(16,5,10,5)
+    Background = Color.LightGray
+    Alignment = Align.Center
+    Text = ("Address")
+  }
+}

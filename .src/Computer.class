@@ -9,7 +9,8 @@ Property Read SingleStep As Boolean
 Property BreakPoints As Boolean
 Property StartAddress As Long
 Property SetMemoryProtection As Boolean
-
+Property Profiling As Boolean
+Property Read ProfileInfo As String[]
 
 Event StatusInfo(Info As Cpustatus)
 Event NextInst(Info As String)
@@ -310,3 +311,21 @@ Private Sub SetMemoryProtection_Write(Value As Boolean)
 
 End
 
+
+Private Function Profiling_Read() As Boolean
+
+  Return MyCpu.Profiling
+
+End
+
+Private Sub Profiling_Write(Value As Boolean)
+
+  MyCpu.Profiling = Value
+
+End
+
+Private Function ProfileInfo_Read() As String[]
+
+  Return MyCpu.ProfileInfo
+
+End

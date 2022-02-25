@@ -1,6 +1,5 @@
 ' Gambas class file
 
-'
 Public PC As Long = &H0000                ' Program counter
 Public SP As Byte = &HFF                   ' Stack Pointer 0x100-0x1ff 256 bytes fifo
 
@@ -15,6 +14,8 @@ Public DataBus As Integer = &h0          ' Data on databus
 Public AddressBus As Long = &h0          ' Address Bus current address
 Property BreakPoints As Boolean Use $BreakPoints  ' turn on breakpoint checking
 Public BreakPointList As Long[]          ' an array of breakpoints
+Public InstProfile As Profiler           ' when profiling is on then this counts cycles per instruction
+
 'When the following Is False just Return $ff On a bad Memory Read Or Write
 Property ChkBadMemAccess As Boolean Use $ChkBadMemAccess = True ' turn on or off catching bad read or writes
 
@@ -39,6 +40,8 @@ Property IRQPending As Boolean Use $IRQPending = False
 Property NMIPending As Boolean Use $NMIPending = False
 Property ResetPending As Boolean Use $ResetPending = False
 Property Halted As Boolean Use $Halted = False
+Property Profiling As Boolean Use $Profiling = False
+Property Read ProfileInfo As String[]
 
 Event StatusInfo(information As Cpustatus)
 Event NextInst(Inst As String)
@@ -181,7 +184,6 @@ Fast Unsafe Public Sub Run()
         SingleStep = True
         $Breakpoints = False
         Raise breakpoint(pc)
-        'Raise NextInst(Disassembler.Inst(Me, pc))
         StepInfo()
         Return
       Endif
@@ -263,11 +265,17 @@ Fast Unsafe Public Sub ExecuteInstruction()
 
   AddressBus = pc
   ReadByte()
-  Inc pc
-  Inc AddressBus
   inst = DataBus
+
   CycleCount = Disassembler.InstructionCycles[inst]
   $TotalCycles += CycleCount
+
+  If $Profiling Then
+    InstProfile.count(pc, CycleCount)
+  Endif
+
+  Inc pc
+  AddressBus = pc
 
   addrMode = Disassembler.AddrMode[inst]
   aaa = disassembler.aaa[inst]
@@ -804,14 +812,28 @@ Public Sub MyDevice_Reset()
 
 End
 
-Private Function ResetPending_Read() As Boolean
 
+Private Function Profiling_Read() As Boolean
 
+  Return $Profiling
 
 End
 
-Private Sub ResetPending_Write(Value As Boolean)
+Private Sub Profiling_Write(Value As Boolean)
 
+  If Value = True Then
+    InstProfile = New Profiler(Me)
+    $Profiling = True
+  Else
+    $Profiling = False
+  Endif
 
+End
+
+Private Function ProfileInfo_Read() As String[]
+
+  If InstProfile Then
+    Return InstProfile.report()
+  Endif
 
 End

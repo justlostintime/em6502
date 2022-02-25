@@ -1,0 +1,34 @@
+' Gambas class file
+
+
+Public Sub disableProfile1_Click()
+
+  FMain.MyComputer.Profiling = False
+
+End
+
+Public Sub enableProfile_Click()
+
+  ShowInfo.enabled = True
+  FMain.MyComputer.Profiling = True
+
+End
+
+
+
+Public Sub ShowInfo_Click()
+
+  ProfileDisplay.Clear()
+
+  For Each s As String In FMain.MyComputer.ProfileInfo
+    ProfileDisplay.print(s & "\r\n")
+  Next
+
+End
+
+Public Sub Form_Resize()
+
+  ProfileDisplay.h = Me.H
+  ProfileDisplay.w = Me.w
+
+End

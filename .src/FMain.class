@@ -876,3 +876,9 @@ Public Sub DeleteDevice_Click()
   Endif
 
 End
+
+Public Sub Profilemenu_Click()
+
+  ProfilerInfo.Show()
+
+End
