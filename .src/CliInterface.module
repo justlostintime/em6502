@@ -1,0 +1,76 @@
+' Gambas module file
+
+Public AppDescription As String = ("This application emulates a 6502, its default is ctmon65 with tinybasic")
+
+Public Sub main()
+
+  Dim bVersion, bAbout As Boolean
+  Dim sComputerName As String
+
+  Args.Begin(Application.name & " <options>")
+  bVersion = Args.Has("v", "version", "Display the version Of the emulator")
+  bAbout = Args.Has("a", "about", "Information about " & Application.name)
+  sComputerName = Args.Get("c", "computer", "Provies the name of the computer to run, No GUI is started", "", "")
+
+  If bVersion Then
+    Print Application.name;; Application.Version
+  Else If bAbout Then
+    Print Application.name;; Application.Version; "\n"; AppDescription
+  Else If sComputerName <> "" Then
+    RunComputer(sComputerName)
+  Else
+    FMain.Show()
+  Endif
+
+  Quit 0
+
+Catch
+  Print "6502 Error "; Error.text;; "at";; Error.where
+  Quit 1
+
+End
+
+Public MyComputer As New Computer
+Public AsmRootDirectory As String = User.home &/ "6502"
+Public AsmSourceDirectory As String = User.home &/ "6502/asm"
+Public AsmBinaryDirectory As String = User.home &/ "6502/bin"
+Public AsmDeviceDirectory As String = User.home &/ "6502/dev"
+Public AsmComputerDefinitions As String = User.home &/ "6502/computer"
+Public AsmDrivesDirectory As String = User.home &/ "6502/drives"
+Public AsmDocumentDirectory As String = User.home &/ "6502/doc"
+
+Public Sub RunComputer(ComputerName As String)
+
+  AsmSourceDirectory = Settings["AsmSourceDirectory", AsmSourceDirectory]
+  AsmBinaryDirectory = Settings["AsmBinaryDirectory", AsmBinaryDirectory]
+  AsmDeviceDirectory = Settings["AsmDeviceDirectory", AsmDeviceDirectory]
+  AsmComputerDefinitions = Settings["AsmComputerDefinitions", AsmComputerDefinitions]
+  AsmDrivesDirectory = Settings["AsmDrivesDirectory", AsmDrivesDirectory]
+  AsmDocumentDirectory = Settings["AsmDocumentDirectory", AsmDocumentDirectory]
+
+  CreateDefaults()
+
+  MyComputer = New Computer As "the_computer"
+  Dim Comp As New ComputerDef(AsmComputerDefinitions, ComputerName)
+  MyComputer.Configure(Comp)
+  Wait
+  MyComputer.StatusOff()
+  MyComputer.Trace(False)
+  MyComputer.UnsetSingleStep()
+  MyComputer.run()
+
+End
+
+Public Sub The_computer_Autostart(Address As Long, speed As Integer)
+
+  MyComputer.StartAddress = address
+
+End
+
+
+
+
+
+
+
+

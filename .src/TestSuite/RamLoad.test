@@ -1,0 +1,14 @@
+' Gambas test file
+
+
+
+Public Sub atestRam()
+
+  Dim Devices As New ScriptManager(True, user.home &/ "6502/dev")
+  Dim ramclass As Class
+
+  Try ramclass = Devices("RamMemory.dev")
+  Assert.Noterror("RamMemory create Passed")
+  Devices = Null
+
+End

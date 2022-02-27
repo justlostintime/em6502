@@ -1,21 +1,26 @@
 ' Gambas test file
 
-Devices As New ScriptManager(True, user.home &/ "6502/dev")
+Devices As ScriptManager
 
-Public Sub testCrt()
+Public Sub _Setup()
 
-  Dim Crtclass As Class
-
-  Crtclass = Devices("CRT.dev")
-  Assert.Noterror("CRT create Passed")
+  Devices = New ScriptManager(True, user.home &/ "6502/dev")
 
 End
+
+Public Sub _TearDown()
+
+  Devices = Null
+
+End
+
+
 
 Public Sub atestRam()
 
   Dim ramclass As Class
 
-  ramclass = Devices("RamMemory.dev")
+  Try ramclass = Devices("RamMemory.dev")
   Assert.Noterror("RamMemory create Passed")
 
 End
@@ -24,19 +29,11 @@ Public Sub btestRom()
 
   Dim romclass As Class
 
-  romclass = Devices("RomMemory.dev")
+  Try romclass = Devices("RomMemory.dev")
   Assert.Noterror("RomMemory create Passed")
 
 End
 
-Public Sub ctestTTY()
-
-  Dim Ttyclass As Class
-
-  ttyclass = Devices("TTY.dev")
-  Assert.Noterror("TTY create Passed")
-
-End
 
 Public Sub dTestCreateDevices()
 
@@ -45,11 +42,13 @@ Public Sub dTestCreateDevices()
   Dim romclass As Class
   Dim MyRom As Object
 
-  ramclass = Devices("RamMemory.dev")
-  MyRam = ramclass.New([&h000000, &h08000])
+  Try ramclass = Devices("RamMemory.dev")
+  Assert.Noterror("RamMemory create object Passed - step 1")
+  Try MyRam = ramclass.New([&h000000, &h08000, ""])
   Assert.Noterror("RamMemory create object Passed - step 2")
-  romclass = Devices("RomMemory.dev")
-  MyRom = romclass.New([&h08000, &h08000, User.home &/ "6502/bin/rom.bin"])
+  Try romclass = Devices("RomMemory.dev")
+  Assert.Noterror("RomMemory create object Passed - step 1")
+  Try MyRom = romclass.New([&h08000, &h08000, User.home &/ "6502/bin/rom.bin"])
   Assert.Noterror("RomMemory create object Passed - step 2")
 
   Dim dumptext As Byte

@@ -61,8 +61,6 @@ Public Sub _new()
   MonitorList = New Collection(gb.ignorecase)
   Devices = New ScriptManager(True, user.home &/ "6502/dev")
 
-
-
 End
 
 Public Sub _free()

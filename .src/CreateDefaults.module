@@ -15,6 +15,7 @@ Public Sub _call()
       Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
       Comp["TTYSIM"] = [&h0E000, 16, "Tiny Basic running with CTMON65 monitor"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp["HaltButton"] = [0, 0, "Halt Button"]
       Comp.Save(.AsmComputerDefinitions)
 
       Comp = New ComputerDef

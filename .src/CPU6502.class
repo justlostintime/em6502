@@ -47,6 +47,7 @@ Event StatusInfo(information As Cpustatus)
 Event NextInst(Inst As String)
 Event breakpoint(pc As Long)
 Event BinaryLoaded(address As Long, BinName As String, info As String)
+Event Abort(Reason As String)
 
 Public Sub _new()
 
@@ -87,6 +88,7 @@ Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
   Endif
 
 End
+
 
 Public Sub Halt()
 
@@ -788,6 +790,13 @@ End
 Private Sub SpeedScaler_Write(Value As Long)
 
   $SpeedScaler = value
+
+End
+
+Public Sub MyDevice_halt(Reason As String)
+
+  Halt()
+  Print Reason
 
 End
 

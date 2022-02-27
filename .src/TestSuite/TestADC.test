@@ -1,8 +1,8 @@
-' Gambas module file
+' Gambas test file
 
 SR As Byte = &h36
 
-Public Sub main()
+Public Sub TestSbcAdc()
 
   pv(SbcAC(0, &h80))
   pv(SbcAC(0, &h7f))
@@ -10,7 +10,6 @@ Public Sub main()
   pv(SbcAC(&h01, &h04))
   pv(SbcAC(&hFF, &hFE))
   pv(SbcAC(&hFF, &h01))
-  Print "add"
   pv(AdcAC(&h50, &h10))
   pv(AdcAC(&h50, &h50))
   pv(AdcAC(&h50, &h90))
@@ -20,6 +19,7 @@ Public Sub main()
   pv(AdcAC(&hd0, &h90))
   pv(AdcAC(&hd0, &hd0))
 
+  Assert.Pass("Passed math test")
 
 End
 
@@ -31,7 +31,7 @@ End
 
 
 
-Public Sub AdcAc(AC As Byte, DataBus As Byte) As Byte
+Sub AdcAc(AC As Byte, DataBus As Byte) As Byte
 
   Dim addone As Integer = IIf(BTst(sr, 0), 1, 0)
   Dim tmp As Integer
@@ -59,7 +59,7 @@ Public Sub AdcAc(AC As Byte, DataBus As Byte) As Byte
 
 End
 
-Public Sub SbcAc(ac As Byte, databus As Byte) As Byte
+Sub SbcAc(ac As Byte, databus As Byte) As Byte
 
   Dim tmp As Byte = (DataBus Xor &h0FF)
 
@@ -69,4 +69,6 @@ Public Sub SbcAc(ac As Byte, databus As Byte) As Byte
   Return ac
 
 End
+
+
 

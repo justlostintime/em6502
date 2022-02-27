@@ -52,7 +52,7 @@ Public Sub Form_Open()
   MyComputer = New Computer As "the_computer"
   Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
   updatetimer.delay = 500
-  updatetimer.enabled = True
+  updatetimer.enabled = False
 
   LoadComputersConfig()
 

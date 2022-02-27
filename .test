@@ -1,4 +1,13 @@
 [TestSuites]
-Count=0
+Count=2
 TestWith=0
+Default="RamLoad.atestRam,TestADC.TestSbcAdc,TestDevices.atestRam;btestRom;dTestCreateDevices,TestTTY.OpenTTY"
+
+[TestSuites/1]
+Name="TestTTYSIm"
+Tests="TestTTY.OpenTTY"
+
+[TestSuites/2]
+Name="RamLoad"
+Tests="RamLoad.atestRam"
 

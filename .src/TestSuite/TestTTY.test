@@ -1,16 +1,23 @@
 ' Gambas test file
 
-Devices As New ScriptManager(True, user.home &/ "6502/dev")
+Devices As ScriptManager
 
 Public Sub OpenTTY()
 
+  Devices = New ScriptManager(True, user.home &/ "6502/dev")
   Dim Ttyclass As Class
+  Dim MyTTy As Object
+  Dim DataBus As Byte[] = [&h31, &h32, &h33]
+  ttyclass = Devices("TTYSIM.dev")
+  Mytty = ttyclass.New([&h0e000, 16, "The title"])
+  For Each bb As Byte In DataBus
+    Try MyTTy[&h0e001] = bb
+    Wait 1.0
+  Next
+  Assert.NotError("Passed")
+  MyTTY.halt()
+  Devices = Null
 
-  Print "Begin"
-  ttyclass = Devices("TTY.dev")
-  Assert.Noterror("TTY create Passed")
-  Print " it is Open"
-  Wait 10.0
 
 End
 
