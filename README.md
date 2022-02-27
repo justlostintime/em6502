@@ -1,8 +1,12 @@
 # 6502Emulator-DevEnv
 This emulator Development environment is written in gambas3
-you will need the latest gambas build from
+you will need the latest gambas build from gambas daily builds or 3.17
 
-Adding this PPA to your system
+## NEW
+  Added profiling at the instruction level, look under new debug menu. the profiling displays the total 
+  cycle count for each executed instruction in your program.
+  
+## Adding this PPA to your system
 You can update your system with this PPA by adding 
 ppa:gambas-team/gambas-daily to your system's Software Sources. (Read about installing)
 ```
@@ -13,7 +17,7 @@ ppa:gambas-team/gambas-daily to your system's Software Sources. (Read about inst
 ```
 Symbolic debugging, memory monitoring etc.
 
-Everything one needs to develope 6502 applications\
+Everything one needs to develop 6502 applications\
 It includes a portable system monitor and tiny basic.\
 Corsham Techologies, LLC 6502 monitor CTMON65\
 CTMON65 rev 0.3\
