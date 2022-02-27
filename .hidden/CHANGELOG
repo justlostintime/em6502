@@ -1,4 +1,8 @@
 * Sun Feb 27 2022 Justlostintime <justlostintime@gmail.com> 1.0.1
+- Added cli interface, to directly run computer config without development environment
+- 6502 -c Default
+
+* Sun Feb 27 2022 Justlostintime <justlostintime@gmail.com> 1.0.1
 
 * Sun Feb 27 2022 Justlostintime <justlostintime@gmail.com> 1.0.1
 - Initial release

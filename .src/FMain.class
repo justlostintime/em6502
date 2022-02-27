@@ -20,7 +20,7 @@ OnImage As Picture = Picture.Fromstring(File.load("OnLed.png"))
 OffImage As Picture = Picture.Fromstring(File.load("OffLed.png"))
 
 updatetimer As New Timer As "MyTimer"
-DeveloperMode As Boolean = False
+Public DeveloperMode As Boolean = False
 
 Public Sub Form_Open()
 
