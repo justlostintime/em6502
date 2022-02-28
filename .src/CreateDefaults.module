@@ -47,12 +47,19 @@ Public Sub _call()
 
   End With
 
+Catch
+  Print "Create Defaults Error: "; Error.text;; Error.where
+
 End
 
 Sub copyDirectory(path As String, topath As String)
 
+  Print "Create Default :";; toPath;; "From";; path
   If Not Exist(toPath) Then
     Try Shell.MkDir(ToPath)
+    If Error Then
+      Debug "Unable to make directory ";; topath;; Error.text
+    Endif
   Else
     Return
   Endif
@@ -63,7 +70,11 @@ Sub copyDirectory(path As String, topath As String)
 
   For Each s As String In Dir(path, "*", gb.file)
     If Right(s, 1) = "~" Then Continue
-    Copy path &/ s To ToPath &/ s
+    Print "Copy :";; s
+    Try Copy path &/ s To ToPath &/ s
+    If Error Then
+      Debug "Unable to copy file ";; ToPath &/ s;; "from";; path &/ s
+    Endif
   Next
 
 End
