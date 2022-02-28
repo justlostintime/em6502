@@ -14,9 +14,10 @@
 ' Example usage:
 ' if ButtonPress then Raise IRQ()
 '
-event RESET()
-event IRQ()
-event NMI()
+event RESET()           ' Indicate a reset to the cpu
+event IRQ()             ' Indicate an IRQ to cpu
+event NMI()             ' Indicate an NMI to cpu
+event Halt()            ' Halt and terminate the cpu/computer session
 
 ' These are the memory constraints this device will occupy in the 6502 memory map
 Public MemoryStart As Long = 0                    ' Start of this block of memory
