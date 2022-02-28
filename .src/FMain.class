@@ -20,14 +20,8 @@ OnImage As Picture = Picture.Fromstring(File.load("OnLed.png"))
 OffImage As Picture = Picture.Fromstring(File.load("OffLed.png"))
 
 updatetimer As New Timer As "MyTimer"
-Public DeveloperMode As Boolean = False
 
 Public Sub Form_Open()
-
-  If developerMode Then
-    Try Shell.RmDir(AsmRootDirectory)
-    Settings.Clear()
-  Endif
 
   SetEditDefaults()
 
@@ -35,19 +29,6 @@ Public Sub Form_Open()
   FMain.Y = Settings["FMain/Window/Y", FMain.Y]
   FMain.H = Settings["FMain/Window/H", FMain.H]
   FMain.W = Settings["FMain/Window/W", FMain.W]
-
-  ''Create the default assembled source and binary directories
-
-  AsmSourceDirectory = Settings["AsmSourceDirectory", AsmSourceDirectory]
-  AsmBinaryDirectory = Settings["AsmBinaryDirectory", AsmBinaryDirectory]
-  AsmDeviceDirectory = Settings["AsmDeviceDirectory", AsmDeviceDirectory]
-  AsmComputerDefinitions = Settings["AsmComputerDefinitions", AsmComputerDefinitions]
-  AsmDrivesDirectory = Settings["AsmDrivesDirectory", AsmDrivesDirectory]
-  AsmDocumentDirectory = Settings["AsmDocumentDirectory", AsmDocumentDirectory]
-  CurrentComputerDefinition = Settings["computer/current", DefaultComputerDefinition]
-  DefaultComputerDefinition = Settings["computer/default", DefaultComputerDefinition]
-
-  CreateDefaults()
 
   MyComputer = New Computer As "the_computer"
   Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
@@ -304,6 +285,8 @@ End
 
 Public Sub MoniorMemSet_Click()
 
+  Dim mywin As MemoryMonitor
+
   FromAddr.text = Right("0000" & FromAddr.text, 4)
   ToAddr.text = Right("0000" & ToAddr.text, 4)
   Dim fromAdr As Long = Eval("&h0" & FromAddr.text)
@@ -313,7 +296,7 @@ Public Sub MoniorMemSet_Click()
     Return
   Endif
 
-  Dim mywin As New MemoryMonitor(FromAddr.text, ToAddr.text)
+  mywin = New MemoryMonitor(FromAddr.text, ToAddr.text)
 
   FromAddr.text = ""
   ToAddr.text = ""

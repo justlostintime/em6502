@@ -14,7 +14,25 @@ Public Sub main()
   sComputerName = Args.Get("c", "computer", "Provies the name of the computer to run, No GUI is started", "", "")
   Args.End()
 
-  If bDevMode Then FMain.DeveloperMode = True
+  ''Define the default assembled source and binary directories
+  With FMAIN
+    .AsmSourceDirectory = Settings["AsmSourceDirectory", .AsmSourceDirectory]
+    .AsmBinaryDirectory = Settings["AsmBinaryDirectory", .AsmBinaryDirectory]
+    .AsmDeviceDirectory = Settings["AsmDeviceDirectory", .AsmDeviceDirectory]
+    .AsmComputerDefinitions = Settings["AsmComputerDefinitions", .AsmComputerDefinitions]
+    .AsmDrivesDirectory = Settings["AsmDrivesDirectory", .AsmDrivesDirectory]
+    .AsmDocumentDirectory = Settings["AsmDocumentDirectory", .AsmDocumentDirectory]
+    .CurrentComputerDefinition = Settings["computer/current", .DefaultComputerDefinition]
+    .DefaultComputerDefinition = Settings["computer/default", .DefaultComputerDefinition]
+
+
+    If bdevMode Then
+      Try Shell.RmDir(.AsmRootDirectory)
+      Settings.Clear()
+    Endif
+  End With
+
+  CreateDefaults()
 
   If bVersion Then
     Print Application.name;; Application.Version
@@ -34,40 +52,30 @@ Catch
 
 End
 
-Public MyComputer As New Computer
-Public AsmRootDirectory As String = User.home &/ "6502"
-Public AsmSourceDirectory As String = User.home &/ "6502/asm"
-Public AsmBinaryDirectory As String = User.home &/ "6502/bin"
-Public AsmDeviceDirectory As String = User.home &/ "6502/dev"
-Public AsmComputerDefinitions As String = User.home &/ "6502/computer"
-Public AsmDrivesDirectory As String = User.home &/ "6502/drives"
-Public AsmDocumentDirectory As String = User.home &/ "6502/doc"
 
 Public Sub RunComputer(ComputerName As String)
 
-  AsmSourceDirectory = Settings["AsmSourceDirectory", AsmSourceDirectory]
-  AsmBinaryDirectory = Settings["AsmBinaryDirectory", AsmBinaryDirectory]
-  AsmDeviceDirectory = Settings["AsmDeviceDirectory", AsmDeviceDirectory]
-  AsmComputerDefinitions = Settings["AsmComputerDefinitions", AsmComputerDefinitions]
-  AsmDrivesDirectory = Settings["AsmDrivesDirectory", AsmDrivesDirectory]
-  AsmDocumentDirectory = Settings["AsmDocumentDirectory", AsmDocumentDirectory]
+  With FMAIN
+    CreateDefaults()
 
-  CreateDefaults()
-
-  MyComputer = New Computer As "the_computer"
-  Dim Comp As New ComputerDef(AsmComputerDefinitions, ComputerName)
-  MyComputer.Configure(Comp)
-  Wait
-  MyComputer.StatusOff()
-  MyComputer.Trace(False)
-  MyComputer.UnsetSingleStep()
-  MyComputer.run()
+    .MyComputer = New Computer As "the_computer"
+    Dim Comp As New ComputerDef(.AsmComputerDefinitions, ComputerName)
+    .MyComputer.Configure(Comp)
+    Wait
+    .MyComputer.StatusOff()
+    .MyComputer.Trace(False)
+    .MyComputer.UnsetSingleStep()
+    .MyComputer.run()
+  End With
 
 End
 
 Public Sub The_computer_Autostart(Address As Long, speed As Integer)
 
-  MyComputer.StartAddress = address
+  With FMAIN
+    .MyComputer.StartAddress = address
+    .MyComputer.SpeedScaler = speed
+  End With
 
 End
 

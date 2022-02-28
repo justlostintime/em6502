@@ -19,6 +19,7 @@ Property Read hidden as boolean use $hidden = false
 
 HaltFORM As Form
 HaltButton as button
+halting as boolean = false
 
 event Reset()
 event irq()
@@ -40,53 +41,52 @@ Public sub _put(value as variant)
 end
 
 Public sub halt()
-
-   print "closing the Halt button"
+   
    HaltForm.Persistent = false
    HaltFORM.close()
-
+   
 end
 
-Sub openHaltWindow(optional thetitle as string = "6502 Big Halt Button")
+Sub openHaltWindow(optional TheTitle as string = "6502 Big Halt Button")
 
-  HaltForm = New Form As "MyHaltButton"
+  HaltForm = New Form As "MyHaltForm"
   HaltForm.title = TheTitle
   HaltForm.persistent = true
-  HaltButton = new button(HaltForm) as "MyButton"
-  HaltForm.h = 200
-  HaltForm.w = 200
-  HaltButton.text = "Quit !"
-  HaltForm.show()
 
+  HaltButton = new button(HaltForm) as "MyHaltButton"
+  HaltButton.text = "Quit !"
+  MyHaltForm_open()
+  HaltForm.show()
+  wait
 End
 
-Public Sub MyButton_click()
+Public Sub MyHaltButton_click()
     raise Halt("User request termination")
 end
 
-Public sub MyHaltButton_resize()
+Public sub MyHaltForm_resize()
     HaltButton.h = HaltForm.h
     HaltButton.w = HaltForm.w
 end
 
-Public Sub MyHaltButton_hide()
-    HaltForm.show()
+Public Sub MyHaltForm_hide()
+    if haltForm.Persistent = true then HaltForm.show()
 END
 
-Public Sub MyHaltButton_open()
-
-  HaltForm.x = Settings["HaltForm/Window/X", 200]
-  HaltForm.y = Settings["HaltForm/Window/Y", 60]
-  HaltForm.h = Settings["HaltForm/Window/H", 200]
-  HaltForm.w = Settings["HaltForm/Window/w", 200]
-
+Public Sub MyHaltForm_open()
+  HaltForm.x = Settings["HaltForm/Window/X", 100]
+  HaltForm.y = Settings["HaltForm/Window/Y", 20]
+  HaltForm.h = Settings["HaltForm/Window/H", 50]
+  HaltForm.w = Settings["HaltForm/Window/W", 50]
+  HaltButton.w = HaltForm.w
+  HaltButton.h = HaltForm.h
 End
 
-Public Sub MyHaltButton_close()
-
+Public Sub MyHaltForm_close()
+  print "Close Halt Form"
   Settings["HaltForm/Window/X"] = HaltForm.X
   Settings["HaltForm/Window/Y"] = HaltForm.y
   Settings["HaltForm/Window/H"] = HaltForm.h
-  Settings["HaltForm/Window/w"] = HaltForm.w
+  Settings["HaltForm/Window/W"] = HaltForm.w
 
 End
