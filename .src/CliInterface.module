@@ -47,6 +47,9 @@ Public Sub main()
     RunComputer(sComputerName)
   Else
     FMain.Show()
+    While Not FMain.Closed
+      Wait 5
+    Wend
   Endif
 
   Quit 0
