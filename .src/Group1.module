@@ -1,5 +1,10 @@
 ' Gambas module file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 'fast unsafe
 Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
 

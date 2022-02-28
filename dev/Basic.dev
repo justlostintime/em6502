@@ -1,5 +1,10 @@
 'Gambas class definition - 6502 device prototype
-'Fast Unsafe
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+Fast Unsafe
 
 Property MemoryStart As Long use $MemoryStart = 0                    ' Start of this block of memory
 Property MemoryEnd As Long use $MemoryEnd = 0                        ' If this is zero then the device has no mapped memory
@@ -57,5 +62,5 @@ end
 'Should be a comma seperated list of files or parameters to be loaded or applied
 public sub load(Parmlist as string)
   dim parameters as string[] = split(ParmList,",","",true,false)
-  
+
 end

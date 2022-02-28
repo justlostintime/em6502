@@ -1,4 +1,9 @@
 ' Gambas class file
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 '' Device TTY
 '' this simulates a tty device Ansi complient
 '' This open a seperate window and allos the entry

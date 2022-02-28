@@ -1,5 +1,10 @@
 ' Gambas module file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 Public Sub _init()
 
   Print "Using DASM Assembler \nCreated by Mathew Dillion.\nCurrently supported by Andrew Davie @ https://github.com/dasm-assembler/dasm"

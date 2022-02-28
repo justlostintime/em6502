@@ -1,5 +1,10 @@
 ' Gambas class file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 Public Devices As New Collection(gb.ignorecase)
 Property Name As String Use $name                 ' Name of this configuration
 Property Speed As Float Use $Speed                ' Mghz to emulate

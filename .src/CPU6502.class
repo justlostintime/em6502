@@ -1,5 +1,10 @@
 ' Gambas class file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 Public PC As Long = &H0000                ' Program counter
 Public SP As Byte = &HFF                   ' Stack Pointer 0x100-0x1ff 256 bytes fifo
 

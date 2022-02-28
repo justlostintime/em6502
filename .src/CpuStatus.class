@@ -1,5 +1,10 @@
 ' Gambas class file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 Fast Unsafe
 Property Read pc As Long Use $pc
 Property Read sp As Byte Use $sp

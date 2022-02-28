@@ -1,4 +1,9 @@
 ' Gambas class file
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 '' Rom Memory
 '' This emulates a rom memory
 '' You me load as many Rom Memory blocks as you wish

@@ -1,4 +1,9 @@
 ' Gambas class file
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 FAST UNSAFE
 '' PIA Disk Drive
 '' Emulates a PIA to a degree as used by the ctmon65 Interface

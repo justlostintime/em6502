@@ -1,5 +1,10 @@
 ' Gambas class file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 Fast Unsafe
 MyCpu As CPU6502
 Running As Boolean

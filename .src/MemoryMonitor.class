@@ -1,5 +1,10 @@
 ' Gambas class file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 MonitorWindow As New MemoryDumpOutput As "MyForm"
 Address As String = "0000"
 

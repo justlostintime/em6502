@@ -1,4 +1,9 @@
 ' Gambas class file
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 '' Ram Memory
 '' You may add as memny ram memory devices as required
 '' if the ram has spaced between addresses you will need to

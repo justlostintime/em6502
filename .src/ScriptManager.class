@@ -1,5 +1,10 @@
 ' Gambas class file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 Public SubsAndClasses As New Collection(gb.ignorecase)
 Private DotProject As String = "# Gambas Project File 3.0\nTitle=$NAME\nStartup=$NAME\nVersion=1.1.2\n$COMPLIST\n"
 Private DotComponent As String = "[Component]\nKey=$NAME\nVersion=1.1.2"

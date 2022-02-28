@@ -1,5 +1,10 @@
 ' Gambas class file
 
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
 'Profiling for instructs based upon clock cycles
 'this makes the execution very slow but return valid cycle usage info
 'It prints out a dissasembled listing with counts for each address accessed
