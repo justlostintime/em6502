@@ -3,6 +3,10 @@ This emulator Development environment is written in gambas3
 you will need the latest gambas build from gambas daily builds or 3.17
 
 ## NEW
+  Added full CLI interface support, possible to directly run a computer config without the gui.
+  '''
+  em6502 -c Default
+  '''
   Added profiling at the instruction level, look under new debug menu. the profiling displays the total 
   cycle count for each executed instruction in your program.
   
