@@ -1,33 +1,40 @@
-
+'Gambas class definition - 6502 device prototype
 'Fast Unsafe
 
 Property MemoryStart As Long use $MemoryStart = 0                    ' Start of this block of memory
 Property MemoryEnd As Long use $MemoryEnd = 0                        ' If this is zero then the device has no mapped memory
 Property MemoryLen As Long use $MemoryLen = 0                        ' Length of this memory block
 
+'This is an example of memory implementation but is not required, if your device does something else
+'see the reset button example
+DevMemory as byte[500]
+
 Property read Name as string use $name
 
 Event IRQ()           ' Device can create an IRQ
 Event NMI()           ' Device can create an NMI
 Event Reset()         ' Device can force a reset of the CPU
+Event Halt()          ' A device can raise this event to terminate the computer session
 
 public sub _new(address as long, len as long, parameters as string)
 
   $Name = "MyDevName"
-  print address, len, parameters
+  debug $Name;;"Created with :";;address, len, parameters
 
 end
 
+' See the RamMemory or the ResetButtom devices for examples
 public sub _get(address as long) as byte
 
-   print "read ", address
+   debug "read ", address
    return 0
 
 end
 
+' See the RamMemory or the ResetButtom devices for examples
 public sub _put(Value as byte, address as long)
 
-  print "write",address, Value
+  debug "write",address, Value
 
 end
 
@@ -41,12 +48,14 @@ Public Sub _InRange(Address As Long) As Boolean
 End
 
 ' This will be called as the computer shuts down
-' Can be implemented if required
+' Can be implemented if required to clean anything up
 Public sub halt()
    ' close any open windows etc
 end
 
 'The following is optional and will be called if the cpu calls to load a bin source
-'Sould be a comma seperated list of files to be loaded
-public sub load(Filelist as string)
+'Should be a comma seperated list of files or parameters to be loaded or applied
+public sub load(Parmlist as string)
+  dim parameters as string[] = split(ParmList,",","",true,false)
+  
 end

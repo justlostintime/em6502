@@ -23,6 +23,7 @@ ResetButton as button
 event reset()
 event irq()
 event nmi()
+event halt()
 
 public sub _new(address as long, len as long, parameters as string)
 
@@ -43,7 +44,7 @@ Public sub halt()
    print "closing the reset button"
    ResetForm.Persistent = false
    ResetFORM.close()
-  
+
 end
 
 Sub openResetWindow(optional thetitle as string = "6502 Big Reset Button")
@@ -52,11 +53,11 @@ Sub openResetWindow(optional thetitle as string = "6502 Big Reset Button")
   ResetForm.title = TheTitle
   ResetForm.persistent = true
   ResetButton = new button(ResetForm) as "MyButton"
-  ResetForm.h = 200
-  ResetForm.w = 200
   ResetButton.text = "Reset!"
+  MyResetButton_open()
   ResetForm.show()
-
+  wait
+  
 End
 
 Public Sub MyButton_click()
@@ -69,7 +70,7 @@ Public sub MyResetButton_resize()
 end
 
 Public Sub MyResetButton_hide()
-    ResetForm.show()
+    if ResetForm.Persistent = true then ResetForm.show()
 END
 
 Public Sub MyResetButton_open()
@@ -78,7 +79,9 @@ Public Sub MyResetButton_open()
   ResetForm.y = Settings["ResetForm/Window/Y", 60]
   ResetForm.h = Settings["ResetForm/Window/H", 200]
   ResetForm.w = Settings["ResetForm/Window/w", 200]
-
+  ResetButton.h = ResetForm.h
+  ResetButton.w = ResetForm.w
+  
 End
 
 Public Sub MyResetButton_close()
