@@ -208,8 +208,15 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     .WriteByte()
     Return
 
-  Grp1Case42: 'Not Used
+  Grp1Case42: 'BIT immediate
+    .Immediate()
+    .ReadByte()
+    Dim bittmp As Byte = (.AC And .DataBus)
+    If BTst(.DataBus, 7) Then .Sr = BSet(.SR, 7) Else .SR = BClr(.SR, 7)
+    If BTst(.DataBus, 6) Then .Sr = BSet(.SR, 6) Else .SR = BClr(.SR, 6)
+    If bittmp = 0 Then .SR = BSet(.SR, 1) Else .sr = BClr(.sr, 1)
     Return
+
     '-------------------------------------------------------------------------------------
   Grp1Case5:
     On addressmode Goto Grp1Case50, Grp1Case51, Grp1Case52, Grp1Case53, Grp1Case54, Grp1Case55, Grp1Case56, Grp1Case57

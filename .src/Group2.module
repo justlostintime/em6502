@@ -42,8 +42,15 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Goto DoAsl
 
   Grp2Case00:' not used
-  Grp2Case04: ' Not Used
-  Grp2Case06: ' Not Used
+  Grp2Case04: 'ORA (ZeroPageIndirect)
+    .ZeroPageIndirect()
+    .ReadByte()
+    .OraAc()
+    Return
+
+  Grp2Case06: 'INA - inc A
+    Inc .AC
+    .setsr(.ac)
     Return
     '---------------------------------------------------------------------------
   Grp2Case1:
@@ -77,8 +84,15 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Goto DoRol
 
   Grp2Case10:'not used
-  Grp2Case14:'not used
-  Grp2Case16:'not used
+  Grp2Case14:'AND ZeroPageIndirect
+    .ZeroPageIndirect()
+    .ReadByte()
+    .AndAc()
+    Return
+
+  Grp2Case16:'DEA  - dec A
+    Dec .AC
+    .setsr(.ac)
     Return
 
   Grp2Case2:
@@ -112,8 +126,14 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Goto DoLsr
 
   Grp2Case20:' not used
-  Grp2Case24:'not used
-  Grp2Case26:'not used
+  Grp2Case24:'EOR ZeroPageIndirect
+    .ZeroPageIndirect()
+    .ReadByte()
+    .EorAc()
+    Return
+
+  Grp2Case26:'PHY - Push Y
+    .Push(.Y)
     Return
     '----------------------------------------------------------------------------
   Grp2Case3:
@@ -148,8 +168,15 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
 
 
   Grp2Case30:' not used
-  Grp2Case34:' not used
-  Grp2Case36:' not used
+  Grp2Case34:'ADC ZeroPageIndirect
+    .ZeroPageIndirect
+    .ReadByte()
+    .AdcAc()
+    Return
+
+  Grp2Case36:'PLY - Pull Y
+    .Y = .Pop()
+    .setsr(.Y)
     Return
 
     '-----------------------------------------------------------------------------
@@ -182,8 +209,16 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Return
 
   Grp2Case40:'not used
-  Grp2Case44:'not used
-  Grp2Case47:'not used
+  Grp2Case44:'STA ZeroPageIndirect
+    .ZeroPageIndirect()
+    .DataBus = .AC
+    .WriteByte()
+    Return
+
+  Grp2Case47:'STZ abs,X
+    .AbsX()
+    .DataBus = 0
+    .WriteByte()
     Return
     '--------------------------------------------------------------------------
   Grp2Case5:
@@ -223,7 +258,11 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     .AbsY()
     Goto Ldx
 
-  Grp2Case54:'not used
+  Grp2Case54:'LDA ZeroPageIndirect
+    .ZeroPageIndirect()
+    .ReadByte()
+    .ac = .DataBus
+    .setsr(.ac)
     Return
 
     '-------------------------------------------------------------------------------------
@@ -258,8 +297,14 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Goto DecMem
 
   Grp2Case60:' Not Used
-  Grp2Case64:' Not Used
-  Grp2Case66:' Not Used
+  Grp2Case64:'CMP ZeroPageIndirect
+    .ZeroPageIndirect()
+    .ReadByte()
+    .Compare(.ac)
+    Return
+
+  Grp2Case66:'PHX Push X
+    .Push(.X)
     Return
 
     '------------------------------------------------------------------------------------------------
@@ -291,8 +336,15 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Goto IncMem
 
   Grp2Case70:' not used
-  Grp2Case74:' not used
-  Grp2Case76:' not used
+  Grp2Case74:'SBC ZeroPageIndirect
+    .ZeroPageIndirect()
+    .ReadByte()
+    .SbcAc()
+    Return
+
+  Grp2Case76:'PLX Pull X
+    .X = .Pop()
+    .SetSR(.X)
     Return
 
   End With

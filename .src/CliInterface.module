@@ -9,13 +9,14 @@ Public AppDescription As String = ("This application emulates a 6502, its defaul
 
 Public Sub main()
 
-  Dim bVersion, bAbout, bDevMode As Boolean
+  Dim bVersion, bAbout, bDevMode, bPrintInstMatrix As Boolean
   Dim sComputerName As String
 
   Args.Begin(Application.name & " <options>")
   bVersion = Args.Has("v", "version", "Display the version Of the emulator")
   bAbout = Args.Has("a", "about", "Information about " & Application.name)
   bDevMode = Args.Has("d", "devmode", "Developer Mode, removes ~/6502 directory and recreats \nall default settings(be carefull all your stuff will be gone!)\n Usefull to get new application updates")
+  bPrintInstMatrix = Args.Has("p", "print", "Print Supported Instruction Matrix and exit")
   sComputerName = Args.Get("c", "computer", "Provies the name of the computer to run, No GUI is started", "", "")
   Args.End()
 
@@ -43,6 +44,8 @@ Public Sub main()
     Print Application.name;; Application.Version
   Else If bAbout Then
     Print Application.name;; Application.Version; "\n"; AppDescription
+  Else If bPrintInstMatrix Then
+    PrintMatrix()
   Else If sComputerName <> "" Then
     RunComputer(sComputerName)
   Else
@@ -60,11 +63,19 @@ Catch
 
 End
 
+Public Sub PrintMatrix()
+
+  With FMAIN
+    .MyComputer = New Computer As "the_computer"
+    Disassembler.InstMatrix()
+  End With
+
+End
+
 
 Public Sub RunComputer(ComputerName As String)
 
   With FMAIN
-    CreateDefaults()
 
     .MyComputer = New Computer As "the_computer"
     Dim Comp As New ComputerDef(.AsmComputerDefinitions, ComputerName)

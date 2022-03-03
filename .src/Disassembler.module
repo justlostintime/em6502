@@ -11,7 +11,10 @@ CurrentIndex As Integer = 0
 Enum opAddressing, opName, opAssembler, opOpc, opBytes, opCycles
 AddressModes As Collection = ["accumulator": True, "zeropage": True, "zeropage,X": True, "absolute": True, "absolute,X": True,
   "absolute,Y": True, "(indirect,X)": True, "(indirect),Y": True, "relative": True, "implied": True,
-  "zeropage,Y": True, "immediate": True, "indirect": True]
+  "zeropage,Y": True, "immediate": True, "indirect": True, "(zeropage)": True]
+ShortAddressMode As Collection = ["accumulator": "A", "zeropage": "zp", "zeropage,X": "zp,X", "absolute": "abs", "absolute,X": "abs,X",
+  "absolute,Y": "abs,Y", "(indirect,X)": "(ind,X)", "(indirect),Y": "(ind),Y", "relative": "rel", "implied": "imp",
+  "zeropage,Y": "zp,Y", "immediate": "#", "indirect": "ind", "(zeropage)": "(zp)"]
 Source As String[]
 Property Read version As String Use $version
 Public InstructionCycles As New Integer[256]
@@ -42,6 +45,9 @@ Public Sub _init()
       Error.Raise("Invalid OP Code definition as line " & CurrentIndex & " In file " & source[CurrentIndex])
     Endif
   Wend
+
+Catch
+  Print "Dissasembler load mnonics:";; Error.text, Error.where;; source[CurrentIndex]
 
 End
 
@@ -162,8 +168,44 @@ Fast Unsafe Sub CalcBranch(pc As Long, jmp As Byte) As Long
 
 End
 
+''print the instruction matrix used for this processor
+''Tables are generated bases upon format CC : aaa X bbb
+Public Sub InstMatrix()
 
+  Dim Table_cc As New Variant[4]
+  Dim i As Integer
 
+  For i = 0 To Table_cc.Max
+    Table_cc[i] = New String[8, 8]        ' define the matrix instruction definition
+  Next
+
+  For i = 0 To 255
+    If Instructions.Exist(i) Then
+      Table_cc[cc[i]][aaa[i], AddrMode[i]] = "$" & Left(Hex(i, 2) & " " & Instructions[i].name & " " & ShortAddressMode[Instructions[i].addressing] & Space(15), 16)
+    Else
+      Dim icc As Integer = (i And &h0003)
+      Dim iaaa As Integer = (i Shr 5)
+      Dim ibbb As Integer = (i And &h0001c) Shr 2
+      Table_cc[icc][iaaa, ibbb] = "$" & Left(Hex(i, 2) & Space(21), 16)
+    Endif
+  Next
+  Print " c, a : ";
+  For i = 0 To 7
+    Print "       " & i & "       ";
+  Next
+  Print
+  For i = 0 To Table_cc.Max
+    For j As Integer = 0 To 7
+      Print Subst("&1,&2 : ", Format(i, "#0"), Format(j, "#0"));
+      For k As Integer = 0 To 7
+        Print Table_cc[i][j, k];
+      Next
+      Print
+    Next
+    Print
+  Next
+
+End
 
 
 

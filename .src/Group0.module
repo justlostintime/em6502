@@ -39,11 +39,39 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     .sr = BClr(.sr, 0)
     Return
 
-  Grp0Case01:'unused
-  Grp0Case03:'unused
-  Grp0Case05:'unused
-  Grp0Case07:'unused
+  Grp0Case01:'TSB zeropage
+    .ZeroPage()
+
+  TSB:
+    Dim Tsba As Byte = .AC
+    .ReadByte()
+    .OrAc()
+    .DataBus = .AC
+    .AC = Tsba
+    .WriteByte
     Return
+
+  Grp0Case03:'TSB absolute
+    .Absolute()
+    Goto TSB
+
+  Grp0Case05:'TRB ZeroPage
+    .ZeroPage()
+
+  TRB:
+    tsba = .AC
+    .DataBus = &h0FF
+    .EorAc()
+    .ReadByte()
+    .AndAc()
+    .DataBus = .AC
+    .WriteByte()
+    .AC = tsba
+    Return
+
+  Grp0Case07:'TRB Absolute
+    .Absolute()
+    Goto TRB
     '-------------------------------------------------------------------
   Grp0Case1:
     On addressmode Goto Grp0Case10, Grp0Case11, Grp0Case12, Grp0Case13, Grp0Case14, Grp0Case15, Grp0Case16, Grp0Case17
@@ -91,9 +119,14 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     .sr = BSet(.sr, 0)
     Return
 
-  Grp0Case15:'unused
-  Grp0Case17:'unused
-    Return
+  Grp0Case15:'BIT ZeroPage,X
+    .ZeroPageX
+    Goto bitDo
+
+  Grp0Case17:'BIT Abs,X
+    .AbsX()
+    Goto bitDo
+
     '-------------------------------------------------------------------
   Grp0Case2:
     On addressmode Goto Grp0Case20, Grp0Case21, Grp0Case22, Grp0Case23, Grp0Case24, Grp0Case25, Grp0Case26, Grp0Case27
@@ -165,9 +198,20 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     .sr = BSet(.rc, 2)
     Return
 
-  Grp0Case31:'unused
-  Grp0Case35:'unused
-  Grp0Case37:'unused
+  Grp0Case31:'STZ ZeroPage
+    .ZeroPage()
+  STZ:
+    .DataBus = 0
+    .WriteByte()
+    Return
+
+  Grp0Case35:'STZ ZeroPage,X
+    .ZeroPageX()
+    Goto STZ
+
+  Grp0Case37:'JMP (indirect,X)
+    .IndirectX()
+    .pc = .AddressBus
     Return
     '---------------------------------------------------------------------------------------------------------------
   Grp0Case4:
@@ -211,8 +255,16 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     .setsr(.AC)
     Return
     '----------------------------------------------
-  Grp0Case40: ' Not used
-  Grp0Case47: ' not used
+  Grp0Case40: 'BRA branch always
+    .Immediate()
+    .ReadByte()
+    .Branch()
+    Return
+
+  Grp0Case47: 'STZ ABS
+    .DataBus = 0
+    .Absolute()
+    .WriteByte()
     Return
     '------------------------------------------------------------------------------------------
   Grp0Case5:

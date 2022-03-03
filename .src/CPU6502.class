@@ -47,6 +47,7 @@ Property ResetPending As Boolean Use $ResetPending = False
 Property Halted As Boolean Use $Halted = False
 Property Profiling As Boolean Use $Profiling = False
 Property Read ProfileInfo As String[]
+Property cpu65c02 As Boolean Use $cpu65c02 = False
 
 Event StatusInfo(information As Cpustatus)
 Event NextInst(Inst As String)
@@ -335,6 +336,19 @@ Fast Unsafe Public Sub ZeroPage()
   ReadByte()
   AddressBus = DataBus
   Inc PC
+
+End
+
+Fast Unsafe Public Sub ZeroPageIndirect()
+
+  Dim addrTemp As Long
+
+  ZeroPage()
+  ReadByte()
+  addrTemp = DataBus
+  Inc AddressBus
+  ReadByte()
+  AddressBus = (DataBus Shl 8) Or addrTemp
 
 End
 
