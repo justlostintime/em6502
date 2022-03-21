@@ -58,7 +58,10 @@ Fast Unsafe Public Sub CycleCount(Instruction As Byte) As Integer
 
 End
 
-' Process the file being read which defines all the valid 6502 instructions
+'Init all tables such that invalid values always become a nop
+
+
+' Process the file being read which defines all the valid 6502 and 65c02 Instructions
 Fast Unsafe Sub ProcessInstruction()
 
   Dim Description As String

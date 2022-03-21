@@ -4,15 +4,27 @@
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
 '  See project license file.
+Public XaInstalled As Boolean = False
 
 Public Sub _init()
 
-  Print "Using DASM Assembler \nCreated by Mathew Dillion.\nCurrently supported by Andrew Davie @ https://github.com/dasm-assembler/dasm"
-  If Not Exist("/tmp/gambasAsm/dasm") Then
-    Print "Installing assembler to /tmp/gambasAsm"
-    Try Shell.MkDir("/tmp/gambasAsm")
-    Copy "dasm" To "/tmp/gambasAsm/dasm"
-    Chmod "/tmp/gambasAsm/dasm" To "rwxr-xr-x"
+  If System.Exist("xa") Then
+    XaInstalled = True
+  Endif
+
+  If Not XaInstalled Then
+    Print "xa not installed, If you require 65c02 extended instruction you must install XA, found in ~/6502/asm, do a make and make available"
+    Print "Using DASM Assembler \nCreated by Mathew Dillion.\nCurrently supported by Andrew Davie @ https://github.com/dasm-assembler/dasm"
+    If Not Exist("/tmp/gambasAsm/dasm") Then
+      Print "Installing assembler to /tmp/gambasAsm"
+      Try Shell.MkDir("/tmp/gambasAsm")
+      Copy "dasm" To "/tmp/gambasAsm/dasm"
+      Chmod "/tmp/gambasAsm/dasm" To "rwxr-xr-x"
+    Endif
+  Else
+    Print "Xa found, 65c02 extensions will be executed correctly"
+    Print "Using xa from  http://www.floodgap.com/retrotech/xa/\nxa is Andre Fachat's open-source 6502 cross assembler. I, Cameron Kaiser (ckaiser@floodgap.com), am the current maintainer, and bug reports and questions should now go to me.\n"
+      "xa Is Copyright © 1989-2021, André Fachat, Jolse Maginnis, David Weinehall and Cameron Kaiser. All rights reserved. Additional contributors: Fabien Nuñez, Mikkel Holm Olsen, Adam Sampson, Alessandro Gatti, Simon Rowe, Dan Horák, Frederic Cambus, Sam Falvo. xa is distributed under the GNU Public License v2. The current maintainer is Cameron Kaiser."
   Endif
 
 End
@@ -22,9 +34,15 @@ Public Sub _call(source As String, Dest As String, listing As String, symbols As
 
   Dim Result As String
 
-  Exec ["/tmp/gambasAsm/dasm", Source, "-o" & Dest, "-l" & listing, "-s" & symbols] To result
+  If XaInstalled Then
+    Exec ["xa", "-o", dest, "-l", symbols] To result
+  Else
+    Exec ["/tmp/gambasAsm/dasm", Source, "-o" & Dest, "-l" & listing, "-s" & symbols] To result
+  Endif
+
   Result = Replace(result, "\n", "\n\r")
   If Exist(listing) Then Result &= "\n\r List available " & Listing & "\n\r Binary Generated " & Dest & "\n\r"
+
   Return result
 
 End
