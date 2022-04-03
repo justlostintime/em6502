@@ -1,5 +1,6 @@
 ' Gambas class file
 
+' Author Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
@@ -39,7 +40,7 @@ Public Sub Configure(Configuration As ComputerDef)
   For Each device As Variant[] In $Config
     Try cDev = Devices($Config.key & ".dev")
     If Error Then
-      Message.Error("Unable to start computer error found In configuration\nSee Error display panel for details", "ok")
+      Message.Error(("Unable to start computer error found In configuration\nSee Error display panel for details"), ("ok"))
       Return
     Endif
     MyCpu.AddMAp(device[0], device[1], cDev, device[2])
@@ -47,7 +48,7 @@ Public Sub Configure(Configuration As ComputerDef)
 
   Try MyCpu.Reset()
   If Error Then
-    Message.Warning("Reset Failed " & Error.text, "Continue")
+    Message.Warning(("Reset Failed ") & Error.text, ("Continue"))
   Endif
 
   If Configuration.AutoStartActive Then
@@ -88,7 +89,7 @@ Public Sub SetBreakPoints(Breaks As String[])
   For Each s As String In Breaks
     Try BrkList.Add(Eval("&H0" & Left(s, 4)))
     If Error Then
-      Message.Error("Bad Breakpoint address format : " & s & "\n Should be 4 hex digits\nBreak Points Not Set!", "Ok")
+      Message.Error(("Bad Breakpoint address format : ") & s & ("\n Should be 4 hex digits\nBreak Points Not Set!"), ("Ok"))
       Return
     Endif
   Next

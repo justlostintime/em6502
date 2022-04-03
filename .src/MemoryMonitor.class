@@ -1,5 +1,6 @@
 ' Gambas class file
 
+' Author Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
@@ -16,10 +17,10 @@ Public Sub _new(StartAddress As String, EndAddress As String)
 
   Fmain.MyComputer.MonitorList.Add([Eval("&H0" & StartAddress), Eval("&H0" & EndAddress)], StartAddress)
   Fmain.MemoryMonitors.Add(Me, StartAddress)
-  MonitorWindow.title = "Monitoring Memory Address $" & StartAddress & " To $" & EndAddress
+  MonitorWindow.title = ("Monitoring Memory Address") & " $" & StartAddress & " " & ("To") & " $" & EndAddress
   MonitorWindow.MemDumpOut.w = MonitorWindow.w - 2
   MonitorWindow.MemDumpOut.h = MonitorWindow.h - 2
-  MonitorWindow.MemDumpOut.text = "Memory Dump Begins"
+  MonitorWindow.MemDumpOut.text = ("Memory Dump Begins")
   MonitorWindow.Show()
 
 End

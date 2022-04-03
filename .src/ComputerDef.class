@@ -1,5 +1,6 @@
 ' Gambas class file
 
+' Author Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
@@ -62,9 +63,9 @@ Public Sub Save(Optional Directory As String = "")
   Dim CompSettings As Settings
 
   If Directory = "" Then
-    CompSettings = New Settings($SourceDirectory &/ $Name, "Definitions for computer " & $name & " Updated " & Str(Now))
+    CompSettings = New Settings($SourceDirectory &/ $Name, ("Definitions for computer ") & $name & (" Updated ") & Str(Now))
   Else
-    CompSettings = New Settings(Directory &/ $Name, "Definitions for computer " & $name & " Created " & Str(Now))
+    CompSettings = New Settings(Directory &/ $Name, ("Definitions for computer ") & $name & (" Created ") & Str(Now))
   Endif
 
   WriteInfo(CompSettings)

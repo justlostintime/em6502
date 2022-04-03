@@ -1,5 +1,6 @@
 ' Gambas module file
 
+' Author Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
@@ -48,17 +49,17 @@ Public Sub _call()
   End With
 
 Catch
-  Error "Create Defaults Error: "; Error.text;; Error.where
+  Error ("Create Defaults Error: "); Error.text;; Error.where
 
 End
 
 Sub copyDirectory(path As String, topath As String)
 
-  Debug "Create Default :";; toPath;; "From";; path
+  Debug ("Create Default :");; toPath;; "From";; path
   If Not Exist(toPath) Then
     Try Shell.MkDir(ToPath)
     If Error Then
-      Debug "Unable to make directory ";; topath;; Error.text
+      Debug ("Unable to make directory ");; topath;; Error.text
     Endif
   Else
     Return
@@ -70,10 +71,10 @@ Sub copyDirectory(path As String, topath As String)
 
   For Each s As String In Dir(path, "*", gb.file)
     If Right(s, 1) = "~" Then Continue
-    Debug "Copy :";; s
+    Debug ("Copy :");; s
     Try Copy path &/ s To ToPath &/ s
     If Error Then
-      Debug "Unable to copy file ";; ToPath &/ s;; "from";; path &/ s
+      Debug ("Unable to copy file ");; ToPath &/ s;; ("from");; path &/ s
     Endif
   Next
 

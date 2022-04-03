@@ -1,5 +1,6 @@
 ' Gambas module file
 
+'Author  Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
@@ -13,11 +14,11 @@ Public Sub main()
   Dim sComputerName As String
 
   Args.Begin(Application.name & " <options>")
-  bVersion = Args.Has("v", "version", "Display the version Of the emulator")
-  bAbout = Args.Has("a", "about", "Information about " & Application.name)
-  bDevMode = Args.Has("d", "devmode", "Developer Mode, removes ~/6502 directory and recreats \nall default settings(be carefull all your stuff will be gone!)\n Usefull to get new application updates")
-  bPrintInstMatrix = Args.Has("p", "print", "Print Supported Instruction Matrix and exit")
-  sComputerName = Args.Get("c", "computer", "Provies the name of the computer to run, No GUI is started", "", "")
+  bVersion = Args.Has("v", "version", ("Display the version Of the emulator"))
+  bAbout = Args.Has("a", "about", ("Information about ") & Application.name)
+  bDevMode = Args.Has("d", "devmode", ("Developer Mode, removes ~/6502 directory and recreats \nall default settings(be carefull all your stuff will be gone!)\n Usefull to get new application updates"))
+  bPrintInstMatrix = Args.Has("p", "print", ("Print Supported Instruction Matrix and exit"))
+  sComputerName = Args.Get("c", "computer", ("Provies the name of the computer to run, No GUI is started"), "", "")
   Args.End()
 
   ''Define the default assembled source and binary directories
@@ -48,10 +49,11 @@ Public Sub main()
     PrintMatrix()
   Else If sComputerName <> "" Then
     RunComputer(sComputerName)
+    Print ("End of Emulator session")                                                     'halt when we get here
   Else
     FMain.Show()
     While Not FMain.Closed
-      Wait 5
+      Wait Next
     Wend
   Endif
 

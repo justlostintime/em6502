@@ -1,5 +1,6 @@
 ' Gambas class file
 
+' Author Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
@@ -57,19 +58,19 @@ Public Function _Call(sname As String, Optional newParms As Variant[] = [], Comp
   If ScriptPath = "" Then ScriptPath = $ScriptDirectory
   Try SourceFile = File.Load(ScriptPath &/ ScriptName)
   If Error Then
-    Error.Raise("Unable to read Script file : " & sname)
+    Error.Raise(("Unable to read Script file") & " : " & sname)
   Endif
 
   If SubsAndClasses.Exist(cname) Then
-    Debug "Compile : Already have compiled Copy "; sname
+    Debug ("Compile : Already have compiled Copy "); sname
     cObject = SubsAndClasses[cname]
     If SourceFile <> cObject.OldSource Then
-      Debug "Source does not match old one, Recompiling"
+      Debug ("Source does not match old one, Recompiling")
       sName = cname & Str(Overloadcount)
       Inc OverloadCount
       cObject.iChanged = True
     Else
-      Debug "Source is unchanged , Just returning class"
+      Debug ("Source is unchanged , Just returning class")
       Return cObject.iClass
     Endif
   Else
@@ -158,7 +159,7 @@ Public Function _Call(sname As String, Optional newParms As Variant[] = [], Comp
   sArchive = $sPluginPath &/ sName & ".gambas"
   scmd = Subst$("gba3 &1 -o &2 2>&&1", sPath, sArchive)
   Shell scmd To sRes
-  If Process.LastValue Then Error.Raise(Subst$(("Archiver error:\n&1"), sRes))
+  If Process.LastValue Then Error.Raise(Subst$((("Archiver error:") & "\n&1"), sRes))
 
 
   If Not CompileOnly Then
@@ -188,7 +189,7 @@ Catch
   Dim ErrorMessage As String = ""
   Dim s As String[] = Split(Replace(Error.text, "\n", ""), ":", "", True)
 
-  ErrorMessage &= "\n\x1b[33mCompiler Error - " & Error.Text & "\x1b[0m" & IIf(s.count < 3, Error.where, "") & "\n"
+  ErrorMessage &= "\n\x1b[33m" & ("Compiler Error") & " - " & Error.Text & "\x1b[0m" & IIf(s.count < 3, Error.where, "") & "\n"
   If Not compileonly Then
     If cObject And If cObject.iFirstDef Then
       SubsAndClasses.Remove(cname)
@@ -201,13 +202,13 @@ Catch
 
   If Not $ReturnResult Then
     Dim deverrors As New InfoOut
-    deverrors.title = "Errors for : " & s[0]
+    deverrors.title = ("Errors for") & " : " & s[0]
     deverrors.Show()
     deverrors.Display(ErrorMessage)
     Wait
-    Error.Raise("Script Compile completed with errors\n")
+    Error.Raise(("Script Compile completed with errors") & "\n")
   Else
-    Error.Raise("Script Compile completed with errors\n" & ErrorMessage)
+    Error.Raise(("Script Compile completed with errors") & "\n" & ErrorMessage)
   Endif
 
 End
@@ -215,7 +216,7 @@ End
 Public Sub _get(index As String) As Object
 
   If Not SubsAndClasses.exist(index) Then
-    Error.Raise("Invalid Script requested : " & index)
+    Error.Raise("Invalid Script name requested : " & index)
   Endif
 
   Return SubsAndClasses[index].iScript
@@ -233,7 +234,7 @@ Public Sub NewInstance(index As String, ...) As Object
   Dim Params As Variant[] = Param.All
 
   If Not SubsAndClasses.exist(index) Then
-    Error.Raise("Invalid Script name requested : " & index)
+    Error.Raise(("Invalid Script name requested") & " : " & index)
   Endif
 
   If Param.count > 0 Then
@@ -247,7 +248,7 @@ End
 Public Sub HasUse(index As String) As Boolean
 
   If Not SubsAndClasses.exist(index) Then
-    Error.Raise("Invalid Script Name requested : " & index)
+    Error.Raise(("Invalid Script name requested") & ": " & index)
   Endif
   Return SubsAndClasses[index].bUSEIncluded
 
@@ -256,7 +257,7 @@ End
 Public Sub HasGui(index As String) As Boolean
 
   If Not SubsAndClasses.exist(index) Then
-    Error.Raise("Invalid Script Name requested : " & index)
+    Error.Raise(("Invalid Script name requested") & " : " & index)
   Endif
   Return SubsAndClasses[index].bGuiNeeded
 
@@ -265,7 +266,7 @@ End
 Public Sub FileName(Index As String) As String
 
   If Not SubsAndClasses.exist(index) Then
-    Error.Raise("Invalid Script Name requested : " & index)
+    Error.Raise(("Invalid Script name requested") & " : " & index)
   Endif
 
   Return SubsAndClasses[index].sFileName
@@ -276,7 +277,7 @@ End
 Public Sub changed(index As String) As Boolean
 
   If Not SubsAndClasses.exist(index) Then
-    Error.Raise("Invalid Script Name requested : " & index)
+    Error.Raise(("Invalid Script name requested") & " : " & index)
   Endif
   Return SubsAndClasses[index].iChanged
 
@@ -341,7 +342,7 @@ Private Sub ProcessLibrary(LibName As String) As String
   Dim LibEntry As String
 
   If sSplitLine.count <> 2 Then
-    Error.Raise("Invalid Library name [" & LibName & "] Should look like \"vendor.libname:version\"")
+    Error.Raise(("Invalid Library name") & " [" & LibName & "] " & ("Should look like \"vendor.libname:version\""))
   Endif
   sSplitLine[0] = Replace(sSplitLine[0], ".", "/")
   LibEntry = sSplitLine[0]
@@ -377,7 +378,7 @@ Private Sub ProcessLibrary(LibName As String) As String
   Endif
 
   If LibEntry = "" Then
-    error.raise("Library: [&1] not found", LibName)
+    error.raise(("Library") & ": [&1] " & ("not found"), LibName)
   Endif
   Return LibEntry
 

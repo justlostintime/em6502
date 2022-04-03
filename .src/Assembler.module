@@ -1,9 +1,11 @@
 ' Gambas module file
 
+' Author Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
 '  See project license file.
+
 Public XaInstalled As Boolean = False
 
 Public Sub _init()
@@ -13,18 +15,20 @@ Public Sub _init()
   Endif
 
   If Not XaInstalled Then
-    Print "xa not installed, If you require 65c02 extended instruction you must install XA, found in ~/6502/asm, do a make and make available"
-    Print "Using DASM Assembler \nCreated by Mathew Dillion.\nCurrently supported by Andrew Davie @ https://github.com/dasm-assembler/dasm"
+    Print ("xa not installed, If you require 65c02 extended instruction you must install XA, found in ~/6502/asm, do a make and make available")
+    Print ("Using DASM Assembler \nCreated by Mathew Dillion.\nCurrently supported by Andrew Davie @ https://github.com/dasm-assembler/dasm")
     If Not Exist("/tmp/gambasAsm/dasm") Then
-      Print "Installing assembler to /tmp/gambasAsm"
+      Print ("Installing assembler to /tmp/gambasAsm")
       Try Shell.MkDir("/tmp/gambasAsm")
       Copy "dasm" To "/tmp/gambasAsm/dasm"
       Chmod "/tmp/gambasAsm/dasm" To "rwxr-xr-x"
     Endif
   Else
-    Print "Xa found, 65c02 extensions will be executed correctly"
-    Print "Using xa from  http://www.floodgap.com/retrotech/xa/\nxa is Andre Fachat's open-source 6502 cross assembler. I, Cameron Kaiser (ckaiser@floodgap.com), am the current maintainer, and bug reports and questions should now go to me.\n"
-      "xa Is Copyright © 1989-2021, André Fachat, Jolse Maginnis, David Weinehall and Cameron Kaiser. All rights reserved. Additional contributors: Fabien Nuñez, Mikkel Holm Olsen, Adam Sampson, Alessandro Gatti, Simon Rowe, Dan Horák, Frederic Cambus, Sam Falvo. xa is distributed under the GNU Public License v2. The current maintainer is Cameron Kaiser."
+    Print ("Xa found, 65c02 extensions will be executed correctly")
+    Print ("Using xa from  http://www.floodgap.com/retrotech/xa/\nxa is Andre Fachat's open-source 6502 cross assembler. I, Cameron Kaiser (ckaiser@floodgap.com), am the current maintainer, and bug reports and questions should now go to me.")
+    Print ("xa Is Copyright © 1989-2021, André Fachat, Jolse Maginnis, David Weinehall and Cameron Kaiser. All rights reserved.")
+    Print ("Additional contributors: Fabien Nuñez, Mikkel Holm Olsen, Adam Sampson, Alessandro Gatti, Simon Rowe, Dan Horák, Frederic Cambus, Sam Falvo.")
+    Print ("xa is distributed under the GNU Public License v2. The current maintainer is Cameron Kaiser.")
   Endif
 
 End
@@ -41,7 +45,7 @@ Public Sub _call(source As String, Dest As String, listing As String, symbols As
   Endif
 
   Result = Replace(result, "\n", "\n\r")
-  If Exist(listing) Then Result &= "\n\r List available " & Listing & "\n\r Binary Generated " & Dest & "\n\r"
+  If Exist(listing) Then Result &= "\n\r" & ("Listing available") & "  " & Listing & "\n\r" & ("Binary Generated") & " " & Dest & "\n\r"
 
   Return result
 

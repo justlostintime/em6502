@@ -1,5 +1,6 @@
 ' Gambas module file
 
+' Author Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
@@ -42,12 +43,12 @@ Public Sub _init()
       Inc CurrentIndex
       ProcessInstruction()              'DefInst[1])
     Else
-      Error.Raise("Invalid OP Code definition as line " & CurrentIndex & " In file " & source[CurrentIndex])
+      Error.Raise(("Invalid OP Code definition at line") & " " & CurrentIndex & " In file " & source[CurrentIndex])
     Endif
   Wend
 
 Catch
-  Print "Dissasembler load mnonics:";; Error.text, Error.where;; source[CurrentIndex]
+  Print ("Dissasembler load mnonics:");; Error.text, Error.where;; source[CurrentIndex]
 
 End
 
@@ -59,8 +60,6 @@ Fast Unsafe Public Sub CycleCount(Instruction As Byte) As Integer
 End
 
 'Init all tables such that invalid values always become a nop
-
-
 ' Process the file being read which defines all the valid 6502 and 65c02 Instructions
 Fast Unsafe Sub ProcessInstruction()
 
@@ -116,7 +115,7 @@ Fast Unsafe Public Sub Inst(TheCpu As Cpu6502, address As Long) As String
   Dim num As String
 
   If InstData = Null Then
-    Return Hex(address, 4) & " Unknow Instruction [" & Hex(instNum, 2) & "]"
+    Return Hex(address, 4) & " " & ("Unknow Instruction") & " [" & Hex(instNum, 2) & "]"
   Endif
 
   If InstData.Bytes > 1 Then

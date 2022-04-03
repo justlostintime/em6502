@@ -1,5 +1,6 @@
 ' Gambas class file
 
+'Author Westwood JustLostintime
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
@@ -160,7 +161,7 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
 
   Try BinInfo = Open filename For Read
   If Error Then
-    Raise BinaryLoaded(address, "", "Fail:" & BinName & ":" & Error.text)
+    Raise BinaryLoaded(address, "", ("Fail:") & BinName & ":" & Error.text)
     Return
   Endif
 
@@ -169,14 +170,14 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
 
   Address = Address Or ah
   Address = ((Address Shl 8) Or al)
-  Debug "Loading Image to address "; Hex(address, 4)
+  Debug ("Loading Image to address "); Hex(address, 4)
 
   Dim Length As Integer = Lof(BinInfo) - 2
   buffer = New Byte[length]
   buffer.Read(bininfo)
   Try WriteBytes(buffer, address, length)
   If Error Then
-    Raise BinaryLoaded(address, "", "Fail Writing bytes:" & BinName & ":" & Error.text)
+    Raise BinaryLoaded(address, "", ("Fail Writing bytes:") & BinName & ":" & Error.text)
   Endif
   Raise BinaryLoaded(address, BinName, "$" & Hex(address, 4) & "-" & Hex(Address + Length - 1, 4) & " - " & BinName)
 
@@ -455,7 +456,7 @@ Fast Unsafe Public Sub GetDevice(Address As Long) As Object
     If AddressMap[i]._InRange(Address) Then Return AddressMap[i]
   Next
 
-  If $ChkBadMemAccess Then Error.Raise("Invalid Memory Address [" & Hex(Address, 4) & "]")
+  If $ChkBadMemAccess Then Error.Raise(("Invalid Memory Address") & " [" & Hex(Address, 4) & "]")
 
 End
 
@@ -473,7 +474,7 @@ Fast Unsafe Public Sub ReadByte()
     DataBus = dev[AddressBus]
   Else
     If $ChkBadMemAccess Then
-      Error.Raise("Invalid Read Memory Address [" & Hex(AddressBus, 4) & "]")
+      Error.Raise(("Invalid Read Memory Address") & " [" & Hex(AddressBus, 4) & "]")
     Else
       DataBus = &HFF
     Endif
@@ -496,7 +497,7 @@ Fast Unsafe Public Sub WriteByte()
     dev[AddressBus] = Databus
   Else
     If $ChkBadMemAccess Then
-      Error.Raise("Invalid Write Memory Address [" & Hex(AddressBus, 4) & "]")
+      Error.Raise(("Invalid Write Memory Address") & " [" & Hex(AddressBus, 4) & "]")
     Endif
   Endif
 
@@ -521,7 +522,7 @@ Fast Unsafe Public Sub Reset()
   PC = (PC Or (DataBus Shl 8))
 
   If SingleStep Then
-    Debug "PC Reset " & Hex(pc)
+    Debug ("PC Reset");; Hex(pc)
     StepInfo()
   Endif
 
