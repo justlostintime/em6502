@@ -1,7 +1,11 @@
-# 6502Emulator-DevEnv
+# 65C02 Emulator/ Development Environment
 This emulator Development environment is written in gambas3
 you will need the latest gambas build from gambas daily builds or 3.17
 
+## Special Note 09/04/2022
+  As of this week updates to how Gabas3 implements the gui for gtk/Qt a patch in the em6502 code was required, please
+  Download the latest version.
+  
 ## NEW
   Added full CLI interface support, possible to directly run a computer config without the gui.
   '''
