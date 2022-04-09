@@ -51,9 +51,9 @@ Public Sub Configure(Configuration As ComputerDef)
     Message.Warning(("Reset Failed ") & Error.text, ("Continue"))
   Endif
 
-  ' If Configuration.AutoStartActive Then
-  '  Raise AutoStart(Configuration.AutoStart, Configuration.speed)
-  ' Endif
+  If Configuration.AutoStartActive Then
+    Raise AutoStart(Configuration.AutoStart, Configuration.speed)
+  Endif
 
 End
 
