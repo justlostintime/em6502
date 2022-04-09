@@ -24,7 +24,7 @@ Public Sub Display(value As String)
   Next
   AsmListing.text = Source.join("\n")
   AsmListing.Refresh()
-  Wait
+  Wait 0.001
 
 End
 

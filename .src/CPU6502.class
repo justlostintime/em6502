@@ -101,7 +101,7 @@ Public Sub Halt()
 
   SingleStep = True
   $Halted = True
-  Wait 0.01
+  Wait 0.001
   CpuClock.Enabled = False
   For Each o As Object In AddressMap
     If Object.Class(o).Exist("halt") Then
@@ -214,7 +214,6 @@ Fast Unsafe Public Sub Run()
 
     ExecuteInstruction()
 
-
     If DisplayStatus Then
       Dim pinfo As New CpuStatus(pc, sp, ac, X, Y, sr, DataBus, AddressBus, TotalInstructions, $InstructionsPerSecond, $TotalCycles, $CyclesPerSecond)
       Raise StatusInfo(pinfo)
@@ -228,7 +227,7 @@ Fast Unsafe Public Sub Run()
     Endif
 
     If counter = $SpeedScaler Then
-      Wait 0.00045
+      Wait 0.001
       counter = 0
     Else
       Inc counter

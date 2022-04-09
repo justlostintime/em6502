@@ -59,6 +59,7 @@ Sub openResetWindow(optional thetitle as string = "6502 Big Reset Button")
   ResetForm.Maximized = false
   ResetForm.Minimized = false
   ResetForm.persistent = true
+  ResetForm.Arrangement = arrange.fill
   ResetButton = new button(ResetForm) as "MyButton"
   ResetButton.text = "Reset!"
   MyResetButton_open()

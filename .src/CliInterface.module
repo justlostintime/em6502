@@ -82,7 +82,7 @@ Public Sub RunComputer(ComputerName As String)
     .MyComputer = New Computer As "the_computer"
     Dim Comp As New ComputerDef(.AsmComputerDefinitions, ComputerName)
     .MyComputer.Configure(Comp)
-    Wait
+    Wait 0.001
     .MyComputer.StatusOff()
     .MyComputer.Trace(False)
     .MyComputer.UnsetSingleStep()

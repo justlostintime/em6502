@@ -58,7 +58,8 @@ Sub openHaltWindow(optional TheTitle as string = "6502 Big Halt Button")
   HaltForm.title = TheTitle
   HaltForm.Maximized = false
   HaltForm.Minimized = false
-  HaltForm.persistent = true
+  'HaltForm.persistent = true
+  HaltForm.Arrangement = Arrange.fill
 
   HaltButton = new button(HaltForm) as "MyHaltButton"
   HaltButton.text = "Quit !"
@@ -69,10 +70,12 @@ Sub openHaltWindow(optional TheTitle as string = "6502 Big Halt Button")
 End
 
 Public Sub MyHaltButton_click()
+    debug "Halt Button pressed"
     raise Halt("User request termination")
 end
 
 Public sub MyHaltForm_resize()
+    debug "form resize"
     HaltButton.h = HaltForm.h
     HaltButton.w = HaltForm.w
 end
@@ -80,6 +83,10 @@ end
 Public Sub MyHaltForm_hide()
     if haltForm.Persistent = true then HaltForm.show()
 END
+
+Public Sub MyHaltForm_keypress()
+  debug "form clicked"
+end
 
 Public Sub MyHaltForm_open()
   HaltForm.x = Settings["HaltForm/Window/X", 200]

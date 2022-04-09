@@ -205,7 +205,7 @@ Catch
     deverrors.title = ("Errors for") & " : " & s[0]
     deverrors.Show()
     deverrors.Display(ErrorMessage)
-    Wait
+    Wait 0.001
     Error.Raise(("Script Compile completed with errors") & "\n")
   Else
     Error.Raise(("Script Compile completed with errors") & "\n" & ErrorMessage)

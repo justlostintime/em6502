@@ -121,12 +121,15 @@ Sub openTTYWindow()
   TTYForm = New Form As "MyTerminal"
   TTYFORM.title = " 6502 tty "
   TTYForm.persistent = true
+  TTYForm.arrangement = arrange.fill
 
   TermOut = New TerminalView(TTYForm) As "MyView"
   TermOut.Enabled = True
   TermOut.ReadOnly = False
   TermOut.Width = TTYForm.width - 2
   TermOut.Height = TTYForm.Height - 2
+  TermOut.Y = 1
+  TermOut.X = 1
   TTYFORM.show()
   TermOut.print("\e[32m")
 End
@@ -151,8 +154,8 @@ Public Sub MyTerminal_close()
 End
 
 Public sub MyTerminal_resize()
-    TermOut.h = TTYForm.h
-    TermOut.w = TTYForm.w
+    TermOut.h = TTYForm.h - 2
+    TermOut.w = TTYForm.w - 2
 end
 
 Public Sub MyTerminal_hide()

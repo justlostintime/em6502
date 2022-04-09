@@ -88,7 +88,7 @@ Public Sub The_Computer_NextInst(info As String)
 
   Disassembly.Print(info & "\n\r")
   Disassembly.Refresh()
-  Wait
+  Wait 0.001
 
 End
 
@@ -133,7 +133,7 @@ Public Sub The_computer_MemMonitor(address As Long, data As String)
   Dim MyObject As Object = MemoryMonitors[txtaddr]
 
   Object.Call(MyObject, "UpdateMem", [data])
-  Wait
+  Wait 0.001
 
 End
 
@@ -162,7 +162,7 @@ Public Sub The_Computer_StatusInfo(info As Cpustatus)
   Flag_O.value = info.Overflow
   Flag_Z.value = info.zero
   FMain.Refresh()
-  Wait
+  Wait 0.001
 
 End
 
@@ -258,7 +258,7 @@ Public Sub DumpMem_Click()
 
   FMain.Refresh()
 
-  Wait
+  Wait 0.001
 
   Dim fromAdr As Long = Eval("&h0" & FromAddr.text)
   Dim ToAdr As Long = Eval("&h0" & ToAddr.text)
@@ -463,7 +463,7 @@ Public Sub LoadToRome_Click()
 
   SingleStepSet.value = True
   SingleStepSet_Click()
-  Wait
+  Wait 0.001
   MyComputer.LoadMemory(LastBinaryGenerated)
 
 End
@@ -472,7 +472,7 @@ Public Sub LoadToRam_Click()
 
   SingleStepSet.value = True
   SingleStepSet_Click()
-  Wait
+  Wait 0.001
   MyComputer.LoadMemory(LastBinaryGenerated)
 
 End
@@ -506,7 +506,7 @@ Public Sub The_Computer_BreakPoint(pc As Long)
   SingleStepSet.value = True
   LastBreakAddress.text = "$" & Hex(pc, 4)
   InfoSection.Index = 0
-  Wait
+  Wait 0.001
 
 End
 
@@ -788,7 +788,7 @@ Public Sub Dasminfo_Click()
   Dim a As New WebInfoViewer
 
   a.Show()
-  Wait
+  Wait 0.001
   a.SetUrl("https://dasm-assembler.github.io/", "The user manual can be found in the ~/6502/doc directory")
 
 End
@@ -797,10 +797,9 @@ Public Sub CTMON65Info_Click()
 
   Dim a As New WebInfoViewer
 
-  a.Show()
-  Wait
   a.SetUrl("https://github.com/CorshamTech/CTMon65", "This project extended with  R - remove file")
-
+  a.Show()
+  Wait 0.001
 
 End
 
@@ -808,9 +807,9 @@ Public Sub tbinfo_Click()
 
   Dim a As New WebInfoViewer
 
-  a.Show()
-  Wait
   a.SetUrl("https://github.com/CorshamTech/6502-Tiny-BASIC", "This project extended with new keywords, see ~/6502/doc")
+  a.Show()
+  Wait 0.001
 
 End
 
@@ -818,9 +817,9 @@ Public Sub AboutInfo_Click()
 
   Dim a As New WebInfoViewer
 
-  a.Show()
-  Wait
   a.SetUrl("https://github.com/justlostintime/6502Emulator-DevEnv/wiki", "This is the first Pass using sample 6502 Software")
+  a.Show()
+  Wait 0.001
 
 End
 
@@ -829,10 +828,9 @@ Public Sub creditDue_Click()
 
   Dim a As New WebInfoViewer
 
-  a.Show()
-  Wait
   a.SetUrl("https://github.com/justlostintime/6502Emulator-DevEnv/wiki", "Developed by JustLostInTime@gmail.com")
-
+  a.Show()
+  Wait 0.001
 
 End
 
@@ -840,10 +838,9 @@ Public Sub m6502help_Click()
 
   Dim a As New WebInfoViewer
 
-  a.Show()
-  Wait
   a.SetUrl("https://github.com/justlostintime/6502Emulator-DevEnv/wiki", "Developed by JustLostInTime@gmail.com")
-
+  a.Show()
+  Wait 0.001
 
 End
 

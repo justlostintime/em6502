@@ -30,7 +30,7 @@ Public Sub updatemem(data As String)
   MonitorWindow.SetFocus()
   MonitorWindow.MemDumpOut.text = data
   MonitorWindow.MemDumpOut.Refresh()
-  Wait
+  Wait 0.001
 
 End
 

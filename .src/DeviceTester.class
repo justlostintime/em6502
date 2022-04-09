@@ -65,7 +65,7 @@ Public Sub WriteData_Click()
     DataTransmitted.text &= "" & Hex(address, 4) & " - " & Hex(b, 2) & " - " & Quote(GetPrintable(b)) & "\n"
 
     DataTransmitted.refresh()
-    Wait
+    Wait 0.001
     Try testdev[address] = b
     If Error Then
       message.Error("Error while writing to device:" & Error.text, "OK")
@@ -105,7 +105,7 @@ Public Sub ReadData_Click()
 
     DataRecieved.text &= "" & Hex(address, 4) & " - " & Hex(b, 2) & " - " & Quote(GetPrintable(b)) & "\n"
     DataRecieved.refresh()
-    Wait
+    Wait 0.001
 
     If ReadAutoInc.value Then Inc address
     Wait 0.25

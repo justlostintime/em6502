@@ -19,7 +19,7 @@ Public Sub Display(value As String)
 
   MemDumpOut.text &= value
   MemDumpOut.Refresh()
-  Wait
+  Wait 0.001
 
 End
 

@@ -110,9 +110,9 @@ Public Sub devcompile_Click()
     Dim deverrors As New InfoOut
     deverrors.title = "Errors for : " & CurrentFile
     deverrors.Show()
-    Wait
+    Wait 0.001
     deverrors.Display(DispInfo)
-    Wait
+    Wait 0.001
     CurrentDeviceClass = Null
   Else
     Message.Info("No Compile errors!", "OK")
@@ -125,7 +125,7 @@ Public Sub TestDev_Click()
   If CurrentDeviceClass = Null Then Return
   Dim atest As New DeviceTester
   atest.Show()
-  Wait
+  Wait 0.001
 
   DeviceTester.SetDevice(CurrentFile)
 

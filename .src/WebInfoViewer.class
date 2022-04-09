@@ -13,7 +13,7 @@ Public Sub SetUrl(url As String, details As String)
   DetailedInfo.text = details
   webinfo.url = url
   webinfo.Refresh()
-  Wait
+  Wait 0.001
 
 End
 
