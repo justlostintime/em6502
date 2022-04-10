@@ -74,14 +74,19 @@ Public Sub Load(BinSource As String) as long
   Dim BinInfo As File
 
   Try BinInfo = Open BinSource For Read
+  If Error Then Error.Raise("Missing Rom Source file : "& BinSource)
+  
   Dim al, ah As Byte
-  Read #BinInfo, al
-  Read #BinInfo, ah
+  try Read #BinInfo, al
+  If Error Then Error.Raise("Error reading Rom Source Start Address :" &BinSource & " : "& Error.text)
+  try Read #BinInfo, ah
+  If Error Then Error.Raise("Error reading Rom Source Start Address :" &BinSource & " : "& Error.text)
+  
   Dim Address As Long = ((CInt(ah) Shl 8) Or al)
   If address <> MemoryStart Then
-    Error.Raise(Subst("Rom address and image start address do not match ROM START: &1, Image Start:&2", Hex(MemoryStart, 6), Hex(address, 6)))
+    close BinInfo
+    Error.Raise(Subst("Rom address and image start address do not match ROM START: &1, Image Start:&2", Hex(MemoryStart, 6), Hex(address, 6))&" : "&BinSource)
   Endif
-  If Error Then Error.Raise("Missing Rom Source file")
   Try mem.Read(BinInfo)
   If Error Then Error.Raise("Error reading Rom Source :" & Error.text)
   Print "Rom Image loaded from "; BinSource

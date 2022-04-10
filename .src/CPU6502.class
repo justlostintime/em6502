@@ -227,7 +227,7 @@ Fast Unsafe Public Sub Run()
     Endif
 
     If counter = $SpeedScaler Then
-      Wait 0.001
+      Wait 0                           'This is used to check the GUI and throttle the cpu speed
       counter = 0
     Else
       Inc counter

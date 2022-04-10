@@ -78,7 +78,6 @@ End
 Public Sub RunComputer(ComputerName As String)
 
   With FMAIN
-
     .MyComputer = New Computer As "the_computer"
     Dim Comp As New ComputerDef(.AsmComputerDefinitions, ComputerName)
     .MyComputer.Configure(Comp)

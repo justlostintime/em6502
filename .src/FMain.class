@@ -19,7 +19,7 @@ Public DefaultComputerDefinition As String = "Default"
 OnImage As Picture = Picture.Fromstring(File.load("OnLed.png"))
 OffImage As Picture = Picture.Fromstring(File.load("OffLed.png"))
 
-updatetimer As New Timer As "MyTimer"
+updatetimer As Timer = Null
 
 Public Sub Form_Open()
 
@@ -32,7 +32,9 @@ Public Sub Form_Open()
 
   MyComputer = New Computer As "the_computer"
   Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
-  updatetimer.delay = 500
+
+  Updatetimer = New Timer As "MyTimer"
+  updatetimer.delay = 1000
   updatetimer.enabled = False
 
   LoadComputersConfig()
@@ -483,6 +485,7 @@ Public Sub MyTimer_Timer()
 
   MHZ.text = Format(CFloat(MyComputer.CyclesPerSecond) / 1000000.00, "#0.00000")
   MHZ.Refresh()
+  Wait
 
 End
 

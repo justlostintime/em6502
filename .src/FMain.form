@@ -9,6 +9,9 @@
       { Dasminfo Menu
         Text = ("6502 assembler Dasm")
       }
+      { M65C02Assemblerxa Menu
+        Text = ("65C02 Assembler xa")
+      }
     }
     { SampleSoftware Menu
       Text = ("Sample Software")
@@ -49,16 +52,19 @@
   }
   { SingleStepSet RadioButton
     MoveScaled(84,79,14,3)
+    ToolTip = ("Indicates the cpu is in sigle step mode\nwhen set")
     Text = ("Single Step")
     Value = True
   }
   { RunModeSet RadioButton
     MoveScaled(84,83,14,3)
+    ToolTip = ("Indicates that the CPU is in run mode\nwhen set")
     Text = ("Run")
   }
   { StepNow Button
     MoveScaled(102,74,13,4)
     Enabled = False
+    ToolTip = ("Step to next instruction\nIf in run mode stop cpu, enter sigle step mode\n")
     Text = ("Step")
   }
   { SetTrace ToggleButton
@@ -221,14 +227,17 @@
   }
   { StartStop Button
     MoveScaled(84,74,14,4)
+    ToolTip = ("Enable/Disables the computer for execution")
     Text = ("Start")
   }
   { resetCpu Button
     MoveScaled(118,79,9,4)
+    ToolTip = ("Resets the CPU and all devices")
     Text = ("Reset")
   }
   { NmiCpu Button
     MoveScaled(118,74,9,4)
+    ToolTip = ("Send an NMI to the Computer/CPU")
     Text = ("NMI")
   }
   { InfoSection TabPanel
@@ -409,23 +418,26 @@
     }
     { OpenListing Button
       MoveScaled(51,84,26,3)
-      ToolTip = ("- Set the cpu to single step mode\n- Load the binary to  Rom memory  \n- First two bytes of the file contain the load address\n- reset the cpu")
+      ToolTip = ("View the listing from the Last \nfile assembled")
       Text = ("View Listing")
     }
     Index = 0
   }
   { SpeedScaler SliderBox
     MoveScaled(102,88,48,5)
+    ToolTip = ("Control the execution speed of the cpu\n0 is slowest, Higher numbers are faster")
     MaxValue = 600
     Value = 2
   }
   { TextBox1 TextBox
     MoveScaled(85,88,16,5)
+    ToolTip = ("Control the execution speed of the cpu\n0 is slowest, Higher numbers are faster")
     Text = ("Speed Control")
   }
   { GoNow Button
     MoveScaled(102,79,13,4)
     Enabled = False
+    ToolTip = ("Start cpu at address provided by Start Address \nif no address then start cpu at next instruction\nif in sigle step mode change to run mode and\ncontinue at next instruction")
     Text = ("Go")
   }
   { SetStatus ToggleButton
@@ -438,6 +450,7 @@
     MoveScaled(84,2,74,70)
     { EnableBreakPoints CheckBox
       MoveScaled(2,1,25,5)
+      ToolTip = ("Must be selected/deselected  to enable/disable  breakpoints")
       Text = ("Enable Break Points")
     }
     { LastBreakAddress TextBox
@@ -495,10 +508,12 @@
     }
     { ClearSymbols Button
       MoveScaled(57,60,15,4)
+      ToolTip = ("Clear all symbol table entries")
       Text = ("Clear Symbols")
     }
     { SymLoadedList ListView
       MoveScaled(30,50,26,19)
+      ToolTip = ("List of symbol tables loaded")
     }
     { RemoveAll Button
       MoveScaled(35,30,5,3)
@@ -533,7 +548,7 @@
     }
     { MoniorMemSet Button
       MoveScaled(18,8,16,3)
-      ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory")
+      ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory dynamically.\nTrace must be enabled for this to be updated.")
       Text = ("Monitor Mem")
     }
   }
