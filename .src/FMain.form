@@ -555,6 +555,7 @@
   { MemAccessReports CheckBox
     MoveScaled(108,84,26,3)
     ToolTip = ("When enabled The Cpu will report  invalid\nread and write memory access")
+    Text = ("Enable Memory Checking")
     Value = CheckBox.True
   }
 }
