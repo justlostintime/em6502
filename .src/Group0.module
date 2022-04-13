@@ -134,9 +134,12 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Return
 
   Grp0Case20:  ' rti
-    .sr = BClr(.pop(), 4)
-    .sr = BClr(.sr, 5)                 ' brk and ignore are not reloaded
-    Goto Grp0Case30                    ' rts
+    .sr = BClr(.pop(), 4)         '  ignore bit not loaded
+    .sr = BClr(.sr, 5)                 '  brk and ignore are not reloaded
+    Dim tmplow As Byte = .Pop()
+    .PC = .Pop()      ' Pop The high Byte
+    .Pc = .PC Shl 8
+    .PC = .PC Or tmpLow
     Return
 
   Grp0Case22:  'pha
@@ -170,7 +173,7 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Return
 
   Grp0Case30:' rts
-    Dim tmplow As Byte = .Pop()
+    tmplow = .Pop()
     .PC = .Pop()      ' Pop The high Byte
     .Pc = .PC Shl 8
     .PC = .PC Or tmpLow

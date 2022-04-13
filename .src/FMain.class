@@ -425,6 +425,12 @@ Public Sub NmiCpu_Click()
 
 End
 
+Public Sub IrqCpu_Click()
+
+  MyComputer.IRQ()
+
+End
+
 Public Sub AsmbProg_Click()
 
   SaveProg_Click()
@@ -865,3 +871,5 @@ Public Sub Profilemenu_Click()
   ProfilerInfo.Show()
 
 End
+
+

@@ -1,0 +1,128 @@
+'Gambas class definition - 6502 device prototype
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+'  Author Justlostintime, Westwood
+
+Fast Unsafe
+
+Property MemoryStart As Long use $MemoryStart = 0                    ' Start of this block of memory
+Property MemoryEnd As Long use $MemoryEnd = 0                        ' If this is zero then the device has no mapped memory
+Property MemoryLen As Long use $MemoryLen = 0                        ' Length of this memory block
+Property TimerPeriod as long use $Period = 0                         ' number of ticks between interupt
+Property TheCpu as Variant use $TheCpu                               ' The cpu we are running on
+
+$SysTimer as Timer                                                   ' The actual timer object
+$IRQPending as boolean = false                                       ' Set if an irq is pending
+
+
+'Timer implementation, will interupt every period time when enabled
+'interupts must be acked before the next will be set
+'Io based deviced configured at slot 0 which is the first slot after the $E000 address
+'Base+0 = enable write 1, Disable write 0, ignored when interupt is pending
+'Base+1 = Upper part of Timer period
+'Base+2 = Lower Part of Timer period
+'Base+3 = Write = Ack interupt, Read = 1 interupt pending, read = 0 no interupt pending
+'         Writing anything to this address clears the interupt pending and enables the next timer tick
+
+'DevMemory as byte[500]
+
+Property read Name as string use $name
+
+Event IRQ()                           ' Device can create an IRQ
+Event NMI()                           ' Device can create an NMI
+Event Reset()                         ' Device can force a reset of the CPU
+Event Halt(Reason as string)          ' A device can raise this event to terminate the computer session
+
+public sub _new(address as long, len as long, parameters as string)
+
+  $Name = "IrqTimer"
+  debug $Name;;"Created with :";;address, len, parameters
+  $MemoryStart = Address
+  $MemoryEnd = Address + Len
+  $MemoryLen = Len
+  $Period = val(trim(parameters))
+  debug $Name;;"Default timeout set to :";;$Period
+  $SysTimer = new Timer as "TheTimer"
+  $SysTimer.ignore = true
+  $SysTimer.Delay = $Period
+
+end
+
+public sub _get(address as long) as byte
+
+   debug "read $";hex(address,4)
+   select case address
+     case  $MemoryStart   ' return the timer status 0 off, 1 on
+        return iif($Systimer.enabled,1,0)
+        
+     Case  $MemoryStart+1
+        return ($Period shr 8)
+        
+     Case  $MemoryStart+2
+        return ($period and &h00ff)
+        
+     Case  $MemoryStart+3
+        return iif($IRQPending,1,0)
+   end select
+
+   return -1
+
+end
+
+public sub _put(Value as byte, address as long)
+
+  debug "write $";hex(address,4); " $";hex(Value,2)
+
+   select case address
+     case $MemoryStart   ' enable/disable the timer status 0 off, 1 on
+     
+        if $IRQPending then return
+        
+        if Value > 0 then
+          $Systimer.enabled = true
+        else
+          $SysTimer.enabled = false
+        endif
+
+     Case  $MemoryStart+1
+        $Period = (value shl 8) or ($Period and &h00ff)
+
+     Case  $MemoryStart+2
+        $Period = ($period and &hff00) + value
+
+     Case  $MemoryStart+3
+     
+        If $IRQPending then
+          $SysTimer.enabled = true
+          $IRQPending = 0
+        endif
+        
+   end select
+
+end
+
+public sub TheTimer_timer()
+  if $IRQPENDING then return
+  $IRQPENDING = true
+  $SysTimer.Enabled = false
+  raise IRQ()
+  return
+end
+
+'this can be called by other devices or the computer
+'the cpu keeps its own dictionary of device addresses
+Public Sub _InRange(Address As Long) As Boolean
+
+  If Address >= $MemoryStart And Address <= $MemoryEnd Then Return True
+  Return False
+
+End
+
+' This will be called as the computer shuts down
+' Can be implemented if required to clean anything up
+Public sub halt()
+   ' close any open windows etc
+   $Systimer.Stop()
+end

@@ -1,0 +1,103 @@
+' Gambas class file
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+'' Device NMIButton
+'' Send an NMI signal to the cpu
+
+fast unsafe
+use "gb.form"
+
+Public MemoryStart As Long = 0
+Public MemoryEnd As Long = 0
+Public MemoryLen As Long = 0
+Public MyObs As Observer
+
+Property read name as string use $name
+Property Read hidden as boolean use $hidden = false
+Property TheCpu as Variant use $TheCpu
+
+NmiFORM As Form
+NmiButton as button
+
+' event Reset()
+' event irq()
+' event nmi()
+' event halt(Reason as string)
+
+public sub _new(address as long, len as long, parameters as string)
+
+  $NAME="NMIButton"
+  OpenNmiWindow(parameters)
+
+end
+
+Public sub _get() as variant
+   return 0
+end
+
+Public sub _put(value as variant)
+end
+
+Public sub halt()
+
+   debug "closing the NMI button"
+   NmiForm.Persistent = false
+   NmiFORM.close()
+
+end
+
+Sub openNmiWindow(optional thetitle as string = "6502 Big Nmi Button")
+
+  NmiForm = New Form As "MyNmiButton"
+  NmiForm.title = TheTitle
+  NmiForm.Maximized = false
+  NmiForm.Minimized = false
+  NmiForm.persistent = true
+  NmiForm.Arrangement = arrange.fill
+  NmiButton = new button(NmiForm) as "MyButton"
+  NmiButton.text = "Nmi!"
+  MyNmiButton_open()
+  NmiForm.show()
+  wait
+
+End
+
+Public Sub MyButton_click()
+    'raise Nmi()
+    $TheCpu.NmiPending = True
+    $TheCpu.InteruptPending = True
+end
+
+Public sub MyNmiButton_resize()
+    NmiButton.h = NmiForm.h - 2
+    NmiButton.w = NmiForm.w - 2
+end
+
+Public Sub MyNmiButton_hide()
+    if NmiForm.Persistent = true then NmiForm.show()
+END
+
+Public Sub MyNmiButton_open()
+
+  NmiForm.x = Settings["NmiForm/Window/X", 200]
+  NmiForm.y = Settings["NmiForm/Window/Y", 200]
+  NmiForm.h = Settings["NmiForm/Window/H", 100]
+  NmiForm.w = Settings["NmiForm/Window/w", 150]
+  NmiButton.x = 1
+  NmiButton.y = 1
+  NmiButton.h = NmiForm.h
+  NmiButton.w = NmiForm.w
+
+End
+
+Public Sub MyNmiButton_close()
+
+  Settings["NmiForm/Window/X"] = NmiForm.X
+  Settings["NmiForm/Window/Y"] = NmiForm.y
+  Settings["NmiForm/Window/H"] = NmiForm.h
+  Settings["NmiForm/Window/w"] = NmiForm.w
+
+End

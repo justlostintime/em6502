@@ -12,7 +12,7 @@ input            processor 6502
 ;
 ; 10/07/2017
 ;
-; This implements a stripped down Tiny BASIC 
+; This implements a stripped down Tiny BASIC
 ; interpreter using the Interpretive Language (IL)
 ; method as described in the first few issues of
 ; Dr Dobb's Journal.  The IL interpreter can be used
@@ -27,7 +27,7 @@ input            processor 6502
 ;		* No more error 5 when a program
 ;		  reaches the end without an END.
 ;
-; 02/15/2022 v0.5 JustLostInTime@gmail.compare
+; 02/15/2022 v0.5 JustLostInTime@gmail.com
 ;               * Add some usefull system level functions
 ;               * allow a larger number of tiny basic formats
 ;               * Add byte at start of line holding length
@@ -41,12 +41,13 @@ input            processor 6502
 ;
 ; www.corshamtech.com
 ; bob@corshamtech.com
+; JustLostInTime@gmail.com
 ;
 ;=====================================================
 ;
 ; Create TRUE and FALSE values for conditionals.
 ;
-       
+
 FALSE		equ	0
 TRUE		equ	~FALSE
 ;
@@ -137,7 +138,7 @@ ERR_STACK_OVER_FLOW	equ     12      ;Stack overflow
 ;
             SEG.U  Data
             org	$0040
-		
+
 ILTrace             	ds	1	       	;non-zero means tracing
 variables           	ds	26*2       	;2 bytes, A-Z
 variablesEnd       	equ	*
@@ -214,11 +215,11 @@ MONITOR		jmp	extKIM
 puts		equ	putsil
 BUFFER_SIZE	equ	132
 	endif
-	
+
 	if	CTMON65
 		include	"ctmon65.inc"
 		SEG Code
-		
+
 OUTCH		jmp	cout
 GETCH		jmp	cin
 CRLF		jmp	crlf
@@ -230,7 +231,7 @@ puts		equ	putsil
 cold2		jsr	puts
 		db	CR,LF
 		db	"Bob's Tiny BASIC v1.0.1"
-		db	CR,LF	
+		db	CR,LF
 		db	"https://github.com/CorshamTech/6502-Tiny-BASIC"
 		db	CR,LF,0
 ;
@@ -263,7 +264,7 @@ cold2		jsr	puts
 		jmp	coldtwo
 ;
 ; This is the warm start entry point
-;	
+;
 warm2		jsr	CRLF
 		lda	errGoto
 		sta	ILPC
@@ -358,7 +359,7 @@ ILgood		tay		       ;move index into Y
 		jmp	(dpl)	   ;go to handler
 ;
 ;=====================================================
-; This is the IL jump table.  The IL opcode is 
+; This is the IL jump table.  The IL opcode is
 ; mulitplied by two, then looked-up in this table.
 ; There is absolutely nothing special about the order
 ; of entries here... they all decode at exactly the
@@ -437,7 +438,7 @@ ILTBL	    dw	iXINIT	;0
 	    dw  iCallFunc     ;53       call a machine rtn accumulator
 	    dw  iCallFunc2    ;54       call system rtn with value in a
 	    dw  iTSTStr       ;55       Test Specifically for the start of a quoted string
-	 
+
 ILTBLend	equ	*
 ;
 ;=====================================================
@@ -447,7 +448,7 @@ ILTBLend	equ	*
 ;=====================================================
 ;=====================================================
 ;=====================================================
-; 
+;
 ;
 iINIT		lda	#0                       ;clear IL stack pointer,gosub stack
 		sta	retStackPtr
@@ -464,7 +465,7 @@ iINIT		lda	#0                       ;clear IL stack pointer,gosub stack
 ;
 ;=====================================================
 ; This initializes for the start of the next line of
-; BASIC text. 
+; BASIC text.
 ;
 iXINIT		lda	#0
 		sta	mathStackPtr	       ;clear math stack
@@ -503,7 +504,7 @@ iPRS		ldy	CUROFF
 ;
 ;=====================================================
 ; Pop the top off the stack and print it as a signed
-; decimal number. 
+; decimal number.
 ;
 iPRN		jsr	popR0
 		jsr	PrintDecimal
@@ -589,7 +590,7 @@ iSAV		jsr pushLN
 iSAVErr		ldx #12
 iSAVErr2        lda #0
 		jmp iErr2
-            
+
 ;
 ;=====================================================
 ; Pop the next line from the call stack.
@@ -686,7 +687,7 @@ iCMPno		jsr	FindNextLine
 		jmp	iXFER2
 ;
 ;=====================================================
-; Get a line of text from the user, convert to a 
+; Get a line of text from the user, convert to a
 ; number, leave on top of stack.
 ;
 iINNUM		lda	CUROFF	;save state before GetLine
@@ -854,14 +855,14 @@ multloop	asl	R0
 multno		dex		       ;did all bits yet?
 		bne	multloop
 ;
-pushR0nextIl	
+pushR0nextIl
 		jsr	pushR0	     ;OP
 		jmp	NextIL
 ;
 ;=====================================================
 ; Divide the top of stack into the next to top item.
 ; Leave results on stack.  Taken from:
-; http://codebase64.org/doku.php?id=base:16bit_division_16-bit_result 
+; http://codebase64.org/doku.php?id=base:16bit_division_16-bit_result
 ;
 ; MQ = R0 / R1
 ; Remainder is in R0
@@ -894,12 +895,12 @@ divloop		asl	R0              ;dividend lb & hb*2, msb -> Carry
 		bcc	skip            ;if carry=0 then divisor didn't fit in yet
 
 		sta	MQ+1            ;else save substraction result as new remainder,
-		sty	MQ	
+		sty	MQ
 		inc	R0              ;and INCrement result cause divisor fit in 1 times
 
 skip		dex
 		bne	divloop
-		jsr	RestoreSigns	
+		jsr	RestoreSigns
 		jmp	pushR0nextIl
 ;
 ; Indicate divide-by-zero error
@@ -1015,7 +1016,7 @@ iGETLINE	lda	#'>	;prompt character
 ; Insert the line into the program or delete the line
 ; if there is nothing after the line number,
 ;
-iINSRT		ldy	#0              
+iINSRT		ldy	#0
 		jsr	getDecimal	;convert line #
 		jsr	SkipSpaces      ;Ignore any spaces after the line number
 		sty	offset		;Save the start of the program line text
@@ -1046,12 +1047,12 @@ iINSRT		ldy	#0
 ;
 ; Compute the new end of the program first.
 ;
-		sec                     ;Set the carry bit 
+		sec                     ;Set the carry bit
 		lda	PROGRAMEND      ;Get low byte of program end
 		sbc	lineLength      ;Subtract the length of the current line
 		sta	PROGRAMEND      ;save it
-		lda	PROGRAMEND+1    
-		sbc	#0              ;Process the carry 
+		lda	PROGRAMEND+1
+		sbc	#0              ;Process the carry
 		sta	PROGRAMEND+1    ;We now have the new end of program with the line removed
 ;
 ; Copy CURPTR into R1 for working
@@ -1068,12 +1069,12 @@ InsDelChk	lda	R1             ;Compare the copy dest to end of memory to check if
 		bne	InsDelLoop
 		lda	R1+1
 		cmp	PROGRAMEND+1
-		beq	insert2       ;Now the existing line was removed lets go insert the new line 
+		beq	insert2       ;Now the existing line was removed lets go insert the new line
 ;
 ; Move one byte, move to next location.
 ;
 InsDelLoop  	ldy	lineLength    ;Move a byte up to remove the space
-		beq	insert2       ;if this is zero it is a big oops  
+		beq	insert2       ;if this is zero it is a big oops
 		lda	(R1),y
 		ldy	#0
 		sta	(R1),y
@@ -1100,7 +1101,7 @@ insert2		ldy	offset		;get back ptr  Get the current offset
 		sta	FROM+1
 ;
 mvup1		ldy	#0		;always zero from From copy position to use indirect addressing
-		lda	(FROM),y    
+		lda	(FROM),y
 		ldy	lineLength      ;Now load y with new offset downward to store the byte
 		sta	(FROM),y        ;Save the new byte
 ;
@@ -1154,7 +1155,7 @@ mvUpFini	jmp	NextIL
 ;
 ;=====================================================
 ; Pops the top value of the ILPC stack and stores it
-; in ILPC.  Ie, return from an IL subroutine. 
+; in ILPC.  Ie, return from an IL subroutine.
 ;
 iRTN		jsr	popILPC
 		jmp	NextIL
@@ -1201,7 +1202,7 @@ Vinit2		sta	variables,x
 ;
 ;=====================================================
 ; Set the address of the error handler.  After any
-; error, set to the ILPC to the specified location. 
+; error, set to the ILPC to the specified location.
 ;
 iERRGOTO	jsr	getILWord
 		stx	errGoto
@@ -1247,7 +1248,7 @@ iTSTStr 	jsr	getILByte
 		lda     #'"
 		cmp    (CURPTR),y
 		bne    iTSTfail
-		iny    
+		iny
 		sty    CUROFF
 		jmp    NextILStr
 ;
@@ -1262,7 +1263,7 @@ iTSTfail	jsr	restoreIL
 iTSTLET		jsr	getILByte
 		sta	offset
 		jsr	saveIL 		; save to restore when done
-		
+
 		ldy	CUROFF
 		jsr	SkipSpaces
 		iny			; skip the Variable name
@@ -1279,7 +1280,7 @@ iTSTLET		jsr	getILByte
 iTSTDONE	jsr	getILByte
 		sta     offset
 		jsr	saveIL
-		
+
 		ldy	CUROFF
 		sty	dpl
 		jsr	SkipSpaces
@@ -1372,7 +1373,7 @@ iTSTN_1		jsr	getDecimal
 		sty	CUROFF
 		jsr	pushR0		;save onto stack
 		jmp	NextIL
-		
+
 ;
 ; Common jump point for all TSTx instructions that
 ; fail to meet the requirements.  This takes the
@@ -1517,7 +1518,7 @@ iCallFunc	jsr	iCallRtn
 iCallRtn        jsr 	popR0
 		jmp     (R0)
 
-		
+
 ;===========================================jlit======
 ;Get a character from the terminal convert to value
 ;leave the number on top f the stack
@@ -1534,7 +1535,7 @@ iPutStack	sta     R0
 		jsr	pushR0
 		jmp     NextIL
 ;===========================================jlit======
-;Put a character to the terminal convert to 
+;Put a character to the terminal convert to
 ;
 iPUTCHAR:	jsr popR0
 		lda R0
@@ -1579,7 +1580,7 @@ PROGEND		equ	*
 ;
 		seg.u	Data
 		org	PROGEND
-		
+
 mathStack	ds	STACKSIZE*2
 mathStackPtr	ds	1
 retStack	ds	STACKSIZE*2
@@ -1590,7 +1591,7 @@ LINBUF		ds	132
 getlinx		ds	1
 printtx		ds	1	          ;temp X for print funcs
 diddigit	ds	1	          ;for leading zero suppression
-putsy		ds	1     
+putsy		ds	1
 errGoto		ds	2	          ;where to set ILPC on err
 MQ		ds	2	              ;used for some math
 sign		ds	1	          ;0 = positive, else negative

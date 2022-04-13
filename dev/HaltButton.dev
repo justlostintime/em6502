@@ -4,12 +4,8 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-'' Device TTY
-'' this simulates a tty device Ansi complient
-'' This open a seperate window and allos the entry
-'' of text to the cpu, it acts like a rs232 connected
-'' device. This is configured to work with the
-'' CTMON65 default rom, but may be used more generally
+'' Device Halt Button
+'' Send a halt signal to the Computer object
 
 'fast unsafe
 use "gb.form"
@@ -26,9 +22,9 @@ HaltFORM As Form
 HaltButton as button
 halting as boolean = false
 
-event Reset()
-event irq()
-event nmi()
+'event Reset()
+'event irq()
+'event nmi()
 event halt(Reason as string)
 
 public sub _new(address as long, len as long, parameters as string)
@@ -58,11 +54,11 @@ Sub openHaltWindow(optional TheTitle as string = "6502 Big Halt Button")
   HaltForm.title = TheTitle
   HaltForm.Maximized = false
   HaltForm.Minimized = false
-  'HaltForm.persistent = true
-  HaltForm.Arrangement = Arrange.fill
+  HaltForm.persistent = true
 
   HaltButton = new button(HaltForm) as "MyHaltButton"
   HaltButton.text = "Quit !"
+  HaltButton.ToolTip = ("Halt the Cpu and exit the simulation")
   MyHaltForm_open()
   HaltForm.show()
   wait
@@ -76,8 +72,8 @@ end
 
 Public sub MyHaltForm_resize()
     debug "form resize"
-    HaltButton.h = HaltForm.h
-    HaltButton.w = HaltForm.w
+    HaltButton.h = HaltForm.h - 2
+    HaltButton.w = HaltForm.w - 2
 end
 
 Public Sub MyHaltForm_hide()
@@ -93,8 +89,10 @@ Public Sub MyHaltForm_open()
   HaltForm.y = Settings["HaltForm/Window/Y", 200]
   HaltForm.h = Settings["HaltForm/Window/H", 100]
   HaltForm.w = Settings["HaltForm/Window/W", 150]
-  HaltButton.w = HaltForm.w
-  HaltButton.h = HaltForm.h
+  HaltButton.x = 1
+  HaltButton.y = 1
+  HaltButton.w = HaltForm.w - 2
+  HaltButton.h = HaltForm.h - 2
 End
 
 Public Sub MyHaltForm_close()

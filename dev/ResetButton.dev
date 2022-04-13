@@ -4,12 +4,8 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-'' Device TTY
-'' this simulates a tty device Ansi complient
-'' This open a seperate window and allos the entry
-'' of text to the cpu, it acts like a rs232 connected
-'' device. This is configured to work with the
-'' CTMON65 default rom, but may be used more generally
+'' Device ResetButton
+'' Send Reset signal to the cpu
 
 fast unsafe
 use "gb.form"
@@ -21,14 +17,15 @@ Public MyObs As Observer
 
 Property read name as string use $name
 Property Read hidden as boolean use $hidden = false
+Property TheCpu as Variant use $TheCpu
 
 ResetFORM As Form
 ResetButton as button
 
-event reset()
-event irq()
-event nmi()
-event halt(Reason as string)
+' event reset()
+' event irq()
+' event nmi()
+' event halt(Reason as string)
 
 public sub _new(address as long, len as long, parameters as string)
 
@@ -69,12 +66,14 @@ Sub openResetWindow(optional thetitle as string = "6502 Big Reset Button")
 End
 
 Public Sub MyButton_click()
-    raise reset()
+    'raise reset()
+    $TheCpu.ResetPending = True
+    $TheCpu.InteruptPending = True
 end
 
 Public sub MyResetButton_resize()
-    ResetButton.h = ResetForm.h
-    ResetButton.w = ResetForm.w
+    ResetButton.h = ResetForm.h - 2
+    ResetButton.w = ResetForm.w - 2
 end
 
 Public Sub MyResetButton_hide()
@@ -87,6 +86,8 @@ Public Sub MyResetButton_open()
   ResetForm.y = Settings["ResetForm/Window/Y", 200]
   ResetForm.h = Settings["ResetForm/Window/H", 100]
   ResetForm.w = Settings["ResetForm/Window/w", 150]
+  ResetButton.x = 1
+  ResetButton.y = 1
   ResetButton.h = ResetForm.h
   ResetButton.w = ResetForm.w
 

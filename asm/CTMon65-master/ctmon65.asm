@@ -30,7 +30,7 @@
 ; Current version and revision
 ;
 VERSION		equ	0
-REVISION	equ	3
+REVISION	equ	4
 ;
 ;---------------------------------------------------------
 ; ASCII constants
@@ -206,8 +206,9 @@ RESET		ldx	#$ff
 		db	VERSION+'0,'.
 		db	REVISION+'0
 		db	CR,LF
-		db	"09/20/2018 by Bob Applegate K2UT"
-		db	", bob@corshamtech.com"
+		db	"04/13/2022 by Bob Applegate K2UT/JustLostInTime"
+		db	CR,LF
+		db	"Authors: bob@corshamtech.com, https://github.com/justlostintime/em6502"
 		db	CR,LF,LF,0
 ;
 ;---------------------------------------------------------

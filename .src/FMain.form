@@ -62,7 +62,7 @@
     Text = ("Run")
   }
   { StepNow Button
-    MoveScaled(102,74,13,4)
+    MoveScaled(102,74,7,4)
     Enabled = False
     ToolTip = ("Step to next instruction\nIf in run mode stop cpu, enter sigle step mode\n")
     Text = ("Step")
@@ -231,12 +231,12 @@
     Text = ("Start")
   }
   { resetCpu Button
-    MoveScaled(118,79,9,4)
+    MoveScaled(111,79,6,4)
     ToolTip = ("Resets the CPU and all devices")
     Text = ("Reset")
   }
   { NmiCpu Button
-    MoveScaled(118,74,9,4)
+    MoveScaled(111,74,6,4)
     ToolTip = ("Send an NMI to the Computer/CPU")
     Text = ("NMI")
   }
@@ -435,7 +435,7 @@
     Text = ("Speed Control")
   }
   { GoNow Button
-    MoveScaled(102,79,13,4)
+    MoveScaled(102,79,7,4)
     Enabled = False
     ToolTip = ("Start cpu at address provided by Start Address \nif no address then start cpu at next instruction\nif in sigle step mode change to run mode and\ncontinue at next instruction")
     Text = ("Go")
@@ -557,5 +557,10 @@
     ToolTip = ("When enabled The Cpu will report  invalid\nread and write memory access")
     Text = ("Enable Memory Checking")
     Value = CheckBox.True
+  }
+  { IrqCpu Button
+    MoveScaled(118,74,6,4)
+    ToolTip = ("Send an IRQ to the Computer/CPU")
+    Text = ("IRQ")
   }
 }

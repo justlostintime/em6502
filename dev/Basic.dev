@@ -16,10 +16,10 @@ DevMemory as byte[500]
 
 Property read Name as string use $name
 
-Event IRQ()           ' Device can create an IRQ
-Event NMI()           ' Device can create an NMI
-Event Reset()         ' Device can force a reset of the CPU
-Event Halt()          ' A device can raise this event to terminate the computer session
+Event IRQ()                                ' Device can create an IRQ
+Event NMI()                                ' Device can create an NMI
+Event Reset()                              ' Device can force a reset of the CPU
+Event Halt(Reason as string)          ' A device can raise this event to terminate the computer session
 
 public sub _new(address as long, len as long, parameters as string)
 
@@ -47,7 +47,7 @@ end
 'the cpu keeps its own dictionary of device addresses
 Public Sub _InRange(Address As Long) As Boolean
 
-  If Address >= MemoryStart And Address <= MemoryEnd Then Return True
+  If Address >= $MemoryStart And Address <= $MemoryEnd Then Return True
   Return False
 
 End

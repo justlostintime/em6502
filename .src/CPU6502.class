@@ -56,7 +56,7 @@ Event breakpoint(pc As Long)
 Event BinaryLoaded(address As Long, BinName As String, info As String)
 Event Abort(Reason As String)
 
-Public Sub _new()
+Fast Unsafe Public Sub _new()
 
   Debug Disassembler.version
   $TotalCycles = 0
@@ -72,7 +72,7 @@ Public Sub _new()
 
 End
 
-Public Sub _free()
+Fast Unsafe Public Sub _free()
 
   CpuClock.enabled = False
 
@@ -96,8 +96,7 @@ Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
 
 End
 
-
-Public Sub Halt()
+Fast Unsafe Public Sub Halt()
 
   SingleStep = True
   $Halted = True
@@ -149,7 +148,6 @@ Fast Unsafe Public Sub WriteBytes(buffer As Byte[], address As Long, length As I
   AddressBus = sab
 
 End
-
 
 Fast Unsafe Public Sub LoadMemory(FileName As String)
 
@@ -238,7 +236,7 @@ Fast Unsafe Public Sub Run()
 End
 
 '' Create an event with all the information needed to display the next Instruction with status
-Sub StepInfo()
+Fast Unsafe Sub StepInfo()
 
   LastTraceInstruction = Left(Disassembler.Inst(Me, pc) & Space(40), 40) & "->[" & SRText() & "] " & Hex(ac, 2) & " " & Hex(X, 2) & " " & Hex(Y, 2) & " " & "1" & Hex(sp, 2)
   Raise NextInst(LastTraceInstruction)
@@ -248,7 +246,7 @@ End
 FlagsOn As String[] = ["C", "Z", "I", "D", "B", "-", "V", "N"]
 FlagsOff As String[] = ["c", "z", "i", "d", "b", "-", "v", "n"]
 
-Sub SRText() As String
+Fast Unsafe Sub SRText() As String
 
   Dim flag As String = ""
 
@@ -428,6 +426,10 @@ Fast Unsafe Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optio
 
   Dim dev As Object = Device.New(params)
 
+  If Device.Exist("TheCpu") Then
+    dev.TheCpu = Me
+  Endif
+
   object.attach(dev, Me, "MyDevice")
 
   AddressMap.Add(Dev)
@@ -606,17 +608,19 @@ End
 Fast Unsafe Public Sub NMI()
 
   $NMIPending = False
+
   interupt(&H0FFFA)
-  SR = BSet(sr, 2)
+  SR = BSet(sr, 2)                                                     ' disable the IRQ
 
 End
 
-Fast Unsafe Public Sub IRQ()
+Public Sub IRQ()
 
   $IRQPending = False
   If BTst(sr, 2) Then Return                          ' Ignore this if the irq is disabled
+
   interupt(&h0FFFE)
-  SR = BSet(sr, 2)
+  SR = BSet(sr, 2)                                             ' Disable the IRQ, restored upon irq return
 
 End
 
@@ -624,6 +628,7 @@ Fast Unsafe Public Sub BRK()
 
   sr = BSet(sr, 4)
   interupt(&H0FFFE)
+  SR = BSet(sr, 2)                                                     ' disable the IRQ
 
 End
 
@@ -711,7 +716,7 @@ Fast Unsafe Public Sub SbcDecMode()
 
 End
 
-Sub SetBcd(Value As Integer) ' ignore the extra 100's value
+Fast Unsafe Sub SetBcd(Value As Integer) ' ignore the extra 100's value
 
   Dim ones As Integer = Value Mod 10
   Dim tens As Integer = (value \ 10) Mod 10
@@ -800,40 +805,40 @@ Fast Unsafe Public Sub Poke(addr As Long, value As Integer)
 
 End
 
-Private Function SpeedScaler_Read() As Long
+Fast Unsafe Private Function SpeedScaler_Read() As Long
 
   Return $SpeedScaler
 
 End
 
-Private Sub SpeedScaler_Write(Value As Long)
+Fast Unsafe Private Sub SpeedScaler_Write(Value As Long)
 
   $SpeedScaler = value
 
 End
 
-Public Sub MyDevice_halt(Reason As String)
+Fast Unsafe Public Sub MyDevice_halt(Reason As String)
 
   Halt()
   Print Reason
 
 End
 
-Public Sub MyDevice_IRQ()
+Fast Unsafe Public Sub MyDevice_IRQ()
 
   $IRQPending = True
   $InteruptPending = True
 
 End
 
-Public Sub MyDevice_NMI()
+Fast Unsafe Public Sub MyDevice_NMI()
 
   $NMIPending = True
   $InteruptPending = True
 
 End
 
-Public Sub MyDevice_Reset()
+Fast Unsafe Public Sub MyDevice_Reset()
 
   $ResetPending = True
   $InteruptPending = True
@@ -841,13 +846,13 @@ Public Sub MyDevice_Reset()
 End
 
 
-Private Function Profiling_Read() As Boolean
+Fast Unsafe Private Function Profiling_Read() As Boolean
 
   Return $Profiling
 
 End
 
-Private Sub Profiling_Write(Value As Boolean)
+Fast Unsafe Private Sub Profiling_Write(Value As Boolean)
 
   If Value = True Then
     InstProfile = New Profiler(Me)
@@ -858,7 +863,7 @@ Private Sub Profiling_Write(Value As Boolean)
 
 End
 
-Private Function ProfileInfo_Read() As String[]
+Fast Unsafe Private Function ProfileInfo_Read() As String[]
 
   If InstProfile Then
     Return InstProfile.report()

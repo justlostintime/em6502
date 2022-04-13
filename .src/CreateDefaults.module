@@ -38,6 +38,22 @@ Public Sub _call()
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp.Save(.AsmComputerDefinitions)
 
+      Comp = New ComputerDef
+      Comp.Name = "CTMONTIMER"
+      Comp.Speed = 500
+      Comp.AutoStart = &h0200
+      Comp.AutoStartActive = True
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "useirq.bin"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Timer at $E020"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp["IrqTimer"] = [&h0E020, 5, "1000"]
+      Comp["ResetButton"] = [0, 0, "Reset button"]
+      Comp["HaltButton"] = [0, 0, "Quit Button"]
+      Comp["NMIButton"] = [0, 0, "NMI Button"]
+      Comp["IrqButton"] = [0, 0, "IRQ Button"]
+      Comp.Save(.AsmComputerDefinitions)
+
     Endif
 
     copyDirectory("dev", .AsmDeviceDirectory)
