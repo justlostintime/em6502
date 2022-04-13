@@ -1,0 +1,220 @@
+------- FILE useirq.asm LEVEL 1 PASS 2
+      1  029e				   input      processor	6502
+      2  029e ????						;=====================================================
+      3  029e ????						;UseIrq is a sample program that enables the IRQ for the
+      4  029e ????						;Emulator and then prints a star each time the
+      5  029e ????						;irq arrives.
+      6  029e ????						; 04/13/2022 https://github.com/justlostintime/em6502
+      7  029e ????						;=====================================================
+      8  029e ????						;   Need to define some macros for the dasm assembler
+      9  029e ????						;
+     10  029e ????				      MACRO	dw
+     11  029e ????				      .word	{0}
+     12  029e ????				      ENDM
+     13  029e ????
+     14  029e ????				      MACRO	db
+     15  029e ????				      .byte	{0}
+     16  029e ????				      ENDM
+     17  029e ????						;
+     18  029e ????						; Common ASCII constants
+     19  029e ????						;
+     20  029e ????	       00 07	   BEL	      equ	$07
+     21  029e ????	       00 08	   BS	      equ	$08
+     22  029e ????	       00 09	   TAB	      equ	$09
+     23  029e ????	       00 0a	   LF	      equ	$0A
+     24  029e ????	       00 0d	   CR	      equ	$0D
+     25  029e ????	       00 22	   QUOTE      equ	$22
+     26  029e ????	       00 20	   SPACE      equ	$20
+     27  029e ????	       00 2c	   COMMA      equ	',
+     28  029e ????	       00 3b	   SEMICOLON  equ	';
+     29  029e ????						;=====================================================
+     30  029e ????						;
+     31  029e ????				      SEG	Code
+     32  0200					      org	$0200
+     33  0200		       4c 12 02    UseIrq     jmp	CodeStart	; jump around the vectors
+     34  0203
+------- FILE ctmon65.inc LEVEL 2 PASS 2
+      0  0203					      include	"ctmon65.inc"
+      1  0203							;*********************************************************
+      2  0203							; FILE: ctmon65.inc
+      3  0203							;
+      4  0203							; Applications wishing to run under CTMON65 should include
+      5  0203							; this file, as it defines vectors and other pieces of
+      6  0203							; necessary data.
+      7  0203							;*********************************************************
+      8  0203							;
+------- FILE config.inc LEVEL 3 PASS 2
+      0  0203					      include	"config.inc"
+      1  0203					      Processor	6502
+      2  0203							;*********************************************************
+      3  0203							; FILE: config.inc
+      4  0203							;
+      5  0203							; General configuration file
+      6  0203							;*********************************************************
+      7  0203							;
+      8  0203		       00 00	   FALSE      equ	0
+      9  0203		       00 01	   TRUE       equ	!FALSE
+     10  0203							;
+     11  0203							; SS-50 bus constants
+     12  0203							;
+     13  0203		       e0 00	   IO_BASE    equ	$E000
+     14  0203		       00 10	   IO_SIZE    equ	16
+     15  0203							;
+     16  0203							; Memory usage
+     17  0203							;
+     18  0203		       00 f0	   ZERO_PAGE_START equ	$00f0
+     19  0203		       f0 00	   ROM_START  equ	$f000
+     20  0203		       df 00	   RAM_START  equ	$df00
+     21  0203							;
+     22  0203							; If enabled, turn on buffered input code.
+     23  0203							;
+     24  0203		       00 00	   BUFFERED_INPUT equ	FALSE
+     25  0203							;
+     26  0203		       00 05	   MAX_ARGC   equ	5
+     27  0203							;
+     28  0203							; If enabled, the debugger will display the flag register
+     29  0203							; in ASCII.  Nice, but takes more code.
+     30  0203							;
+     31  0203		       00 01	   FULL_STATUS equ	TRUE
+     32  0203							;
+     33  0203							; Enable EXTENDED_CMDS to allow linking external commands
+     34  0203							; to the command handler.
+     35  0203							;
+     36  0203		       00 00	   EXTENDED_CMDS equ	FALSE
+     37  0203							;
+     38  0203							; Define to enable SD related functions
+     39  0203							;
+     40  0203		       00 01	   SD_ENABLED equ	TRUE
+     41  0203							;
+     42  0203							; Size of the keyboard buffer
+     43  0203							;
+     44  0203		       00 84	   BUFFER_SIZE equ	132
+     45  0203
+------- FILE ctmon65.inc
+     10  0203							;
+     11 Uf048 ????				      SEG.U	rom
+     12 Uf000					      org	ROM_START
+     13 Uf000							;
+     14 Uf000							;=========================================================
+     15 Uf000							; Jump table to common functions.  The entries in this
+     16 Uf000							; table are used by external programs, so nothing can be
+     17 Uf000							; moved or removed from this table.  New entries always
+     18 Uf000							; go at the end.  Many of these are internal functions
+     19 Uf000							; and I figured they might be handy for others.
+     20 Uf000							;
+     21 Uf000		       00 00 00    RESET      ds	3
+     22 Uf003		       00 00 00    WARM       ds	3
+     23 Uf006							;
+     24 Uf006							; These are the major and minor revision numbers so that
+     25 Uf006							; code can check to see which CTMON65 version is running.
+     26 Uf006							;
+     27 Uf006		       00	   CTMON65ver ds	1
+     28 Uf007		       00	   CTMON65rev ds	1
+     29 Uf008		       00		      ds	1	;unused
+     30 Uf009							;
+     31 Uf009							; Console related functions
+     32 Uf009							;
+     33 Uf009		       00 00 00    cin	      ds	3
+     34 Uf00c		       00 00 00    cout       ds	3
+     35 Uf00f		       00 00 00    cstatus    ds	3
+     36 Uf012		       00 00 00    putsil     ds	3
+     37 Uf015		       00 00 00    getline    ds	3
+     38 Uf018		       00 00 00    crlf       ds	3
+     39 Uf01b		       00 00 00    HexA       ds	3
+     40 Uf01e							;
+     41 Uf01e							; Low-level functions to access the SD card system
+     42 Uf01e							;
+     43 Uf01e					      if	SD_ENABLED	;SD ENABLED
+     44 Uf01e		       00 00 00    xParInit   ds	3
+     45 Uf021		       00 00 00    xParSetWrite ds	3
+     46 Uf024		       00 00 00    xParSetRead ds	3
+     47 Uf027		       00 00 00    xParWriteByte ds	3
+     48 Uf02a		       00 00 00    xParReadByte ds	3
+     49 Uf02d							;
+     50 Uf02d							; Higher level SD card functions
+     51 Uf02d							;
+     52 Uf02d		       00 00 00    DiskPing   ds	3
+     53 Uf030		       00 00 00    DiskDir    ds	3
+     54 Uf033		       00 00 00    DiskDirNext ds	3
+     55 Uf036		       00 00 00    DiskOpenRead ds	3
+     56 Uf039		       00 00 00    DiskOpenWrite ds	3
+     57 Uf03c		       00 00 00    DiskRead   ds	3
+     58 Uf03f		       00 00 00    DiskWrite  ds	3
+     59 Uf042		       00 00 00    DiskClose  ds	3
+     60 Uf045		       00 00 00    DiskRmFile ds	3
+     61 Uf048					      endif		;SD_ENABLED
+     62 Uf048
+     63 Uf048							;
+     64 Udf8e ????				      SEG.U	Data
+     65 Udf00					      org	RAM_START
+     66 Udf00							;
+     67 Udf00							; The use of memory starting from here will remain
+     68 Udf00							; constant through different versions of CTMON65.
+     69 Udf00							;
+     70 Udf00		       00 00	   IRQvec     ds	2
+     71 Udf02		       00 00	   NMIvec     ds	2
+     72 Udf04							;
+     73 Udf04							; Before a L(oad) command, these are set to $FF.
+     74 Udf04							; After loading, if they are different, jump to
+     75 Udf04							; that address.
+     76 Udf04							;
+     77 Udf04		       00 00	   AutoRun    ds	2
+     78 Udf06							;
+     79 Udf06							; Pointer to the subroutine that gets the next input
+     80 Udf06							; character.  Used for doing disk/console input.
+     81 Udf06							;
+     82 Udf06		       00 00	   inputVector ds	2
+     83 Udf08							;
+     84 Udf08							; Same thing for output.
+     85 Udf08							;
+     86 Udf08		       00 00	   outputVector ds	2
+     87 Udf0a							;
+     88 Udf0a							; Buffer for GETLINE
+     89 Udf0a							;
+     90 Udf0a		       00 00 00 00*buffer     ds	BUFFER_SIZE
+------- FILE useirq.asm
+     36  0203					      SEG	Code
+     37  0203
+     38  0203		       4c 0c f0    OUTCH      jmp	cout
+     39  0206		       4c 09 f0    GETCH      jmp	cin
+     40  0209		       4c 18 f0    CRLF       jmp	crlf
+     41  020c		       4c 1b f0    OUTHEX     jmp	HexA
+     42  020f		       4c 03 f0    MONITOR    jmp	WARM
+     43  020f		       f0 12	   puts       equ	putsil
+     44  0212
+     45  0212		       20 12 f0    CodeStart  jsr	puts
+      0  0215					      db	CR,LF,CR,LF
+      1  0215		       0d 0a 0d 0a	      .byte.b	CR,LF,CR,LF
+      0  0219					      db	"IRQ Test app Version 1.0.1"
+      1  0219		       49 52 51 20*	      .byte.b	"IRQ Test app Version 1.0.1"
+      0  0233					      db	CR,LF
+      1  0233		       0d 0a		      .byte.b	CR,LF
+      0  0235					      db	"https://github.com/justlostintime/em6502"
+      1  0235		       68 74 74 70*	      .byte.b	"https://github.com/justlostintime/em6502"
+      0  025d					      db	CR,LF,0
+      1  025d		       0d 0a 00 	      .byte.b	CR,LF,0
+     51  0260		       a9 78		      lda	#ServiceIrq&$ff	;Irq Service function
+     52  0262		       8d 00 df 	      sta	IRQvec
+     53  0265		       a9 02		      lda	#ServiceIrq>>8
+     54  0267		       8d 01 df 	      sta	IRQvec+1
+     55  026a		       a9 8b		      lda	#ServiceNmi&$ff	;Nmi Service function
+     56  026c		       8d 02 df 	      sta	NMIvec
+     57  026f		       a9 02		      lda	#ServiceNmi>>8
+     58  0271		       8d 03 df 	      sta	NMIvec+1
+     59  0274		       58		      cli
+     60  0275		       4c 0f 02 	      jmp	MONITOR
+     61  0278
+     62  0278		       20 12 f0    ServiceIrq jsr	puts
+      0  027b					      db	"IRQ Recieved"
+      1  027b		       49 52 51 20*	      .byte.b	"IRQ Recieved"
+      0  0287					      db	CR,LF,0
+      1  0287		       0d 0a 00 	      .byte.b	CR,LF,0
+     65  028a		       40		      rti
+     66  028b
+     67  028b		       20 12 f0    ServiceNmi jsr	puts
+      0  028e					      db	"NMI Recieved"
+      1  028e		       4e 4d 49 20*	      .byte.b	"NMI Recieved"
+      0  029a					      db	CR,LF,0
+      1  029a		       0d 0a 00 	      .byte.b	CR,LF,0
+     70  029d		       40		      rti
+     71  029e

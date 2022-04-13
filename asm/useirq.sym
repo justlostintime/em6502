@@ -1,0 +1,65 @@
+--- Symbol List (sorted by symbol)
+AutoRun                  df04                  
+BEL                      0007                  
+BS                       0008                  
+buffer                   df0a                  
+BUFFER_SIZE              0084              (R )
+BUFFERED_INPUT           0000                  
+cin                      f009              (R )
+CodeStart                0212              (R )
+COMMA                    002c                  
+cout                     f00c              (R )
+CR                       000d              (R )
+crlf                     f018              (R )
+CRLF                     0209                  
+cstatus                  f00f                  
+CTMON65rev               f007                  
+CTMON65ver               f006                  
+DiskClose                f042                  
+DiskDir                  f030                  
+DiskDirNext              f033                  
+DiskOpenRead             f036                  
+DiskOpenWrite            f039                  
+DiskPing                 f02d                  
+DiskRead                 f03c                  
+DiskRmFile               f045                  
+DiskWrite                f03f                  
+EXTENDED_CMDS            0000                  
+FALSE                    0000              (R )
+FULL_STATUS              0001                  
+GETCH                    0206                  
+getline                  f015                  
+HexA                     f01b              (R )
+inputVector              df06                  
+IO_BASE                  e000                  
+IO_SIZE                  0010                  
+IRQvec                   df00              (R )
+LF                       000a              (R )
+MAX_ARGC                 0005                  
+MONITOR                  020f              (R )
+NMIvec                   df02              (R )
+OUTCH                    0203                  
+OUTHEX                   020c                  
+outputVector             df08                  
+puts                     f012              (R )
+putsil                   f012              (R )
+QUOTE                    0022                  
+RAM_START                df00              (R )
+RESET                    f000                  
+ROM_START                f000              (R )
+SD_ENABLED               0001              (R )
+SEMICOLON                003b                  
+ServiceIrq               0278              (R )
+ServiceNmi               028b              (R )
+SPACE                    0020                  
+TAB                      0009                  
+TRUE                     0001              (R )
+UseIrq                   0200                  
+WARM                     f003              (R )
+xParInit                 f01e                  
+xParReadByte             f02a                  
+xParSetRead              f024                  
+xParSetWrite             f021                  
+xParWriteByte            f027                  
+ZERO_PAGE_START          00f0                  
+--- End of Symbol List.
