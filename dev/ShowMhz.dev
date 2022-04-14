@@ -1,0 +1,111 @@
+' Gambas class file
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+'' Device Status Button
+'' Send an Status to the CPU
+
+fast unsafe
+use "gb.form"
+
+Public MemoryStart As Long = 0
+Public MemoryEnd As Long = 0
+Public MemoryLen As Long = 0
+Public MyObs As Observer
+
+Property read name as string use $name
+Property Read hidden as boolean use $hidden = false
+Property TheCpu as Variant use $TheCpu
+
+StatusFORM As Form
+StatusInfo as TextBox
+StatusUpdate as timer
+
+' event Reset()
+' event IRQ()
+' event nmi()
+' event halt(Reason as string)
+
+public sub _new(address as long, len as long, parameters as string)
+
+  $NAME="ShowMhz"
+  OpenStatusWindow(parameters)
+  StatusUpdate = new timer as "MyStatusTimer"
+  StatusUpdate.delay = val(trim(parameters))
+  StatusUpdate.enabled = true
+  
+end
+
+Public sub _get() as variant
+   return 0
+end
+
+Public sub _put(value as variant)
+end
+
+Public sub halt()
+
+   debug "closing the Mhz Display"
+   StatusForm.Persistent = false
+   StatusUpdate.Stop()
+   StatusFORM.close()
+   $TheCpu = null
+   StatusUpdate = null
+   
+end
+
+Sub openStatusWindow(optional thetitle as string = "Cpu Speed")
+
+  StatusForm = New Form As "MyStatusInfo"
+  StatusForm.title = "Cpu Speed"
+  StatusForm.Maximized = false
+  StatusForm.Minimized = false
+  StatusForm.persistent = true
+
+  StatusInfo = new TextBox(StatusForm) as "MyButton"
+  StatusInfo.Alignment = align.right
+  StatusInfo.text = "Getting CPU Mhz"
+  MyStatusInfo_open()
+  StatusForm.show()
+  wait
+
+End
+
+Public sub MyStatusInfo_resize()
+    StatusInfo.h = StatusForm.h - 2
+    StatusInfo.w = StatusForm.w - 2
+end
+
+Public Sub MyStatusInfo_hide()
+    if StatusForm.Persistent = true then StatusForm.show()
+END
+
+Public Sub MyStatusInfo_open()
+
+  StatusForm.x = Settings["StatusForm/Window/X", 200]
+  StatusForm.y = Settings["StatusForm/Window/Y", 200]
+  StatusForm.h = Settings["StatusForm/Window/H", 40]
+  StatusForm.w = Settings["StatusForm/Window/w", 100]
+  StatusInfo.x = 1
+  StatusInfo.y = 1
+  StatusInfo.h = StatusForm.h
+  StatusInfo.w = StatusForm.w
+
+End
+
+Public Sub MyStatusInfo_close()
+
+  Settings["StatusForm/Window/X"] = StatusForm.X
+  Settings["StatusForm/Window/Y"] = StatusForm.y
+  Settings["StatusForm/Window/H"] = StatusForm.h
+  Settings["StatusForm/Window/w"] = StatusForm.w
+
+End
+
+Public Sub MyStatusTimer_timer()
+    StatusInfo.text = Format(CFloat($TheCpu.CyclesPerSecond) / 1000000.00, "#0.00000")&"mhz"
+    StatusInfo.Refresh()
+    Wait
+End

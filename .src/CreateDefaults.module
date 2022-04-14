@@ -48,10 +48,13 @@ Public Sub _call()
       Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Timer at $E020"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["IrqTimer"] = [&h0E020, 5, "1000"]
+      Comp["CycleTimer"] = [&h0E030, 5, "5000"]
       Comp["ResetButton"] = [0, 0, "Reset button"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp["NMIButton"] = [0, 0, "NMI Button"]
       Comp["IrqButton"] = [0, 0, "IRQ Button"]
+      Comp["ShowMhz"] = [0, 0, "3000"]
+
       Comp.Save(.AsmComputerDefinitions)
 
     Endif

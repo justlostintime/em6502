@@ -83,6 +83,7 @@
     }
     { pc_info TextBox
       MoveScaled(8,7,20,4)
+      ReadOnly = True
     }
     { Label3 Label
       MoveScaled(1,11,6,4)
@@ -90,6 +91,7 @@
     }
     { sp_info TextBox
       MoveScaled(8,11,20,4)
+      ReadOnly = True
     }
     { Label4 Label
       MoveScaled(1,15,6,4)
@@ -97,6 +99,7 @@
     }
     { AC_info TextBox
       MoveScaled(8,15,20,4)
+      ReadOnly = True
     }
     { Label5 Label
       MoveScaled(1,19,6,4)
@@ -104,6 +107,7 @@
     }
     { x_Info TextBox
       MoveScaled(8,19,20,4)
+      ReadOnly = True
     }
     { Label6 Label
       MoveScaled(1,23,7,4)
@@ -111,6 +115,7 @@
     }
     { Y_info TextBox
       MoveScaled(8,23,20,4)
+      ReadOnly = True
     }
     { Label7 Label
       MoveScaled(4,39,24,4)
@@ -154,15 +159,19 @@
     }
     { SR_info TextBox
       MoveScaled(2,42,17,4)
+      ReadOnly = True
     }
     { Total_inst TextBox
       MoveScaled(2,30,17,4)
+      ReadOnly = True
     }
     { AddrBus_Info TextBox
       MoveScaled(11,71.1429,23,4)
+      ReadOnly = True
     }
     { DataBus_INFO TextBox
       MoveScaled(11,75,10,4)
+      ReadOnly = True
     }
     { Label8 Label
       MoveScaled(1,71.1429,9,5)
@@ -185,6 +194,7 @@
     { !InstructionsPerSecond TextBox
       MoveScaled(20,30,14,4)
       #Public = True
+      ReadOnly = True
     }
     { Label16 Label
       MoveScaled(20,33,13,4)
@@ -196,14 +206,17 @@
     }
     { TotalCycles TextBox
       MoveScaled(2,36,17,4)
+      ReadOnly = True
     }
     { CyclesPerSecond TextBox
       MoveScaled(20,36,14,4)
+      ReadOnly = True
     }
     { MHZ TextBox
       MoveScaled(20,42,11,4)
       ToolTip = ("Displays the the emulated speed of the cpu\nthis is calculated from the number of cpu cycles per\nsecond the emulateris able to execute.\nIt seems to be able to run at a maximum speed\nof about 4.1MHZ on a 2GHZ computer.\nYour milage may vary!")
       Alignment = Align.Right
+      ReadOnly = True
     }
     { Label18 Label
       MoveScaled(31,42,4,4)

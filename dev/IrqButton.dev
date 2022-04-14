@@ -46,6 +46,7 @@ Public sub halt()
    debug "closing the Irq button"
    IrqForm.Persistent = false
    IrqFORM.close()
+   $TheCpu = null
 
 end
 
@@ -99,5 +100,5 @@ Public Sub MyIrqButton_close()
   Settings["IrqForm/Window/Y"] = IrqForm.y
   Settings["IrqForm/Window/H"] = IrqForm.h
   Settings["IrqForm/Window/w"] = IrqForm.w
-
+  
 End

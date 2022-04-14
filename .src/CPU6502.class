@@ -6,15 +6,15 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-Public PC As Long = &H0000                ' Program counter
+Public PC As Long = &H0000             ' Program counter
 Public SP As Byte = &HFF                   ' Stack Pointer 0x100-0x1ff 256 bytes fifo
 
 Public SR As Byte = (1 Shl 3)             ' Status Register start with irq disabled
 Public Enum SR_Carry, SR_Zero, SR_Interrupt, SR_Decimal, SR_Break, SR_Ignored, SR_Overflow, SR_Negative
 
-Public AC As Byte = &h0                  ' Acumulator
-Public X As Byte = &h0                   ' X register
-Public Y As Byte = &h0                   ' Y Register
+Public AC As Byte = &h0                    ' Acumulator
+Public X As Byte = &h0                       ' X register
+Public Y As Byte = &h0                       ' Y Register
 
 Public DataBus As Integer = &h0          ' Data on databus
 Public AddressBus As Long = &h0          ' Address Bus current address
@@ -28,19 +28,19 @@ Property ChkBadMemAccess As Boolean Use $ChkBadMemAccess = True ' turn on or off
 Public AddressMap As New Object[]        ' Address bus map object pointers
 maphigh As New Long[]
 maplow As New Long[]
-Public SingleStep As Boolean             ' Turn On single step mode
-Public DisplayStatus As Boolean          ' Turn On the status screen
-Public DisplayInstruction As Boolean     ' Cause the instruction to be executed to be displayed to the trace screen
-Public LastTraceInstruction As String    ' When trace is on this will contain the last data
-Public TotalInstructions As Long = 0     ' Number of instructions executed
+Public SingleStep As Boolean                                                                                  ' Turn On single step mode
+Public DisplayStatus As Boolean                                                                            ' Turn On the status screen
+Public DisplayInstruction As Boolean                                                                   ' Cause the instruction to be executed to be displayed to the trace screen
+Public LastTraceInstruction As String                                                                   ' When trace is on this will contain the last data
+Public TotalInstructions As Long = 0                                                                     ' Number of instructions executed
 Property Read InstructionsPerSecond As Long Use $InstructionsPerSecond ' Number of instructions executed per second
 
-Public CpuClock As Timer       ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
+Public CpuClock As Timer                                                                                          ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
 
 Property Read CyclesPerSecond As Long Use $CyclesPerSecond               ' will track the actual number of cycles per second
-Property Read TotalCycles As Long Use $TotalCycles                       ' Total Number of Cycles executed
+Property Read TotalCycles As Long Use $TotalCycles                                     ' Total Number of Cycles executed
 
-Property SpeedScaler As Long Use $SpeedScaler                     ' use this as each cpu we run on may have a different clock
+Property SpeedScaler As Long Use $SpeedScaler                                             ' use this as each cpu we run on may have a different clock
 Property InteruptPending As Boolean Use $InteruptPending = False
 Property IRQPending As Boolean Use $IRQPending = False
 Property NMIPending As Boolean Use $NMIPending = False
@@ -49,6 +49,10 @@ Property Halted As Boolean Use $Halted = False
 Property Profiling As Boolean Use $Profiling = False
 Property Read ProfileInfo As String[]
 Property cpu65c02 As Boolean Use $cpu65c02 = False
+
+Property MillisecondTicks As Long Use $MillisecondTicks = 2000              ' based upon @mhz oscillator speed
+Property ExternalOssilator As Variant Use $ExternalOssilator = Null        ' will callback to this each millisecond
+Private OssilatorCounter As Long = 0                                                                    ' This is the counter used by the cpu to queue the call to ossilator
 
 Event StatusInfo(information As Cpustatus)
 Event NextInst(Inst As String)
@@ -63,12 +67,11 @@ Fast Unsafe Public Sub _new()
   $CyclesPerSecond = 0
   $InstructionsPerSecond = 0
   CpuClock = New Timer As "MyClock"
-  CpuClock.Delay = 10
+  CpuClock.Delay = 1000
   CpuClock.enabled = True
-  $SpeedScaler = 2
+  $SpeedScaler = 500
   $BreakPoints = False
   BreakPointList = New Long[]
-
 
 End
 
@@ -80,31 +83,27 @@ End
 
 Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
 
-  Static OneSecondTimer As Long = 0
   Static StartInstructionCount As Long = 0
   Static StartCycleCount As Long = 0
 
-  If OneSecondTimer = 99 Then
-    OneSecondTimer = 0
-    $InstructionsPerSecond = TotalInstructions - StartInstructionCount
-    StartInstructionCount = TotalInstructions
-    $CyclesPerSecond = $TotalCycles - StartCycleCount
-    StartCycleCount = $TotalCycles
-  Else
-    Inc OneSecondTimer
-  Endif
+
+  $InstructionsPerSecond = TotalInstructions - StartInstructionCount
+  StartInstructionCount = TotalInstructions
+  $CyclesPerSecond = $TotalCycles - StartCycleCount
+  StartCycleCount = $TotalCycles
 
 End
 
 Fast Unsafe Public Sub Halt()
 
+  CpuClock.Enabled = False                                              ' Stop the cpu internal clock
   SingleStep = True
   $Halted = True
   Wait 0.001
-  CpuClock.Enabled = False
   For Each o As Object In AddressMap
     If Object.Class(o).Exist("halt") Then
-      o.halt()                                 ' tell each device to shutdown if needed
+      o.halt()                                                                                ' tell each device to shutdown if needed
+      Wait 0.001
     Endif
   Next
 
@@ -208,6 +207,15 @@ Fast Unsafe Public Sub Run()
         IRQ()
         CycleCount += 5
       Endif
+    Endif
+
+    If OssilatorCounter = 0 Then
+      OssilatorCounter = $MillisecondTicks
+      If $ExternalOssilator Then                              '  If some device want emulated millisecond ticks
+        $ExternalOssilator.Tick()
+      Endif
+    Else
+      Dec OssilatorCounter
     Endif
 
     ExecuteInstruction()
@@ -428,6 +436,9 @@ Fast Unsafe Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optio
 
   If Device.Exist("TheCpu") Then
     dev.TheCpu = Me
+    If Device.Exist("CpuInit") Then
+      dev.CpuInit()
+    Endif
   Endif
 
   object.attach(dev, Me, "MyDevice")
@@ -785,7 +796,6 @@ Fast Unsafe Public Sub OraAc()
 
 End
 
-
 Fast Unsafe Public Sub Peek(Addr As Long) As Byte
 
   Dim dev As Object
@@ -845,7 +855,6 @@ Fast Unsafe Public Sub MyDevice_Reset()
 
 End
 
-
 Fast Unsafe Private Function Profiling_Read() As Boolean
 
   Return $Profiling
@@ -870,3 +879,4 @@ Fast Unsafe Private Function ProfileInfo_Read() As String[]
   Endif
 
 End
+

@@ -12,10 +12,10 @@
     Value = True
   }
   { ShowInfo Button
-    MoveScaled(58,1,21,4)
+    MoveScaled(53,1,26,4)
     Enabled = False
     ToolTip = ("Display Current profile Information\nYou do not need to stop profiling to\nget the current information from the profiler.\n")
-    Text = ("Show Profile Info")
+    Text = ("Show/Update Profile Info")
   }
   { Label1 Label
     MoveScaled(82,1,20,4)

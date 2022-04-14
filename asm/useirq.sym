@@ -15,6 +15,11 @@ CRLF                     0209
 cstatus                  f00f                  
 CTMON65rev               f007                  
 CTMON65ver               f006                  
+CycleTime                e030              (R )
+Cycletime                0000 ????         (R )
+CycleTime_Ack            e033              (R )
+Cycletime_Period         0001 ????             
+cycletimer               02a4              (R )
 DiskClose                f042                  
 DiskDir                  f030                  
 DiskDirNext              f033                  
@@ -24,6 +29,7 @@ DiskPing                 f02d
 DiskRead                 f03c                  
 DiskRmFile               f045                  
 DiskWrite                f03f                  
+ExitIrq                  02f5              (R )
 EXTENDED_CMDS            0000                  
 FALSE                    0000              (R )
 FULL_STATUS              0001                  
@@ -38,6 +44,7 @@ LF                       000a              (R )
 MAX_ARGC                 0005                  
 MONITOR                  020f              (R )
 NMIvec                   df02              (R )
+NotTimer                 02c5              (R )
 OUTCH                    0203                  
 OUTHEX                   020c                  
 outputVector             df08                  
@@ -47,11 +54,15 @@ QUOTE                    0022
 RAM_START                df00              (R )
 RESET                    f000                  
 ROM_START                f000              (R )
+SaveReg                  0278              (R )
 SD_ENABLED               0001              (R )
 SEMICOLON                003b                  
-ServiceIrq               0278              (R )
-ServiceNmi               028b              (R )
+ServiceIrq               027b              (R )
+ServiceNmi               02da              (R )
 SPACE                    0020                  
+SysTime                  e020              (R )
+SysTime_Ack              e023              (R )
+SysTime_Period           e021                  
 TAB                      0009                  
 TRUE                     0001              (R )
 UseIrq                   0200                  

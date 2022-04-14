@@ -42,4 +42,17 @@ SD_ENABLED	equ	TRUE
 ; Size of the keyboard buffer
 ;
 BUFFER_SIZE	equ	132
+;==============================================
+; Device specific information
+;=============================================
+;Timer based upon emulator system clock
+SysTime        equ $E020                              ; write 1 to enable 0 to disable
+SysTime_Period equ SysTime+1                          ; Write the timeout period 2 bytew Low/high order
+SysTime_Ack    equ SysTime+3                          ; Set to one if irq pending, write any value to ACK irq
+
+;Timer based upon instruction cycle clock
+CycleTime        equ $E030                            ; write 1 to enable 0 to disable
+Cycletime_Period equ Cycletime+1                      ; Write the timeout period 2 bytes Low/high order
+CycleTime_Ack    equ CycleTime+3                      ; Set to one if irq pending, write any value to ACK irq
+
 

@@ -11,14 +11,17 @@ Property MemoryStart As Long use $MemoryStart = 0                    ' Start of 
 Property MemoryEnd As Long use $MemoryEnd = 0                        ' If this is zero then the device has no mapped memory
 Property MemoryLen As Long use $MemoryLen = 0                        ' Length of this memory block
 Property TimerPeriod as long use $Period = 0                         ' number of ticks between interupt
-Property TheCpu as Variant use $TheCpu                               ' The cpu we are running on
+Property TheCpu as Variant use $TheCpu  = null                       ' The cpu we are running on, set by the cpu right after instanciation if present
 
-$SysTimer as Timer                                                   ' The actual timer object
 $IRQPending as boolean = false                                       ' Set if an irq is pending
 $IRQDisabled as boolean = true                                       ' The IRQ and timer is completly disabled
+$CountDown as long = 0                                               ' Counts down until zero
 
 ' Timer implementation, will interupt every period time when enabled
-' This used the host clock to provide real time millisecond values
+' This uses the emulated CPU cycle count to emulate clock source
+' That is it used the cpu cyclecount to know how long a millisecond is based on a 2mhz cpu
+' 2,000,000 cycles per second so 1 milisecond = 2000 cycles
+
 'interupts must be acked before the next will be set
 'Io based deviced configured at slot 0 which is the first slot after the $E000 address
 'Base+0 = enable write 1, Disable write 0, ignored when interupt is pending
@@ -28,6 +31,7 @@ $IRQDisabled as boolean = true                                       ' The IRQ a
 '         Writing anything to this address clears the interupt pending and enables the next timer tick
 
 'DevMemory as byte[500]
+LastTime as float
 
 Property read Name as string use $name
 
@@ -38,25 +42,28 @@ Property read Name as string use $name
 
 public sub _new(address as long, len as long, parameters as string)
 
-  $Name = "IrqTimer"
+  $Name = "CycleTimer"
   debug $Name;;"Created with :";;address, len, parameters
   $MemoryStart = Address
   $MemoryEnd = Address + Len
   $MemoryLen = Len
   $Period = val(trim(parameters))
   debug $Name;;"Default timeout set to :";;$Period
-  $SysTimer = new Timer as "TheTimer"
-  $SysTimer.ignore = true
-  $SysTimer.Delay = $Period
 
+end
+
+' If present this is called by the cpu to allow init of any cpu related
+' interfaces right after the device is instantiated.
+public sub CpuInit()
+   $TheCpu.ExternalOssilator = me
 end
 
 public sub _get(address as long) as byte
 
-   'debug "read $";hex(address,4)
+   debug "read $";hex(address,4)
    select case address
      case  $MemoryStart   ' return the timer status 0 off, 1 on
-        return iif($Systimer.enabled,1,0)
+        return iif($IRQDisabled,0,1)
 
      Case  $MemoryStart+1
         return ($Period shr 8)
@@ -74,17 +81,18 @@ end
 
 public sub _put(Value as byte, address as long)
 
-  'debug "write $";hex(address,4); " $";hex(Value,2)
+  debug "write $";hex(address,4); " $";hex(Value,2)
 
    select case address
      case $MemoryStart   ' enable/disable the timer status 0 off, 1 on
 
         if Value > 0 then
-          $Systimer.Start()
+          $CountDown = $Period
           $IRQPending = false
           $IRQDisabled = false
+          LastTime  = timer
         else
-          $SysTimer.Stop()
+          $CountDown = 0
           $IRQPending = false
           $IRQDisabled = true
         endif
@@ -97,22 +105,27 @@ public sub _put(Value as byte, address as long)
 
      Case  $MemoryStart+3
         If $IRQDisabled then return
-        
+
         If $IRQPending then
-          $SysTimer.enabled = true
+          $CountDown = $Period
           $IRQPending = 0
+          LastTime  = timer
         endif
 
    end select
 
 end
 
-public sub TheTimer_timer()
+public sub Tick()
+  
   if $IRQDisabled or if $IRQPENDING then return
-  $IRQPENDING = true
-  $SysTimer.Enabled = false
-  $TheCpu.IRQPending = true
-  $TheCpu.InteruptPending = true
+  dec $CountDown
+  if $CountDown = 0 then
+    $IRQPENDING = true
+    $TheCpu.IRQPending = true
+    $TheCpu.InteruptPending = true
+    debug "Cycle timer ticked";; $period ;; "ticks, real time waited = ";;Timer-LastTime
+  endif
 end
 
 'this can be called by other devices or the computer
@@ -128,8 +141,7 @@ End
 ' Can be implemented if required to clean anything up
 Public sub halt()
    ' close any open windows etc
-   $Systimer.Stop()
-   $SysTimer = null
+   $TheCpu.ExternalOssilator = null
    $TheCpu = null
-   
+
 end

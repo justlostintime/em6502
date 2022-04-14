@@ -34,8 +34,8 @@ Public Sub Form_Open()
   Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
 
   Updatetimer = New Timer As "MyTimer"
-  updatetimer.delay = 1000
-  updatetimer.enabled = False
+  updatetimer.delay = 3000
+  updatetimer.enabled = True
 
   LoadComputersConfig()
 
@@ -79,8 +79,9 @@ Public Sub Form_Close()
 
   If StartStop.text = "Stop" Then StartStop_Click()
   updatetimer.enabled = False
-  Wait 0.01
+  Wait 0
   MyComputer.shutdown()
+  Wait 0
   SaveComputersConfig()
 
 End
@@ -489,9 +490,11 @@ End
 
 Public Sub MyTimer_Timer()
 
-  MHZ.text = Format(CFloat(MyComputer.CyclesPerSecond) / 1000000.00, "#0.00000")
-  MHZ.Refresh()
-  Wait
+  If FMain.Visible Then
+    MHZ.text = Format(CFloat(MyComputer.CyclesPerSecond) / 1000000.00, "#0.00000")
+    MHZ.Refresh()
+    Wait
+  Endif
 
 End
 

@@ -1,35 +1,35 @@
 ------- FILE useirq.asm LEVEL 1 PASS 2
-      1  029e				   input      processor	6502
-      2  029e ????						;=====================================================
-      3  029e ????						;UseIrq is a sample program that enables the IRQ for the
-      4  029e ????						;Emulator and then prints a star each time the
-      5  029e ????						;irq arrives.
-      6  029e ????						; 04/13/2022 https://github.com/justlostintime/em6502
-      7  029e ????						;=====================================================
-      8  029e ????						;   Need to define some macros for the dasm assembler
-      9  029e ????						;
-     10  029e ????				      MACRO	dw
-     11  029e ????				      .word	{0}
-     12  029e ????				      ENDM
-     13  029e ????
-     14  029e ????				      MACRO	db
-     15  029e ????				      .byte	{0}
-     16  029e ????				      ENDM
-     17  029e ????						;
-     18  029e ????						; Common ASCII constants
-     19  029e ????						;
-     20  029e ????	       00 07	   BEL	      equ	$07
-     21  029e ????	       00 08	   BS	      equ	$08
-     22  029e ????	       00 09	   TAB	      equ	$09
-     23  029e ????	       00 0a	   LF	      equ	$0A
-     24  029e ????	       00 0d	   CR	      equ	$0D
-     25  029e ????	       00 22	   QUOTE      equ	$22
-     26  029e ????	       00 20	   SPACE      equ	$20
-     27  029e ????	       00 2c	   COMMA      equ	',
-     28  029e ????	       00 3b	   SEMICOLON  equ	';
-     29  029e ????						;=====================================================
-     30  029e ????						;
-     31  029e ????				      SEG	Code
+      1  02ff				   input      processor	6502
+      2  02ff ????						;=====================================================
+      3  02ff ????						;UseIrq is a sample program that enables the IRQ for the
+      4  02ff ????						;Emulator and then prints a star each time the
+      5  02ff ????						;irq arrives.
+      6  02ff ????						; 04/13/2022 https://github.com/justlostintime/em6502
+      7  02ff ????						;=====================================================
+      8  02ff ????						;   Need to define some macros for the dasm assembler
+      9  02ff ????						;
+     10  02ff ????				      MACRO	dw
+     11  02ff ????				      .word	{0}
+     12  02ff ????				      ENDM
+     13  02ff ????
+     14  02ff ????				      MACRO	db
+     15  02ff ????				      .byte	{0}
+     16  02ff ????				      ENDM
+     17  02ff ????						;
+     18  02ff ????						; Common ASCII constants
+     19  02ff ????						;
+     20  02ff ????	       00 07	   BEL	      equ	$07
+     21  02ff ????	       00 08	   BS	      equ	$08
+     22  02ff ????	       00 09	   TAB	      equ	$09
+     23  02ff ????	       00 0a	   LF	      equ	$0A
+     24  02ff ????	       00 0d	   CR	      equ	$0D
+     25  02ff ????	       00 22	   QUOTE      equ	$22
+     26  02ff ????	       00 20	   SPACE      equ	$20
+     27  02ff ????	       00 2c	   COMMA      equ	',
+     28  02ff ????	       00 3b	   SEMICOLON  equ	';
+     29  02ff ????						;=====================================================
+     30  02ff ????						;
+     31  02ff ????				      SEG	Code
      32  0200					      org	$0200
      33  0200		       4c 12 02    UseIrq     jmp	CodeStart	; jump around the vectors
      34  0203
@@ -89,7 +89,20 @@
      42  0203							; Size of the keyboard buffer
      43  0203							;
      44  0203		       00 84	   BUFFER_SIZE equ	132
-     45  0203
+     45  0203							;==============================================
+     46  0203							; Device specific information
+     47  0203							;=============================================
+     48  0203							;Timer based upon emulator system clock
+     49  0203		       e0 20	   SysTime    equ	$E020	; write 1 to enable 0 to disable
+     50  0203		       e0 21	   SysTime_Period equ	SysTime+1	; Write the timeout period 2 bytew Low/high order
+     51  0203		       e0 23	   SysTime_Ack equ	SysTime+3	; Set to one if irq pending, write any value to ACK irq
+     52  0203
+     53  0203							;Timer based upon instruction cycle clock
+     54  0203		       e0 30	   CycleTime  equ	$E030	; write 1 to enable 0 to disable
+     55  0203		       00 01	   Cycletime_Period equ	Cycletime+1	; Write the timeout period 2 bytes Low/high order
+     56  0203		       e0 33	   CycleTime_Ack equ	CycleTime+3	; Set to one if irq pending, write any value to ACK irq
+     57  0203
+     58  0203
 ------- FILE ctmon65.inc
      10  0203							;
      11 Uf048 ????				      SEG.U	rom
@@ -193,28 +206,66 @@
       1  0235		       68 74 74 70*	      .byte.b	"https://github.com/justlostintime/em6502"
       0  025d					      db	CR,LF,0
       1  025d		       0d 0a 00 	      .byte.b	CR,LF,0
-     51  0260		       a9 78		      lda	#ServiceIrq&$ff	;Irq Service function
+     51  0260		       a9 7b		      lda	#ServiceIrq&$ff	;Irq Service function
      52  0262		       8d 00 df 	      sta	IRQvec
      53  0265		       a9 02		      lda	#ServiceIrq>>8
      54  0267		       8d 01 df 	      sta	IRQvec+1
-     55  026a		       a9 8b		      lda	#ServiceNmi&$ff	;Nmi Service function
+     55  026a		       a9 da		      lda	#ServiceNmi&$ff	;Nmi Service function
      56  026c		       8d 02 df 	      sta	NMIvec
      57  026f		       a9 02		      lda	#ServiceNmi>>8
      58  0271		       8d 03 df 	      sta	NMIvec+1
      59  0274		       58		      cli
      60  0275		       4c 0f 02 	      jmp	MONITOR
      61  0278
-     62  0278		       20 12 f0    ServiceIrq jsr	puts
-      0  027b					      db	"IRQ Recieved"
-      1  027b		       49 52 51 20*	      .byte.b	"IRQ Recieved"
-      0  0287					      db	CR,LF,0
-      1  0287		       0d 0a 00 	      .byte.b	CR,LF,0
-     65  028a		       40		      rti
-     66  028b
-     67  028b		       20 12 f0    ServiceNmi jsr	puts
-      0  028e					      db	"NMI Recieved"
-      1  028e		       4e 4d 49 20*	      .byte.b	"NMI Recieved"
+      0  0278				   SaveReg    db	0,0,0
+      1  0278		       00 00 00 	      .byte.b	0,0,0
+     63  027b
+     64  027b		       8d 78 02    ServiceIrq sta	SaveReg
+     65  027e		       8c 79 02 	      sty	SaveReg+1
+     66  0281		       8e 7a 02 	      stx	SaveReg+2
+     67  0284
+     68  0284		       ad 20 e0 	      lda	SysTime	;Check if this created the IRQ
+     69  0287		       f0 1b		      beq	cycletimer
+     70  0289		       20 12 f0 	      jsr	puts	; the timer that uses a real system timer
+      0  028c					      db	"IRQ Real Timer"
+      1  028c		       49 52 51 20*	      .byte.b	"IRQ Real Timer"
       0  029a					      db	CR,LF,0
       1  029a		       0d 0a 00 	      .byte.b	CR,LF,0
-     70  029d		       40		      rti
-     71  029e
+     73  029d		       a9 00		      lda	#0	; Zero the pending and reset timer
+     74  029f		       8d 23 e0 	      sta	SysTime_Ack	; Write anything to reset the timer
+     75  02a2		       f0 51		      beq	ExitIrq
+     76  02a4
+     77  02a4		       ad 30 e0    cycletimer lda	CycleTime	; Check timer based upon clock cycles ticked
+     78  02a7		       f0 1c		      beq	NotTimer
+     79  02a9		       20 12 f0 	      jsr	puts	; the timer that uses a Cycle Clock as a timer source
+      0  02ac					      db	"IRQ Cycle Timer"
+      1  02ac		       49 52 51 20*	      .byte.b	"IRQ Cycle Timer"
+      0  02bb					      db	CR,LF,0
+      1  02bb		       0d 0a 00 	      .byte.b	CR,LF,0
+     82  02be		       a9 00		      lda	#0	; Zero the pending and reset timer
+     83  02c0		       8d 33 e0 	      sta	CycleTime_Ack	; Write anything to reset the timer
+     84  02c3		       f0 30		      beq	ExitIrq
+     85  02c5
+     86  02c5		       20 12 f0    NotTimer   jsr	puts	; we have some unknown irq happening
+      0  02c8					      db	"IRQ UnKnown"
+      1  02c8		       49 52 51 20*	      .byte.b	"IRQ UnKnown"
+      0  02d3					      db	CR,LF,0
+      1  02d3		       0d 0a 00 	      .byte.b	CR,LF,0
+     89  02d6		       a9 00		      lda	#0
+     90  02d8		       f0 1b		      beq	ExitIrq
+     91  02da
+     92  02da		       8d 78 02    ServiceNmi sta	SaveReg
+     93  02dd		       8c 79 02 	      sty	SaveReg+1
+     94  02e0		       8e 7a 02 	      stx	SaveReg+2
+     95  02e3
+     96  02e3		       20 12 f0 	      jsr	puts
+      0  02e6					      db	"NMI Recieved"
+      1  02e6		       4e 4d 49 20*	      .byte.b	"NMI Recieved"
+      0  02f2					      db	CR,LF,0
+      1  02f2		       0d 0a 00 	      .byte.b	CR,LF,0
+     99  02f5
+    100  02f5		       ad 78 02    ExitIrq    lda	SaveReg
+    101  02f8		       ac 79 02 	      ldy	SaveReg+1
+    102  02fb		       ae 7a 02 	      ldx	SaveReg+2
+    103  02fe		       40		      rti
+    104  02ff

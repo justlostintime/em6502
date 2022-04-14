@@ -46,6 +46,7 @@ Public sub halt()
    debug "closing the NMI button"
    NmiForm.Persistent = false
    NmiFORM.close()
+   $TheCpu = NULL
 
 end
 

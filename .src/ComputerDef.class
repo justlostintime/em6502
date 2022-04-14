@@ -137,7 +137,7 @@ Public Sub ReadInfo(comp As Settings)
   For i As Integer = 0 To DevCount - 1
     Dim Index As String = Hex(i, 4)
     Devices[Comp["Device/" & index & "/key"]] = [Comp["Device/" & index & "/StartAddress"], Comp["Device/" & index & "/Length"], Comp["Device/" & index & "/Parameter"]]
-    Inc index
+    'Inc index
   Next
 
 End

@@ -9,8 +9,10 @@ End
 
 Public Sub enableProfile_Click()
 
-  ShowInfo.enabled = True
-  FMain.MyComputer.Profiling = True
+  If FMain.MyComputer.Profiling = False Then
+    ShowInfo.enabled = True
+    FMain.MyComputer.Profiling = True
+  Endif
 
 End
 
@@ -30,5 +32,13 @@ Public Sub Form_Resize()
 
   ProfileDisplay.h = Me.H
   ProfileDisplay.w = Me.w
+
+End
+
+Public Sub Form_Open()
+
+
+  ShowInfo.enabled = FMain.MyComputer.Profiling
+  enableProfile.value = FMain.MyComputer.Profiling
 
 End

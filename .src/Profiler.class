@@ -35,7 +35,7 @@ Public Sub report(Optional start_address As Long = -1, prog_length As Integer = 
   If Start_address >= 0 Then
     For pc_counter = start_address To start_address + Prog_length - 1
       If profile.Exist(Hex(pc_counter, 4)) Then
-        Result.Add(Subst("&1 : &2", fmtptrval(profile[Hex(pc_counter, 4)]), Disassembler.Inst(UserCpu, pc_counter)))
+        Result.Add(Subst("&1 : &2", fmtptrval(profile[Hex(pc_counter, 4)]), Disassembler.Inst(UserCpu, pc_counter, True)))
       Endif
     Next
   Else
@@ -43,7 +43,7 @@ Public Sub report(Optional start_address As Long = -1, prog_length As Integer = 
     addrlist.sort()
     For Each pc_index As String In addrList
       pc_counter = Eval("&h0" & pc_index)
-      Result.Add(Subst("&1 : &2", fmtptrval(profile[Hex(pc_counter, 4)]), Disassembler.Inst(UserCpu, pc_counter)))
+      Result.Add(Subst("&1 : &2", fmtptrval(profile[Hex(pc_counter, 4)]), Disassembler.Inst(UserCpu, pc_counter, True)))
     Next
   Endif
 
