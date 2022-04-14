@@ -86,7 +86,7 @@ Public Sub _get(address As Long) As Byte
    dim status as byte = 2                            ' Can Always write
    'Status = bset(status,1)                          ' Can Always write something
    if DataBuffer.count > 0 then
-      'print "TTY : Byte Avaiable for read COUNT = ";DataBuffer.count
+      'debug "TTY : Byte Avaiable for read COUNT = ";DataBuffer.count
       Status += 1                                    'Set if something to read
       'Status = bset(status,0)                       ' set if something to be read
     'else
