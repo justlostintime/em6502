@@ -5,8 +5,8 @@
 '  See project license file.
 
 '' Device TTY
-'' this simulates a tty device Ansi complient
-'' This open a seperate window and allos the entry
+'' This simulates a tty device that is Ansi complient
+'' This opens a seperate window and allows the entry
 '' of text to the cpu, it acts like a rs232 connected
 '' device. This is configured to work with the
 '' CTMON65 default rom, but may be used more generally
