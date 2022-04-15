@@ -224,7 +224,7 @@
      65  027e		       8c 79 02 	      sty	SaveReg+1
      66  0281		       8e 7a 02 	      stx	SaveReg+2
      67  0284
-     68  0284		       ad 20 e0 	      lda	SysTime	;Check if this created the IRQ
+     68  0284		       ad 23 e0 	      lda	SysTime_Ack	;Check if this created the IRQ
      69  0287		       f0 1b		      beq	cycletimer
      70  0289		       20 12 f0 	      jsr	puts	; the timer that uses a real system timer
       0  028c					      db	"IRQ Real Timer"
@@ -235,7 +235,7 @@
      74  029f		       8d 23 e0 	      sta	SysTime_Ack	; Write anything to reset the timer
      75  02a2		       f0 51		      beq	ExitIrq
      76  02a4
-     77  02a4		       ad 30 e0    cycletimer lda	CycleTime	; Check timer based upon clock cycles ticked
+     77  02a4		       ad 33 e0    cycletimer lda	CycleTime_Ack	; Check timer based upon clock cycles ticked
      78  02a7		       f0 1c		      beq	NotTimer
      79  02a9		       20 12 f0 	      jsr	puts	; the timer that uses a Cycle Clock as a timer source
       0  02ac					      db	"IRQ Cycle Timer"

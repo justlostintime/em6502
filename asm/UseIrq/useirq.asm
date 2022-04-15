@@ -65,7 +65,7 @@ ServiceIrq  sta SaveReg
 	    sty SaveReg+1
 	    stx SaveReg+2
 	    
-	    lda SysTime                 ;Check if this created the IRQ
+	    lda SysTime_Ack             ;Check if this created the IRQ
 	    beq cycletimer
 	    jsr puts                    ; the timer that uses a real system timer
 	    db "IRQ Real Timer"
@@ -74,7 +74,7 @@ ServiceIrq  sta SaveReg
 	    sta SysTime_Ack             ; Write anything to reset the timer
 	    beq ExitIrq
 
-cycletimer  lda CycleTime               ; Check timer based upon clock cycles ticked
+cycletimer  lda CycleTime_Ack           ; Check timer based upon clock cycles ticked
 	    beq NotTimer
 	    jsr puts                    ; the timer that uses a Cycle Clock as a timer source
 	    db "IRQ Cycle Timer"

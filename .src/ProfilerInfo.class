@@ -1,6 +1,5 @@
 ' Gambas class file
 
-
 Public Sub disableProfile1_Click()
 
   FMain.MyComputer.Profiling = False
@@ -16,8 +15,6 @@ Public Sub enableProfile_Click()
 
 End
 
-
-
 Public Sub ShowInfo_Click()
 
   ProfileDisplay.Clear()
@@ -30,15 +27,31 @@ End
 
 Public Sub Form_Resize()
 
-  ProfileDisplay.h = Me.H
-  ProfileDisplay.w = Me.w
+  ProfileDisplay.h = Me.H - 2
+  ProfileDisplay.w = Me.w - 2
 
 End
 
 Public Sub Form_Open()
 
-
   ShowInfo.enabled = FMain.MyComputer.Profiling
   enableProfile.value = FMain.MyComputer.Profiling
+  ProfilerInfo.x = Settings["Profiler/Window/X", 100]
+  ProfilerInfo.y = Settings["Profiler/Window/Y", 100]
+  ProfilerInfo.h = Settings["Profiler/Window/H", 700]
+  ProfilerInfo.w = Settings["Profiler/Window/w", 600]
+
+  ProfileDisplay.h = Me.H - 2
+  ProfileDisplay.w = Me.w - 2
+  ProfileDisplay.x = 1
+
+End
+
+Public Sub Form_Close()
+
+  Settings["Profiler/Window/X"] = ProfilerInfo.X
+  Settings["Profiler/Window/Y"] = ProfilerInfo.y
+  Settings["Profiler/Window/H"] = ProfilerInfo.h
+  Settings["Profiler/Window/w"] = ProfilerInfo.w
 
 End

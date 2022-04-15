@@ -77,13 +77,16 @@ public sub _put(Value as byte, address as long)
   'debug "write $";hex(address,4); " $";hex(Value,2)
 
    select case address
-     case $MemoryStart   ' enable/disable the timer status 0 off, 1 on
+     case $MemoryStart              ' enable/disable the timer status 0 off, 1 on
 
-        if Value > 0 then
-          $Systimer.Start()
+        if Value = 1 then
+        
+          $Systimer.Stop()
           $IRQPending = false
           $IRQDisabled = false
-        else
+          $Systimer.Start()
+        
+        else if Value = 0 then
           $SysTimer.Stop()
           $IRQPending = false
           $IRQDisabled = true
@@ -95,12 +98,12 @@ public sub _put(Value as byte, address as long)
      Case  $MemoryStart+2
         $Period = ($period and &hff00) + value
 
-     Case  $MemoryStart+3
+     Case  $MemoryStart+3                  ' Ack the last timer interupt
         If $IRQDisabled then return
-        
+
         If $IRQPending then
           $SysTimer.enabled = true
-          $IRQPending = 0
+          $IRQPending = false
         endif
 
    end select
@@ -110,7 +113,7 @@ end
 public sub TheTimer_timer()
   if $IRQDisabled or if $IRQPENDING then return
   $IRQPENDING = true
-  $SysTimer.Enabled = false
+  $SysTimer.Stop()
   $TheCpu.IRQPending = true
   $TheCpu.InteruptPending = true
 end
@@ -131,5 +134,5 @@ Public sub halt()
    $Systimer.Stop()
    $SysTimer = null
    $TheCpu = null
-   
+
 end

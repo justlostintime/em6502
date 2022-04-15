@@ -86,7 +86,6 @@ Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
   Static StartInstructionCount As Long = 0
   Static StartCycleCount As Long = 0
 
-
   $InstructionsPerSecond = TotalInstructions - StartInstructionCount
   StartInstructionCount = TotalInstructions
   $CyclesPerSecond = $TotalCycles - StartCycleCount
@@ -130,7 +129,6 @@ Fast Unsafe Public Sub ReadBytes(address As Long, length As Integer) As Byte[]
 End
 
 Fast Unsafe Public Sub WriteBytes(buffer As Byte[], address As Long, length As Integer)
-
 
   Dim sdb As Byte = databus
   Dim sab As Long = AddressBus
@@ -336,7 +334,6 @@ Fast Unsafe Public Sub AbsY()
 
 End
 
-
 Fast Unsafe Public Sub ZeroPage()
 
   ReadByte()
@@ -371,7 +368,6 @@ Fast Unsafe Public Sub ZeroPageY()
   AddressBus += Y
 
 End
-
 
 Fast Unsafe Public Sub Immediate()
 
@@ -426,7 +422,6 @@ Fast Unsafe Public Sub Indirect()
   AddressBus = (DataBus Shl 8) Or addrTemp
 
 End
-
 
 Fast Unsafe Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams As Variant = "") As Object
 
@@ -515,7 +510,6 @@ Fast Unsafe Public Sub WriteByte()
 
 End
 
-
 Fast Unsafe Public Sub Reset()
 
   $NMIPending = False
@@ -546,7 +540,6 @@ Fast Unsafe Public Sub DisplayCurrentInst()
 
 End
 
-
 Fast Unsafe Public Sub Branch()
 
   If BTst(databus, 7) Then
@@ -557,7 +550,6 @@ Fast Unsafe Public Sub Branch()
   Endif
 
 End
-
 
 Fast Unsafe Public Sub Compare(Value As Byte)
 
@@ -582,7 +574,6 @@ Fast Unsafe Public Sub Compare(Value As Byte)
 
 End
 
-
 Fast Unsafe Public Sub Push(Optional Value As Byte = databus)
 
   databus = Value
@@ -591,7 +582,6 @@ Fast Unsafe Public Sub Push(Optional Value As Byte = databus)
   Dec sp
 
 End
-
 
 Fast Unsafe Public Sub Pop() As Byte
 
@@ -879,4 +869,3 @@ Fast Unsafe Private Function ProfileInfo_Read() As String[]
   Endif
 
 End
-

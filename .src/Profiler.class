@@ -58,4 +58,3 @@ Sub fmtPtrVal(value As Pointer) As String
   Return Right(Counter, 12)
 
 End
-

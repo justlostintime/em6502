@@ -40,7 +40,7 @@ Public Sub Form_Open()
   LoadComputersConfig()
 
   DeviceList.Columns.Count = 4
-  DeviceList.Rows.Count = 14
+  DeviceList.Rows.Count = 50
   DeviceList.Header = GridView.Horizontal
   DeviceList.Columns[0].text = "Device Name       "
   DeviceList.Columns[1].Text = "Start "
@@ -55,7 +55,6 @@ Public Sub Form_Open()
   MyComputer.Configure(Comp)
 
 End
-
 
 Public Sub Form_Close()
 
@@ -86,7 +85,6 @@ Public Sub Form_Close()
 
 End
 
-
 Public Sub The_Computer_NextInst(info As String)
 
   Disassembly.Print(info & "\n\r")
@@ -109,7 +107,6 @@ Public Sub The_Computer_AutoStart(address As Long, Speed As Integer)
   GoNow_Click()
 
 End
-
 
 Public Sub The_Computer_BinaryLoaded(address As Long, BinName As String, info As String)
 
@@ -139,7 +136,6 @@ Public Sub The_computer_MemMonitor(address As Long, data As String)
   Wait 0.001
 
 End
-
 
 Public Sub The_Computer_StatusInfo(info As Cpustatus)
 
@@ -198,7 +194,6 @@ Public Sub GoNow_Click()
   MyComputer.Run()
   Try GoStop.Picture = OffImage
 
-
 Catch
   Message.Warning(Error.text & " " & Error.where, "ok")
 
@@ -227,7 +222,6 @@ Public Sub StartStop_Click()
 
 End
 
-
 Public Sub SingleStepSet_Click()
 
   MyComputer.SetSingleStep()
@@ -252,7 +246,6 @@ Sub Padnumber(Num As String) As String
   Return Num
 
 End
-
 
 Public Sub DumpMem_Click()
 
@@ -318,7 +311,6 @@ Public Sub SetTrace_Click()
 
 End
 
-
 Public Sub SetStatus_Click()
 
   If SetStatus.value = True Then
@@ -372,7 +364,6 @@ Public Sub VerifyProgSaved()
     Endif
   Endif
 
-
 End
 
 Public Sub OpenProg_Click()
@@ -388,7 +379,6 @@ Public Sub OpenProg_Click()
   AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
 
 End
-
 
 Public Sub SaveAsProg_Click()
 
@@ -418,7 +408,6 @@ Public Sub NewProg_Click()
   OriginalSource = EditProg.text
 
 End
-
 
 Public Sub NmiCpu_Click()
 
@@ -486,8 +475,6 @@ Public Sub LoadToRam_Click()
 
 End
 
-
-
 Public Sub MyTimer_Timer()
 
   If FMain.Visible Then
@@ -497,7 +484,6 @@ Public Sub MyTimer_Timer()
   Endif
 
 End
-
 
 Public Sub SpeedScaler_Change()
 
@@ -533,7 +519,6 @@ Public Sub SetNextBreak()
   Endif
 
 End
-
 
 Public Sub LoadImage_DblClick()
 
@@ -699,9 +684,7 @@ Sub SetComp(Cname As String)
     Inc DevIndex
   Next
 
-
 End
-
 
 Public Sub SaveComp_Click()
 
@@ -731,7 +714,6 @@ Public Sub DeviceList_Save(Row As Integer, Column As Integer, Value As String)
   DeviceList[row, column].text = Value
   DeviceList.Refresh()
 
-
 End
 
 Public Sub SetAsDefault_Click()
@@ -739,7 +721,6 @@ Public Sub SetAsDefault_Click()
   DefaultComputerDefinition = Computers.Selection[0]
 
 End
-
 
 Public Sub MakeActive_Click()
 
@@ -779,7 +760,6 @@ Public Sub RmDevice_Click()
   Next
   DeviceList.Refresh()
 
-
 End
 
 Public Sub MemAccessReports_Click()
@@ -793,7 +773,6 @@ Public Sub devtest_Click()
   DeviceDevelopement.Show()
 
 End
-
 
 Public Sub Dasminfo_Click()
 
@@ -835,7 +814,6 @@ Public Sub AboutInfo_Click()
 
 End
 
-
 Public Sub creditDue_Click()
 
   Dim a As New WebInfoViewer
@@ -875,4 +853,9 @@ Public Sub Profilemenu_Click()
 
 End
 
+Public Sub RemoveAll_Click()
 
+  BreakPointList.Clear()
+  EnableBreakPoints.value = False
+
+End
