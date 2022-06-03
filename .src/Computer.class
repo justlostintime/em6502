@@ -38,7 +38,8 @@ Public Sub Configure(Configuration As ComputerDef)
 
   $Config = Configuration
   For Each device As Variant[] In $Config
-    Try cDev = Devices($Config.key & ".dev")
+    Dim vname As String[] = Split($Config.key, ":")
+    Try cDev = Devices(vname[0] & ".dev")
     If Error Then
       Message.Error(("Unable to start computer error found In configuration\nSee Error display panel for details"), ("ok"))
       Return

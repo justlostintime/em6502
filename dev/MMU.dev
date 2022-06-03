@@ -4,10 +4,10 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-'' Ram Memory
+'' MMU and Ram Memory
 '' You may add as many MMU/Ram memory devices as required
 '' if the ram has spaced between addresses you will need to
-'' define a ram device for each block location
+'' define a MMU/ram device for each block location
 '' when defining ram memory block you may also have binaries loaded
 '' automatically by adding the parameter in the format "IoAddress, NumberofBlock ; bin1:block#,bin2:Block#,.."
 '' Just make sure the load points don't overlap
@@ -16,26 +16,44 @@ Fast Unsafe
 Public MemoryStart As Long = 0                    ' Start of this block of memory
 Public MemoryEnd As Long = 0                      ' Highest valid address
 Public MemoryLen As Long = 0                      ' Length of this memory block
+Public NumberOfBlocks as Integer = 1              ' Number of blocks of memory
+Public CurrentBlock as integer = 0                ' Default to block zero
 
-'Public IoAddress as long = 0                      ' IoAddress for this MMU
-'Public IoLength as long = 1                       ' IoAddress Space Length
+Public IoAddress as long = 0                      ' IoAddress for this MMU
+Public IoLength as long = 5                       ' IoAddress Space Length
 
-Public Mem As byte[]                              ' The actual memory array of memory blocks
+Public Mem As Variant[]                           ' The actual memory array of memory blocks
 Property read Name as string use $Name            ' Every device gets a name
 Property read BinLoaded as string use $BinLoaded  ' coma seperated list of all loaded binaries
 
+'' mmu info format : IoAddress, Numberofblocks; "MyBinImage:2","MyOtherBinImage:0"
 '' bin image load info   filename:blockNumber
-Public Sub _New(Start As Long, Length As Long, LoadImages As String)
+Public Sub _New(Start As Long, Length As Long, MMUInfo As String)
+  dim temps as string[] = split(MMUInfo,";")
+  dim mmudef as string[] = split(temps[0])
+  IoAddress = eval(mmuDef[0])
+  NumberOfBlocks = eval(mmuDef[1])
 
+  dim LoadImages as string = ""
+
+  if Temps.length = 2 then
+      LoadImages = Temps[1]
+  endif
+
+  mem = new Variant[NumberOfBlocks]
   MemoryStart = Start
   MemoryEnd = start + Length - 1
   MemoryLen = Length
 
-  Mem = New Byte[Length]
+  For i as integer = 0 to mem.max
+    Mem[i] = New Byte[Length]
+  Next
 
-  $Name = "RAM"
+  $Name = "MMU"
+  CurrentBlock = 0
 
-  Debug "Ram Defined at : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length)
+  Debug "MMU/Ram Defined at    : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length);;"Blocks(";NumberOfBlocks;")"
+  Debug "MMU/Ram IO Defined at : $"; Hex(IoAddress,6);; "For Memory Segment selection "
   If LoadImages <> ""  Then
     Load(LoadImages)
   Endif
@@ -51,24 +69,31 @@ Public Sub _get(memoryAddress As Long) As Byte
   '  Return &hff
   'Endif
 
-    return Mem[memoryAddress - MemoryStart]
+  if memoryAddress >= IoAddress and if memoryAddress <= IoAddress + IoLength - 1 then
+    return CurrentBlock
+  else
+    return Mem[CurrentBlock][memoryAddress - MemoryStart]
+  endif
 
 End
 
 Public Sub _put(value As Byte, memoryAddress as long)
-
+  if memoryAddress >= IoAddress and if memoryAddress <= IoAddress + IoLength - 1 then
+    CurrentBlock = value
+  else
     'print "Store to "; hex(MemoryAddress,6) ;; "Value = ";Hex(value,2);; "Read = ";
-    Mem[memoryAddress - MemoryStart] = value
+    Mem[CurrentBlock][memoryAddress - MemoryStart] = value
     'print hex(Mem[memoryAddress - MemoryStart],2)
-
+  endif
 End
 
 Public Sub _InRange(Address As Long) As Boolean
-
+  if Address = IoAddress then
+    return true
+  endif
   If Address >= MemoryStart And if Address <= MemoryEnd Then
       Return True
   endif
-
   Return False
 
 End
@@ -78,38 +103,48 @@ End
 
 Public Sub Load(sBinSources As string ) as long ' For ram we can load a number Of files into Memory
   dim binsources as string[] = split(sBinSources,",","\"\"",true,false)
-  print "Ram Load Request ";sBinSources
+  print "MMU/Ram Load Request ";sBinSources
+  dim tempBlock as integer = CurrentBlock
 
   For Each BinSource As String In BinSources
+    Dim BinDefInfo as string[] = split(BinSource,":")
+    if BinDefInfo.count = 2 then
+      CurrentBlock = BinDefInfo[1]
+    else
+      CurrentBlock = tempBlock          ' If No block defined just use the currentBlock
+    endif
 
     Dim BinInfo As File
     Dim al as byte
     Dim ah As Byte
 
-    Try BinInfo = Open BinSource For Read
+    Try BinInfo = Open BinDefInfo[0] For Read
 
     Read #BinInfo, al
     Read #BinInfo, ah
 
     Dim address As Long = 0
-    Dim ReadtoAddress as long = 0
+    Dim LoadToAddress as long = 0
     
     Address = Address or ah
     Address = (Address shl 8) or al
     Dim Length As Integer = Lof(BinInfo) - 2
     Print "Loading Image to address "; hex(address,4); " Length=";hex(length,4)
-    ReadToAddress = Address - MemoryStart
+
     If (Address < MemoryStart) Or If (Address + length - 1) > MemoryEnd Then
       Error.Raise(Subst("Invalid Memory Address Scope for &1, Starts at $&2 for length of $&3", BinSOurce, Hex(address, 6), Hex(Length, 4)))
     Endif
+    
     If Error Then Error.Raise("Missing Ram Source file")
-    Try mem.Read(BinInfo, ReadToAddress, Length)
+    LoadToAddress = Address - MemoryStart
+    Try mem[CurrentBlock].Read(BinInfo, LoadToAddress, Length)
     If Error Then Error.Raise(subst("Error reading Ram Source at address &1 for length &2 :&3",hex(address,4),length,  Error.text))
     Debug "Binary Ram Image "; BinSource; " at Address:"; Hex(address, 6)
   Next
 
  dim bindef as string = BinSource &":"&hex(address,4)
  $BinLoaded &= iif($binLoaded = "",BinDef,","&BinDef)
+ currentBlock = TempBlock
  return address
 End
 

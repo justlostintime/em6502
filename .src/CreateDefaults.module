@@ -26,6 +26,32 @@ Public Sub _call()
       Comp.Save(.AsmComputerDefinitions)
 
       Comp = New ComputerDef
+      Comp.Name = "CTMON2Rams"
+      Comp.Speed = 500
+      Comp.AutoStart = &h0200
+      Comp.AutoStartActive = True
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
+      Comp["RamMemory"] = [&h0000, &h00200, ""]
+      Comp["RamMemory:1"] = [&h0200, &h0DE00, .AsmBinaryDirectory &/ "mytb.bin"]
+      Comp["TTYSIM"] = [&h0E000, 16, "Tiny Basic running with CTMON65 monitor"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp["HaltButton"] = [0, 0, "Quit Button"]
+      Comp.Save(.AsmComputerDefinitions)
+
+      Comp = New ComputerDef
+      Comp.Name = "CTMONMMU"
+      Comp.Speed = 500
+      Comp.AutoStart = &h0200
+      Comp.AutoStartActive = True
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
+      Comp["RamMemory"] = [&h0000, &h0200, ""]
+      Comp["MMU"] = [&h0200, &h0DE00, "&h0E030,20;" & .AsmBinaryDirectory &/ "mytb.bin"]
+      Comp["TTYSIM"] = [&h0E000, 16, "Tiny Basic running with CTMON65 monitor"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp["HaltButton"] = [0, 0, "Quit Button"]
+      Comp.Save(.AsmComputerDefinitions)
+
+      Comp = New ComputerDef
       Comp.Name = "CTMON65"
       Comp.Speed = 500
       Comp.AutoStart = -1

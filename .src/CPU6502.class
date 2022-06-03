@@ -423,7 +423,7 @@ Fast Unsafe Public Sub Indirect()
 
 End
 
-Fast Unsafe Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams As Variant = "") As Object
+Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams As Variant = "") As Object
 
   Dim params As Variant[] = [Start, Len, vParams]
 
@@ -439,10 +439,21 @@ Fast Unsafe Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optio
   object.attach(dev, Me, "MyDevice")
 
   AddressMap.Add(Dev)
-  If len = 0 Then Return dev            ' allow devices which require no memory, such as buttons and switches
+  If len = 0 Then Return dev                                  ' allow devices which require no memory, such as buttons and switches
 
   mapLow.Add(Start)
   mapHigh.Add(Start + len - 1)
+
+  If Device.Exist("IoAddress") Then                    '  We allow a device to also have an io control address
+    AddressMap.Add(Dev)
+    mapLow.Add(Dev.IoAddress)
+    If Device.Exist("IoLength") Then
+      mapHigh.Add(Dev.IoAddress + (Dev.IoLength - 1))
+    Else
+      mapHigh.Add(Dev.IoAddress)
+    Endif
+  Endif
+
   ' now let the computer know what binary images were loaded when the device was created
   If Object.Class(dev).Exist("BinLoaded") Then
     Dim binImage As String[] = Split(dev.BinLoaded, ",")
@@ -615,7 +626,7 @@ Fast Unsafe Public Sub NMI()
 
 End
 
-Public Sub IRQ()
+Fast Unsafe Public Sub IRQ()
 
   $IRQPending = False
   If BTst(sr, 2) Then Return                          ' Ignore this if the irq is disabled

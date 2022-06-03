@@ -6,11 +6,11 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-Public AppDescription As String = ("This application emulates a 6502, its default is ctmon65 with tinybasic")
+Public AppDescription As String = ("This application emulates a 6502/65C02, its default is ctmon65 with tinybasic")
 
 Public Sub main()
 
-  Dim bVersion, bAbout, bDevMode, bPrintInstMatrix As Boolean
+  Dim bVersion, bAbout, bDevMode, bPrintInstMatrix, bStartSingleStep As Boolean
   Dim sComputerName As String
 
   Args.Begin(Application.name & " <options>")
@@ -18,6 +18,7 @@ Public Sub main()
   bAbout = Args.Has("a", "about", ("Information about ") & Application.name)
   bDevMode = Args.Has("d", "devmode", ("Developer Mode, removes ~/6502 directory and recreats \nall default settings(be carefull all your stuff will be gone!)\n Usefull to get new application updates"))
   bPrintInstMatrix = Args.Has("p", "print", ("Print Supported Instruction Matrix and exit"))
+  bStartSingleStep = Args.Has("s", "singlestep", ("Start the emulator in single step mode"))
   sComputerName = Args.Get("c", "computer", ("Provies the name of the computer to run, No GUI is started"), "", "")
   Args.End()
 
