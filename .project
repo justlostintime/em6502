@@ -28,6 +28,7 @@ Address=justlostintime@gmail.com
 Url=https://github.com/justlostintime/6502Emulator-DevEnv/wiki
 License=General Public License V3
 PackageName=em6502-1.0.3
+PackageVersion=2
 CreateEachDirectory=1
 RuntimeVersion="3.16"
 Packager=1
