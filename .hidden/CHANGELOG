@@ -1,3 +1,7 @@
+* Mon Jun 06 2022 Justlostintime <justlostintime@gmail.com> 1.1.0
+- Updated Auto Update to create any missing DEvice or coputer definitions per software update
+- Without needing to do a -d which will wipe everything and recreate it
+
 * Sun Jun 05 2022 Justlostintime <justlostintime@gmail.com> 1.1.0
 
 * Sun Jun 05 2022 Justlostintime <justlostintime@gmail.com> 1.1.0
