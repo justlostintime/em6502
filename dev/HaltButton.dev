@@ -71,7 +71,6 @@ Public Sub MyHaltButton_click()
 end
 
 Public sub MyHaltForm_resize()
-    debug "form resize"
     HaltButton.h = HaltForm.h - 2
     HaltButton.w = HaltForm.w - 2
 end

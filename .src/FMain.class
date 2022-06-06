@@ -859,3 +859,19 @@ Public Sub RemoveAll_Click()
   EnableBreakPoints.value = False
 
 End
+
+Public Sub Form_Resize()
+
+  AllControls.x = FMain.W - AllControls.Width - 4
+  InfoSection.w = AllControls.x - 4
+  InfoSection.h = FMain.h - 50
+  EditProg.w = InfoSection.w - 10
+  EditProg.h = InfoSection.h - EditorButtons.h - 40
+  EditorButtons.y = EditProg.h + EditProg.y + 2
+  AsmOutput.w = EditProg.W
+  AsmOutput.h = EditProg.h
+  AsmOutputButtons.y = EditorButtons.y
+  Disassembly.w = EditProg.W
+  Disassembly.h = InfoSection.h - Disassembly.y - 30
+
+End

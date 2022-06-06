@@ -26,7 +26,6 @@ Public cc As New Integer[256]
 Public SymbolsByName As New Collection(gb.ignoreCase)
 Public SymbolsByAddress As New Collection(gb.ignoreCase)
 
-
 Public Sub _init()
 
   $Version = "1.0.1"
@@ -160,7 +159,6 @@ Fast Unsafe Sub GetSymAsName(addr As String) As String
 
 End
 
-
 Fast Unsafe Sub CalcBranch(pc As Long, jmp As Byte) As Long
 
   If BTst(jmp, 7) Then
@@ -212,24 +210,3 @@ Public Sub InstMatrix()
   Next
 
 End
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
