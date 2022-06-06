@@ -11,8 +11,10 @@ Public Sub _call()
   With FMain
 
     If Not Exist(.AsmComputerDefinitions) Then
-
       Try Shell.MkDir(.AsmComputerDefinitions)
+    Endif
+
+    If Not Exist(.AsmComputerDefinitions &/ "Default") Then
       Dim Comp As New ComputerDef
       Comp.Name = "Default"
       Comp.Speed = 500
@@ -24,7 +26,9 @@ Public Sub _call()
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp.Save(.AsmComputerDefinitions)
+    Endif
 
+    If Not Exist(.AsmComputerDefinitions &/ "CTMON2Rams") Then
       Comp = New ComputerDef
       Comp.Name = "CTMON2Rams"
       Comp.Speed = 500
@@ -37,7 +41,9 @@ Public Sub _call()
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp.Save(.AsmComputerDefinitions)
+    Endif
 
+    If Not Exist(.AsmComputerDefinitions &/ "CTMONMMU") Then
       Comp = New ComputerDef
       Comp.Name = "CTMONMMU"
       Comp.Speed = 500
@@ -50,7 +56,9 @@ Public Sub _call()
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp.Save(.AsmComputerDefinitions)
+    Endif
 
+    If Not Exist(.AsmComputerDefinitions &/ "CTMON65") Then
       Comp = New ComputerDef
       Comp.Name = "CTMON65"
       Comp.Speed = 500
@@ -63,7 +71,9 @@ Public Sub _call()
       Comp["ResetButton"] = [0, 0, "Reset button"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp.Save(.AsmComputerDefinitions)
+    Endif
 
+    If Not Exist(.AsmComputerDefinitions &/ "CTMONTIMER") Then
       Comp = New ComputerDef
       Comp.Name = "CTMONTIMER"
       Comp.Speed = 500
@@ -80,9 +90,7 @@ Public Sub _call()
       Comp["NMIButton"] = [0, 0, "NMI Button"]
       Comp["IrqButton"] = [0, 0, "IRQ Button"]
       Comp["ShowMhz"] = [0, 0, "3000"]
-
       Comp.Save(.AsmComputerDefinitions)
-
     Endif
 
     copyDirectory("dev", .AsmDeviceDirectory)
@@ -100,14 +108,15 @@ End
 
 Sub copyDirectory(path As String, topath As String)
 
-  Debug ("Create Default :");; toPath;; "From";; path
   If Not Exist(toPath) Then
+    Debug ("Create Default :");; toPath;; "From";; path
     Try Shell.MkDir(ToPath)
     If Error Then
       Debug ("Unable to make directory ");; topath;; Error.text
+      Return
     Endif
-  Else
-    Return
+    '  Else
+    '    Return
   Endif
 
   For Each s As String In Dir(path, "*", gb.directory)
@@ -116,10 +125,11 @@ Sub copyDirectory(path As String, topath As String)
 
   For Each s As String In Dir(path, "*", gb.file)
     If Right(s, 1) = "~" Then Continue
+    If Exist(ToPath &/ s) Then Continue
     Debug ("Copy :");; s
     Try Copy path &/ s To ToPath &/ s
     If Error Then
-      Debug ("Unable to copy file ");; ToPath &/ s;; ("from");; path &/ s
+      Debug ("Unable to copy file ");; ToPath &/ s;; ("from");; path &/ s;; ":";; Error.text
     Endif
   Next
 
