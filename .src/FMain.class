@@ -647,7 +647,7 @@ End
 
 Public Sub SaveComputersConfig()
 
-  If Not CurrentCompDev Then Return
+  If Not CurrentCompDev Or If ComputerName.Text = "" Then Return
   CurrentCompDev.name = ComputerName.text
   CurrentCompDev.Speed = SpeedDef.value
   CurrentCompDev.AutoStart = IIf(AutoStartAddress.text = "", -1, Eval("&H0" & AutoStartAddress.text))
