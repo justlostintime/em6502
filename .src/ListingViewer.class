@@ -62,5 +62,9 @@ Sub SetTabs(srcline As String) As String
 
 End
 
+Public Sub Form_Resize()
 
+  AsmListing.h = Me.h - 10
+  AsmListing.W = Me.W - 10
 
+End

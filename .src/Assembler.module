@@ -17,12 +17,6 @@ Public Sub _init()
   If Not XaInstalled Then
     Print ("xa not installed, If you require 65c02 extended instruction you must install XA, found in ~/6502/asm, do a make and make available")
     Print ("Using DASM Assembler \nCreated by Mathew Dillion.\nCurrently supported by Andrew Davie @ https://github.com/dasm-assembler/dasm")
-    If Not Exist("/tmp/gambasAsm/dasm") Then
-      Print ("Installing assembler to /tmp/gambasAsm")
-      Try Shell.MkDir("/tmp/gambasAsm")
-      Copy "dasm" To "/tmp/gambasAsm/dasm"
-      Chmod "/tmp/gambasAsm/dasm" To "rwxr-xr-x"
-    Endif
   Else
     Print ("Xa found, 65c02 extensions will be executed correctly")
     Print ("Using xa from  http://www.floodgap.com/retrotech/xa/\nxa is Andre Fachat's open-source 6502 cross assembler. I, Cameron Kaiser (ckaiser@floodgap.com), am the current maintainer, and bug reports and questions should now go to me.")
@@ -31,18 +25,36 @@ Public Sub _init()
     Print ("xa is distributed under the GNU Public License v2. The current maintainer is Cameron Kaiser.")
   Endif
 
+  If Not Exist("/tmp/gambasAsm/dasm") Then
+    Print ("Installing assembler to /tmp/gambasAsm")
+    Try Shell.MkDir("/tmp/gambasAsm")
+    Copy "dasm" To "/tmp/gambasAsm/dasm"
+    Chmod "/tmp/gambasAsm/dasm" To "rwxr-xr-x"
+  Endif
+
 End
 
-
-Public Sub _call(source As String, Dest As String, listing As String, symbols As String) As String
+Public Sub _call(source As String, Dest As String, listing As String, symbols As String, SearchPaths As String[]) As String
 
   Dim Result As String
+  Dim cmd As String[]
 
-  If XaInstalled Then
-    Exec ["xa", "-o", dest, "-l", symbols] To result
+  If Not FMain.AsmDasmSelect And If XaInstalled Then
+    cmd = ["xa", "-o", dest, "-l", symbols]
   Else
-    Exec ["/tmp/gambasAsm/dasm", Source, "-o" & Dest, "-l" & listing, "-s" & symbols] To result
+    cmd = ["/tmp/gambasAsm/dasm", Source, "-o" & Dest, "-l" & listing, "-s" & symbols]
   Endif
+
+  For Each s As String In SearchPaths
+    If Not FMain.AsmDasmSelect And If XaInstalled Then
+      cmd.Add("-I")
+      cmd.Add(s)
+    Else
+      cmd.Add("-I" & s)
+    Endif
+  Next
+
+  Exec cmd To result
 
   Result = Replace(result, "\n", "\n\r")
   If Exist(listing) Then Result &= "\n\r" & ("Listing available") & "  " & Listing & "\n\r" & ("Binary Generated") & " " & Dest & "\n\r"
@@ -50,4 +62,3 @@ Public Sub _call(source As String, Dest As String, listing As String, symbols As
   Return result
 
 End
-

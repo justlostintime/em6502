@@ -377,6 +377,12 @@ Public Sub OpenProg_Click()
   OriginalSource = EditProg.text
   CurrentlyOpenFile = Dialog.Path
   AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
+  Dim sp As String[] = Split(SearchPaths.text)
+
+  If sp.count = 0 Or If Not sp.Exist(AsmSourceDirectory) Then
+    sp.Add(AsmSourceDirectory)
+    SearchPaths.text = sp.Join()
+  Endif
 
 End
 
@@ -434,7 +440,7 @@ Public Sub AsmbProg_Click()
     Kill OutPutPath &/ FileBase & ".lst"
   Endif
   OpenListing.enabled = False
-  asmOutput.Print(Assembler(InputPath &/ FileName, OutPutPath &/ FileBase & ".bin", LstPath &/ FileBase & ".lst", LstPath &/ FileBase & ".sym"))
+  asmOutput.Print(Assembler(InputPath &/ FileName, OutPutPath &/ FileBase & ".bin", LstPath &/ FileBase & ".lst", LstPath &/ FileBase & ".sym", Split(SearchPaths.text)))
   InfoSection.Index = 3
   If Exist(LstPath &/ FileBase & ".lst") Then
     OpenListing.enabled = True
@@ -868,10 +874,12 @@ Public Sub Form_Resize()
   EditProg.w = InfoSection.w - 10
   EditProg.h = InfoSection.h - EditorButtons.h - 40
   EditorButtons.y = EditProg.h + EditProg.y + 2
+  EditorButtons.w = EditProg.w
   AsmOutput.w = EditProg.W
   AsmOutput.h = EditProg.h
   AsmOutputButtons.y = EditorButtons.y
   Disassembly.w = EditProg.W
   Disassembly.h = InfoSection.h - Disassembly.y - 30
+  SearchPaths.w = EditorButtons.w - SearchPaths.x - 10
 
 End

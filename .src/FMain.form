@@ -183,7 +183,7 @@
     Index = 2
     Text = ("Edit/Asm")
     { !EditProg TextEditor
-      MoveScaled(1,1,79,86)
+      MoveScaled(1,1,79,74)
       #Public = True
       Expand = True
       Mode = "C"
@@ -196,7 +196,8 @@
       CloseStrings = True
     }
     { EditorButtons Panel
-      MoveScaled(1,87,79,5)
+      MoveScaled(1,76,79,16)
+      Background = Color.SelectedBackground
       { SaveProg Button
         MoveScaled(13,1,12,3)
         Text = ("Save")
@@ -216,6 +217,30 @@
       { OpenProg Button
         MoveScaled(1,1,11,3)
         Text = ("Open")
+      }
+      { !AsmDasmSelect RadioButton
+        MoveScaled(3,5,22,3)
+        #Public = True
+        Text = ("Use dasm 6502")
+        Value = True
+      }
+      { !AsmXaSelect RadioButton
+        MoveScaled(26,5,23,3)
+        #Public = True
+        Text = ("Use xa 65C02")
+      }
+      { AsmAutoSelect RadioButton
+        MoveScaled(49,5,23,3)
+        Text = ("Auto Select")
+      }
+      { !SearchPaths TextBox
+        MoveScaled(18,9,59,4)
+        #Public = True
+        ToolTip = ("Coma Seperated Search Paths for included binary or Source Files\n")
+      }
+      { Label28 Label
+        MoveScaled(2,9,14,4)
+        Text = ("Include Paths")
       }
     }
     Index = 3
