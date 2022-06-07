@@ -62,7 +62,7 @@ Public Sub Save(Optional Directory As String = "")
 
   Dim CompSettings As Settings
 
-  If $Name = "" Or If Devices.count = 0 Then Return
+  If $Name = "" Then Return
 
   If Directory = "" Then
     CompSettings = New Settings($SourceDirectory &/ $Name, ("Definitions for computer ") & $name & (" Updated ") & Str(Now))
@@ -71,6 +71,7 @@ Public Sub Save(Optional Directory As String = "")
   Endif
 
   WriteInfo(CompSettings)
+  CompSettings = Null
 
 End
 
@@ -95,6 +96,7 @@ Public Sub Load(Directory As String, CName As String) As ComputerDef
 
   $SourceDirectory = Directory
   ReadInfo(CompSettings)
+  CompSettings = Null
 
 End
 
@@ -124,6 +126,7 @@ Public Sub WriteInfo(Comp As Settings)
     Comp["Device/" & Hex(index, 4) & "/Parameter"] = s[2]
     Inc index
   Next
+  Comp.Save()
 
 End
 

@@ -99,5 +99,6 @@ Public Sub MyResetButton_close()
   Settings["ResetForm/Window/Y"] = ResetForm.y
   Settings["ResetForm/Window/H"] = ResetForm.h
   Settings["ResetForm/Window/w"] = ResetForm.w
+  Settings.Save()
 
 End

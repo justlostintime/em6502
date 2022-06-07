@@ -100,5 +100,6 @@ Public Sub MyNmiButton_close()
   Settings["NmiForm/Window/Y"] = NmiForm.y
   Settings["NmiForm/Window/H"] = NmiForm.h
   Settings["NmiForm/Window/w"] = NmiForm.w
-
+  Settings.Save()
+  
 End

@@ -100,5 +100,6 @@ Public Sub MyIrqButton_close()
   Settings["IrqForm/Window/Y"] = IrqForm.y
   Settings["IrqForm/Window/H"] = IrqForm.h
   Settings["IrqForm/Window/w"] = IrqForm.w
+  Settings.Save()
   
 End

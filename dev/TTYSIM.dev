@@ -93,7 +93,7 @@ Public Sub _get(address As Long) As Byte
     ' Status = bclr(status,0)
     ENDIF
   endif
-  
+
   return status
 
 End
@@ -152,7 +152,7 @@ Public Sub MyTerminal_close()
   Settings["TTYForm/Window/Y"] = TTYForm.y
   Settings["TTYForm/Window/H"] = TTYForm.h
   Settings["TTYForm/Window/w"] = TTYForm.w
-
+  Settings.Save()
 
 End
 

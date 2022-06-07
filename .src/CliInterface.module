@@ -13,6 +13,14 @@ Public Sub main()
   Dim bVersion, bAbout, bDevMode, bPrintInstMatrix, bStartSingleStep As Boolean
   Dim sComputerName As String
 
+  Dim sDummy As String = Settings["Init", "Done"]
+
+  Settings["Init"] = sDummy
+  FMain.ReadConfig()
+  FMain.WriteConfig()
+
+  Settings.Save()
+
   Args.Begin(Application.name & " <options>")
   bVersion = Args.Has("v", "version", ("Display the version Of the emulator"))
   bAbout = Args.Has("a", "about", ("Information about ") & Application.name)
@@ -23,22 +31,22 @@ Public Sub main()
   Args.End()
 
   ''Define the default assembled source and binary directories
+
   With FMAIN
-    .AsmSourceDirectory = Settings["AsmSourceDirectory", .AsmSourceDirectory]
-    .AsmBinaryDirectory = Settings["AsmBinaryDirectory", .AsmBinaryDirectory]
-    .AsmDeviceDirectory = Settings["AsmDeviceDirectory", .AsmDeviceDirectory]
-    .AsmComputerDefinitions = Settings["AsmComputerDefinitions", .AsmComputerDefinitions]
-    .AsmDrivesDirectory = Settings["AsmDrivesDirectory", .AsmDrivesDirectory]
-    .AsmDocumentDirectory = Settings["AsmDocumentDirectory", .AsmDocumentDirectory]
-    .CurrentComputerDefinition = Settings["computer/current", .DefaultComputerDefinition]
-    .DefaultComputerDefinition = Settings["computer/default", .DefaultComputerDefinition]
 
+    .ReadConfig()
+    .WriteConfig()
 
-    If bdevMode Then
-      Try Shell.RmDir(.AsmRootDirectory)
-      Settings.Clear()
-    Endif
   End With
+
+  If bdevMode Then
+    Try Shell.RmDir(FMain.AsmRootDirectory)
+    Settings.Clear()
+    Settings.Save()
+  Endif
+
+
+
 
   CreateDefaults()
 

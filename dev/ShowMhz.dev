@@ -35,7 +35,7 @@ public sub _new(address as long, len as long, parameters as string)
   StatusUpdate = new timer as "MyStatusTimer"
   StatusUpdate.delay = val(trim(parameters))
   StatusUpdate.enabled = true
-  
+
 end
 
 Public sub _get() as variant
@@ -53,7 +53,7 @@ Public sub halt()
    StatusFORM.close()
    $TheCpu = null
    StatusUpdate = null
-   
+
 end
 
 Sub openStatusWindow(optional thetitle as string = "Cpu Speed")
@@ -101,7 +101,8 @@ Public Sub MyStatusInfo_close()
   Settings["StatusForm/Window/Y"] = StatusForm.y
   Settings["StatusForm/Window/H"] = StatusForm.h
   Settings["StatusForm/Window/w"] = StatusForm.w
-
+  Settings.Save()
+  
 End
 
 Public Sub MyStatusTimer_timer()

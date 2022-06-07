@@ -527,6 +527,12 @@ Fast Unsafe Public Sub Reset()
   $IRQPending = False
   $ResetPending = False
 
+  For Each od As Object In AddressMap
+    If Object.Class(od).Exist("Reset") Then
+      od.reset()
+    Endif
+  Next
+
   SR = (1 Shl 2)                ' set the irq disabled bit
   ac = 0
   SetSR(AC)

@@ -22,7 +22,7 @@ Public Sub _call()
       Comp.AutoStartActive = True
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
       Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "Tiny Basic running with CTMON65 monitor"]
+      Comp["TTYSIM"] = [&h0E000, 16, "Default Tiny Basic running with CTMON65 monitor"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp.Save(.AsmComputerDefinitions)
@@ -37,7 +37,7 @@ Public Sub _call()
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
       Comp["RamMemory"] = [&h0000, &h00200, ""]
       Comp["RamMemory:1"] = [&h0200, &h0DE00, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "Tiny Basic running with CTMON65 monitor"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMON2Ram Tiny Basic running with CTMON65 monitor"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp.Save(.AsmComputerDefinitions)
@@ -52,7 +52,7 @@ Public Sub _call()
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
       Comp["RamMemory"] = [&h0000, &h0200, ""]
       Comp["MMU"] = [&h0200, &h0DE00, "&h0E030,20;" & .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "Tiny Basic running with CTMON65 monitor"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMONMMU Tiny Basic running with CTMON65 monitor"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
       Comp.Save(.AsmComputerDefinitions)
@@ -66,7 +66,7 @@ Public Sub _call()
       Comp.AutoStartActive = True
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
       Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Basic at $0200"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Basic Loaded  at $0200"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["ResetButton"] = [0, 0, "Reset button"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
@@ -81,7 +81,7 @@ Public Sub _call()
       Comp.AutoStartActive = True
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
       Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "useirq.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Timer at $E020"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMONTIMER CTMON65 Running with Timer at $E020"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["IrqTimer"] = [&h0E020, 5, "1000"]
       Comp["CycleTimer"] = [&h0E030, 5, "5000"]
@@ -115,8 +115,6 @@ Sub copyDirectory(path As String, topath As String)
       Debug ("Unable to make directory ");; topath;; Error.text
       Return
     Endif
-    '  Else
-    '    Return
   Endif
 
   For Each s As String In Dir(path, "*", gb.directory)
@@ -125,7 +123,22 @@ Sub copyDirectory(path As String, topath As String)
 
   For Each s As String In Dir(path, "*", gb.file)
     If Right(s, 1) = "~" Then Continue
-    If Exist(ToPath &/ s) Then Continue
+    If Exist(ToPath &/ s) Then
+      Dim SourceFile As String = File.Load(Path &/ s)
+      Dim DestFile As String = File.Load(ToPath &/ s)
+      If DestFile = SourceFile Then
+        Continue
+      Else
+        Debug "Updating ";; s;; "Current Version Dated ";; Stat(ToPath &/ s).time;; ", Available Version Date ";; Stat(Path &/ s).time
+        If Message.warning("An Update Is available for " & s & " \nWould you like to update?", "Yes", "No") = 1 Then
+          Kill ToPath &/ s
+        Else
+          Continue
+        Endif
+      Endif
+
+    Endif
+
     Debug ("Copy :");; s
     Try Copy path &/ s To ToPath &/ s
     If Error Then

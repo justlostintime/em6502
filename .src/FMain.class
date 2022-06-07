@@ -2,19 +2,19 @@
 
 'Fast Unsafe
 Public MyComputer As Computer
-Public AsmRootDirectory As String = User.home &/ "6502"
-Public AsmSourceDirectory As String = User.home &/ "6502/asm"
-Public AsmBinaryDirectory As String = User.home &/ "6502/bin"
-Public AsmDeviceDirectory As String = User.home &/ "6502/dev"
-Public AsmComputerDefinitions As String = User.home &/ "6502/computer"
-Public AsmDrivesDirectory As String = User.home &/ "6502/drives"
-Public AsmDocumentDirectory As String = User.home &/ "6502/doc"
+Public AsmRootDirectory As String
+Public AsmSourceDirectory As String
+Public AsmBinaryDirectory As String
+Public AsmDeviceDirectory As String
+Public AsmComputerDefinitions As String
+Public AsmDrivesDirectory As String
+Public AsmDocumentDirectory As String
 
 Public CurrentlyOpenFile As String
 Public DefaultTemplate As String
 Public OriginalSource As String
-Public CurrentComputerDefinition As String = "Default"
-Public DefaultComputerDefinition As String = "Default"
+Public CurrentComputerDefinition As String
+Public DefaultComputerDefinition As String
 
 OnImage As Picture = Picture.Fromstring(File.load("OnLed.png"))
 OffImage As Picture = Picture.Fromstring(File.load("OffLed.png"))
@@ -29,6 +29,9 @@ Public Sub Form_Open()
   FMain.Y = Settings["FMain/Window/Y", FMain.Y]
   FMain.H = Settings["FMain/Window/H", FMain.H]
   FMain.W = Settings["FMain/Window/W", FMain.W]
+
+  ActiveComputer.text = CurrentComputerDefinition
+  DefaultComputer.text = DefaultComputerDefinition
 
   MyComputer = New Computer As "the_computer"
   Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
@@ -47,9 +50,8 @@ Public Sub Form_Open()
   DeviceList.Columns[2].text = "Length"
   DeviceList.Columns[3].text = "Device Specific Parameters"
 
-  ActiveComputer.text = CurrentComputerDefinition
-  DefaultComputer.text = DefaultComputerDefinition
 
+  FMain.Text = Application.Title & " " & Application.Version & " Computer Name : " & CurrentComputerDefinition
   FMain.Show()
 
   MyComputer.Configure(Comp)
@@ -65,14 +67,7 @@ Public Sub Form_Close()
   Settings["FMain/Window/W"] = FMain.W
   Settings["FMain/Window/H"] = FMain.H
 
-  Settings["AsmSourceDirectory"] = AsmSourceDirectory
-  Settings["AsmBinaryDirectory"] = AsmBinaryDirectory
-  Settings["AsmDeviceDirectory"] = AsmDeviceDirectory
-  Settings["AsmComputerDefinitions"] = AsmComputerDefinitions
-  Settings["AsmDrivesDirectory"] = AsmDrivesDirectory
-  Settings["computer/current"] = CurrentComputerDefinition
-  Settings["computer/default"] = DefaultComputerDefinition
-  Settings["AsmDocumentDirectory"] = AsmDocumentDirectory
+  WriteConfig()
 
   ShutdownMemMonitors()
 
@@ -84,6 +79,38 @@ Public Sub Form_Close()
   SaveComputersConfig()
 
 End
+
+Public Sub ReadConfig()
+
+  AsmRootDirectory = Settings["AsmRootDirectory", User.home &/ "6502"]
+  AsmSourceDirectory = Settings["AsmSourceDirectory", User.home &/ "6502/asm"]
+  AsmBinaryDirectory = Settings["AsmBinaryDirectory", User.home &/ "6502/bin"]
+  AsmDeviceDirectory = Settings["AsmDeviceDirectory", User.home &/ "6502/dev"]
+  AsmComputerDefinitions = Settings["AsmComputerDefinitions", User.home &/ "6502/computer"]
+  AsmDrivesDirectory = Settings["AsmDrivesDirectory", User.home &/ "6502/drives"]
+  CurrentComputerDefinition = Settings["computer/current", "Default"]
+  DefaultComputerDefinition = Settings["computer/default", "Default"]
+  AsmDocumentDirectory = Settings["AsmDocumentDirectory", User.home &/ "6502/doc"]
+
+End
+
+Public Sub WriteConfig()
+
+  Settings["AsmRootDirectory"] = AsmRootDirectory
+  Settings["AsmSourceDirectory"] = AsmSourceDirectory
+  Settings["AsmBinaryDirectory"] = AsmBinaryDirectory
+  Settings["AsmDeviceDirectory"] = AsmDeviceDirectory
+  Settings["AsmComputerDefinitions"] = AsmComputerDefinitions
+  Settings["AsmDrivesDirectory"] = AsmDrivesDirectory
+  Settings["computer/current"] = CurrentComputerDefinition
+  Settings["computer/default"] = DefaultComputerDefinition
+  Settings["AsmDocumentDirectory"] = AsmDocumentDirectory
+
+  Settings.Save()
+
+End
+
+
 
 Public Sub The_Computer_NextInst(info As String)
 

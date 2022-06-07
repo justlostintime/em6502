@@ -100,5 +100,5 @@ Public Sub MyHaltForm_close()
   Settings["HaltForm/Window/Y"] = HaltForm.y
   Settings["HaltForm/Window/H"] = HaltForm.h
   Settings["HaltForm/Window/W"] = HaltForm.w
-
+  Settings.save()
 End
