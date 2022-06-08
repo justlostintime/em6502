@@ -129,8 +129,8 @@ Sub copyDirectory(path As String, topath As String)
       If DestFile = SourceFile Then
         Continue
       Else
-        Debug "Updating ";; s;; "Current Version Dated ";; Stat(ToPath &/ s).time;; ", Available Version Date ";; Stat(Path &/ s).time
-        If Message.warning("An Update Is available for " & s & " \nWould you like to update?", "Yes", "No") = 1 Then
+        If CliInterface.UpdateDevNoPrompt Or If Message.warning("An Update Is available for " & s & " \nWould you like to update?", "Yes", "No") = 1 Then
+          Debug "Updating ";; s;; "Current Version Dated ";; Stat(ToPath &/ s).time;; ", Available Version Date ";; Stat(Path &/ s).time
           Kill ToPath &/ s
         Else
           Continue

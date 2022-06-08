@@ -7,6 +7,7 @@
 '  See project license file.
 
 Public AppDescription As String = ("This application emulates a 6502/65C02, its default is ctmon65 with tinybasic")
+Public UpdateDevNoPrompt As Boolean = False
 
 Public Sub main()
 
@@ -28,6 +29,8 @@ Public Sub main()
   bPrintInstMatrix = Args.Has("p", "print", ("Print Supported Instruction Matrix and exit"))
   bStartSingleStep = Args.Has("s", "singlestep", ("Start the emulator in single step mode"))
   sComputerName = Args.Get("c", "computer", ("Provies the name of the computer to run, No GUI is started"), "", "")
+  UpdateDevNoPrompt = Args.Has("u", "update", ("Update Device definitions no prompt"))
+
   Args.End()
 
   ''Define the default assembled source and binary directories
