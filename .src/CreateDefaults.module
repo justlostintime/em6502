@@ -118,25 +118,39 @@ Sub copyDirectory(path As String, topath As String)
   Endif
 
   For Each s As String In Dir(path, "*", gb.directory)
+    Debug "Copy SubDirectory : ";; path &/ s
     copyDirectory(path &/ s, ToPath &/ s)
   Next
 
+  Dim SourceFile As String
+  Dim DestFile As String
+
   For Each s As String In Dir(path, "*", gb.file)
     If Right(s, 1) = "~" Then Continue
-    If Exist(ToPath &/ s) Then
-      Dim SourceFile As String = File.Load(Path &/ s)
-      Dim DestFile As String = File.Load(ToPath &/ s)
+    If Not IsDir(Path &/ s) And If Exist(ToPath &/ s) Then
+      Debug "Compare Files ";; Quote(Path) &/ Quote(s);; "to";; Quote(ToPath &/ s)
+      Try SourceFile = File.Load(Path &/ s)
+      If Error Then
+        Debug "Warning: Unable to read file for copy compare/copy ";; Quote(Path) &/ Quote(s)
+        Continue
+      Endif
+      Try DestFile = File.Load(ToPath &/ s)
+      If Error Then
+        Debug "Warning: Unable to read file for copy compare/copy ";; Quote(ToPath &/ s)
+        Continue
+      Endif
       If DestFile = SourceFile Then
         Continue
       Else
-        If CliInterface.UpdateDevNoPrompt Or If Message.warning("An Update Is available for " & s & " \nWould you like to update?", "Yes", "No") = 1 Then
+        Dim Response As Integer = Message.warning("An Update Is available for " & s & " \nWould you like to update?", "Yes", "No", "Yes to All")
+        If CliInterface.UpdateDevNoPrompt Or If Response = 1 Or If Response = 3 Then
+          If response = 3 Then CliInterface.UpdateDevNoPrompt = True
           Debug "Updating ";; s;; "Current Version Dated ";; Stat(ToPath &/ s).time;; ", Available Version Date ";; Stat(Path &/ s).time
           Kill ToPath &/ s
         Else
           Continue
         Endif
       Endif
-
     Endif
 
     Debug ("Copy :");; s
