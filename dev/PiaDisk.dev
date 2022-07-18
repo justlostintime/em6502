@@ -41,6 +41,7 @@ Property Read DiskDriveLocation As String Use $DiskDriveLocation
 InputBuffer As New Byte[]                           ' Data from the cpu           a reg
 OutPutBuffer As New Byte[]                          ' Data to be sent to the cpu  a reg
 RealTime as date                                    ' Read time date
+piaTimer as timer                                   ' available interupt timer
 
 '' We are going to ignore all the direction stuff and init stuff except for
 '' this can be fully parallel in direction as well and we just want to look
@@ -73,6 +74,7 @@ Public Sub _New(Start As Long, Length As Long, DiskDriveLocation As String)
      next
   endif
   ReadTimeDate = now
+  piaTimer = new timer as "piainterupts"
   Debug "PiaDisk Port Defined at : "; Hex(Start, 6); " For length("; length; ")"; Hex(length);; "Disk Drive location:"; $DiskDriveLocation
 
 End
@@ -158,7 +160,7 @@ End
 fast unsafe Sub CompleteMsg() As Boolean
   'print "PIA Complete Message, checking for complete message ";DiskCmdText[InputBuffer.last]
   Select Case InputBuffer.last
-    Case PC_PING, PC_GET_DIR, PC_DONE
+    Case PC_PING, PC_GET_DIR, PC_DONE, PC_GET_CLOCK
       Return True
 
     Case PC_READ_FILE, PC_WRITE_FILE ,PC_RM_FILE       ' this requires as string
@@ -166,7 +168,7 @@ fast unsafe Sub CompleteMsg() As Boolean
         Return True
       Endif
 
-    Case PC_READ_BYTES                      ' this requires one more byte length
+    Case PC_READ_BYTES, PC_SET_TIMER                      ' this requires one more byte length
       If InputBuffer.count >= 2 Then
         Return True
       Endif
@@ -181,7 +183,7 @@ fast unsafe Sub CompleteMsg() As Boolean
       
     Case PC_SET_DATE
       If InputBuffer.count >= 9 Then
-      return true
+        return true
       endif
 
     Case Else
@@ -437,7 +439,7 @@ fast unsafe Sub DiskCmdProcess()
       
     Case PC_GET_CLOCK
        Dim DateTime as Date = DateAdd(RealTimeDate.gb.seconds,cint(timer))
-       print "PIA Get real time clock date and time BSD format"
+       print "PIA Get real time clock date and time BSD format",cstr(DateTime)
        OutputBuffer.add(PR_CLOCK_DATA,0)
        dim bcdvalue as byte = month(DateTime)
        OutputBuffer.add(bscvalue,0)
@@ -458,9 +460,41 @@ fast unsafe Sub DiskCmdProcess()
        
        
     Case PC_SET_CLOCK
-       print "PIA Set Read time clock date and time BSD format"
+       print "PIA Set Real time clock date and time BSD format";;
+       dim theyear as integer = inputBuffer[inputbuffer.max -3] shl 8 +  inputBuffer[inputbuffer.max - 4]
+       dim NewDate as date = date(theyear,inputBuffer[inputbuffer.max -1] ,inputBuffer[inputbuffer.max -2] , inputBuffer[inputbuffer.max - 5] , inputBuffer[inputbuffer.max - 6],inputBuffer[inputbuffer.max - 7]  
+       Print cstr(NewDate)
+       ReadTimeDate = NewDate
+       InputBuffer.remove(InputBuffer.max - 9,-1)            ' remove the info from the buffer
        
     Case PC_SET_TIMER
+       dim value as integer = inputbuffer.pop()
+       value = inputBuffer.pop()
+       if value > 9 then 
+           outbuffer.add(PR_NAK,0)
+           outputbuffer(ERR_NOT_FOUND,0)
+       else 
+         piatimer.stop()
+         piatimer.delay = 0
+         
+         select case value
+           case 0               ' disable interupt
+           case 1,2,3,4,5       ' set to value * 10
+             value = value * 10
+           case 6               ' 100 ms
+             value = 100
+           case 7               ' 250 ms
+             value = 250
+           case 8               ' 500 ms
+             value = 500
+           case 9               ' 1 Second
+             value = 1000
+         end select
+         
+         piatimer.delay = value
+         piatimer.start
+         
+       endif
 
    Case Else
      Print "Pia Unknown/Unsupported command ";hex(InputBuffer.last);" buffer len = ";InputBuffer.count
