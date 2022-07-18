@@ -50,7 +50,6 @@ Public Sub Form_Open()
   DeviceList.Columns[2].text = "Length"
   DeviceList.Columns[3].text = "Device Specific Parameters"
 
-
   FMain.Text = Application.Title & " " & Application.Version & " Computer Name : " & CurrentComputerDefinition
   FMain.Show()
 
@@ -109,8 +108,6 @@ Public Sub WriteConfig()
   Settings.Save()
 
 End
-
-
 
 Public Sub The_Computer_NextInst(info As String)
 

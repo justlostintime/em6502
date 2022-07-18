@@ -29,10 +29,7 @@ Property Read irq As Boolean
 Property Read zero As Boolean
 Property Read Carry As Boolean
 
-
-
 Public Sub _new(lPc As Long, lsp As Long, iAc As Integer, iX As Integer, iy As Integer, isr As Integer, DataBus As Byte, AddressBus As Long, Total As Long, PerSecond As Long, totCycles As Long, CyclesSec As Long)
-
 
   $pc = lPc
   $sp = lsp

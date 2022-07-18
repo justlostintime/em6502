@@ -6,6 +6,7 @@
 
 FAST UNSAFE
 '' PIA Disk Drive
+'' Added the hardware interface supported real time clock used by corshamtech board
 '' Emulates a PIA to a degree as used by the ctmon65 Interface
 '' reads on port A data, writes date thru port a
 '' Port b sets a but high when the PIA has data for the program
@@ -18,7 +19,6 @@ FAST UNSAFE
 drives As String[] = ["disk0", "disk1", "disk2", "disk3"]
 ActiveDrive As Integer = 0
 CurrentFile As File = Null
-
 
 IO_BASE As Long = &H0E000
 piaslot As Integer = 1
@@ -40,6 +40,7 @@ Property Read DiskDriveLocation As String Use $DiskDriveLocation
 
 InputBuffer As New Byte[]                           ' Data from the cpu           a reg
 OutPutBuffer As New Byte[]                          ' Data to be sent to the cpu  a reg
+RealTime as date                                    ' Read time date
 
 '' We are going to ignore all the direction stuff and init stuff except for
 '' this can be fully parallel in direction as well and we just want to look
@@ -71,6 +72,7 @@ Public Sub _New(Start As Long, Length As Long, DiskDriveLocation As String)
        drives.add(LocationAndDrives[i])
      next
   endif
+  ReadTimeDate = now
   Debug "PiaDisk Port Defined at : "; Hex(Start, 6); " For length("; length; ")"; Hex(length);; "Disk Drive location:"; $DiskDriveLocation
 
 End
@@ -89,7 +91,6 @@ End
 ' 3. Raise PSTROBE indicating data was read.
 ' 4. Wait For ACK To go low.
 ' 5. Lower PSTROBE.
-
 
 fast unsafe Public Sub _get(Address As Long) As Byte
   'dim result as byte
@@ -177,6 +178,11 @@ fast unsafe Sub CompleteMsg() As Boolean
           Return True
         Endif
       Endif
+      
+    Case PC_SET_DATE
+      If InputBuffer.count >= 9 Then
+      return true
+      endif
 
     Case Else
       print "Pia Waiting for unknown command : ";hex(InputBuffer.last);" Buffer len = ";InputBuffer.count
@@ -256,6 +262,8 @@ Const PC_GET_MAX As Byte = &H1a                  ' Get maximum drives
 Const PC_WRITE_FILE As Byte = &H1b               ' Open file For writing
 Const PC_WRITE_BYTES As Byte = &H1c              ' Data To be written
 Const PC_SAVE_CONFIG As Byte = &H1d              ' Save SD.CFG With current values
+Const PC_GET_CLOCK as byte = &H07                ' Get a message with date time information
+Const PC_SET_CLOCK as byte = &H08                ' Set the date time
 Const PC_SET_TIMER As Byte = &H1e                ' Set RTC Timer
 Const PC_WR_SEC_LONG As Byte = &H1f              ' Write sector With long sec num
 Const PC_RD_SEC_LONG As Byte = &H20              ' Read sector With long sec num
@@ -268,6 +276,7 @@ Const PR_VERSION_INFO As Byte = &H81             ' Contains version information
 Const PR_ACK As Byte = &H82                      ' ACK(no additional information)
 Const PR_NAK As Byte = &H83                      ' NAK - one status byte follows
 Const PR_PONG As Byte = &H85                     ' Reply To a ping
+Const PR_CLOCK_DATA as byte = &H87               ' Response to A PC_GET_CLOCK request
 Const PR_DIR_ENTRY As Byte = &H90                ' Directory entry
 Const PR_DIR_END As Byte = &H91                  ' End Of directory entries
 Const PR_FILE_DATA As Byte = &H92                ' File data
@@ -425,9 +434,36 @@ fast unsafe Sub DiskCmdProcess()
         Close CurrentFile
         CurrentFile = Null
       Endif
+      
+    Case PC_GET_CLOCK
+       Dim DateTime as Date = DateAdd(RealTimeDate.gb.seconds,cint(timer))
+       print "PIA Get real time clock date and time BSD format"
+       OutputBuffer.add(PR_CLOCK_DATA,0)
+       dim bcdvalue as byte = month(DateTime)
+       OutputBuffer.add(bscvalue,0)
+       bcdvalue = day(DateTime)
+       OutputBuffer.add(bcdvalue,0)
+       bsdvalue = year(DateTime) shr 8
+       OutputBuffer.add(bcdValue)
+       bcdvalue = (year(DateTime) and &hff00) shr 8
+       OutputBuffer.add(bcdvalue,0)
+       bcdValue = hour(DateTime)
+       OutputBuffer.add(bcdvalue,0)
+       bcdValue = minute(DateTime)
+       OutputBuffer.add(bcdValue,0)
+       bcdvalue = Second(DateTime)
+       OutputBuffer.add(bcdValue,0)
+       bcdvalue = WeekDay(DateTime)
+       OutputBuffer.add(bcdValue,0)
+       
+       
+    Case PC_SET_CLOCK
+       print "PIA Set Read time clock date and time BSD format"
+       
+    Case PC_SET_TIMER
 
    Case Else
-     Print "Pia Unknown command ";hex(InputBuffer.last);" buffer len = ";InputBuffer.count
+     Print "Pia Unknown/Unsupported command ";hex(InputBuffer.last);" buffer len = ";InputBuffer.count
 
   End Select
 
@@ -445,4 +481,3 @@ Sub GetFileName() As String
   Wend
   return filename
 End
-
