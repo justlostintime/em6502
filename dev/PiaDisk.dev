@@ -4,7 +4,7 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-FAST UNSAFE
+' FAST UNSAFE
 '' PIA Disk Drive
 '' Added the hardware interface supported real time clock used by corshamtech board
 '' Emulates a PIA to a degree as used by the ctmon65 Interface
@@ -37,6 +37,9 @@ Public MemoryLen As Long = 0                        ' Length of this memory bloc
 
 Property Read Name As String Use $Name              ' Every device gets a name
 Property Read DiskDriveLocation As String Use $DiskDriveLocation
+Property TheCpu as Variant use $TheCpu              ' The cpu we are running on
+
+Event IRQ()                                         ' Device can create an IRQ
 
 InputBuffer As New Byte[]                           ' Data from the cpu           a reg
 OutPutBuffer As New Byte[]                          ' Data to be sent to the cpu  a reg
@@ -73,7 +76,7 @@ Public Sub _New(Start As Long, Length As Long, DiskDriveLocation As String)
        drives.add(LocationAndDrives[i])
      next
   endif
-  ReadTimeDate = now
+  RealTime = now
   piaTimer = new timer as "piainterupts"
   Debug "PiaDisk Port Defined at : "; Hex(Start, 6); " For length("; length; ")"; Hex(length);; "Disk Drive location:"; $DiskDriveLocation
 
@@ -94,13 +97,13 @@ End
 ' 4. Wait For ACK To go low.
 ' 5. Lower PSTROBE.
 
-fast unsafe Public Sub _get(Address As Long) As Byte
+Public Sub _get(Address As Long) As Byte
   'dim result as byte
 
   Select Case Address
     Case PIAREGA
       If OutPutBuffer.count > 0 Then
-        'print "Pia Reg a Request Data, reply with data"
+        print "Pia Reg a Request Data, reply with data";;hex(OutputBuffer.last)
         Return OutPutBuffer.pop()
       ELSE
         print "Pia Invalid data read request "
@@ -157,8 +160,8 @@ End
 ' 6. Wait For ACK To go low, indicating End Of transfer
 
 '-------------------------------------------------------------------------------------------------------
-fast unsafe Sub CompleteMsg() As Boolean
-  'print "PIA Complete Message, checking for complete message ";DiskCmdText[InputBuffer.last]
+Sub CompleteMsg() As Boolean
+  print "PIA Complete Message, checking for complete message ";DiskCmdText[InputBuffer.last]
   Select Case InputBuffer.last
     Case PC_PING, PC_GET_DIR, PC_DONE, PC_GET_CLOCK
       Return True
@@ -180,9 +183,10 @@ fast unsafe Sub CompleteMsg() As Boolean
           Return True
         Endif
       Endif
-      
-    Case PC_SET_DATE
+
+    Case PC_SET_CLOCK
       If InputBuffer.count >= 9 Then
+        print "Pia Set Clock Called"
         return true
       endif
 
@@ -194,13 +198,13 @@ fast unsafe Sub CompleteMsg() As Boolean
 
 End
 
-fast unsafe Public Sub _put(value As Byte, address as long)
+Public Sub _put(value As Byte, address as long)
 
   Select Case Address
     Case PIAREGA
-      'print "Pia Reg a Message  Data=$";hex(value,2)
+      print "Pia Reg a Message  Data=$";hex(value,2)
       InputBuffer.add(value, 0)
-      'Print "Pia Recieved ";hex(value)
+      Print "Pia Recieved ";hex(value)
       If CompleteMsg() Then DiskCmdProcess()
       Return
 
@@ -224,10 +228,11 @@ fast unsafe Public Sub _put(value As Byte, address as long)
   End Select
 
  ' Print "Parallel: Write Request Address=$"; Hex(address, 4);; "With Data=$"; Hex(value, 2)
-
+catch
+  print error.text, error.where
 End
 
-fast unsafe Public Sub _InRange(Address As Long) As Boolean
+Public Sub _InRange(Address As Long) As Boolean
 
   If Address >= MemoryStart And if Address <= MemoryEnd Then Return True
   Return False
@@ -240,10 +245,15 @@ End
 ' Commands From host To Arduino
 '
 DiskCmdText as collection = [str(&H01):"PC_GET_VERSION",
-                             str(&H05):"PC_PING",str(&H06):"PC_LED_CONTROL",str(&H10):"PC_GET_DIR",str(&H11):"PC_GET_MOUNTED",str(&H12):"PC_MOUNT",str(&H13):"PC_UNMOUNT",
-                             str(&H14):"PC_GET_STATUS",str(&H15):"PC_DONE/PC_ABORT",str(&H16):"PC_READ_FILE",str(&H17):"PC_READ_BYTES",str(&H18):"PC_RD_SECTOR",str(&H19):"PC_WR_SECTOR",
-                             str(&H1a):"PC_GET_MAX",str(&H1b):"PC_WRITE_FILE",str(&H1c):"PC_WRITE_BYTES",str(&H1d):"PC_SAVE_CONFIG",str(&H1e):"PC_SET_TIMER",str(&H1f):"PC_WR_SEC_LONG",
-                             str(&H20):"PC_RD_SEC_LONG",str(&H81):"PR_VERSION_INFO",str(&H82):"PR_ACK",str(&H83):"PR_NAK",str(&H85):"PR_PONG",str(&H90):"PR_DIR_ENTRY",str(&H91):"PR_DIR_END",
+                             str(&H05):"PC_PING",str(&H06):"PC_LED_CONTROL",str(&H10):"PC_GET_DIR",str(&H11):"PC_GET_MOUNTED",str(&H12):"PC_MOUNT",
+                             str(&H13):"PC_UNMOUNT",
+                             str(&H14):"PC_GET_STATUS",str(&H15):"PC_DONE/PC_ABORT",str(&H16):"PC_READ_FILE",str(&H17):"PC_READ_BYTES",
+                             str(&H18):"PC_RD_SECTOR",str(&H19):"PC_WR_SECTOR",
+                             str(&H1a):"PC_GET_MAX",str(&H1b):"PC_WRITE_FILE",str(&H1c):"PC_WRITE_BYTES",str(&H1d):"PC_SAVE_CONFIG",
+                             str(&H07):"PC_GET_CLOCK",str(&H08):"_PC_SET_CLOCK",
+                             str(&H1e):"PC_SET_TIMER",str(&H1f):"PC_WR_SEC_LONG",
+                             str(&H20):"PC_RD_SEC_LONG",str(&H81):"PR_VERSION_INFO",str(&H82):"PR_ACK",str(&H83):"PR_NAK",str(&H85):"PR_PONG",
+                             str(&H90):"PR_DIR_ENTRY",str(&H91):"PR_DIR_END",
                              str(&H92):"PR_FILE_DATA",str(&H93):"PR_STATUS",str(&H94):"PR_SECTOR_DATA",str(&H95):"PR_MOUNT_INFO",str(&H96):"PR_MAX_DRIVES"]
 
 Const PC_GET_VERSION As Byte = &H01
@@ -308,7 +318,7 @@ Const ERR_NOT_IMPL As Byte = 20                 ' Command Not implemented
 
 ' send PR_NAK If a file Error occurs
 
-fast unsafe Sub DiskCmdProcess()
+Sub DiskCmdProcess()
    Dim FileName as string = ""
   If InputBuffer.count = 0 Then Return
   Select Case InputBuffer.pop()
@@ -436,47 +446,58 @@ fast unsafe Sub DiskCmdProcess()
         Close CurrentFile
         CurrentFile = Null
       Endif
-      
+
     Case PC_GET_CLOCK
-       Dim DateTime as Date = DateAdd(RealTimeDate.gb.seconds,cint(timer))
+       Dim DateTime as Date = DateAdd(RealTime,gb.second,cint(timer))
        print "PIA Get real time clock date and time BSD format",cstr(DateTime)
        OutputBuffer.add(PR_CLOCK_DATA,0)
-       dim bcdvalue as byte = month(DateTime)
-       OutputBuffer.add(bscvalue,0)
-       bcdvalue = day(DateTime)
+       dim bcdvalue as byte = bcd(month(DateTime))
        OutputBuffer.add(bcdvalue,0)
-       bsdvalue = year(DateTime) shr 8
-       OutputBuffer.add(bcdValue)
-       bcdvalue = (year(DateTime) and &hff00) shr 8
+       bcdvalue = bcd(day(DateTime))
        OutputBuffer.add(bcdvalue,0)
-       bcdValue = hour(DateTime)
+       bcdvalue = bcd(year(DateTime) / 100 )
+       OutputBuffer.add(bcdValue,0)
+       bcdvalue = bcd(year(DateTime) mod 100)
        OutputBuffer.add(bcdvalue,0)
-       bcdValue = minute(DateTime)
+       bcdValue = bcd(hour(DateTime))
+       OutputBuffer.add(bcdvalue,0)
+       bcdValue = bcd(minute(DateTime))
        OutputBuffer.add(bcdValue,0)
-       bcdvalue = Second(DateTime)
+       bcdvalue = bcd(Second(DateTime))
        OutputBuffer.add(bcdValue,0)
-       bcdvalue = WeekDay(DateTime)
+       bcdvalue = bcd(WeekDay(DateTime))
        OutputBuffer.add(bcdValue,0)
-       
-       
+
+
     Case PC_SET_CLOCK
        print "PIA Set Real time clock date and time BSD format";;
-       dim theyear as integer = inputBuffer[inputbuffer.max -3] shl 8 +  inputBuffer[inputbuffer.max - 4]
-       dim NewDate as date = date(theyear,inputBuffer[inputbuffer.max -1] ,inputBuffer[inputbuffer.max -2] , inputBuffer[inputbuffer.max - 5] , inputBuffer[inputbuffer.max - 6],inputBuffer[inputbuffer.max - 7]  
+       'inputbuffer.pop()             ' read the message number
+       dim imonth as integer =  frombcd(inputbuffer.pop())
+       dim iday as integer =  frombcd(inputbuffer.pop())
+       dim theyear as integer = (frombcd(inputbuffer.pop()) * 100 )+ frombcd(inputbuffer.pop())
+       dim ihour as integer = frombcd(inputbuffer.pop())
+       dim iminute as integer =  frombcd(inputbuffer.pop())
+       dim iSecond as integer = frombcd(inputbuffer.pop())
+       dim iDayOfWeek as integer = frombcd(inputbuffer.pop())
+       
+       print "Date Requested : ";theyear,imonth,iday,ihour,iminute,isecond
+       
+       dim NewDate as date = date(theyear,imonth,iday,ihour,iminute,isecond)
        Print cstr(NewDate)
-       ReadTimeDate = NewDate
+       RealTime = NewDate
        InputBuffer.remove(InputBuffer.max - 9,-1)            ' remove the info from the buffer
+       outputbuffer.add(PR_ACK,0)
        
     Case PC_SET_TIMER
        dim value as integer = inputbuffer.pop()
        value = inputBuffer.pop()
-       if value > 9 then 
-           outbuffer.add(PR_NAK,0)
+       if value > 9 then
+           outputbuffer.add(PR_NAK,0)
            outputbuffer(ERR_NOT_FOUND,0)
-       else 
+       else
          piatimer.stop()
          piatimer.delay = 0
-         
+
          select case value
            case 0               ' disable interupt
            case 1,2,3,4,5       ' set to value * 10
@@ -490,10 +511,11 @@ fast unsafe Sub DiskCmdProcess()
            case 9               ' 1 Second
              value = 1000
          end select
-         
+
          piatimer.delay = value
          piatimer.start
          
+         outputbuffer.add(PR_ACK,0)
        endif
 
    Case Else
@@ -502,6 +524,10 @@ fast unsafe Sub DiskCmdProcess()
   End Select
 
 End
+
+public sub piainterupts_timer()
+    
+end
 
 Sub GetFileName() As String
 
@@ -515,3 +541,34 @@ Sub GetFileName() As String
   Wend
   return filename
 End
+
+sub frombcd(value as byte) as integer
+'print "Frombcd ";hex(value)
+dim result as integer = 0
+result = (value shr 4) * 10
+result += value and &h0f
+return result
+
+end
+
+sub bcd(value as byte) as byte
+  'print "convert value ";value
+  dim a as new byte[]
+  if value = 0 then return value
+  dim result as byte = 0
+  while value > 0
+    dim v as byte = value  % 10
+    a.add(v)
+    value \= 10
+    print "Value = ";v
+  wend
+  
+  do
+     dim digit as byte = a.pop()
+     result = (result shl 4)
+     result = result or digit
+  loop until a.count = 0
+  
+  'print "Return BCD = ";hex(result)
+  return result
+end
