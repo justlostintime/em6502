@@ -526,7 +526,8 @@ Sub DiskCmdProcess()
 End
 
 public sub piainterupts_timer()
-    
+    raise IRQ()
+    wait
 end
 
 Sub GetFileName() As String
@@ -571,4 +572,10 @@ sub bcd(value as byte) as byte
   
   'print "Return BCD = ";hex(result)
   return result
+end
+
+Public sub Halt()
+
+ piatimer.stop()
+ 
 end
