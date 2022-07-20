@@ -7,6 +7,15 @@
 ;*********************************************************
 ;
 		include	"config.inc"
+; Zero-page data
+;
+;		zpage
+            seg.U ZEROPAGE
+            org	ZERO_PAGE_START
+sptr		ds	2
+INL         	ds	1
+INH         	ds	1
+putsp		ds	2
 ;
 		SEG.U   rom
 		org	ROM_START
@@ -59,7 +68,7 @@ DiskWrite       ds	3
 DiskClose       ds	3
 DiskRmFile	ds	3
 	endif	             ;SD_ENABLED
-	
+
 ;
 		SEG.U   Data
 		org	RAM_START

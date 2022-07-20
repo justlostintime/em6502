@@ -20,7 +20,7 @@ input            processor 6502
 ; IL code rather than the interpreter itself.
 ;
 ; 10/15/2021 v0.4 - Bob Applegate
-;		* Fxed major bug in findLine that
+;		* Fixed major bug in findLine that
 ;		  caused corrupted lines, crashes, etc.
 ;		* If no parameter given to RND, assume
 ;		  32766.
@@ -38,6 +38,7 @@ input            processor 6502
 ;               * Added extended function erase to
 ;                 use the extended ctmon65 rm file
 ;               * Fix quoted text to not have to backtrack
+;               * Add IRQ handler, Call Gosub and Iret at end
 ;
 ; www.corshamtech.com
 ; bob@corshamtech.com
@@ -230,7 +231,7 @@ puts		equ	putsil
 ;
 cold2		jsr	puts
 		db	CR,LF
-		db	"Bob's Tiny BASIC v1.0.1"
+		db	"Bob's Tiny BASIC v1.0.2 IRQs"
 		db	CR,LF
 		db	"https://github.com/CorshamTech/6502-Tiny-BASIC"
 		db	CR,LF,0
@@ -261,7 +262,30 @@ cold2		jsr	puts
 		lda	#%01011011
 		sta	random+1
 ;
-		jmp	coldtwo
+;   Insert a Basic irq handler for the basic Language
+    lda #ServiceIrq&$ff
+    sta IRQvec
+    lda #ServiceIrq>>8
+    sta IRQvec+1
+	  jmp	coldtwo
+
+;
+; This is the Basic IRQ handler
+SaveIrqReg db 0
+IRQStatus  db 0
+IRQPending db 0
+IRQEntry   db 0,0
+
+ServiceIrq pha
+           lda IRQStatus
+           BEQ  RetIrq
+           lda IRQPending
+           BNE  RetIrq
+           lda #1
+           sta IRQPending
+RetIrq     pla
+           rti
+;
 ;
 ; This is the warm start entry point
 ;
@@ -432,12 +456,15 @@ ILTBL	    dw	iXINIT	;0
 	    dw	iPOKEMEMORY   ;47
 	    dw  iPEEKMEMORY   ;48
 	    dw  iTSTLET       ;49       Test if the let with no LET keyword
-	    dw	iTSTDONE      ;50	Test if we are at the end of a line
+	    dw	iTSTDONE      ;50	     Test if we are at the end of a line
 	    dw	iGETCHAR      ;51       Get a character from the terminal
 	    dw	iPUTCHAR      ;52       Put a char to the terminal
 	    dw  iCallFunc     ;53       call a machine rtn accumulator
 	    dw  iCallFunc2    ;54       call system rtn with value in a
 	    dw  iTSTStr       ;55       Test Specifically for the start of a quoted string
+	    dw  iSetIrq       ;56       sets the irq handler
+	    dw  iTstIrq       ;57       test if irq is pending
+	    dw  iRET          ;58       return from interupt
 
 ILTBLend	equ	*
 ;
@@ -550,10 +577,10 @@ iNxtRun2	jsr	getILWord	;ignore next word
 ; find the next one after that.
 ;
 iXFER		jsr	popR0
-		jsr	findLine
+		    jsr	findLine
 iXFER2		jsr	AtEnd	      ;at end of user program?
 		beq	iFINv
-		ldy	#3            ;Change: 2->3 to skip length byte, point to start of text
+		ldy	#3              ;Change: 2->3 to skip length byte, point to start of text
 		sty	CUROFF
 		lda	#$ff
 		sta	RunMode
@@ -595,6 +622,15 @@ iSAVErr2        lda #0
 ;=====================================================
 ; Pop the next line from the call stack.
 ;
+iRET     jsr popLN
+         bcs iSAVErr
+         ldy #3
+         sty CUROFF
+         lda 0
+         sta IRQPending
+         cli
+         jmp NextIL
+
 iRSTR		jsr popLN
 		bcs iSAVErr
 		jmp NextIL
@@ -1273,7 +1309,7 @@ iTSTLET		jsr	getILByte
 		bne	iTSTfail        ; return it failed
 		jsr	restoreIL	; restore the IL anyway
 		jmp     NextIL		; Then next instruction
-;
+
 ;================================================jLIT=
 ;Test for end of line
 ;
@@ -1399,6 +1435,31 @@ tstPositive	clc
 		adc	#0
 		sta	ILPC+1
 		jmp	NextIL
+
+;
+;====================================================
+;Test for IRQ pending
+;
+iTstIrq jsr getILByte       ; get the offset to next instruction when not in irq
+        sta  offset
+        lda  IRQPending
+        beq  tstBranch
+        cmp  #1             ; only do this if set to first time
+        bne  tstBranch
+        sei                 ; disable the interupt until ireturn resets it
+irqbrk  inc  IRQPending     ; Set the pending to 2, so this ignores it, iret sets it to 0
+        jsr pushLN          ; Push the next line to be executed
+        bcs irqErra         ; Check if there was an error
+        lda  IRQEntry       ; Get the line number to branch to
+        sta  CURPTR         ; put line number into r0
+        lda  IRQEntry+1
+        sta  CURPTR+1
+        lda #3
+        sta CUROFF
+        jmp NextIL          ; Execute the next instruction should jmp statement
+irqErra ldx #12             ; Flag any error in line number
+         lda #0             ; stop the execution
+		jmp iErr2
 ;
 ;=====================================================
 ; This places the number of free bytes on top of the
@@ -1559,6 +1620,33 @@ iABS		jsr	popR0
 		inc	R0+1
 iABS_1		jsr	pushR0
 		jmp	NextIL
+;
+;================================================================
+;Set the IRQ service rtn line number
+;
+iSetIrq sei             ; disable the interupts
+        lda #0          ; Zero the Status flag
+        sta IRQStatus
+        jsr popR0       ; get the line number 
+        lda R0
+        ora R0+1
+        beq iSetExt     ; if it is zero disable all
+        lda CUROFF
+        sta SaveIrqReg  ; save the offset
+        jsr pushLN      ; Save the current line pointer
+        jsr findLine    ; Find the IRQ func Line Pointer
+        lda CURPTR+1    ; Copy it to the Entry pointer
+        sta IRQEntry+1
+        lda CURPTR
+        sta IRQEntry
+        lda #1          ; Indicate there is an irq gosub
+        sta IRQStatus
+        jsr popLN       ; Restore the old line number
+        lda SaveIrqReg
+        sta CUROFF      ; restore the offset
+        cli             ; Enable the interupts
+iSetExt jmp NextIL
+
 ;================================================================
 ;
             include	"support.asm"

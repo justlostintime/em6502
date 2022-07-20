@@ -197,7 +197,7 @@
 		db	37
 		endm
 ;
-; ABS will replace the top of stack with the 
+; ABS will replace the top of stack with the
 ; absolute value.
 ;
 		macro   ABS
@@ -241,12 +241,12 @@
 	macro DDIR
 		db	44
 		endm
-		
+
 ; RMFILE remove a fle from disk
 	macro RMFILE
 		db	45
 		endm
-		
+
 ; CLEARSCREEN clear the screen
 	macro CLEARSCREEN
 		db	46
@@ -271,7 +271,7 @@
 		endm
 ; GETCHAR	get a character from the input line leave it in RO
 	macro	GETCHAR
-		db	51
+		db 51
 		endm
 ; PUTCHAR	Put a character to the terminal
 	macro	PUTCHAR
@@ -290,4 +290,20 @@
                 db      55
                 db	({1}-*)-1           ;(addr-*)-1
                 endm
+; SETIRQ       Sets the line number to run when an irq happens irq 550
+  macro SETIRQ
+    db 56
+    endm
+
+; TSTIRQ       Test for irq pending,
+;              if so push the IRQ LINE NUMBER into RO, onto stack
+  macro TSTIRQ
+    db 57
+    db	({1}-*)-1           ;(addr-*)-1
+    endm
+    
+; IRET    return from interupt service
+  macro IRET
+    db 58
+    endm
 

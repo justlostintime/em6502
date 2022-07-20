@@ -9,8 +9,17 @@
 50 gosub 800
 55 rem after waiting for a while then print time again
 60 gosub 200
-70 end
-200 rem read the clock 
+65 print "Start the irqs going"
+70 gosub 900
+75 ? "Wait a while to display them"
+80 gosub 800
+85 ? "Stop the irqs"
+90 gosub 950
+95 ? "Display date one more time"
+100 gosub 200
+105 ? " Done with test "
+199 end
+200 rem read the clock
 220 poke(57360,7)
 230 a = peek(57360)
 240 gosub 500
@@ -60,10 +69,20 @@
 795 a = peek(57360)
 799 return
 800 rem delay some amount of time
-810 a = 1000
+810 a = 250
 820 if a = 0 then return
 830 a = a - 1
 840 goto 820
+900 rem set the timeout to 1 second
+910 poke(57360,30)
+920 poke(57360,9)
+925 a = peek(57360)
+930 return
+950 rem set timeout off
+960 poke(57360,30)
+970 poke(57360,0)
+975 a = peek(57360)
+980 return
 
 
 

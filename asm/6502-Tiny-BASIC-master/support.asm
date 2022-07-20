@@ -110,11 +110,11 @@ findLine	lda	#ProgramStart&$ff  ;Start of program -> CURPTR
 ; At end of code?
 ;
 iXFER1		lda	CURPTR 		   ; chk CURPTR = END PROGRAM
-		cmp	PROGRAMEND       
+		cmp	PROGRAMEND
 		bne	xfer2		   ;not end
 		lda	CURPTR+1
 		cmp	PROGRAMEND+1
-		bne	xfer2              ;Not at end 
+		bne	xfer2              ;Not at end
 ;
 ; Line not found and the end of the program was
 ; reached.  Return Z and C both clear.
@@ -166,12 +166,12 @@ xfer3		jsr	FindNextLine
 ;=====================================================
 ; This advances CURPTR to the next line.  If there
 ; are no more lines, this leaves CURPTR equal to
-; ProgramEnd.  Returns CUROFF set to 2.  This assumes
+; ProgramEnd.  Returns CUROFF set to 3.  This assumes
 ; CURPTR is pointing to a valid line on entry.  This
 ; pointer points to the two-byte line number.
 ; Update this points to the 1 byte line length  ****************
 ;
-FindNextLine	            
+FindNextLine
 		ldy	#3		;skip line number and length byte
 		sty	CUROFF		;this is the new offset
 		ldy     #0
@@ -198,7 +198,7 @@ atendexit	rts
 ; Print the contents of R0 as a signed decimal number.
 ; Does leading zero suppression.
 ;
-PrintDecimal	
+PrintDecimal
 		lda	R0+1	;MSB has sign
 		bpl	pplus		;it's a positive number
 ;
@@ -373,7 +373,7 @@ getDdone	lda	R0
 		inc	R0
 		bne	getDone2
 		inc	R0+1
-getDone2	
+getDone2
             lda R0
             sta $0010
             lda R0+1
@@ -406,9 +406,9 @@ psinb       	ldy	#1
 		inc	dpl	;update the pointer
 		bne	psinc	;if not, we're pntng to next char
 		inc	dpl+1	;account for page crossing
-psinc		ora	#0	;Set flags according to contents of 
+psinc		ora	#0	;Set flags according to contents of
              			;   Accumulator
-		beq	psix1	;don't print the final NULL 
+		beq	psix1	;don't print the final NULL
 		jsr	OUTCH	;write it out
 		jmp	psinb	;back around
 psix1		inc	dpl
@@ -500,7 +500,7 @@ getlinebs	ldx	getlinx
 ; extra bytes for where the line number will be.
 ; Update must now include leading length byte not the null at end ****************
 ;
-getLineLength	
+getLineLength
 		ldx	#0	;size
 getLineL2	lda	LINBUF,y
 		beq	getLineL3
@@ -567,13 +567,13 @@ pushR0		ldx	mathStackPtr
 		inx
 		stx	mathStackPtr
 		rts
-		
+
 ;=====================================================
 ; This pushes curptr basic current line onto the call stack.
 
 pushLN		sty	rtemp1
 		ldy	GoSubStackPtr
-		tya	
+		tya
 		cmp 	#GOSUBSTACKSIZE*2
 		beq	pusherr
 		lda	CURPTR
@@ -586,7 +586,7 @@ pushLN		sty	rtemp1
 		ldy	rtemp1
 		clc
 		rts
-		
+
 pusherr:	sec
 		rts
 ;
@@ -618,7 +618,7 @@ popR0		ldx	mathStackPtr
 ;=====================================================
 ; This pops Top Of gosub call Stack and
 ; laces it in CURPTR.
-; 
+;
 popLN		sty	rtemp1
                 ldy	GoSubStackPtr
 		dey
@@ -713,7 +713,7 @@ RestoreSigns
 		lda	R0
 		bne	restoresigns3
 		dec	R0+1
-restoresigns3	
+restoresigns3
 		dec	R0
 		lda	R0
 		eor	#$ff
@@ -725,7 +725,7 @@ restoresigns3
 		lda	R1
 		bne	restoresigns4
 		dec	R1+1
-restoresigns4	
+restoresigns4
 		dec	R1
 		lda	R1
 		eor	#$ff
@@ -830,7 +830,7 @@ GetSizes
 ;=====================================================
 ; Set output vector to the console output function
 ;
-SetOutConsole	
+SetOutConsole
 		lda	#OUTCH&$ff
 		sta	BOutVec
 		lda	#OUTCH/256
@@ -859,7 +859,7 @@ PrtStr		stx	PrtFrom+1
 		sty	PrtFrom
 		sta	PrtTerm
 		ldy	#0
-		
+
 PrtLoop		lda	(PrtFrom),y
 		cmp	PrtTerm
 		beq	PrtEnd

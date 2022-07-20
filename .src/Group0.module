@@ -199,7 +199,7 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Return
 
   Grp0Case36:'SEI impl
-    .sr = BSet(.rc, 2)
+    .sr = BSet(.sr, 2)
     Return
 
   Grp0Case31:'STZ ZeroPage

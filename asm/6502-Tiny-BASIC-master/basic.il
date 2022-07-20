@@ -30,13 +30,15 @@ XEC:
 	XINIT                      ;INITIALIZE
 
 ;STATEMENT EXECUTOR
-
 STMT:
+      TSTIRQ  notirq      ;if it is an irq set, this will cause transfer to irq handler
+notirq:
         TSTLET	   LET		   ;Test if second field is =
-	IJMP       DOLET           ;allow the default to be let
+	      IJMP       DOLET           ;allow the default to be let
 LET:
         TST        S1,"LET"       ;IS STATEMENT A LET
-DOLET:	TSTV       ERRVEC          ;YES, PLACE VAR ADDRESS ON AESTK
+DOLET:
+	TSTV       ERRVEC          ;YES, PLACE VAR ADDRESS ON AESTK
 	TST        ERRVEC,"="      ;(This line originally omitted)
 	CALL       EXPR            ;PLACE EXPR VALUE ON AESTK
 	DONE                       ;REPORT ERROR IF NOT NEXT
@@ -44,6 +46,14 @@ DOLET:	TSTV       ERRVEC          ;YES, PLACE VAR ADDRESS ON AESTK
 	NXT        CO              ;AND SEQUENCE TO NEXT
 	IJMP       STMT
 S1:
+  TST        S1S1,"IRET"     ;test return from interupt
+  TST        S1Sa,"URN"
+S1Sa:
+  DONE                       ;Must be only thing on the line
+  	IRET                       ;RESTORE LINE NUMBER OF CALL
+	IJMP       STMT
+
+S1S1:
 	TST        S2b,"GO"        ;GOTO OT GOSUB?
 	TST        S2,"TO"         ;YES...TO, OR...SUB
 	CALL       EXPR            ;GET LABEL
@@ -56,10 +66,10 @@ S2:
 	SAV                        ;SAVE RETURN LINE
 	XFER                       ;AND JUMP
 S2b:
-	TST        S3,"RE"	   ;Speed up pocessing but more memory
+	TST        S3,"RE"	        ;Speed up pocessing but more memory
 	TST        S2a,"T"
 	TST        S2aa,"URN"      ;RETURN STATEMENT
-S2aa:	DONE                       ;MUST BE CR
+S2aa:	DONE                   ;MUST BE CR
 	RSTR                       ;RESTORE LINE NUMBER OF CALL
 	NXT        CO              ;SEQUENCE TO NEXT STATEMENT
 	IJMP       STMT
@@ -67,7 +77,7 @@ S2a:
 	TST        S3,"M"          ;REMark.  Skip rest of line
 	NXT        CO
 	IJMP       STMT
-	
+
 S3:
 	TST        S3a,"?"         ; ? symonym for print
 	IJMP	   S4
@@ -77,7 +87,7 @@ S3a:
 S4:
 	TSTDONE    S4a		   ;Test if we just want crlf printed
 	IJMP	   S6
-	
+
 S4a:	TSTSTR     S7              ;TEST FOR QUOTED String
 	PRS                        ;PRINT STRING
 S5:
@@ -115,7 +125,7 @@ S8:
 	TST        S8a1,"THEN"     ;(This line originally omitted) not required
 S8a1	CMPR                       ;PERFORM COMPARISON -- PERFORMS NXT IF FALSE
 	IJMP       STMT
-	
+
 S8a:
 	TST        S8b,"POKE("       ;Poke a value into memory
         CALL	   EXPR	             ;Get address to write to
@@ -130,7 +140,7 @@ S8a:
 S8b:
 	TST       S8c,"PUTCH("     ;Put a char to the terminal
 	CALL      EXPR
-	TST       UNKNOWN,")"      
+	TST       UNKNOWN,")"
 	PUTCHAR
 	DONE
         NXT        CO              ;AND SEQUENCE TO NEXT
@@ -158,6 +168,13 @@ S13:
 	TST        S14,"END"
 	FIN
 S14:
+  TST        S14S1,"IRQ"      ;Check if we are setting IRQ HANDLER
+  CALL       EXPR            ;Get the LABEL .. line NUMBER
+  DONE                       ;must be CR
+  SETIRQ                     ;Set the line number now
+  NXT        CO              ;SEQUENCE TO NEXT STATEMENT
+  IJMP       STMT
+S14S1:
 	TST        S15,"LIST"      ;LIST COMMAND
 	DONE
 	LST
@@ -185,7 +202,7 @@ S17A:
 ;
 S17B:
 	if	(XKIM || CTMON65) && DISK_ACCESS
-	
+
 	TST        S17C,"SAVE"
 	OPENWRITE
 	DLIST
@@ -203,17 +220,17 @@ S17CLP:
 S17EOL:
 	DCLOSE                     ;close disk file
 	IJMP	CO                 ;back to start
-	
+
 S18:	TST 	S19,"DIR"
 	DDIR			   ;Display the directory content
 	IJMP	CO
 	endif
-	
+
 S19:	TST 	UNKNOWN,"ERASE"
 	RMFILE			   ;Erase the file from the disk
 	IJMP	CO
 	endif
-	
+
 ;
 ; Else, unknown command.
 ;
@@ -308,7 +325,7 @@ F2B2:
         TST       UNKNOWN,")"
         CALLFUNC2
         RTN
-        
+
 F2B2A   TST       UNKNOWN,")"
         CALLFUNC
         RTN

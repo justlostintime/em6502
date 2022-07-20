@@ -4,7 +4,7 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-' FAST UNSAFE
+FAST UNSAFE
 '' PIA Disk Drive
 '' Added the hardware interface supported real time clock used by corshamtech board
 '' Emulates a PIA to a degree as used by the ctmon65 Interface
@@ -479,27 +479,28 @@ Sub DiskCmdProcess()
        dim iminute as integer =  frombcd(inputbuffer.pop())
        dim iSecond as integer = frombcd(inputbuffer.pop())
        dim iDayOfWeek as integer = frombcd(inputbuffer.pop())
-       
+
        print "Date Requested : ";theyear,imonth,iday,ihour,iminute,isecond
-       
+
        dim NewDate as date = date(theyear,imonth,iday,ihour,iminute,isecond)
        Print cstr(NewDate)
        RealTime = NewDate
        InputBuffer.remove(InputBuffer.max - 9,-1)            ' remove the info from the buffer
        outputbuffer.add(PR_ACK,0)
-       
+
     Case PC_SET_TIMER
        dim value as integer = inputbuffer.pop()
-       value = inputBuffer.pop()
+       print "Set irq time to ";value
        if value > 9 then
            outputbuffer.add(PR_NAK,0)
            outputbuffer(ERR_NOT_FOUND,0)
        else
-         piatimer.stop()
-         piatimer.delay = 0
-
+         piatimer.enabled = false
          select case value
            case 0               ' disable interupt
+            outputbuffer.add(PR_ACK,0)
+            return
+
            case 1,2,3,4,5       ' set to value * 10
              value = value * 10
            case 6               ' 100 ms
@@ -514,7 +515,7 @@ Sub DiskCmdProcess()
 
          piatimer.delay = value
          piatimer.start
-         
+
          outputbuffer.add(PR_ACK,0)
        endif
 
@@ -526,8 +527,11 @@ Sub DiskCmdProcess()
 End
 
 public sub piainterupts_timer()
-    raise IRQ()
-    wait
+  'if $IRQDisabled or if $IRQPENDING then return
+  '$IRQPENDING = true
+  '$SysTimer.Stop()
+  $TheCpu.IRQPending = true
+  $TheCpu.InteruptPending = true
 end
 
 Sub GetFileName() As String
@@ -563,13 +567,13 @@ sub bcd(value as byte) as byte
     value \= 10
     print "Value = ";v
   wend
-  
+
   do
      dim digit as byte = a.pop()
      result = (result shl 4)
      result = result or digit
   loop until a.count = 0
-  
+
   'print "Return BCD = ";hex(result)
   return result
 end
@@ -577,5 +581,5 @@ end
 Public sub Halt()
 
  piatimer.stop()
- 
+
 end

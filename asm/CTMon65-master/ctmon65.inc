@@ -9,6 +9,7 @@
 ;
 		include	"config.inc"
 ;
+
 		seg     Vectors
 		org	ROM_START
 ;

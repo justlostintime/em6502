@@ -1,0 +1,38 @@
+1 goto 10
+2 rem IRQ callback function
+3 ? "In IRQ"
+4 c = c + 1
+5 ireturn
+10 rem Test the irq service functions
+30 gosub 900
+35 IRQ 3
+40 gosub 800
+50 gosub 950
+60 end
+800 rem delay some amount of time
+802 t = 10
+803 c = 0
+805 ? "Delay for "; t; " Seconds"
+820 if c = t then return
+840 goto 820
+900 rem set the timeout to 1 second
+905 ? "Set the interupt timeout to 1 second"
+910 poke(57360,30)
+920 poke(57360,9)
+925 a = peek(57360)
+930 return
+950 rem set timeout off
+955 ? "Turn off the IRQ"
+960 poke(57360,30)
+970 poke(57360,0)
+975 a = peek(57360)
+980 return
+1000 rem this program sets up an IRQ handler, this can be anywhere as
+1010 rem Internally a direct pointer is used to go to the service
+1020 rem function. When the IRQ handler is called all IRQ requests are 
+1030 rem disabled untill the service rtn completes with an ireturn
+1040 rem The uses the Corsham PIA clock functions to generate the
+1050 rem IRQ requests. lines 910 sends the request, 920 sets the length
+1060 rem see the corsham documentation included with this project for
+1070 rem meanings of the values.
+
