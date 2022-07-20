@@ -94,6 +94,12 @@ Public Sub Load(Directory As String, CName As String) As ComputerDef
 
   Dim CompSettings As New Settings(Directory &/ CName)
 
+  Dim sName As String = CompSettings["Name", "Not Found"]
+
+  If sName = "Not Found" Then
+    Error.Raise(("Unknown Computer Definition : ") & CName)
+  Endif
+
   $SourceDirectory = Directory
   ReadInfo(CompSettings)
   CompSettings = Null

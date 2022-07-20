@@ -62,7 +62,7 @@ Event Abort(Reason As String)
 
 Fast Unsafe Public Sub _new()
 
-  Debug Disassembler.version
+  If FMain.Verbose Then Error Disassembler.version
   $TotalCycles = 0
   $CyclesPerSecond = 0
   $InstructionsPerSecond = 0
@@ -165,7 +165,7 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
 
   Address = Address Or ah
   Address = ((Address Shl 8) Or al)
-  Debug ("Loading Image to address "); Hex(address, 4)
+  If FMain.Verbose Then Error ("Loading Image to address "); Hex(address, 4)
 
   Dim Length As Integer = Lof(BinInfo) - 2
   buffer = New Byte[length]
@@ -545,7 +545,7 @@ Fast Unsafe Public Sub Reset()
   PC = (PC Or (DataBus Shl 8))
 
   If SingleStep Then
-    Debug ("PC Reset");; Hex(pc)
+    If FMain.Verbose Then Error ("PC Reset");; Hex(pc)
     StepInfo()
   Endif
 

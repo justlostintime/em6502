@@ -25,6 +25,7 @@ Public Sub _call()
       Comp["TTYSIM"] = [&h0E000, 16, "Default Tiny Basic running with CTMON65 monitor"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
       Comp["HaltButton"] = [0, 0, "Quit Button"]
+      Comp["ShowMhz"] = [0, 0, "3000"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
@@ -109,16 +110,16 @@ End
 Sub copyDirectory(path As String, topath As String)
 
   If Not Exist(toPath) Then
-    Debug ("Create Default :");; toPath;; "From";; path
+    If FMain.Verbose Then Error ("Create Default :");; toPath;; "From";; path
     Try Shell.MkDir(ToPath)
     If Error Then
-      Debug ("Unable to make directory ");; topath;; Error.text
+      If FMain.Verbose Then Error ("Unable to make directory ");; topath;; Error.text
       Return
     Endif
   Endif
 
   For Each s As String In Dir(path, "*", gb.directory)
-    Debug "Copy SubDirectory : ";; path &/ s
+    If FMain.Verbose Then Error "Copy SubDirectory : ";; path &/ s
     copyDirectory(path &/ s, ToPath &/ s)
   Next
 
@@ -128,24 +129,24 @@ Sub copyDirectory(path As String, topath As String)
   For Each s As String In Dir(path, "*", gb.file)
     If Right(s, 1) = "~" Then Continue
     If Not IsDir(Path &/ s) And If Exist(ToPath &/ s) Then
-      Debug "Compare Files ";; Quote(Path) &/ Quote(s);; "to";; Quote(ToPath &/ s)
+      If FMain.Verbose Then Error ("Compare Files ");; Quote(Path) &/ Quote(s);; "to";; Quote(ToPath &/ s)
       Try SourceFile = File.Load(Path &/ s)
       If Error Then
-        Debug "Warning: Unable to read file for copy compare/copy ";; Quote(Path) &/ Quote(s)
+        If FMain.Verbose Then Error ("Warning: Unable to read file for copy compare/copy ");; Quote(Path) &/ Quote(s)
         Continue
       Endif
       Try DestFile = File.Load(ToPath &/ s)
       If Error Then
-        Debug "Warning: Unable to read file for copy compare/copy ";; Quote(ToPath &/ s)
+        If FMain.Verbose Then Error ("Warning: Unable to read file for copy compare/copy ");; Quote(ToPath &/ s)
         Continue
       Endif
       If DestFile = SourceFile Then
         Continue
       Else
-        Dim Response As Integer = Message.warning("An Update Is available for " & s & " \nWould you like to update?", "Yes", "No", "Yes to All")
+        Dim Response As Integer = Message.warning(("An Update Is available for ") & s & " \n" & ("Would you like to update?"), ("Yes"), ("No"), ("Yes to All"))
         If CliInterface.UpdateDevNoPrompt Or If Response = 1 Or If Response = 3 Then
           If response = 3 Then CliInterface.UpdateDevNoPrompt = True
-          Debug "Updating ";; s;; "Current Version Dated ";; Stat(ToPath &/ s).time;; ", Available Version Date ";; Stat(Path &/ s).time
+          If FMain.Verbose Then Error ("Updating ");; s;; ("Current Version Dated ");; Stat(ToPath &/ s).time;; "," & (" Available Version Date ");; Stat(Path &/ s).time
           Kill ToPath &/ s
         Else
           Continue
@@ -153,10 +154,10 @@ Sub copyDirectory(path As String, topath As String)
       Endif
     Endif
 
-    Debug ("Copy :");; s
+    If FMain.Verbose Then Error ("Copy :");; s
     Try Copy path &/ s To ToPath &/ s
     If Error Then
-      Debug ("Unable to copy file ");; ToPath &/ s;; ("from");; path &/ s;; ":";; Error.text
+      If FMain.Verbose Then Error ("Unable to copy file ");; ToPath &/ s;; ("from");; path &/ s;; ":";; Error.text
     Endif
   Next
 

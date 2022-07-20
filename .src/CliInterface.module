@@ -11,7 +11,7 @@ Public UpdateDevNoPrompt As Boolean = False
 
 Public Sub main()
 
-  Dim bVersion, bAbout, bDevMode, bPrintInstMatrix, bStartSingleStep As Boolean
+  Dim bVersion, bAbout, bDevMode, bPrintInstMatrix, bStartSingleStep, bVerbose As Boolean
   Dim sComputerName As String
 
   Dim sDummy As String = Settings["Init", "Done"]
@@ -30,6 +30,9 @@ Public Sub main()
   bStartSingleStep = Args.Has("s", "singlestep", ("Start the emulator in single step mode"))
   sComputerName = Args.Get("c", "computer", ("Provies the name of the computer to run, No GUI is started"), "", "")
   UpdateDevNoPrompt = Args.Has("u", "update", ("Update Device definitions no prompt"))
+  bVerbose = Args.Has("V", "verbose", ("Display Verbose messages"))
+
+
 
   Args.End()
 
@@ -37,6 +40,7 @@ Public Sub main()
 
   With FMAIN
 
+    If bVerbose Then .Verbose = True
     .ReadConfig()
     .WriteConfig()
 
@@ -61,7 +65,7 @@ Public Sub main()
     PrintMatrix()
   Else If sComputerName <> "" Then
     RunComputer(sComputerName)
-    Print ("End of Emulator session")                                                     'halt when we get here
+    If FMain.Verbose Then Error ("End of Emulator session")                                                     'halt when we get here
   Else
     FMain.Show()
     While Not FMain.Closed
@@ -89,9 +93,15 @@ End
 
 Public Sub RunComputer(ComputerName As String)
 
+  Dim Comp As ComputerDef
+
   With FMAIN
     .MyComputer = New Computer As "the_computer"
-    Dim Comp As New ComputerDef(.AsmComputerDefinitions, ComputerName)
+    Try Comp = New ComputerDef(.AsmComputerDefinitions, ComputerName)
+    If Error Then
+      Error Error.text
+      Return
+    Endif
     .MyComputer.Configure(Comp)
     Wait 0.001
     .MyComputer.StatusOff()

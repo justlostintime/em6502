@@ -16,6 +16,8 @@ Public OriginalSource As String
 Public CurrentComputerDefinition As String
 Public DefaultComputerDefinition As String
 
+Public Verbose As Boolean = False
+
 OnImage As Picture = Picture.Fromstring(File.load("OnLed.png"))
 OffImage As Picture = Picture.Fromstring(File.load("OffLed.png"))
 
@@ -558,7 +560,7 @@ End
 
 Public Sub DoLoad_Click()
 
-  Dialog.Title = "Select the Binary File to load"
+  Dialog.Title = ("Select the Binary File to load")
   Dialog.path = AsmBinaryDirectory
   If Dialog.OpenFile() Then
     Return
@@ -566,7 +568,7 @@ Public Sub DoLoad_Click()
 
   Try MyComputer.LoadMemory(Dialog.Path)
   If Error Then
-    Debug "ErrorLoading memory "; Error.text
+    Error ("ErrorLoading memory "); Error.text
     Return
   Endif
 

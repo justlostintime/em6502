@@ -37,7 +37,7 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
   MemoryEnd = Start
   MemoryLen = 16
   TermOut.Print("Ready at " & Hex(Start, 6) & "\n\r")
-  error "TTY Defined at : "; Hex(Start, 6); " For length("; len; ")"; Hex(len)
+  Debug "TTY Defined at : "; Hex(Start, 6); " For length("; len; ")"; Hex(len)
   if StartMessage <> "" then
   TermOut.Print(StartMessage & "\n\r")
   endif

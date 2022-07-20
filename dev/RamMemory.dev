@@ -78,7 +78,7 @@ End
 
 Public Sub Load(sBinSources As string ) as long ' For ram we can load a number Of files into Memory
   dim binsources as string[] = split(sBinSources,",","\"\"",true,false)
-  print "Ram Load Request ";sBinSources
+  Debug "Ram Load Request ";sBinSources
 
   For Each BinSource As String In BinSources
 
@@ -93,11 +93,11 @@ Public Sub Load(sBinSources As string ) as long ' For ram we can load a number O
 
     Dim address As Long = 0
     Dim ReadtoAddress as long = 0
-    
+
     Address = Address or ah
     Address = (Address shl 8) or al
     Dim Length As Integer = Lof(BinInfo) - 2
-    Print "Loading Image to address "; hex(address,4); " Length=";hex(length,4)
+    Debug "Loading Image to address "; hex(address,4); " Length=";hex(length,4)
     ReadToAddress = Address - MemoryStart
     If (Address < MemoryStart) Or If (Address + length - 1) > MemoryEnd Then
       Error.Raise(Subst("Invalid Memory Address Scope for &1, Starts at $&2 for length of $&3", BinSOurce, Hex(address, 6), Hex(Length, 4)))

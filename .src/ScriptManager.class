@@ -62,15 +62,15 @@ Public Function _Call(sname As String, Optional newParms As Variant[] = [], Comp
   Endif
 
   If SubsAndClasses.Exist(cname) Then
-    Debug ("Compile : Already have compiled Copy "); sname
+    If FMain.Verbose Then Error ("Compile : Already have compiled Copy "); sname
     cObject = SubsAndClasses[cname]
     If SourceFile <> cObject.OldSource Then
-      Debug ("Source does not match old one, Recompiling")
+      If FMain.Verbose Then Error ("Source does not match old one, Recompiling")
       sName = cname & Str(Overloadcount)
       Inc OverloadCount
       cObject.iChanged = True
     Else
-      Debug ("Source is unchanged , Just returning class")
+      If FMain.Verbose Then Error ("Source is unchanged , Just returning class")
       Return cObject.iClass
     Endif
   Else
@@ -148,7 +148,8 @@ Public Function _Call(sname As String, Optional newParms As Variant[] = [], Comp
   Endif
 
   ' Compile, archive, load and finally get the plugin class
-  Dim scmd As String = "gbc3 -a -g " & sPath & " 2>&1"
+  ' Dim scmd As String = "gbc3 -a -g " & sPath & " 2>&1"
+  Dim scmd As String = "gbc3 -a" & IIf(FMain.Verbose, " -g ", " ") & sPath & " 2>&1"
   Shell scmd To sRes ' include the -g flag to have Debug enabled
   If Process.LastValue Then
     'Error "Compile error sPath=[" & sPath & "]"

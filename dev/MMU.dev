@@ -103,7 +103,7 @@ End
 
 Public Sub Load(sBinSources As string ) as long ' For ram we can load a number Of files into Memory
   dim binsources as string[] = split(sBinSources,",","\"\"",true,false)
-  print "MMU/Ram Load Request ";sBinSources
+  Debug "MMU/Ram Load Request ";sBinSources
   dim tempBlock as integer = CurrentBlock
 
   For Each BinSource As String In BinSources
