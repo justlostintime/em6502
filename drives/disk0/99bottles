@@ -1,0 +1,19 @@
+100 LET N=99
+105 GOSUB 120
+110 IF N>0 THEN GOTO 105
+115 END
+120 GOSUB 155
+125 GOSUB 175
+130 PRINT "Take one down, pass it round"
+135 LET N=N-1
+140 GOSUB 155
+145 PRINT ""
+150 RETURN
+155 IF N=0 THEN PRINT "No more bottles of beer on the wall"
+160 IF N=1 THEN PRINT N," bottle of beer on the wall"
+165 IF N>1 THEN PRINT N," bottles of beer on the wall"
+170 RETURN
+175 IF N=0 THEN PRINT "No more bottles of beer"
+180 IF N=1 THEN PRINT N," bottle of beer"
+185 IF N>1 THEN PRINT N," bottles of beer"
+190 RETURN
