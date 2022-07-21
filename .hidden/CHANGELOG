@@ -1,3 +1,6 @@
+* Wed Jul 20 2022 Justlostintime <justlostintime@gmail.com> 1.1.6
+- Add Games and tiny basic functions
+
 * Wed Jul 20 2022 Justlostintime <justlostintime@gmail.com> 1.1.5
 - Updated error handling and verbosity
 - Added -V --verbose option to turn on the verbose mode for
