@@ -301,9 +301,13 @@
     db 57
     db	({1}-*)-1           ;(addr-*)-1
     endm
-    
+
 ; IRET    return from interupt service
   macro IRET
     db 58
+    endm
+; INSTR   read a string from the input
+  macro INSTR
+    db 59
     endm
 

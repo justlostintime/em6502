@@ -571,10 +571,11 @@ pushR0		ldx	mathStackPtr
 ;=====================================================
 ; This pushes curptr basic current line onto the call stack.
 
-pushLN		sty	rtemp1
+pushLN
+    sty	rtemp1
 		ldy	GoSubStackPtr
 		tya
-		cmp 	#GOSUBSTACKSIZE*2
+		cmp 	#GOSUBSTACKSIZE*3
 		beq	pusherr
 		lda	CURPTR
 		sta	(GOSUBSTACK),y
@@ -582,12 +583,16 @@ pushLN		sty	rtemp1
 		lda	CURPTR+1
 		sta	(GOSUBSTACK),y
 		iny
+		lda CUROFF
+		sta	(GOSUBSTACK),y
+		iny
 		sty	GoSubStackPtr
 		ldy	rtemp1
 		clc
 		rts
 
-pusherr:	sec
+pusherr:
+    sec
 		rts
 ;
 ;=====================================================
@@ -620,11 +625,14 @@ popR0		ldx	mathStackPtr
 ; laces it in CURPTR.
 ;
 popLN		sty	rtemp1
-                ldy	GoSubStackPtr
+        ldy	GoSubStackPtr
 		dey
 		tya
 		cmp	#$FF
 		beq	poperr
+		lda	(GOSUBSTACK),y
+		sta CUROFF
+		dey
 		lda	(GOSUBSTACK),y
 		sta	CURPTR+1
 		dey

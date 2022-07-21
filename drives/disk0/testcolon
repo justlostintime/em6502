@@ -1,0 +1,11 @@
+5 input "Enter Number",a
+6 input "Enter a letter",b$
+7 ? "a=";a,"b=";b
+10 if 1=1 then ? "hi" : ? "bye"
+20 if 1<>1 then ? "no" : ? "Not"
+25 if 1=1 then ? "hi"; : ? "bye2"
+30 gosub 1000 : gosub 2000:gosub1000:?"all called"
+300 ? "done"
+400 end
+1000 ? "sub 1000" : return
+2000 ? "sub 2000" : return

@@ -104,7 +104,7 @@ FIXED		equ	FALSE
 ; BASIC, so keep this small!
 ;
 STACKSIZE	equ	8	;number of entries
-GOSUBSTACKSIZE  equ     20      ;Depth of gosub nesting max is 128
+GOSUBSTACKSIZE  equ     20      ;Depth of gosub nesting max is 85
 ;
 ; Common ASCII constants
 ;
@@ -117,6 +117,8 @@ QUOTE			equ	$22
 SPACE			equ	$20
 COMMA			equ	',
 SEMICOLON		equ	';
+COLON       equ 58
+DOLLAR      equ $24
 ;
 ; These are error codes
 ;
@@ -237,11 +239,11 @@ cold2		jsr	puts
 		db	CR,LF,0
 ;
                 jsr     GetSizes           ;setup the free space available
-                lda	HighMem
-                sbc	#GOSUBSTACKSIZE*2
+                lda     HighMem
+                sbc     #GOSUBSTACKSIZE*3
                 sta     GOSUBSTACK
                 lda     HighMem+1
-                sbc	#0
+                sbc     #0
                 sta     GOSUBSTACK+1
 		lda	#IL&$ff
 		sta	ILPC
@@ -465,6 +467,7 @@ ILTBL	    dw	iXINIT	;0
 	    dw  iSetIrq       ;56       sets the irq handler
 	    dw  iTstIrq       ;57       test if irq is pending
 	    dw  iRET          ;58       return from interupt
+	    dw  iINSTR        ;59       read a string return first char on top of stack
 
 ILTBLend	equ	*
 ;
@@ -506,6 +509,12 @@ iDONE		ldy	CUROFF
 		jsr	SkipSpaces
 		lda	(CURPTR),y
 		beq	doneadv
+		cmp #COLON              ; is it a  ':' or eol
+		bne idoneErr
+		sty CUROFF
+		jmp NextIL           ; continue on this line
+
+idoneErr
 		ldx	#ERR_EXTRA_STUFF
 		lda	#0
 		jmp	iErr2
@@ -558,17 +567,27 @@ iNXT		lda	RunMode
 ;
 		jmp	iJMP
 ;
-iNxtRun		jsr	FindNextLine
+iNxtRun
+    ldy CUROFF
+    lda (CURPTR),y
+    cmp #COLON
+    bne iNxtRunGo
+    iny
+    sty CUROFF
+    jmp iNxtRun2
+
+iNxtRunGo
+    jsr	FindNextLine
 		jsr	AtEnd
-		bne	iNxtRun2	;not at end
+		bne	iNxtRun2	        ;not at end
 ;
 ; At the end of the program.  Pretend an END statement
 ; was found.
 ;
 iFINv		jmp	iFIN
 ;
-iNxtRun2	jsr	getILWord	;ignore next word
-		jmp	NextIL
+iNxtRun2	jsr	getILWord	  ;ignore next word
+		    jmp	NextIL
 ;
 ;=====================================================
 ; XFER takes the number on top of the stack and looks
@@ -726,7 +745,8 @@ iCMPno		jsr	FindNextLine
 ; Get a line of text from the user, convert to a
 ; number, leave on top of stack.
 ;
-iINNUM		lda	CUROFF	;save state before GetLine
+iINNUM
+    lda	CUROFF                       	;save state before GetLine
 		pha
 		lda	CURPTR+1
 		pha
@@ -736,8 +756,31 @@ iINNUM		lda	CUROFF	;save state before GetLine
 		lda	#'?
 		jsr	GetLine
 		jsr	getDecimal
-		jsr	pushR0	;put onto stack
+		jsr	pushR0       	;put onto stack
 ;
+    jmp ExitIn
+;
+;=====================================================
+; Get a line of text from the user, convert to a
+; String , leave on top of stack. up to 2 characters
+;
+iINSTR
+    lda	CUROFF                       	;save state before GetLine
+		pha
+		lda	CURPTR+1
+		pha
+		lda	CURPTR
+		pha
+;
+		lda	#'?
+		jsr	GetLine
+		lda (CURPTR),y
+		sta R0
+		lda #0
+		sta R0+1
+		jsr	pushR0       	;put onto stack
+;
+ExitIn
 		pla
 		sta	CURPTR
 		pla
@@ -747,7 +790,6 @@ iINNUM		lda	CUROFF	;save state before GetLine
 ;
 		jmp	NextIL
 ;
-
 ;
 ;=====================================================
 ; Stop the currently running program.  Actually very
@@ -1314,21 +1356,23 @@ iTSTLET		jsr	getILByte
 ;Test for end of line
 ;
 iTSTDONE	jsr	getILByte
-		sta     offset
-		jsr	saveIL
-
-		ldy	CUROFF
-		sty	dpl
-		jsr	SkipSpaces
-		lda	(CURPTR),y
-		beq	iTSTDONEtrue
-		ldy	dpl
-		sty	CUROFF
-		jmp	iTSTfail
+		    sta     offset
+		    jsr	   saveIL
+		    ldy	CUROFF
+		    sty	dpl
+		    jsr	SkipSpaces
+		    lda	(CURPTR),y
+		    beq	iTSTDONEtrue
+		    cmp #COLON
+		    beq iTSTDONEtrue
+		    ldy	dpl
+		    sty	CUROFF
+		    jmp	iTSTfail
 ;
 ; Advance to the next line
 ;
-iTSTDONEtrue	jmp	NextIL
+iTSTDONEtrue
+    jmp	NextIL
 ;
 ;=====================================================
 ; TSTV is followed by an 8 bit signed offset.  If the
@@ -1564,7 +1608,11 @@ iPEEKMEMORY	sty	tempy
 		ldy	#0
 		lda	(R0),y
 		ldy     tempy
-		jmp     iPutStack
+		sta     R0
+		lda	#0
+		sta     R0+1
+		jsr	pushR0
+    	jmp     NextIL
 ;
 ; Call to address return what ever is in a to the stack
 ; func2 will load a value into a before the call
@@ -1584,16 +1632,32 @@ iCallRtn        jsr 	popR0
 ;Get a character from the terminal convert to value
 ;leave the number on top f the stack
 ;
-iGETCHAR:	jsr	GETCH
-	    if	CTMON65
+iGETCHAR:
+    lda	CUROFF                       	;save state before GetLine
+		pha
+		lda	CURPTR+1
+		pha
+		lda	CURPTR
+		pha
+;
+    jsr	GETCH
+ if	CTMON65
 		pha
 		jsr	cout   ;echo echo echo
 		pla
-	    endif
-iPutStack	sta     R0
-		lda	#0
+ endif
+    sta     R0
+		lda	    #0
 		sta     R0+1
-		jsr	pushR0
+		jsr	    pushR0
+;
+		pla
+		sta	CURPTR
+		pla
+		sta	CURPTR+1
+		pla
+		sta	CUROFF
+
 		jmp     NextIL
 ;===========================================jlit======
 ;Put a character to the terminal convert to
@@ -1627,7 +1691,7 @@ iABS_1		jsr	pushR0
 iSetIrq sei             ; disable the interupts
         lda #0          ; Zero the Status flag
         sta IRQStatus
-        jsr popR0       ; get the line number 
+        jsr popR0       ; get the line number
         lda R0
         ora R0+1
         beq iSetExt     ; if it is zero disable all
@@ -1673,7 +1737,7 @@ mathStack	ds	STACKSIZE*2
 mathStackPtr	ds	1
 retStack	ds	STACKSIZE*2
 retStackPtr	ds	1
-;callStack	ds	GOSUBSTACKSIZE*2
+;callStack	ds 	GOSUBSTACKSIZE*3
 GoSubStackPtr	ds	1
 LINBUF		ds	132
 getlinx		ds	1

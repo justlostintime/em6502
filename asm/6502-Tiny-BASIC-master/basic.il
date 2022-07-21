@@ -31,7 +31,7 @@ XEC:
 
 ;STATEMENT EXECUTOR
 STMT:
-      TSTIRQ  notirq      ;if it is an irq set, this will cause transfer to irq handler
+      TSTIRQ  notirq      ;if it is an irq posted, this will cause transfer to irq handler
 notirq:
         TSTLET	   LET		   ;Test if second field is =
 	      IJMP       DOLET           ;allow the default to be let
@@ -69,7 +69,8 @@ S2b:
 	TST        S3,"RE"	        ;Speed up pocessing but more memory
 	TST        S2a,"T"
 	TST        S2aa,"URN"      ;RETURN STATEMENT
-S2aa:	DONE                   ;MUST BE CR
+S2aa:
+  DONE                       ;MUST BE CR
 	RSTR                       ;RESTORE LINE NUMBER OF CALL
 	NXT        CO              ;SEQUENCE TO NEXT STATEMENT
 	IJMP       STMT
@@ -85,28 +86,28 @@ S3a:
 	TST        S8,"PR"         ;allow short form of print
 	TST        S4,"INT"        ;PRINT
 S4:
-	TSTDONE    S4a		   ;Test if we just want crlf printed
+	TSTDONE    S4a		          ;Test if we just want crlf printed
 	IJMP	   S6
 
 S4a:	TSTSTR     S7              ;TEST FOR QUOTED String
-	PRS                        ;PRINT STRING
+	PRS                          ;PRINT STRING
 S5:
 	TST        S6A,COMMA       ;IS THERE MORE?
 	SPC                        ;SPACE TO NEXT ZONE
-	TSTDONE	   S4		   ;Not end of line jump back
+	TSTDONE	   S4		          ;Not end of line jump back
 	IJMP       S6a             ;YES JUMP BACK
 ;
 ; If a semicolon, don't do anything.
 ;
 S6A:
 	TST        S6,SEMICOLON    ;IF semicolon also check if end of line
-	TSTDONE	   S4		   ;Jump Back if not end of line
+	TSTDONE	   S4		          ;Jump Back if not end of line
 	IJMP       S6a
 S6:
 	DONE                       ;ERROR IF CR NOT NEXT
 	NLINE
 S6a	NXT        CO		   ;exit here if , or ; at end of print
-	IJMP       STMT
+	  IJMP       STMT
 ;
 ; A jump for code too far away for relative branch
 ;
@@ -154,8 +155,17 @@ S8c
 S9:
 	TST        S13,"INPUT"     ;INPUT STATEMENT
 S10:
+  TSTSTR     S10A            ;If there is a string print the prompt
+  PRS
+  	TST        S10A,COMMA       ;IS THERE MORE?
+S10A:
 	TSTV       UNKNOWN         ;GET VAR ADDRESS (Originally CALL VAR = nonexist)
+	TST        S10A1,DOLLAR 
+	INSTR
+	IJMP       S10A2
+S10A1:
 	INNUM                      ;MOVE NUMBER FROM TTY TO AESTK
+S10A2:
 	STORE                      ;STORE IT
 	TST        S11,COMMA       ;IS THERE MORE?
 	IJMP       S10             ;YES
