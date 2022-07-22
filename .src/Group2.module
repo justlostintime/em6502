@@ -46,7 +46,7 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
   Grp2Case04: 'ORA (ZeroPageIndirect)
     .ZeroPageIndirect()
     .ReadByte()
-    .OraAc()
+    .OrAc()
     Return
 
   Grp2Case06: 'INA - inc A

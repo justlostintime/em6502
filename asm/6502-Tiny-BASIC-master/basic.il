@@ -121,22 +121,24 @@ S7:
 S8:
 	TST        S8a,"IF"        ;IF STATEMENT
 	CALL       EXPR            ;GET EXPRESSION
-	CALL       RELOP           ;DETERMINE OPR AND PUT ON STK
-	CALL       EXPR            ;GET EXPRESSION
+	;Expression is not including the relative operators, true and false
+	                           ;CALL       RELOP           ;DETERMINE OPR AND PUT ON STK
+	                           ;CALL       EXPR            ;GET EXPRESSION
 	TST        S8a1,"THEN"     ;(This line originally omitted) not required
-S8a1	CMPR                       ;PERFORM COMPARISON -- PERFORMS NXT IF FALSE
+S8a1:
+	IBRANCH                    ;PERFORM COMPARISON -- PERFORMS NXT IF FALSE calls iBranch
 	IJMP       STMT
 
 S8a:
-	TST        S8b,"POKE("       ;Poke a value into memory
-        CALL	   EXPR	             ;Get address to write to
+	TST        S8b,"POKE("             ;Poke a value into memory
+        CALL	   EXPR	                ;Get address to write to
         TST        UNKNOWN,COMMA     ;Must have a coma
-        CALL	   EXPR		     ;Get the value to poke
+        CALL	   EXPR		              ;Get the value to poke
         TST        UNKNOWN,")"
         POKEMEM
         DONE
         NXT        CO              ;AND SEQUENCE TO NEXT
-	IJMP       STMT
+        IJMP       STMT
 
 S8b:
 	TST       S8c,"PUTCH("     ;Put a char to the terminal
@@ -157,10 +159,10 @@ S9:
 S10:
   TSTSTR     S10A            ;If there is a string print the prompt
   PRS
-  	TST        S10A,COMMA       ;IS THERE MORE?
+  	TST        S10Z,SEMICOLON  ;Must follow the prompt
 S10A:
 	TSTV       UNKNOWN         ;GET VAR ADDRESS (Originally CALL VAR = nonexist)
-	TST        S10A1,DOLLAR 
+	TST        S10A1,DOLLAR
 	INSTR
 	IJMP       S10A2
 S10A1:
@@ -169,7 +171,8 @@ S10A2:
 	STORE                      ;STORE IT
 	TST        S11,COMMA       ;IS THERE MORE?
 	IJMP       S10             ;YES
-
+S10Z:
+  iJMP       UNKNOWN
 S11:
 	DONE                       ;MUST BE CR
 	NXT        CO              ;SEQUENCE TO NEXT
@@ -249,42 +252,87 @@ UNKNOWN:
 
 ;-----------------------------------------------------
 EXPR:
-	TST        E0,"-"
-	CALL       TERM            ;TEST FOR UNARY -.
-	NEG                        ;GET VALUE
-	IJMP       E1              ;NEGATE IT
+  Call       EXPR2           ; get the first expression
+	TST        iR0,"="
+	LIT        2               ;=
+	IJMP       iRFound
+iR0:
+	TST        iR4,"<"
+	TST        iR1,"="
+	LIT        3               ;<=
+	IJMP       iRFound
+iR1:
+	TST        iR3,">"
+	LIT        5	              ;<>
+	IJMP       iRFound
+iR3:
+	LIT        1               ;<
+	IJMP       iRFound
+iR4:
+	TST        iRDone,">"
+	TST        iR5,"="
+	LIT        6               ;>=
+	IJMP       iRFound
+iR5:
+	TST        iR6,"<"
+	LIT        1
+	IJMP       iRFound          ;(This line originally omitted)
+iR6:
+	LIT        4               ;>
+iRFound:
+  Call       EXPR2           ; get the right side of the expression
+  CMPR                       ; Push the value of the true false onto the stack
+
+iRDone:
+  RTN
+
+EXPR2:
+	TST        E0,"-"          ; Look for leading - to negate term
+	CALL       TERM            ; Get value to negate FOR UNARY -.
+	NEG                        ; Make value negated
+	IJMP       E1              ; We have Left term process operators next
 E0:
-	TST        E1A,"+"         ;LOOK FOR MORE
+	TST        E1A,"+"         ; Look for a leading + for value and disgard it if found
 E1A:
-	CALL       TERM            ;TEST FOR UNARY +
+	CALL       TERM            ; Get the left term if it was not negated
 E1:
-	TST        E2,"+"          ;LEADING TERM
-	CALL       TERM
-	ADD
-	IJMP       E1
+	TST        E2,"+"          ; Check if we are adding left term to something
+	CALL       TERM            ; if adding then get the right side term
+	ADD                        ; Add it to left term
+	IJMP       E1              ; look for next + or -
 E2:
-	TST        E3,"-"          ;ANY MORE?
-	CALL       TERM            ;DIFFERENCE TERM
-	SUB
-	IJMP       E1
-E3:
-T2:
-	RTN                        ;ANY MORE?
+	TST        E3,"-"          ; Check if we are subtractig something
+	CALL       TERM            ; get right side to subtract Diffrence
+	SUB                        ; Subtract the value
+	IJMP       E1              ; Look for next + or -
+E3:                          ; Finish processing the expression
+	RTN                        ; We are finished processing the Expression
+;
+; Get one of the terms of an expression
+;
 TERM:
-	CALL       FACT
-T0:
-	TST        T1,"*"
-	CALL       FACT            ;PRODUCT FACTOR.
-	MUL
-	IJMP	  T0
+	CALL       FACT            ; Get a value
+T0:                          ; Check for higher precidence operators
+	TST        T1,"*"          ; Check for *
+	CALL       FACT            ; Get right side of term PRODUCT FACTOR.
+	MUL                        ; Multiply factors
+	IJMP	  T0                   ; Check for * or /
 T1:
-	TST        T2,"/"
-	CALL       FACT            ;QUOTIENT FACTOR.
-	DIV
-	IJMP       T0
+	TST        T2,"/"          ; Check for a division
+	CALL       FACT            ; get right side QUOTIENT FACTOR.
+	DIV                        ; do division
+	IJMP       T0              ; check for more * or /
+T2:  
+  TST        T3,"%"          ; Check for a division
+	CALL       FACT            ; get right side QUOTIENT FACTOR.
+	MODULO                     ; do division for remainder
+	IJMP       T0              ; check for more * or / or %                 
+T3                           ; Finish processing the Term
+  RTN
 
 UNKNOWNVEC:
 	IJMP       UNKNOWN
+
 
 ;
 ; Factor an expression.  Always test for functions
@@ -329,14 +377,15 @@ F2B:
 
 F2B2:
         TST       F2C,"CALL("       ;call machine function
-        CALL	  EXPR
+        CALL      EXPR
         TST       F2B2A,COMMA
         CALL      EXPR
-        TST       UNKNOWN,")"
-        CALLFUNC2
+        TST       UNKNOWNVEC,")"
+        CALLFUNC
         RTN
 
-F2B2A   TST       UNKNOWN,")"
+F2B2A   TST       UNKNOWNVEC,")"
+        LIT     0
         CALLFUNC
         RTN
 F2C:
@@ -354,34 +403,5 @@ F1:
 
 F2:
 	ERRMSG     ERR_SYNTAX      ;ERROR.
-
-RELOP:
-	TST        iR0,"="
-	LIT        2               ;=
-	RTN
-iR0:
-	TST        R4,"<"
-	TST        iR1,"="
-	LIT        3               ;<=
-	RTN
-iR1:
-	TST        R3,">"
-	LIT        5	           ;<>
-	RTN
-R3:
-	LIT        1               ;<
-	RTN
-R4:
-	TST        UNKNOWNVEC,">"
-	TST        R5,"="
-	LIT        6               ;>=
-	RTN
-R5:
-	TST        R6,"<"
-	LIT        1
-	RTN		                  ;(This line originally omitted)
-R6:
-	LIT        4               ;>???
-	RTN
 
 ILEND           equ     *

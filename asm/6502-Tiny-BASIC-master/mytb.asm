@@ -103,7 +103,7 @@ FIXED		equ	FALSE
 ; Sets the arithmetic stack depth.  This is *TINY*
 ; BASIC, so keep this small!
 ;
-STACKSIZE	equ	8	;number of entries
+STACKSIZE       equ     20      ;number of entries
 GOSUBSTACKSIZE  equ     20      ;Depth of gosub nesting max is 85
 ;
 ; Common ASCII constants
@@ -392,7 +392,7 @@ ILgood		tay		       ;move index into Y
 ; same speed.  However the entry number must match the
 ; values in IL.inc.
 ;
-ILTBL	    dw	iXINIT	;0
+ILTBL       dw	iXINIT	;0
             dw	iDONE	;1
             dw	iPRS	;2
             dw	iPRN	;3
@@ -402,7 +402,7 @@ ILTBL	    dw	iXINIT	;0
             dw	iXFER	;7
             dw	iSAV	;8
             dw	iRSTR	;9
-            dw	iCMPR	;10
+            dw	iCMPR	 ;10
             dw	iINNUM	;11
             dw	iFIN	;12
             dw	iERR	;13
@@ -437,37 +437,38 @@ ILTBL	    dw	iXINIT	;0
 ; Makes things easier in IL.inc.
 ;
 	if	DISK_ACCESS
-            dw	iOPENREAD      ;39
-            dw	iOPENWRITE     ;40
-            dw	iDCLOSE        ;41
-            dw	iDGETLINE      ;42 Life, universe, everything(hitch hiker)
-            dw	iDLIST         ;43 Did you remeber your towel?
-            dw  iDDIR          ;44
-            dw	iRMFILE	       ;45
+      dw    iOPENREAD    ;39
+      dw    iOPENWRITE   ;40
+      dw    iDCLOSE      ;41
+      dw    iDGETLINE    ;42 Life, universe, everything(hitch hiker)
+      dw    iDLIST       ;43 Did you remeber your towel?
+      dw    iDDIR        ;44
+      dw    iRMFILE      ;45
 	else
-            dw	NextIL	      ;39
-            dw	NextIL	      ;40
-            dw	NextIL	      ;41
-            dw	NextIL	      ;42
-            dw	NextIL	      ;43
-            dw  NextIL	      ;44
-            dw  NextIL	      ;45
+      dw    NextIL	      ;39
+      dw    NextIL	      ;40
+      dw    NextIL	      ;41
+      dw    NextIL	      ;42
+      dw    NextIL	      ;43
+      dw    NextIL	      ;44
+      dw    NextIL	      ;45
 	endif
 ;
 	    dw  iCLEARSCREEN  ;46
-	    dw	iPOKEMEMORY   ;47
+	    dw  iPOKEMEMORY   ;47
 	    dw  iPEEKMEMORY   ;48
 	    dw  iTSTLET       ;49       Test if the let with no LET keyword
-	    dw	iTSTDONE      ;50	     Test if we are at the end of a line
-	    dw	iGETCHAR      ;51       Get a character from the terminal
-	    dw	iPUTCHAR      ;52       Put a char to the terminal
+	    dw  iTSTDONE      ;50       Test if we are at the end of a line
+	    dw  iGETCHAR      ;51       Get a character from the terminal
+	    dw  iPUTCHAR      ;52       Put a char to the terminal
 	    dw  iCallFunc     ;53       call a machine rtn accumulator
-	    dw  iCallFunc2    ;54       call system rtn with value in a
+	    dw  iBranch       ;54       if value on stack is 0 then next line, else next instuction
 	    dw  iTSTStr       ;55       Test Specifically for the start of a quoted string
 	    dw  iSetIrq       ;56       sets the irq handler
 	    dw  iTstIrq       ;57       test if irq is pending
 	    dw  iRET          ;58       return from interupt
 	    dw  iINSTR        ;59       read a string return first char on top of stack
+      dw  iMOD          ;60       returns remainder of division
 
 ILTBLend	equ	*
 ;
@@ -691,67 +692,83 @@ REL_LT		equ	%001
 REL_EQUAL	equ	%010
 REL_GT		equ	%100
 ;
-iCMPR		jsr	popR1
-		jsr	popMQ	;operator in MQ
-		jsr	popR0
+iCMPR   jsr   popR1
+        jsr   popMQ	;operator in MQ
+        jsr   popR0
 ;
 ; See if they are equal or not
 ;
-		lda	R0
-		cmp	R1
-		bne	iCMPRnoteq	;try not equal
-		lda	R0+1
-		cmp	R1+1
-		bne	iCMPRnoteq
+        lda   R0
+        cmp   R1
+        bne   iCMPRnoteq	                ;try not equal
+        lda   R0+1
+        cmp   R1+1
+        bne   iCMPRnoteq
 ;
 ; Equal, set the flag in MQ+1
 ;
-		lda	#REL_EQUAL
-		bne	iCMPcom
+        lda   #REL_EQUAL                 ;They Are Equal
+        bne   iCMPcom                    ;Exit it is equal
 ;
 ; See if EXPR1 (R0) < EXPR2 (R1)
 ; See www.6502.org/tutorials/compare_beyond.html
 ;
-iCMPRnoteq	lda	R0
-		cmp	R1
-		lda	R0+1
-		sbc	R1+1
-		bvc	iCMPR_2
-		eor	#$80
-iCMPR_2		bmi	iCMPlt
-		lda	#REL_GT
-		bne	iCMPcom
-iCMPlt		lda	#REL_LT	;R0 < R1
-iCMPcom		ora	MQ+1
+iCMPRnoteq
+        lda   R0
+        cmp   R1
+        lda   R0+1
+        sbc   R1+1
+        bvc   iCMPR_2
+        eor   #$80
+iCMPR_2 bmi   iCMPlt
+        lda   #REL_GT
+        bne   iCMPcom
+iCMPlt  lda   #REL_LT   ; R0 < R1
+
+iCMPcom   ora  MQ+1         ; or with original mask
 ;
 ; Now compare the end result with what the caller
 ; was looking for.
 ;
-		and	MQ
-		beq	iCMPno	;no match
-		jmp	NextIL
+        and    MQ
+        beq    iCMPno     ; no match
+        lda    #1
+        sta    R0
+        bne    iCMPDone
 ;
 ; R0 > R1
 ;
-iCMPgt		lda	#REL_GT
-		bne	iCMPcom
+iCMPgt  lda    #REL_GT
+        bne    iCMPcom
+iCMPno:
+        lda    #0
+        sta    R0
+
+iCMPDone:
+        lda    #0
+        sta    R0+1
+        jsr    pushR0
+        jmp    NextIL
 ;
-; Not a match, so jump to the next line of code.
+; if Not a match, so jump to the next line of code.
+; Branches based upon value on top of the stack
+iBranch:
+         jsr  popR0
+         lda  R0
+         ora  R0+1
+         beq  iBranchFalse ; not true
+         jmp  NextIL       ; It is true if any value not zero
 ;
-iCMPno		jsr	FindNextLine
-		jmp	iXFER2
+iBranchFalse:
+        jsr   FindNextLine
+        jmp   iXFER2
 ;
 ;=====================================================
 ; Get a line of text from the user, convert to a
 ; number, leave on top of stack.
 ;
 iINNUM
-    lda	CUROFF                       	;save state before GetLine
-		pha
-		lda	CURPTR+1
-		pha
-		lda	CURPTR
-		pha
+    jsr pushLN
 ;
 		lda	#'?
 		jsr	GetLine
@@ -765,12 +782,7 @@ iINNUM
 ; String , leave on top of stack. up to 2 characters
 ;
 iINSTR
-    lda	CUROFF                       	;save state before GetLine
-		pha
-		lda	CURPTR+1
-		pha
-		lda	CURPTR
-		pha
+    jsr pushLN
 ;
 		lda	#'?
 		jsr	GetLine
@@ -781,12 +793,7 @@ iINSTR
 		jsr	pushR0       	;put onto stack
 ;
 ExitIn
-		pla
-		sta	CURPTR
-		pla
-		sta	CURPTR+1
-		pla
-		sta	CUROFF
+		jsr popLN
 ;
 		jmp	NextIL
 ;
@@ -942,11 +949,24 @@ pushR0nextIl
 ; Leave results on stack.  Taken from:
 ; http://codebase64.org/doku.php?id=base:16bit_division_16-bit_result
 ;
-; MQ = R0 / R1
-; Remainder is in R0
+; R0 = R0 / R1
+; Remainder is in MQ
 ;
-iDIV		jsr	popR1
-		jsr	popR0
+iDIV  jsr iDoDiv
+      jsr	RestoreSigns
+		  jmp	pushR0nextIl
+		  
+iMOD  jsr iDoDiv
+      jsr RestoreSigns
+      lda MQ
+      sta R0
+      lda MQ+1
+      sta R0+1
+      jmp pushR0nextIl
+
+iDoDiv:
+      jsr popR1
+      jsr popR0
 ;
 ; Check for divide by zero
 ;
@@ -959,8 +979,8 @@ iDIV		jsr	popR1
 		sta	MQ
 		sta	MQ+1
 		ldx	#16             ;repeat for each bit: ...
-
-divloop		asl	R0              ;dividend lb & hb*2, msb -> Carry
+divloop
+		asl	R0              ;dividend lb & hb*2, msb -> Carry
 		rol	R0+1
 		rol MQ              ;remainder lb & hb * 2 + msb from carry
 		rol	MQ+1
@@ -978,8 +998,7 @@ divloop		asl	R0              ;dividend lb & hb*2, msb -> Carry
 
 skip		dex
 		bne	divloop
-		jsr	RestoreSigns
-		jmp	pushR0nextIl
+		rts
 ;
 ; Indicate divide-by-zero error
 ;
@@ -1248,7 +1267,7 @@ iNLINE		jsr	CRLF	;user supplied sub
 ; This saves the current ILPC value on the stack, then
 ; jumps to the address specified by the next two bytes.
 ;
-iCALL		jsr	pushILPC	;save ILPC
+iCALL     jsr   pushILPC	        ;save ILPC
 ;
 ; Jmp to a specific location in the IL code.  The new
 ; address immediately follows the opcode.
@@ -1616,15 +1635,16 @@ iPEEKMEMORY	sty	tempy
 ;
 ; Call to address return what ever is in a to the stack
 ; func2 will load a value into a before the call
-iCallFunc2      jsr	popR1
-		lda	R1
-iCallFunc	jsr	iCallRtn
+iCallFunc      jsr	popR1
+		lda	   R1
+    jsr	   iCallRtn
 		sta     R0
 		lda     #0
 		sta     R0+1
-		jsr	pushR0
+		jsr	    pushR0
 		jmp     NextIL
-iCallRtn        jsr 	popR0
+iCallRtn
+    jsr 	    popR0
 		jmp     (R0)
 
 

@@ -796,7 +796,7 @@ Fast Unsafe Public Sub EorAc()
 
 End
 
-Fast Unsafe Public Sub OraAc()
+Fast Unsafe Public Sub OrAc()
 
   ac = (ac Or databus)
   SetSR(ac)

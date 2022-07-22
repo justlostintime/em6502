@@ -39,7 +39,7 @@
 ; next line and continue execution.  However, if
 ; in direct mode, jump to the specified IL label.
 ;
-        macro	NXT   ; addr
+    macro	NXT   ; addr
 		db	6
 		dw	{1}       ; addr
 		endm
@@ -281,10 +281,12 @@
 	macro	CALLFUNC
 		db	53
 		endm
-; Call		Call a machine function return a to stack
-	macro	CALLFUNC2
-		db	54
-		endm
+
+; IBRANCH branch if value on stack = 0 false, nextil if value not = zero
+  macro IBRANCH
+    db 54
+  endm
+
 ; TSTSTR        Tests for the open quote in a string
 	macro	TSTSTR
                 db      55
@@ -306,8 +308,13 @@
   macro IRET
     db 58
     endm
+
 ; INSTR   read a string from the input
   macro INSTR
     db 59
     endm
 
+; MODULO Returns the remainder of the division
+  macro MODULO
+    db 60
+    endm
