@@ -143,7 +143,12 @@ Sub copyDirectory(path As String, topath As String)
       If DestFile = SourceFile Then
         Continue
       Else
-        Dim Response As Integer = Message.warning(("An Update Is available for ") & s & " \n" & ("Would you like to update?"), ("Yes"), ("No"), ("Yes to All"))
+        Dim Response As Integer
+        If CliInterface.UpdateDevNoPrompt = False Then
+          Response = Message.warning(("An Update Is available for ") & s & " \n" & ("Would you like to update?"), ("Yes"), ("No"), ("Yes to All"))
+        Else
+          Response = 1
+        Endif
         If CliInterface.UpdateDevNoPrompt Or If Response = 1 Or If Response = 3 Then
           If response = 3 Then CliInterface.UpdateDevNoPrompt = True
           If FMain.Verbose Then Error ("Updating ");; s;; ("Current Version Dated ");; Stat(ToPath &/ s).time;; "," & (" Available Version Date ");; Stat(Path &/ s).time

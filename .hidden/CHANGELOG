@@ -1,3 +1,6 @@
+* Thu Jul 21 2022 Justlostintime <justlostintime@gmail.com> 1.1.7
+- Added function to MTTB, fixed 6502 Test and set bit instruction
+
 * Wed Jul 20 2022 Justlostintime <justlostintime@gmail.com> 1.1.6
 - Add Games and tiny basic functions
 

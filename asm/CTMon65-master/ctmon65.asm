@@ -22,7 +22,7 @@
    Mac dw
      .word {0}
    endm
-		
+
 ;*********************************************************
 ;
 		include	"config.inc"
@@ -124,8 +124,8 @@ Temp16H		ds	1
 ;		db	"This space for rent.",CR,LF
 ;		db	"Actually, this just forces the "
 ;		db	"binary file to be 8K long."
-		
-		
+
+
 		Seg 	Code
 		org	ROM_START
 ;
@@ -267,7 +267,7 @@ cmdFound	jmp	prompt
 ; the function which handles the command, and a pointer
 ; to a string that describes the command.
 ;
-commandTable    
+commandTable
             db	'?
             dw	showHelp
             dw	quesDesc
@@ -349,7 +349,7 @@ cmdLoop		lda	(sptr),y
 		beq	cmdNotFound
 		cmp	tempA	;compare to user's input
 		beq	cmdMatch
-		ora	#$20    ;allow lower case cmds 
+		ora	#$20    ;allow lower case cmds
 		cmp	tempA   ;try users input again
 		beq	cmdMatch
 		iny		;start of function ptr
@@ -923,7 +923,7 @@ pNFB	sta	buffer,x
 ; Dump the current registers based on values in the Save*
 ; locations.
 ;
-DumpRegisters	
+DumpRegisters
         jsr	putsil
 		db	"PC:",0
 		lda	SavePC+1
@@ -1428,7 +1428,7 @@ setOutputConsole
 ; Set up the output vector to point to a file write
 ; subroutine.
 ;
-setOutputFile	
+setOutputFile
             lda	#putNextFileByte&$ff
             sta outputVector
             lda	#putNextFileByte/256
@@ -1445,7 +1445,7 @@ setOutputFile
 ; Set up the input vector to point to the normal
 ; console input subroutine.
 ;
-setInputConsole	
+setInputConsole
             lda	#cinecho&$ff
             sta inputVector
             lda	#cinecho/256
@@ -1462,7 +1462,7 @@ cinecho		jsr	cin
 ; Set up the input vector to point to a file read
 ; subroutine.
 ;
-setInputFile    
+setInputFile
             lda	#getNextFileByte&$ff
             sta inputVector
             lda	#getNextFileByte/256
@@ -1519,7 +1519,7 @@ getNextEof      lda	#0
                 sta	diskBufLength
                 sec
                 rts
-		
+
 		;page
 ;
 ;========================================jlit 8/2/2022
@@ -1581,7 +1581,7 @@ closeonly       jmp	DiskClose
 ;
                 include	"io.asm"
                 include	"acia.asm"
-		
+
 	if SD_ENABLED
                 include	"parproto.inc"
                 include	"pario.asm"
@@ -1589,7 +1589,7 @@ closeonly       jmp	DiskClose
 	endif
 ;
 ;*********************************************************
-; Handlers for the interrupts.  Basiclly just jump 
+; Handlers for the interrupts.  Basiclly just jump
 ; through the vectors and hope they are set up properly.
 ;
 HandleNMI       jmp	(NMIvec)

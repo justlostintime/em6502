@@ -31,129 +31,150 @@ XEC:
 
 ;STATEMENT EXECUTOR
 STMT:
-      TSTIRQ  notirq      ;if it is an irq posted, this will cause transfer to irq handler
+        TSTIRQ      notirq        ;if it is an irq posted, this will cause transfer to irq handler
 notirq:
-        TSTLET	   LET		   ;Test if second field is =
-	      IJMP       DOLET           ;allow the default to be let
+        TASKSWITCH                ;if this is not a irq then check for task switch
+        TSTLET      LET           ;Test if second field is =
+        IJMP        DOLET         ;allow the default to be let
 LET:
         TST        S1,"LET"       ;IS STATEMENT A LET
 DOLET:
-	TSTV       ERRVEC          ;YES, PLACE VAR ADDRESS ON AESTK
-	TST        ERRVEC,"="      ;(This line originally omitted)
-	CALL       EXPR            ;PLACE EXPR VALUE ON AESTK
-	DONE                       ;REPORT ERROR IF NOT NEXT
-	STORE                      ;STORE RESULT
-	NXT        CO              ;AND SEQUENCE TO NEXT
-	IJMP       STMT
+        TSTV       ERRVEC         ;YES, PLACE VAR ADDRESS ON AESTK
+        TST        LETBE,"["
+        CALL       EXPR
+        TST        ERRVEC,"]"
+        SUBSCRIPT
+LETBE:
+        TST        ERRVEC,"="      ;(This line originally omitted)
+        CALL       EXPR            ;PLACE EXPR VALUE ON AESTK
+        DONE                       ;REPORT ERROR IF NOT NEXT
+        STORE                      ;STORE RESULT
+        NXT        CO              ;AND SEQUENCE TO NEXT
+        IJMP       STMT
 S1:
-  TST        S1S1,"IRET"     ;test return from interupt
-  TST        S1Sa,"URN"
+        TST        S1S1,"IRET"     ;test return from interupt
+        TST        S1Sa,"URN"
 S1Sa:
-  DONE                       ;Must be only thing on the line
-  	IRET                       ;RESTORE LINE NUMBER OF CALL
-	IJMP       STMT
+        DONE                       ;Must be only thing on the line
+        IRET                       ;RESTORE LINE NUMBER OF CALL
+        IJMP       STMT
 
 S1S1:
-	TST        S2b,"GO"        ;GOTO OT GOSUB?
-	TST        S2,"TO"         ;YES...TO, OR...SUB
-	CALL       EXPR            ;GET LABEL
-	DONE                       ;ERROR IF CR NOT NEXT
-	XFER                       ;SET UP AND JUMP
+        TST        S1Z,"IF"        ;IF STATEMENT
+        CALL       EXPR            ;GET EXPRESSION rel ops now valis expression 0 false, everything else true
+        TST        S1W,"THEN"       ;(This line originally omitted) not required
+S1W:
+        IBRANCH                    ;PERFORM COMPARISON -- PERFORMS NXT IF FALSE calls iBranch
+        IJMP       STMT
+
+S1Z:
+        TST        S2b,"GO"        ;GOTO OT GOSUB?
+        TST        S2,"TO"         ;YES...TO, OR...SUB
+        CALL       EXPR            ;GET LABEL
+        XFER                       ;SET UP AND JUMP
 S2:
-	TST        ERRVEC,"SUB"    ;ERROR IF NO MATCH
-	CALL       EXPR            ;GET DESTINATION
-	DONE                       ;ERROR IF CR NOT NEXT
-	SAV                        ;SAVE RETURN LINE
-	XFER                       ;AND JUMP
+        TST        ERRVEC,"SUB"    ;ERROR IF NO MATCH
+        CALL       EXPR            ;GET DESTINATION
+        DONE                       ;ERROR IF CR NOT NEXT
+        SAV                        ;SAVE RETURN LINE
+        XFER                       ;AND JUMP
 S2b:
-	TST        S3,"RE"	        ;Speed up pocessing but more memory
-	TST        S2a,"T"
-	TST        S2aa,"URN"      ;RETURN STATEMENT
+        TST        S3,"RE"	        ;Speed up pocessing but more memory
+        TST        S2a,"T"
+        TST        S2aa,"URN"      ;RETURN STATEMENT
 S2aa:
-  DONE                       ;MUST BE CR
-	RSTR                       ;RESTORE LINE NUMBER OF CALL
-	NXT        CO              ;SEQUENCE TO NEXT STATEMENT
-	IJMP       STMT
+        DONE                       ;MUST BE CR
+        RSTR                       ;RESTORE LINE NUMBER OF CALL
+        NXT        CO              ;SEQUENCE TO NEXT STATEMENT
+        IJMP       STMT
 S2a:
-	TST        S3,"M"          ;REMark.  Skip rest of line
-	NXT        CO
-	IJMP       STMT
+        TST        S3,"M"          ;REMark.  Skip rest of line
+        NXT        CO
+        IJMP       STMT
 
 S3:
-	TST        S3a,"?"         ; ? symonym for print
-	IJMP	   S4
+        TST        S3a,"?"         ; ? symonym for print
+        IJMP       S4
 S3a:
-	TST        S8,"PR"         ;allow short form of print
-	TST        S4,"INT"        ;PRINT
+        TST        S8,"PR"         ;allow short form of print
+        TST        S4,"INT"        ;PRINT
 S4:
-	TSTDONE    S4a		          ;Test if we just want crlf printed
-	IJMP	   S6
+        TSTDONE    S4a             ;Test if we just want crlf printed
+        IJMP       S6
 
-S4a:	TSTSTR     S7              ;TEST FOR QUOTED String
-	PRS                          ;PRINT STRING
+S4a:
+        TSTSTR     S7              ;TEST FOR QUOTED String
+        PRS                        ;PRINT STRING
 S5:
-	TST        S6A,COMMA       ;IS THERE MORE?
-	SPC                        ;SPACE TO NEXT ZONE
-	TSTDONE	   S4		          ;Not end of line jump back
-	IJMP       S6a             ;YES JUMP BACK
+        TST        S6A,COMMA       ;IS THERE MORE?
+        SPC                        ;SPACE TO NEXT ZONE
+        TSTDONE    S4              ;Not end of line jump back
+        IJMP       S6a             ;YES JUMP BACK
 ;
 ; If a semicolon, don't do anything.
 ;
 S6A:
-	TST        S6,SEMICOLON    ;IF semicolon also check if end of line
-	TSTDONE	   S4		          ;Jump Back if not end of line
-	IJMP       S6a
+        TST        S6,SEMICOLON    ;IF semicolon also check if end of line
+        TSTDONE    S4              ;Jump Back if not end of line
+        IJMP       S6a
 S6:
-	DONE                       ;ERROR IF CR NOT NEXT
-	NLINE
-S6a	NXT        CO		   ;exit here if , or ; at end of print
-	  IJMP       STMT
+        DONE                       ;ERROR IF CR NOT NEXT
+        NLINE
+S6a:
+        NXT        CO              ;exit here if , or ; at end of print
+        IJMP       STMT
 ;
 ; A jump for code too far away for relative branch
 ;
 ERRVEC:
-	IJMP       UNKNOWN
+        IJMP       UNKNOWN
 ;
+; Get here if there is an expression to print
 S7:
-	CALL       EXPR
-	PRN                        ;PRINT IT
-	IJMP       S5              ;IS THERE MORE?
+        CALL       EXPR
+        PRN                        ;PRINT IT
+        IJMP       S5              ;IS THERE MORE?
+;
+;===========================================================
+; End of TASK process
 S8:
-	TST        S8a,"IF"        ;IF STATEMENT
-	CALL       EXPR            ;GET EXPRESSION
-	;Expression is not including the relative operators, true and false
-	                           ;CALL       RELOP           ;DETERMINE OPR AND PUT ON STK
-	                           ;CALL       EXPR            ;GET EXPRESSION
-	TST        S8a1,"THEN"     ;(This line originally omitted) not required
-S8a1:
-	IBRANCH                    ;PERFORM COMPARISON -- PERFORMS NXT IF FALSE calls iBranch
-	IJMP       STMT
-
+        TST        S8G,"ETASK"     ; End task
+        ETASK
+        DONE                       ; Must be last thing on a line
+        IJMP       STMT
+;
+;===========================================================
+; The task gives up the rest of the cycles
+S8G:
+        TST        S8a,"NTASK"     ;Next task
+        NTASK
+        NXT        CO              ;Next statement to execute
+        IJMP       STMT
+;
+;===========================================================
+; Update a memory location with a value
 S8a:
-	TST        S8b,"POKE("             ;Poke a value into memory
-        CALL	   EXPR	                ;Get address to write to
+        TST        S8b,"POKE"        ;Poke a value into memory
+        CALL       EXPR              ;Get address to write to
         TST        UNKNOWN,COMMA     ;Must have a coma
-        CALL	   EXPR		              ;Get the value to poke
-        TST        UNKNOWN,")"
+        CALL       EXPR              ;Get the value to poke
         POKEMEM
         DONE
-        NXT        CO              ;AND SEQUENCE TO NEXT
+        NXT        CO                ;AND SEQUENCE TO NEXT
         IJMP       STMT
 
 S8b:
-	TST       S8c,"PUTCH("     ;Put a char to the terminal
-	CALL      EXPR
-	TST       UNKNOWN,")"
-	PUTCHAR
-	DONE
-        NXT        CO              ;AND SEQUENCE TO NEXT
-	IJMP       STMT
+        TST        S8c,"PUTCH"       ;Put a char to the terminal
+        CALL       EXPR
+        PUTCHAR
+        DONE
+        NXT        CO                ;AND SEQUENCE TO NEXT
+        IJMP       STMT
 S8c
-	TST	   S9,"CLS"	   ;Clear the screen
-	CLEARSCREEN
-	DONE
-        NXT        CO              ;AND SEQUENCE TO NEXT
-	IJMP       STMT
+        TST        S9,"CLS"          ;Clear the screen
+        CLEARSCREEN
+        NXT        CO                ;AND SEQUENCE TO NEXT
+        IJMP       STMT
 S9:
 	TST        S13,"INPUT"     ;INPUT STATEMENT
 S10:
@@ -180,13 +201,23 @@ S11:
 S13:
 	TST        S14,"END"
 	FIN
+
 S14:
-  TST        S14S1,"IRQ"      ;Check if we are setting IRQ HANDLER
+  TST        S14Z,"IRQ"      ;Check if we are setting IRQ HANDLER
   CALL       EXPR            ;Get the LABEL .. line NUMBER
   DONE                       ;must be CR
   SETIRQ                     ;Set the line number now
   NXT        CO              ;SEQUENCE TO NEXT STATEMENT
   IJMP       STMT
+  
+S14Z:
+  TST       S14S1,"KILL"     ; Kill A running Task
+  CALL      EXPR
+  DONE
+  TASKKILL
+  NXT       CO
+  IJMP      STMT
+
 S14S1:
 	TST        S15,"LIST"      ;LIST COMMAND
 	DONE
@@ -322,36 +353,41 @@ T1:
 	CALL       FACT            ; get right side QUOTIENT FACTOR.
 	DIV                        ; do division
 	IJMP       T0              ; check for more * or /
-T2:  
+T2:
   TST        T3,"%"          ; Check for a division
 	CALL       FACT            ; get right side QUOTIENT FACTOR.
 	MODULO                     ; do division for remainder
-	IJMP       T0              ; check for more * or / or %                 
+	IJMP       T0              ; check for more * or / or %
 T3                           ; Finish processing the Term
   RTN
 
 UNKNOWNVEC:
 	IJMP       UNKNOWN
 
-
 ;
 ; Factor an expression.  Always test for functions
 ; first or else they'll be confused for variables.
 ;
 FACT:
-	TST        F1A,"FREE()"
-	FREE
-	RTN
+        TST       F1A,"FREE()"
+        FREE
+        RTN
 F1A:
-	TST        F1A2,"GETCH()"   ; read char from the terminal
-	GETCHAR
-	RTN
+        TST       F1A2,"GETCH()"   ; read char from the terminal
+        GETCHAR
+        RTN
 F1A2:
-        TST	   F2A,"PEEK("     ;Return a value from memory
-        CALL 	   EXPR             ;Get the address to write to
-        TST        UNKNOWN,")"      ;Closing bracket
+        TST       F2AZ,"PEEK("     ;Return a value from memory
+        CALL      EXPR             ;Get the address to write to
+        TST       UNKNOWN,")"      ;Closing bracket
         PEEKMEM
         RTN
+F2AZ:
+        TST        F2A,"TASK("    ;Check if we are setting a task start
+        CALL       EXPR             ;Get the LABEL .. line NUMBER
+        TST        UNKNOWN,")"      ;must be )
+        SETTASK                     ;Set the Task up and start it
+        RTN                         ;Returns the Task number
 ;
 ; RND() is supposed to have an argument but if none
 ; was provided, just assume a large value.
@@ -371,11 +407,17 @@ F2A1:
 F2B:
 	TST        F2B2,"ABS("
 	CALL       FACT            ;get value
-	TST        UNKNOWN,")"
+	TST        UNKNOWNVEC,")"
 	ABS
 	RTN
 
 F2B2:
+        TST       F2Z,"STAT("
+        Call      EXPR
+        TST       UNKNOWNVEC,")"
+        TASKSTAT
+        RTN
+F2Z:
         TST       F2C,"CALL("       ;call machine function
         CALL      EXPR
         TST       F2B2A,COMMA
@@ -383,25 +425,29 @@ F2B2:
         TST       UNKNOWNVEC,")"
         CALLFUNC
         RTN
-
-F2B2A   TST       UNKNOWNVEC,")"
-        LIT     0
+F2B2A:  TST       UNKNOWNVEC,")"
+        LIT       0
         CALLFUNC
         RTN
 F2C:
-	TSTV       F0
-	IND                        ;YES, GET THE VALUE.
-	RTN
+        TSTV       F0
+        TST        F2C1,"["
+        CALL       EXPR
+        TST        UNKNOWNVEC,"]"
+        SUBSCRIPT
+F2C1:
+        IND                        ;YES, GET THE VALUE.
+        RTN
 F0:
-	TSTN       F1              ;NUMBER, GET ITS VALUE.
-	RTN
+        TSTN       F1              ;NUMBER, GET ITS VALUE.
+        RTN
 F1:
-	TST        F2A,"("         ;PARENTHESIZED EXPR.
-	CALL       EXPR
-	TST        F2,")"
-	RTN
+        TST        F2A,"("         ;PARENTHESIZED EXPR.
+        CALL       EXPR
+        TST        F2,")"
+        RTN
 
 F2:
-	ERRMSG     ERR_SYNTAX      ;ERROR.
+        ERRMSG     ERR_SYNTAX      ;ERROR.
 
 ILEND           equ     *

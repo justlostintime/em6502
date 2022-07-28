@@ -69,7 +69,7 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
   Grp2Case12:'$2A ROL A
     .DataBus = .AC
     .RotateLeft()
-    .AC = .DataBud
+    .AC = .DataBus
     Return
 
   Grp2Case13:'$2E ROL abs

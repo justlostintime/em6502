@@ -102,60 +102,62 @@ popILPC		ldy	retStackPtr
 ; A, X, and Y are all undefined on return.
 ;
 
-findLine	lda	#ProgramStart&$ff  ;Start of program -> CURPTR
-		sta	CURPTR
-		lda	#ProgramStart>>8
-		sta	CURPTR+1
+findLine
+                lda     #ProgramStart&$ff     ;Start of program -> CURPTR
+                sta     CURPTR
+                lda     #ProgramStart>>8
+                sta     CURPTR+1
 ;
 ; At end of code?
 ;
-iXFER1		lda	CURPTR 		   ; chk CURPTR = END PROGRAM
-		cmp	PROGRAMEND
-		bne	xfer2		   ;not end
-		lda	CURPTR+1
-		cmp	PROGRAMEND+1
-		bne	xfer2              ;Not at end
+iXFER1
+                lda     CURPTR                ; chk CURPTR = END PROGRAM
+                cmp     PROGRAMEND            ; at end of program then stop run
+                bne     xfer2                 ; not end
+                lda     CURPTR+1
+                cmp     PROGRAMEND+1
+                bne     xfer2                 ;Not at end
 ;
 ; Line not found and the end of the program was
 ; reached.  Return Z and C both clear.
 ;
-		lda	#1		;clear Z
-		clc			;clear C
-		rts
+                lda     #1                    ;clear Z
+                clc                           ;clear C
+                rts
 ;
 ; Check for an exact line number match
 ;
-xfer2		lda	R0
-		ldy	#1                ; changed to skip extra length byte
-		cmp	(CURPTR),y
-		bne	xfernotit
-		iny
-		lda	R0+1
-		cmp	(CURPTR),y
-		bne	xfernotit         ; not a matching line number
+xfer2           lda     R0
+                ldy     #1                ; changed to skip extra length byte
+                cmp     (CURPTR),y
+                bne     xfernotit
+                iny
+                lda     R0+1
+                cmp     (CURPTR),y
+                bne     xfernotit         ; not a matching line number
 ;
 ; This is exactly the line we want.
 ;
-		rts                       ;it matches exactly
+                rts                       ;it matches exactly
 ;
 ; See if this line is greater than the one we're
 ; searching for.
 ;
-xfernotit	ldy	#2              ;Changed from to skip leading length and lesat significat digit
-		lda	(CURPTR),y	;compare MSB first
-		cmp	R0+1
-		bcc	xfer3
-		bne	xfer4
-		dey
-		lda	(CURPTR),y	;compare LSB
-		cmp	R0
-		bcc	xfer3
+xfernotit       ldy     #2              ;Changed from to skip leading length and lesat significat digit
+                lda     (CURPTR),y      ;compare MSB first
+                cmp     R0+1
+                bcc     xfer3
+                bne     xfer4
+                dey
+                lda     (CURPTR),y      ;compare LSB
+                cmp     R0
+                bcc     xfer3
 ;
 ; This line is greater than the one we want, so
 ; return Z clear and C set.
 ;
-xfer4:		sec             ;We found a line number greater
-		rts		;both conditions set
+xfer4:          sec             ;We found a line number greater
+                rts             ;both conditions set
 ;
 ; Not the line (or droid) we're looking for.  Move to
 ; the next line.
@@ -643,7 +645,7 @@ popLN		sty	rtemp1
 		clc
 		rts
 poperr		sec
-		rtn
+		rts
 ;
 ;=====================================================
 ; This pops TOS and places it in R1.
@@ -839,50 +841,52 @@ GetSizes
 ; Set output vector to the console output function
 ;
 SetOutConsole
-		lda	#OUTCH&$ff
-		sta	BOutVec
-		lda	#OUTCH/256
-		sta	BOutVec+1
-		rts
+                lda     #OUTCH&$ff
+                sta     BOutVec
+                lda     #OUTCH/256
+                sta     BOutVec+1
+                rts
 ;
 ;=====================================================
 ; Jump to the output function in BOutVec
 ;
-VOUTCH		jmp	(BOutVec)
+VOUTCH          jmp     (BOutVec)
 
 ;====================================================
-PrtTerm		equ     rtemp1
+PrtTerm         equ     rtemp1
 
 ; Print Y has the offset to use
-PrtQuoted	lda	CURPTR
-		sta     PrtFrom
-		lda	CURPTR+1
-		sta     PrtFrom+1
-		lda	#'"
-		sta     PrtTerm
-		jmp	PrtLoop
+PrtQuoted       lda     CURPTR
+                sta     PrtFrom
+                lda     CURPTR+1
+                sta     PrtFrom+1
+                lda     #'"
+                sta     PrtTerm
+                jmp     PrtLoop
+              
 ; Print a string pointed to by x= h, y=l terminated by a
 ; Return y as the length
-PrtStr		stx	PrtFrom+1
-		sty	PrtFrom
-		sta	PrtTerm
-		ldy	#0
 
-PrtLoop		lda	(PrtFrom),y
-		cmp	PrtTerm
-		beq	PrtEnd
-		cmp	#0		; always end if 0 is found
-		beq	PrtEnd
-		jsr	OUTCH
-		iny
-		jmp	PrtLoop
-PrtEnd		iny                     ;return byte after the copy
-		rts
+PrtStr          stx      PrtFrom+1
+                sty      PrtFrom
+                sta      PrtTerm
+                ldy      #0
+
+PrtLoop         lda     (PrtFrom),y
+                cmp     PrtTerm
+                beq     PrtEnd
+                cmp     #0              ; always end if 0 is found
+                beq     PrtEnd
+                jsr     OUTCH
+                iny
+                jmp     PrtLoop
+PrtEnd          iny                     ;return byte after the copy
+                rts
 
 ;====================================================
 ;Clear the terminal assume it is ansii or vt100
 ;
 iCLEARSCREEN
-		jsr 	puts
-		db	$1b,'[,'3,'J,0
-		jmp	NextIL
+                jsr     puts
+                db      $1b,'[,'3,'J,0
+                jmp     NextIL

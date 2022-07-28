@@ -59,7 +59,7 @@ Public Sub _Put(Value As Byte, address as long)
   endif
   if address = MemoryStart+1 then         'put the data
     LastValue = value
-    'if value = 10 or value = 13 then
+   ' if value = 10 or value = 13 then
    '   TermOut.Print("\n\r")
    ' else
       TermOut.Print(Chr(Value))
@@ -84,14 +84,14 @@ Public Sub _get(address As Long) As Byte
         Endif
  else                                                ' Read The Status register
    dim status as byte = 2                            ' Can Always write
-   'Status = bset(status,1)                          ' Can Always write something
+'  Status = bset(status,1)                           ' Can Always write something
    if DataBuffer.count > 0 then
-      'debug "TTY : Byte Avaiable for read COUNT = ";DataBuffer.count
-      Status += 1                                    'Set if something to read
-      'Status = bset(status,0)                       ' set if something to be read
-    'else
-    ' Status = bclr(status,0)
-    ENDIF
+'     debug "TTY : Byte Avaiable for read COUNT = " ;DataBuffer.count
+      Status += 1                                    ' Set if something to read
+'     Status = bset(status,0)                        ' set if something to be read
+'  else
+'     Status = bclr(status,0)
+   endif
   endif
 
   return status

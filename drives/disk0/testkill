@@ -1,0 +1,11 @@
+10 cls:putch(27):print"[?25l":x=task(100):? "Task ID =";x
+20 gosub 200
+30 a = a +1
+40 if a = 100 then ? "Killing ";x; : kill x : print " Status ";stat(x);" Ended":putch(27):print"[?25h":end
+50 goto 20
+100 putch(27):print"[5;20H";"Task:";b
+120 b = b + 1
+130 goto 100
+200 rem place character
+210 putch(27):print"[5;10H";"Main:";a
+220 return
