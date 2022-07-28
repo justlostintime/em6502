@@ -79,7 +79,7 @@ S2:
         SAV                        ;SAVE RETURN LINE
         XFER                       ;AND JUMP
 S2b:
-        TST        S3,"RE"	        ;Speed up pocessing but more memory
+        TST        S3,"RE"         ;Speed up pocessing but more memory
         TST        S2a,"T"
         TST        S2aa,"URN"      ;RETURN STATEMENT
 S2aa:
@@ -109,18 +109,19 @@ S5:
         TST        S6A,COMMA       ;IS THERE MORE?
         SPC                        ;SPACE TO NEXT ZONE
         TSTDONE    S4              ;Not end of line jump back
-        IJMP       S6a             ;YES JUMP BACK
+        IJMP       S6Z             ;YES JUMP BACK
+
 ;
 ; If a semicolon, don't do anything.
 ;
 S6A:
         TST        S6,SEMICOLON    ;IF semicolon also check if end of line
         TSTDONE    S4              ;Jump Back if not end of line
-        IJMP       S6a
+        IJMP       S6Z
 S6:
         DONE                       ;ERROR IF CR NOT NEXT
         NLINE
-S6a:
+S6Z:
         NXT        CO              ;exit here if , or ; at end of print
         IJMP       STMT
 ;
@@ -131,7 +132,16 @@ ERRVEC:
 ;
 ; Get here if there is an expression to print
 S7:
+        TST        S7A,"$"
         CALL       EXPR
+        HEXPRT
+        IJMP       S5
+S7A
+        CALL       EXPR
+        TST        S7B,"$"
+        PUTCHAR
+        IJMP       S5
+S7B
         PRN                        ;PRINT IT
         IJMP       S5              ;IS THERE MORE?
 ;
@@ -209,7 +219,7 @@ S14:
   SETIRQ                     ;Set the line number now
   NXT        CO              ;SEQUENCE TO NEXT STATEMENT
   IJMP       STMT
-  
+
 S14Z:
   TST       S14S1,"KILL"     ; Kill A running Task
   CALL      EXPR

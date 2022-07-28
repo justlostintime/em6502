@@ -24,6 +24,7 @@
 1000 Rem Full test of doors long solution
 1005 ? "100 Doors the full Scan"
 1010 m = 45056  : Rem the memory location for array
+1012 Rem use logical operators 0=1 false, 0=0 true to flip value true of false
 1015 i = 1
 1020 if i > 100 goto 1200
 1030 j = i 

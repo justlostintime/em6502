@@ -484,6 +484,7 @@ ILTBL       dw	iXINIT	;0
       dw  iArray        ;65       Allow Variable to have a subscript
       dw  iTaskKill     ;66       kill a running task
       dw  iTaskStat     ;67       return the state of a task PID
+      dw  iHexOut       ;68       output the value on the stack as a hex string
 
 ILTBLend	equ	*
 ;
@@ -1650,7 +1651,7 @@ iTaskSwitch
                 ldy     taskPtr                   ; check if we have not just ended some other task
                 bne     tasknext                  ; if so then do a next anyway
                 beq     iTaskSwitchDone           ; Skip this if main is only task
-tasknext        
+tasknext
                 dec     taskCurrentCycles         ; Dec the current cycle count
                 bne     iTaskSwitchDone           ; Skip this if we are not end of cycle
                 ldy     taskPtr
@@ -1660,7 +1661,7 @@ tasknext
                 sta     taskTable+2,y
                 lda     CUROFF
                 sta     taskTable+3,y
-taskLoop        
+taskLoop
                 iny
                 iny
                 iny
@@ -1669,7 +1670,7 @@ taskLoop
                 beq     TaskNextChk
                 bcc     TaskNextChk
 TaskResetTop    ldy     #0
-TaskNextChk     
+TaskNextChk
                 lda     taskTable,y               ; there is always at least one entry in table
                 beq     taskLoop                  ; get next slot if this one empty
                 lda     taskTable+1,y
@@ -1847,7 +1848,17 @@ iPUTCHAR:       jsr     popR0
                 lda     R0
                 jsr     OUTCH
                 jmp     NextIL
-;
+;=====================================================
+; Put the number on the stack out as hex, suppress leading 0
+iHexOut
+                jsr     popR0
+                lda     R0+1
+                beq     iHexSecondByte
+                jsr     OUTHEX
+iHexSecondByte
+                lda     R0
+                jsr     OUTHEX
+                jmp     NextIL
 ;
 ;=====================================================
 ; Replace TOS with its absolute value.
@@ -1926,7 +1937,7 @@ iTaskCont
                 inc     taskCount
 iTaskGetCurrent
                 jsr     popLN
-                tya   
+                tya
                 lsr
                 lsr
                 sta     R0                ;Get the table entry value
@@ -1969,13 +1980,13 @@ iTaskValid      jsr     popR0
                 rol
                 cmp     #TASKCOUNT<<2
                 bcc     iTaskIsValid
-                
+
 iTaskValidErr   pla     ;remove return address
                 pla
                 ldx     #ERR_INVALID_PID
                 lda     #0
                 jmp     iErr2
-                
+
 iTaskIsValid    tay
                 rts
 ;

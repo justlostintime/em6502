@@ -335,7 +335,7 @@
     db 64
     endm
 ; Subscript
-  macro SUBSCRIPT 
+  macro SUBSCRIPT
     db 65
     endm
 ; KILL Task
@@ -345,5 +345,9 @@
 ; STAT Task
   macro TASKSTAT
     db 67
+    endm
+;  output value as hex
+    macro HEXPRT
+    db 68
     endm
 
