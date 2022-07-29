@@ -6,7 +6,7 @@
 ; the IL opcodes.  These are support functions, NOT
 ; the IL code.
 ;=====================================================
-GOSUBSTACKSIZE  equ     20      ;Depth of gosub nesting
+GOSUBSTACKSIZE  equ     16        ;Depth of gosub nesting
 ;=====================================================
 	Seg Code
 ;=====================================================
@@ -560,42 +560,71 @@ restoreIL	lda	tempIL
 ;=====================================================
 ; This pushes R0 onto the stack.
 ;
-pushR0		ldx	mathStackPtr
-		lda	R0
-		sta	mathStack,x
-		inx
-		lda	R0+1
-		sta	mathStack,x
-		inx
-		stx	mathStackPtr
-		rts
+pushR0          ldx     mathStackPtr
+                lda     R0
+                sta     mathStack,x
+                inx
+                lda     R0+1
+                sta     mathStack,x
+                inx
+                stx     mathStackPtr
+                rts
 
 ;=====================================================
 ; This pushes curptr basic current line onto the call stack.
 
 pushLN
-    sty	rtemp1
-		ldy	GoSubStackPtr
-		tya
-		cmp 	#GOSUBSTACKSIZE*3
-		beq	pusherr
-		lda	CURPTR
-		sta	(GOSUBSTACK),y
-		iny
-		lda	CURPTR+1
-		sta	(GOSUBSTACK),y
-		iny
-		lda CUROFF
-		sta	(GOSUBSTACK),y
-		iny
-		sty	GoSubStackPtr
-		ldy	rtemp1
-		clc
-		rts
-
+                sty     rtemp1
+                ldx     taskPtr                 ; support tasks
+                ldy     taskGoStacks+2,x
+;                ldy     GoSubStackPtr
+                cpy     #GOSUBSTACKSIZE*3
+                beq     pusherr
+                ldx     #0
+pushLoop
+                lda     CURPTR,x
+                sta     (GOSUBSTACK),y
+                iny
+                inx
+                cpx     #3
+                bne     pushLoop
+                ldx     taskPtr                ; Support tasks
+                tya
+                sta     taskGoStacks+2,x 
+;                sty     GoSubStackPtr
+                ldy     rtemp1
+                clc
+                rts
 pusherr:
-    sec
-		rts
+                sec
+                rts
+;=====================================================
+; This pops Top Of gosub call Stack and
+; laces it in CURPTR.
+;
+popLN           sty     rtemp1
+                ldx     taskPtr
+                ldy     taskGoStacks+2,x
+;                ldy     GoSubStackPtr
+                ldx     #3         ; each stack entry is 3 bytes
+                cpy     #3         ; if less than 3 on stack then error
+                bcc     poperr     ; Process an error
+popLoop
+                dey
+                dex
+                lda     (GOSUBSTACK),y
+                sta     CURPTR,x
+                cpx     #$00
+                bne     popLoop
+                ldx     taskPtr
+                tya
+                sta     taskGoStacks+2,x 
+;                sty     GoSubStackPtr
+                ldy     rtemp1
+                clc
+                rts
+poperr          sec
+                rts
 ;
 ;=====================================================
 ; This pushes R1 onto the stack
@@ -622,30 +651,7 @@ popR0		ldx	mathStackPtr
 		sta	R0
 		stx	mathStackPtr
 		rts
-;=====================================================
-; This pops Top Of gosub call Stack and
-; laces it in CURPTR.
-;
-popLN		sty	rtemp1
-        ldy	GoSubStackPtr
-		dey
-		tya
-		cmp	#$FF
-		beq	poperr
-		lda	(GOSUBSTACK),y
-		sta CUROFF
-		dey
-		lda	(GOSUBSTACK),y
-		sta	CURPTR+1
-		dey
-		lda	(GOSUBSTACK),y
-		sta	CURPTR
-		sty	GoSubStackPtr
-		ldy	rtemp1
-		clc
-		rts
-poperr		sec
-		rts
+
 ;
 ;=====================================================
 ; This pops TOS and places it in R1.
@@ -863,7 +869,7 @@ PrtQuoted       lda     CURPTR
                 lda     #'"
                 sta     PrtTerm
                 jmp     PrtLoop
-              
+
 ; Print a string pointed to by x= h, y=l terminated by a
 ; Return y as the length
 

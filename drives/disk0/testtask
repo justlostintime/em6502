@@ -1,32 +1,32 @@
 5 rem can have up to 10 tasks, main is always 1, so can have 9 more taskscls
-7 cls:putch(27):print"[?25l": rem turn off the cursor
+7 cls:?27$;"[?25l": rem turn off the cursor
 10 x= task(100) : y=task(1000): v=task(2000): d = 200 : e =100: f = 25: g = 1: h=250
-12 i=3200 : j=50 : z = 0
+12 i=32000 : j=50 : z = 0
 15 v = task(2000) : v = task(2000):v=task(2000):v=Task(2000):v=task(2000):v=task(2000)
-20 putch(27):?"[5;10H";"Main Line at ";a
+20 ?27$;"[5;10H";"Main Line at ";a
 21 a = a + g
-22 putch(27):?"[5;23H";a
-25 if a>i putch(27):?"[30;10H"; "End program":putch(27):print"[?25h":etask
-26 if b=h x=task(100) : putch(27):?"[5;40H"; "Restart Task at 100        " : b=0
+22 ?27$;"[5;23H";a
+25 if a>i ?27$;"[30;10H"; "End program":putch(27):print"[?25h":etask
+26 if b=h x=task(100) : ?27$;"[5;40H"; "Restart Task at 100        " : b=0
 30 goto 21
 100 rem test task
-105 b = 0:putch(27):?"[6;10H";"Start Task 1 PID ";task(0)
-106 putch(27):?"[6;40H";"Task 1 PID ";Task(0);" Count=";b
+105 b = 0:?27$;"[6;10H";"Start Task 1 PID ";task(0)
+106 ?27$;"[6;40H";"Task 1 PID ";Task(0);" Count=";b
 110 b = b+g
-112 putch(27):?"[6;59H";b
-115 if b=h putch(27):?"[6;40H"; "Task 1 PID ";Task(0);" Exits ":etask
+112 ?27$;"[6;59H";b
+115 if b=h ?27$;"[6;40H"; "Task 1 PID ";Task(0);" Exits ":etask
 120 goto 110
 1000 rem a second task
-1005 putch(27):?"[7;10H"; "Task 2 PID ";task(0);" Started" : c = 0
-1007 putch(27):?"[7;40H"; "Task 2 PID ";task(0);" Count=";c
+1005 ?27$;"[7;10H"; "Task 2 PID ";task(0);" Started" : c = 0
+1007 ?27$;"[7;40H"; "Task 2 PID ";task(0);" Count=";c
 1010 c = c + g
-1015 putch(27):?"[7;59H";c
+1015 ?27$;"[7;59H";c
 1017 ntask
 1020 goto 1010
 2000 Rem This is a fast task high load
 2010 let k[task(0)] = z
-2015 putch(27):?"[";task(0)+10;";10H";"Task Gen PID ";task(0);" Started"
-2017 putch(27):?"[";task(0)+10;";40H";"Task Gen PID ";task(0);" Alive ";k[task(0)]
+2015 ?27$;"[";task(0)+10;";10H";"Task Gen PID ";task(0);" Started"
+2017 ?27$;"[";task(0)+10;";40H";"Task Gen PID ";task(0);" Alive ";k[task(0)]
 2020 let k[task(0)] = k[task(0)]+1
-2030 if k[task(0)]%j=z putch(27):?"[";task(0)+10;";61H";k[task(0)]
+2030 if k[task(0)]%j=z ?27$;"[";task(0)+10;";61H";k[task(0)]
 2040 goto 2020

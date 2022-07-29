@@ -103,10 +103,10 @@ FIXED		equ	FALSE
 ; Sets the arithmetic stack depth.  This is *TINY*
 ; BASIC, so keep this small!
 ;
-STACKSIZE         equ     20      ;number of entries
+STACKSIZE         equ     20      ;number of entries in math stack
 ILSTACKSIZE       equ     40      ;number of entries in ilstack
-GOSUBSTACKSIZE    equ     20      ;Depth of gosub nesting max is 85
-TASKCOUNT         equ     10      ;Task Table count, up to 85 tasks
+GOSUBSTACKSIZE    equ     16      ;Depth of gosub nesting max is 64 times TASKTABLE LENGTH must < 256
+TASKCOUNT         equ     10      ;Task Table count, up to 64 tasks
 TASKCYCLESDEFAULT equ     20      ;Default Task Switch 0-255 uses a single byte
 ;
 ; Common ASCII constants
@@ -162,11 +162,18 @@ lineLength              ds      1       ;Length of current line
 ; CURPTR is a pointer to curent BASIC line being
 ; executed.  Always points to start of line, CUROFF
 ; is the offset to the current character.
+; The order of these fields is important
+CURPTR                  ds      2           ;Pointer to current Basic line
+CUROFF                  ds      1           ;Current offset in Basic Line
 ;
-CURPTR                  ds      2       ;Pointer to current Basic line
-CUROFF                  ds      1       ;Current offset in Basic Line
-;
-GOSUBSTACK              ds      2       ;pointer to gosub stack
+;The order of these fields in important
+GOSUBSTACK              ds      2           ;pointer to gosub stack
+;GoSubStackPtr           ds      1           ;current offset in the stack, moved to task table
+
+;Defined in data segment here for refrence only
+;taskTable       ds      TASKCOUNT*4        ; Task Table Offset and pointer to Basic code, active flag
+;taskGoStacks    ds      TASKCOUNT*4        ; Table of assigned gosub stack locations and pointers
+;taskPtr         ds      1                  ; Current offset into task table 0, 4, 8, 12 ...
 ;
 
 ;
@@ -192,10 +199,7 @@ FROM                    ds      2       ;Used for basic prog insert/remove and p
 ;
 PrtFrom                 EQU     FROM
 ;
-;Task Cycle Counter and reset count
-taskCurrentCycles       ds      1
-taskResetValue          ds      1
-taskCount               ds      1                  ; Count of active tasks
+
 ;
 ;=====================================================
 ;
@@ -252,12 +256,15 @@ cold2           jsr     puts
                 db      CR,LF,0
 ;
                 jsr     GetSizes           ;setup the free space available
-                lda     HighMem
-                sbc     #GOSUBSTACKSIZE*3
+
+calcstack       lda     HighMem
+                clc
+                sbc     #(GOSUBSTACKSIZE*3*TASKCOUNT)&$FF
                 sta     GOSUBSTACK
                 lda     HighMem+1
-                sbc     #0
+                sbc     #(GOSUBSTACKSIZE*3*TASKCOUNT)>>8
                 sta     GOSUBSTACK+1
+                jsr     taskSetGosubStack               ; setup all the task stacks
                 lda     #IL&$ff
                 sta     ILPC
                 lda     #IL>>8
@@ -316,16 +323,17 @@ coldtwo         jsr     SetOutConsole
 ;
                 lda     #0
                 sta     RunMode
-		sta	LINBUF
+                sta     LINBUF
 ; Clear everything from the stacks
-		sta     mathStackPtr
-		sta     retStackPtr
-		sta     GoSubStackPtr
+                sta     mathStackPtr
+                sta     retStackPtr
+;                sta     GoSubStackPtr
+                jsr     taskReset
 ;
-		lda	#LINBUF&$ff
-		sta	CURPTR
-		lda	#LINBUF>>8
-		sta	CURPTR+1	;fall through...
+                lda     #LINBUF&$ff
+                sta     CURPTR
+                lda     #LINBUF>>8
+                sta     CURPTR+1      ;fall through...
 
 ;=====================================================
 ; This is the top of the IL interpreter.  This fetches
@@ -497,9 +505,11 @@ ILTBLend	equ	*
 ;=====================================================
 ;
 ;
-iINIT           lda     #0       ;clear IL stack pointer,gosub stack
+iINIT           lda     #0                      ;clear IL stack pointer,gosub stack
                 sta     retStackPtr
-                sta     GoSubStackPtr
+                sta     mathStackPtr
+                jsr     taskReset
+;                sta     GoSubStackPtr
 ;
                 lda     #ProgramStart&$ff        ;user prog
                 sta     CURPTR
@@ -564,6 +574,49 @@ taskClearLoop   cpy     #TASKCOUNT*4
 taskClearDone   pla
                 tay
                 rts
+                
+;
+;=====================================================
+; Sets the pointers to the gosub stacks
+taskSetGosubStack
+                ldx     #TASKCOUNT
+                ldy     #0
+taskGoSetLoop   lda     GOSUBSTACK
+                sta     taskGoStacks,y
+                lda     GOSUBSTACK+1
+                sta     taskGoStacks+1,y
+                iny
+                iny
+                iny
+                iny
+                dex
+                beq     taskGoSetDone
+                lda     #GOSUBSTACKSIZE*3   ; must be less than 256
+                clc
+                adc     GOSUBSTACK
+                sta     GOSUBSTACK
+                lda     #0
+                adc     GOSUBSTACK+1
+                sta     GOSUBSTACK+1
+                jmp     taskGoSetLoop
+                
+taskGoSetDone
+                lda     taskGoStacks      ; Restore the task 0 stack pointer
+                sta     GOSUBSTACK
+                lda     taskGoStacks+1
+                sta     GOSUBSTACK+1
+                rts
+                
+;
+;========================================================
+; Set the gosub stack pointer to the correct entry
+;
+taskUpdateGosubStack
+                ldy     taskPtr
+                lda     taskGoStacks,y
+                sta     GOSUBSTACK
+                lda     taskGoStacks+1,y
+                sta     GOSUBSTACK+1
 
 ;
 ;=====================================================
@@ -910,7 +963,7 @@ iErr2a
                 sta     R0+1
                 jsr     PrintDecimal
                 jsr     puts
-                db      " at ",0
+                db      ":",0
                 lda     #0
                 sta     R0+1
                 lda     CUROFF
@@ -919,10 +972,10 @@ iErr2a
                 sta     R0
                 jsr     PrintDecimal
                 jsr     puts
-                db      " = $",0
-                ldy     CUROFF
-                lda     (CURPTR),y
-                jsr     OUTHEX
+                db      ":",0
+                lda     taskPtr
+                sta     R0
+                jsr     PrintDecimal
 ;
 iERR3           jsr     CRLF
                 lda     #0
@@ -940,6 +993,27 @@ ResetIL		lda	#0
 		lda	errGoto+1
 		sta	ILPC+1
 		jmp	NextIL
+		
+;
+;=====================================================
+; Clear all task entries and task gosub stacks
+taskReset
+                lda   #0
+                ldy   #0
+                sta   taskPtr             ; Set the active task to 0 MAIN
+taskResetLoop   sta   taskTable,y         ; clear any active tasks
+                sta   taskGoStacks+2,y    ; clear all the task gosub pointers
+                iny
+                iny
+                iny
+                iny
+                cpy   #TASKCOUNT<<2
+                bne   taskResetLoop
+                lda   taskGoStacks        ; ensure the main task stack is active
+                sta   GOSUBSTACK
+                lda   taskGoStacks+1
+                sta   GOSUBSTACK+1
+                rts
 ;
 ;=====================================================
 ; Pop two items off stack, add them, then place the
@@ -1634,9 +1708,9 @@ irqbrk  inc  IRQPending     ; Set the pending to 2, so this ignores it, iret set
         lda #3
         sta CUROFF
         jmp NextIL          ; Execute the next instruction should jmp statement
-irqErra ldx #12             ; Flag any error in line number
-         lda #0             ; stop the execution
-		jmp iErr2
+irqErra         ldx     #12             ; Flag any error in line number
+                lda     #0             ; stop the execution
+                jmp     iErr2
 ;
 ;================================================
 ; iTaskSwitch   switch to new task if not interupt and
@@ -1679,9 +1753,14 @@ TaskNextChk
                 sta     CURPTR+1
                 lda     taskTable+3,y
                 sta     CUROFF
+                lda     taskGoStacks,y            ; Point to correct stack
+                sta     GOSUBSTACK
+                lda     taskGoStacks+1,y
+                sta     GOSUBSTACK+1
                 sty     taskPtr
                 lda     taskResetValue
                 sta     taskCurrentCycles
+                
 iTaskSwitchDone
                 jmp     NextIL
 ;
@@ -1955,7 +2034,7 @@ iTaskNoEmpty
                 jmp     iErr2
 iTaskRetCurrent                           ;Get if task number is zero Current task
                 ldy     taskPtr
-                bne     iTaskGetCurrent
+                jmp     iTaskGetCurrent
 ;
 ;================================================================
 ; Returns task Status
@@ -2073,22 +2152,33 @@ SaveIrqReg      db      0         ; Store current setting
 IRQStatus       db      0         ; 1 = enabled, 0 = dissabled
 IRQPending      db      0         ; Irq recieved, Called at next Basic Line
 IRQEntry        db      0,0       ; Basic code offset of IRQ Handler
+
 ;
+;==================================================================================================
+; Task Management information
 ; Tasks may be created by the Task <expr>,<expr>,[<expr>]   Slot number, Cycles per switch command
 ; Tasks are ended by the Endtask command   This with clear the entry from the task table
 ; Task switchs happen at the beginning of the next Basic command line
 ; It will not happen during an input or output operations
 ; Task switches otherwise are prememtive, The cycle count defaults to 100.
 ; Task Zero is always the root task, main line program
+;
 taskTable       ds      TASKCOUNT*4        ; Task Table Offset and pointer to Basic code, active flag
-taskPtr         ds      1                  ; Current offset into task table 0, 3, 6,9 ...
-
+taskGoStacks    ds      TASKCOUNT*4        ; Table of assigned gosub stack locations and pointers
+taskPtr         ds      1                  ; Current offset into task table 0, 4, 8, 12 ...
+;Task Cycle Counter and reset count
+taskCurrentCycles       ds      1
+taskResetValue          ds      1
+taskCount               ds      1           ; Count of active tasks
+;
+; Math stack and IL cal return stack definitions
+;
 mathStack       ds      STACKSIZE*2        ;Stack used for math expressions
 mathStackPtr    ds      1
 retStack        ds      ILSTACKSIZE*2      ;stack used by the IL for calls and returns
 retStackPtr     ds      1
-;callStack      ds      GOSUBSTACKSIZE*3   ; Allocated dynamically at App start
-GoSubStackPtr   ds      1
+
+
 
 
 ;
@@ -2101,7 +2191,7 @@ putsy           ds      1
 errGoto         ds      2         ;where to set ILPC on err
 MQ              ds      2         ;used for some math
 sign            ds      1         ;0 = positive, else negative
-rtemp1          ds      1
+rtemp1          ds      2         ;Temp for x and y
 random          ds      2
 BOutVec         ds      2
 tempy           ds      1         ;temp y storage

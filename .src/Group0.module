@@ -320,8 +320,9 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     .sr = BClr(.SR, 6)
     Return
 
-  Grp0Case57:'$BC LDY abs,X
+  Grp0Case57: '$BC LDY abs,X
     .AbsX()
+    .ReadByte()
     .Y = .DataBus
     .SetSR(.Y)
     Return

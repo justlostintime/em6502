@@ -1,8 +1,44 @@
 10 PRINT "START GOSUB TEST"
-20 GOSUB 100
-30 GOTO 200
-40 REM THIS IS THE SUB TO CALL
-100 PRINT "IN SUB"
-110 RETURN
-199 REM WE ARE ALL DONE
-200 PRINT "DONE"
+20 let m[1]=task(4000):let m[2]=task(5000):let m[3]=task(4000):let m[4]=task(5000)
+25 let m[5]=task(4000):let m[6]=task(5000):let m[7]=task(4000):let m[8]=task(5000)
+27 let m[9]=task(4000)
+30 GOSUB 100
+40 a = a+1
+50 if a < 10 goto 30
+55 a = 0
+56 rem now wait for the tasks to finish
+58 a = a + 1
+60 if stat(a) then ? "Waitimg for Task to end ";a:ntask:goto 60
+65 ? "Task PID";a;" Has Terminated"
+70 if a < 9  goto 58
+80 print "End of test"
+90 end
+
+
+100 PRINT "IN SUB 100 ";task(0)
+110 gosub  2000
+120 RETURN
+
+
+2000 print "In Sub 2000 ";task(0)
+2010 gosub 3000
+2020 RETURN
+
+
+3000 print "In Sub 3000 ";task(0) 
+3010 return
+
+
+4000 Print "Start Task 4000 ";task(0)
+4010 gosub 100
+4020 b=b+1
+4030 if b > 50 etask
+4040 goto 4010
+
+
+
+5000 ? "Start Task 5000 ";task(0)
+5010 gosub 100
+5020 c=c+1
+5030 if c > 50 etask
+5040 goto 5010
