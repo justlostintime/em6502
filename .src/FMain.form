@@ -351,7 +351,7 @@
     { ControlPanel Panel
       MoveScaled(0,72,74,26)
       { RunModeSet RadioButton
-        MoveScaled(0,9,17,3)
+        MoveScaled(2,9,14,3)
         ToolTip = ("Indicates that the CPU is in run mode\nwhen set")
         Text = ("Run")
       }
@@ -362,7 +362,7 @@
         Text = ("Step")
       }
       { SetTrace ToggleButton
-        MoveScaled(62,0,11,4)
+        MoveScaled(62,1,11,4)
         ToolTip = ("This is on when dark,\nClick to turn Tracing on and off\nTurning this off will improve speed!")
         Text = ("Trace")
         Value = True
@@ -424,11 +424,11 @@
       { SpeedScaler SliderBox
         MoveScaled(18,14,48,5)
         ToolTip = ("Control the execution speed of the cpu\n0 is slowest, Higher numbers are faster")
-        MaxValue = 600
+        MaxValue = 1000
         Value = 2
       }
       { SingleStepSet RadioButton
-        MoveScaled(0,5,17,3)
+        MoveScaled(2,5,14,3)
         ToolTip = ("Indicates the cpu is in sigle step mode\nwhen set")
         Text = ("Single Step")
         Value = True
@@ -558,7 +558,7 @@
         ReadOnly = True
       }
       { AddrBus_Info TextBox
-        MoveScaled(11,71.1667,23,4)
+        MoveScaled(11,71.1429,23,4)
         ReadOnly = True
       }
       { DataBus_INFO TextBox
@@ -566,11 +566,11 @@
         ReadOnly = True
       }
       { Label8 Label
-        MoveScaled(1,71.1667,9,5)
+        MoveScaled(1,71.1429,9,5)
         Text = ("Adr Bus")
       }
       { Label9 Label
-        MoveScaled(1,75.1667,9,4)
+        MoveScaled(1,75.1429,9,4)
         Text = ("Data Bus")
       }
       { Label10 Label

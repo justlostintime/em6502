@@ -6,7 +6,7 @@
 ; the IL opcodes.  These are support functions, NOT
 ; the IL code.
 ;=====================================================
-GOSUBSTACKSIZE  equ     16        ;Depth of gosub nesting
+;GOSUBSTACKSIZE  equ     16        ;Depth of gosub nesting
 ;=====================================================
 	Seg Code
 ;=====================================================
@@ -35,45 +35,45 @@ getILb2		plp			;restore status
 ;=====================================================
 ; Decrement ILPC by one.
 ;
-decIL		lda	ILPC
-		bne	decIL2
-		dec	ILPC+1
-decIL2		dec	ILPC
-		rts
+decIL           lda     ILPC
+                bne     decIL2
+                dec     ILPC+1
+decIL2          dec     ILPC
+                rts
 ;
 ;=====================================================
 ; Push the ILPC onto the return stack.  Actually, this
 ; pushes the address of ILPC+2 since that's the next
 ; address to execute.
 ;
-pushILPC	ldy	retStackPtr
-		lda	ILPC
-		clc
-		adc	#2
-		sta	retStack,y
-		php			;save C bit
-		iny
-		lda	ILPC+1
-		plp			;restore C
-		adc	#0
-		sta	retStack,y
-		iny
-		sty	retStackPtr
-		rts
+pushILPC      ldy     ILSTACKPTR
+              lda     ILPC
+              clc
+              adc     #2
+              sta     (ILSTACK),y
+              php     ;save C bit
+              iny
+              lda     ILPC+1
+              plp     ;restore C
+              adc     #0
+              sta     (ILSTACK),y
+              iny
+              sty     ILSTACKPTR
+              rts
 ;
 ;=====================================================
 ; Pull the top entry from return stack and put into
 ; ILPC.
 ;
-popILPC		ldy	retStackPtr
-		dey
-		lda	retStack,y
-		sta	ILPC+1
-		dey
-		lda	retStack,y
-		sta	ILPC
-		sty	retStackPtr
-		rts
+popILPC       ldy     ILSTACKPTR
+              dey
+              lda     (ILSTACK),y
+              sta     ILPC+1
+              dey
+              lda     (ILSTACK),y
+              sta     ILPC
+              sty     ILSTACKPTR
+              rts
 ;
 ;=====================================================
 ; This searches for a specific line number that is in
@@ -296,94 +296,94 @@ dectableend	equ	*
 ; a value like "123456789" will produce something,
 ; but not what you had expected.
 ;
-getDecimal	lda	#0
-            sta	R0
-            sta	R0+1
-            sta	dpl	;temporary negative flag
+getDecimal      lda	#0
+                sta	R0
+                sta	R0+1
+                sta	dpl	;temporary negative flag
 ;
 ; See if it's negative...
 ;
-	    sty $0013
-            lda	(CURPTR),y
-            cmp	#'-
-            bne	getDecLoop
-            inc	dpl	;it's negative
+                sty $0013
+                lda	(CURPTR),y
+                cmp	#'-
+                bne	getDecLoop
+                inc	dpl	;it's negative
 ;
 getDecLoop	lda	(CURPTR),y
-            cmp	#'0
-            bcc	getDdone
-            cmp	#'9+1
-            bcs	getDdone
-            sec
-            sbc	#'0	;convert to binary
-            pha
+                cmp	#'0
+                bcc	getDdone
+                cmp	#'9+1
+                bcs	getDdone
+                sec
+                sbc	#'0	;convert to binary
+                pha
 ;
 ; Now multiply R0 by 10.  Remember that
 ; 2*N + 8*N = 10*N.
 ;
-            asl	R0
-            rol	R0+1	;*2
-            lda	R0
-            sta	R1
-            lda	R0+1
-            sta	R1+1
-            asl	R0
-            rol	R0+1	;*4
-            asl	R0
-            rol	R0+1	;*8
-            clc		;now add the partial sums...
-            lda	R0	;...to get *10
-            adc	R1
-            sta	R0
-            lda	R0+1
-            adc	R1+1
-            sta	R0+1
+                asl	R0
+                rol	R0+1	;*2
+                lda	R0
+                sta	R1
+                lda	R0+1
+                sta	R1+1
+                asl	R0
+                rol	R0+1	;*4
+                asl	R0
+                rol	R0+1	;*8
+                clc		;now add the partial sums...
+                lda	R0	;...to get *10
+                adc	R1
+                sta	R0
+                lda	R0+1
+                adc	R1+1
+                sta	R0+1
 ;
 ; Add in the new digit
 ;
-            pla
-            clc
-            adc	R0
-            sta	R0
-            bcc	getD2
-            inc	R0+1
+                pla
+                clc
+                adc	R0
+                sta	R0
+                bcc	getD2
+                inc	R0+1
 ;
 ; Move to next character
 ;
-getD2		iny
-		bne	getDecLoop
+getD2           iny
+                bne     getDecLoop
 ;
 ; All done with digits, so now deal with it being
 ; negative.  If zero, then don't check for negative
 ; flag.  Ie, -0 is stored as 0.
 ;
-getDdone	lda	R0
-		ora	R0+1
-		beq	getDone2	;zero
-		lda	dpl
-		beq	getDone2	;positive
+getDdone        lda	R0
+                ora     R0+1
+                beq	getDone2	;zero
+                lda	dpl
+                beq	getDone2	;positive
 ;
 ; Invert all the bits, then add one.
 ;
-		lda	R0
-		eor	#$ff
-		sta	R0
-		lda	R0+1
-		eor	#$ff
-		sta	R0+1
+                lda	R0
+                eor	#$ff
+                sta	R0
+                lda	R0+1
+                eor	#$ff
+                sta	R0+1
 ;
-		inc	R0
-		bne	getDone2
-		inc	R0+1
+                inc	R0
+                bne	getDone2
+                inc	R0+1
 getDone2
-            lda R0
-            sta $0010
-            lda R0+1
-            sta $0011
-            lda dpl
-            sta $012
+                lda R0
+                sta $0010
+                lda R0+1
+                sta $0011
+                lda dpl
+                sta $012
 
-            rts
+                rts
 ;
 ;=====================================================
 ; Print the string that immediately follows the JSR to
@@ -425,6 +425,8 @@ psix2		ldy	putsy
 ;
 ; On entry:
 ;    A contains the prompt character, or 0 if none.
+;    X = 1 Background read
+;    x = 0 Forground read with wait
 ;
 ; On exit:
 ;    CURPTR points to LINBUF
@@ -432,67 +434,142 @@ psix2		ldy	putsy
 ;    Y has offset to first non-space character
 ;    CURROFF has the same as Y.
 ;
-GetLine		ldx	#LINBUF&$ff
-		stx	CURPTR
-		ldx	#LINBUF>>8
-		stx	CURPTR+1
+GetLine         jsr     ReadPrompt
+                cpx     #0
+                beq     GetLineRetry
+                ldx     taskPtr
+                lda     taskTable,x
+                cmp     #$03            ;Task Active and waiting for IO
+                beq     taskWaitingIO
+                ora     #$02            ;Mark Task as waiting for IO
+                sta     taskTable,x     ;Mark the state for task as waiting io
+                dec     taskWaitingIO   ;Start polling the input and make task wait
+                beq     taskWaitingIO   ;Get out of here and wait for io to complete
+
 ;
-; Prompt
+; Now read a line and wait for the CR
 ;
-		pha		;save for retries
-GetLinePr	pla		;restore
-		pha		;save again
-		ora	#0	;any prompt?
-		beq	getlinenp
-		jsr	OUTCH
-		lda	#$20
-		jsr	OUTCH	;space after prompt
+GetLineRetry
+                lda     #0                ;Wait for input to complete
+                jsr     ReadLine
+
 ;
-getlinenp	ldx	#0	;offset into LINBUF
-getline1	stx	getlinx
-		jsr	GETCH
-	    if	CTMON65
-		pha
-		jsr	cout   ;echo echo echo
-		pla
-	    endif
-		cmp	#CR
-		beq	getlind	;end of line
-		cmp	#BS	;backspace?
-		beq	getlinebs
-		ldx	getlinx
-		sta	LINBUF,x
-		inx
-		bne	getline1
+; Point to the line we just read
+; Set the current pointer to point to the input line
 ;
-; CR was hit
-;
-getlind		lda	#0
-		ldx	getlinx
-		sta	LINBUF,x
-		sta	CUROFF
+ReadComplete    ldy     #0
+                sty     CUROFF
+                ldx     #LINBUF&$ff
+                stx     CURPTR
+                ldx     #LINBUF>>8
+                stx     CURPTR+1
 ;
 ; Output a CR/LF
 ;
-		jsr	CRLF
+                jsr     CRLF
 ;
 ; If a blank line, prompt again.
 ;
-		ldy	#0
-		jsr	SkipSpaces
-		lda	(CURPTR),y
-		beq	GetLinePr	;empty line
-		pla		        ;get rid of prompt char
-		rts
+                jsr     SkipSpaces
+                lda     (CURPTR),y
+                bne     GetLineDone            ;We have data then exit
+                jsr     ReadPromptRetry
+                ldx     taskPtr                ;if this task is waiting for IO
+                lda     taskTable,x            ;then get out, wait for line to
+                cmp     #3                     ;Complete again
+                beq     taskWaitingIO
+                jmp     GetLineRetry           ;If the IO is wait then jump to start
+
+GetLineDone
+                ldx     taskPtr
+                lda     #1
+                sta     taskTable,x          ;IO is complete
+
+taskWaitingIO
+                rts
+
+;
+;=======================================================================
+; Display the prompt character
+; On entry
+;          A contains the prompt character
+; On exit
+;          The readbuffer index is reset to 0
+;
+ReadPrompt      sta     promptChar
+
+;
+; Prompt
+;
+
+ReadPromptRetry lda     promptChar
+                ora     #0                ;any prompt?
+                beq     getlinenp
+                jsr     OUTCH
+                lda     #$20
+                jsr     OUTCH             ;Space after prompt
+;
+getlinenp       ldx     #0                ;offset into LINBUF
+                stx     getlinx
+                rts
+;
+;===============================================================
+; This fuction is the driver for the line input
+; on call if a = 0 then it waits for all input
+;            a = 1 then nowait for input
+; On exit
+;                     c clear if not complete line
+;                     c set if it was a complete line
+
+ReadLine
+                sta     inputNoWait
+                cmp     #0
+                beq     getline1
+                jsr     ISCHAR           ; if there is no character just get out
+                beq     GetLineNoWait
+getline1        jsr     GETCH
+        if  CTMON65
+                pha
+                jsr     cout              ;echo echo echo
+                pla
+        endif
+                cmp     #CR
+                beq     getlind           ;end of line
+                cmp     #BS               ;backspace?
+                beq     getlinebs
+                ldx     getlinx
+                sta     LINBUF,x
+                inx
+                stx     getlinx
+                lda     inputNoWait
+                beq     getline1
+                bne     GetLineNoWait
+;
+; CR was hit
+;
+getlind         lda     #0                  ; set the end pf buffer
+                ldx     getlinx
+                sta     LINBUF,x
+
+                sec                         ; Carry set then cr received
+                rts
+
+GetLineNoWait
+                clc                         ; Carry clear no end of line
+                rts
 ;
 ; Backspace was hit
 ;
-getlinebs	ldx	getlinx
-		beq	getline1	;at start of line
-		dex
-		jsr     puts
-		db      27,"[K",0
-		jmp	getline1
+getlinebs       ldx     getlinx
+                beq     getlineEOL          ;at start of line
+                dex
+                stx     getlinx
+getlinepbs      jsr     puts
+                db      27,"[K",0
+                jmp     getline1
+getlineEOL      lda     #SPACE
+                jsr     OUTCH
+                bne     getlinepbs
 ;
 ;=====================================================
 ; Count the length of the line currently in LINBUF
@@ -539,6 +616,39 @@ getLineL3	inx		;count null at end
 ;		rts
 ;
 ;=====================================================
+; Save Context Store the context to the TASK Table
+; on entry y contains the task table entry to save to
+; on exit y points to next task table entry
+;         x contains the number of bytes copied
+ContextSave     ldx   #0
+                iny             ;inc past the task flags
+ContextSvLoop   lda   CONTEXT,x
+                sta   taskTable,y
+                iny
+                inx
+                cpx   #CONTEXTLEN
+                bcc   ContextSvLoop
+                rts
+;
+; Load Context transfer context from task table to the Current Context
+; on entry y contains the task table entry to transfer
+; on exit y points to the original task table entry
+;         x contains the number of byts copied
+ContextLoad     tya
+                pha
+                ldx   #0
+                iny                 ;inc past the task flags
+ContextLDLoop   lda   taskTable,y
+                sta   CONTEXT,x
+                iny
+                inx
+                cpx   #CONTEXTLEN
+                bcc   ContextLDLoop
+                pla
+                tay
+                rts
+;
+;=====================================================
 ; This saves ILPC.  This saves to a single save area,
 ; so it can't be called more than once.
 ;
@@ -560,38 +670,41 @@ restoreIL	lda	tempIL
 ;=====================================================
 ; This pushes R0 onto the stack.
 ;
-pushR0          ldx     mathStackPtr
+pushR0          sty     rtemp1
+                ldy     MATHSTACKPTR
                 lda     R0
-                sta     mathStack,x
-                inx
+                sta     (MATHSTACK),y
+                iny
                 lda     R0+1
-                sta     mathStack,x
-                inx
-                stx     mathStackPtr
+                sta     (MATHSTACK),y
+                iny
+                sty     MATHSTACKPTR
+                ldy     rtemp1
                 rts
 
 ;=====================================================
 ; This pushes curptr basic current line onto the call stack.
+; and CUROFF. Also marks entry type as 1 = GOSUB
 
 pushLN
                 sty     rtemp1
-                ldx     taskPtr                 ; support tasks
-                ldy     taskGoStacks+2,x
-;                ldy     GoSubStackPtr
-                cpy     #GOSUBSTACKSIZE*3
-                beq     pusherr
-                ldx     #0
+                ldy     GOSUBSTACKPTR           ; Get the Go Stack Pointer
+                cpy     #GOSUBSTACKSIZE*4       ; Is there space available
+                beq     pusherr                 ; No error
+                ldx     #0                      ; Start of bytes to copy
 pushLoop
-                lda     CURPTR,x
-                sta     (GOSUBSTACK),y
-                iny
-                inx
-                cpx     #3
-                bne     pushLoop
-                ldx     taskPtr                ; Support tasks
-                tya
-                sta     taskGoStacks+2,x 
-;                sty     GoSubStackPtr
+                lda     CURPTR,x                ; Get the current pointer Start address
+                sta     (GOSUBSTACK),y          ; put it onto the stack
+                iny                             ; Next destination
+                inx                             ; Next Source byte
+                cpx     #3                      ; 4 bytes per entry on the stack
+                bne     pushLoop                ; Jump if not done for next byte
+
+pushDone        lda     #1                      ; Type of stack entry, 1 gosub, 2 for , 3 next
+                sta     (GOSUBSTACK),y          ; Store Type of stack entry
+                iny                             ; Next entry
+
+                sty     GOSUBSTACKPTR           ; Save the new stack pointer
                 ldy     rtemp1
                 clc
                 rts
@@ -599,85 +712,107 @@ pusherr:
                 sec
                 rts
 ;=====================================================
-; This pops Top Of gosub call Stack and
-; laces it in CURPTR.
-;
+; This pops Top Off gosub call Stack and
+; places it in CURPTR/CUROFF.
+; This checks if the type = 1 GOSUB
+; if not it removes what ever is on the stack
+; until it finds the next return. Allowing
+; a return from within a for/next
 popLN           sty     rtemp1
-                ldx     taskPtr
-                ldy     taskGoStacks+2,x
-;                ldy     GoSubStackPtr
-                ldx     #3         ; each stack entry is 3 bytes
-                cpy     #3         ; if less than 3 on stack then error
-                bcc     poperr     ; Process an error
+                ldy     GOSUBSTACKPTR         ; Get the Gosub/for stack pointer
+                ldx     #3                    ; each stack entry is 3 bytes
+
+popContinue
+                cpy     #4                    ; if less than 4 on stack then error
+                bcc     poperr                ; Process an error
+
+                dey                           ; Position to read entry type
+                lda     (GOSUBSTACK),y        ; get the stack entry type
+                cmp     #1                    ; Type is a gosub entry
+                bne     popSkipEntry          ; No then just skip this
+
 popLoop
                 dey
                 dex
                 lda     (GOSUBSTACK),y
                 sta     CURPTR,x
-                cpx     #$00
-                bne     popLoop
-                ldx     taskPtr
-                tya
-                sta     taskGoStacks+2,x 
-;                sty     GoSubStackPtr
+                cpx     #0
+                bne     popLoop               ; Loop until all moved
+
+
+PopDone         sty     GOSUBSTACKPTR
                 ldy     rtemp1
                 clc
                 rts
 poperr          sec
                 rts
+
+popSkipEntry    dey
+                dey
+                dey
+                jmp popContinue
+
 ;
 ;=====================================================
 ; This pushes R1 onto the stack
 ;
-pushR1		ldx	mathStackPtr
-		lda	R1
-		sta	mathStack,x
-		inx
-		lda	R1+1
-		sta	mathStack,x
-		inx
-		stx	mathStackPtr
-		rts
+pushR1          sty     rtemp1
+                ldy     MATHSTACKPTR
+                lda     R1
+                sta     (MATHSTACK),y
+                iny
+                lda     R1+1
+                sta     (MATHSTACK),y
+                iny
+                sty     MATHSTACKPTR
+                ldy     rtemp1
+                rts
 ;
 ;=====================================================
 ; This pops Top Of Stack and places it in R0.
 ;
-popR0		ldx	mathStackPtr
-		dex
-		lda	mathStack,x
-		sta	R0+1
-		dex
-		lda	mathStack,x
-		sta	R0
-		stx	mathStackPtr
-		rts
+popR0           sty     rtemp1
+                ldy     MATHSTACKPTR
+                dey
+                lda     (MATHSTACK),y
+                sta     R0+1
+                dey
+                lda     (MATHSTACK),y
+                sta     R0
+                sty     MATHSTACKPTR
+                ldy     rtemp1
+                rts
 
 ;
 ;=====================================================
 ; This pops TOS and places it in R1.
 ;
-popR1		ldx	mathStackPtr
-		dex
-		lda	mathStack,x
-		sta	R1+1
-		dex
-		lda	mathStack,x
-		sta	R1
-		stx	mathStackPtr
-		rts
+popR1           sty     rtemp1
+                ldy     MATHSTACKPTR
+                dey
+                lda     (MATHSTACK),y
+                sta     R1+1
+                dey
+                lda     (MATHSTACK),y
+                sta     R1
+                sty     MATHSTACKPTR
+                ldy     rtemp1
+                rts
 ;
 ;=====================================================
 ; This pops TOS and places it in MQ.
 ;
-popMQ		ldx	mathStackPtr
-		dex
-		lda	mathStack,x
-		sta	MQ+1
-		dex
-		lda	mathStack,x
-		sta	MQ
-		stx	mathStackPtr
-		rts
+popMQ         sty     rtemp1
+              ldy     MATHSTACKPTR
+              dey
+              lda     (MATHSTACK),y
+              sta     MQ+1
+              dey
+              lda     (MATHSTACK),y
+              sta     MQ
+              sty     MATHSTACKPTR
+              ldy     rtemp1
+              rts
 ;
 ;=====================================================
 ; This assists with multiplication and division by

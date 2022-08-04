@@ -29,11 +29,10 @@ CO:
 XEC:
 	XINIT                      ;INITIALIZE
 
-;STATEMENT EXECUTOR
+;STATEMENT EXECUTOR DO not change the NAME as task manager uses this
 STMT:
         TSTIRQ      notirq        ;if it is an irq posted, this will cause transfer to irq handler
 notirq:
-        TASKSWITCH                ;if this is not a irq then check for task switch
         TSTLET      LET           ;Test if second field is =
         IJMP        DOLET         ;allow the default to be let
 LET:
@@ -94,10 +93,12 @@ S2a:
 
 S3:
         TST        S3a,"?"         ; ? symonym for print
-        IJMP       S4
+        IJMP       S4S
 S3a:
         TST        S8,"PR"         ;allow short form of print
-        TST        S4,"INT"        ;PRINT
+        TST        S4S,"INT"       ;PRINT
+S4S:
+        STARTIO                    ;Lock task until io completes
 S4:
         TSTDONE    S4a             ;Test if we just want crlf printed
         IJMP       S6
@@ -122,12 +123,14 @@ S6:
         DONE                       ;ERROR IF CR NOT NEXT
         NLINE
 S6Z:
+        ENDIO                      ;release task io completed
         NXT        CO              ;exit here if , or ; at end of print
         IJMP       STMT
 ;
 ; A jump for code too far away for relative branch
 ;
 ERRVEC:
+        ENDIO
         IJMP       UNKNOWN
 ;
 ; Get here if there is an expression to print
@@ -186,28 +189,28 @@ S8c
         NXT        CO                ;AND SEQUENCE TO NEXT
         IJMP       STMT
 S9:
-	TST        S13,"INPUT"     ;INPUT STATEMENT
+        TST        S13,"INPUT"     ;INPUT STATEMENT
 S10:
-  TSTSTR     S10A            ;If there is a string print the prompt
-  PRS
-  	TST        S10Z,SEMICOLON  ;Must follow the prompt
+        TSTSTR     S10A            ;If there is a string print the prompt
+        PRS
+        TST        S10Z,SEMICOLON  ;Must follow the prompt
 S10A:
-	TSTV       UNKNOWN         ;GET VAR ADDRESS (Originally CALL VAR = nonexist)
-	TST        S10A1,DOLLAR
-	INSTR
-	IJMP       S10A2
+        TSTV       UNKNOWN         ;GET VAR ADDRESS (Originally CALL VAR = nonexist)
+        TST        S10A1,DOLLAR
+        INSTR                      ;Move character From tty to AESTK
+        IJMP       S10A2
 S10A1:
-	INNUM                      ;MOVE NUMBER FROM TTY TO AESTK
+        INNUM                      ;MOVE NUMBER FROM TTY TO AESTK
 S10A2:
-	STORE                      ;STORE IT
-	TST        S11,COMMA       ;IS THERE MORE?
-	IJMP       S10             ;YES
+        STORE                      ;STORE IT
+        TST        S11,COMMA       ;IS THERE MORE?
+        IJMP       S10             ;YES
 S10Z:
-  iJMP       UNKNOWN
+        iJMP       UNKNOWN
 S11:
-	DONE                       ;MUST BE CR
-	NXT        CO              ;SEQUENCE TO NEXT
-	IJMP       STMT
+        DONE                       ;MUST BE CR
+        NXT        CO              ;SEQUENCE TO NEXT
+        IJMP       STMT
 S13:
 	TST        S14,"END"
 	FIN
@@ -289,6 +292,7 @@ S19:	TST 	UNKNOWN,"ERASE"
 ; Else, unknown command.
 ;
 UNKNOWN:
+  ENDIO
 	ERRMSG     ERR_SYNTAX      ;SYNTAX ERROR
 
 ;-----------------------------------------------------
@@ -428,6 +432,11 @@ F2B2:
         TASKSTAT
         RTN
 F2Z:
+        TST       F2ZA,"PID"
+        LIT       0
+        SETTASK
+        RTN
+F2ZA:
         TST       F2C,"CALL("       ;call machine function
         CALL      EXPR
         TST       F2B2A,COMMA

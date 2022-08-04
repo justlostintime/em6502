@@ -27,8 +27,8 @@ End
 
 Public Sub Form_Resize()
 
-  ProfileDisplay.h = Me.H - 2
-  ProfileDisplay.w = Me.w - 2
+  ProfileDisplay.h = Me.H - 100
+  ProfileDisplay.w = Me.w - 14
 
 End
 
@@ -41,9 +41,9 @@ Public Sub Form_Open()
   ProfilerInfo.h = Settings["Profiler/Window/H", 700]
   ProfilerInfo.w = Settings["Profiler/Window/w", 600]
 
-  ProfileDisplay.h = Me.H - 2
-  ProfileDisplay.w = Me.w - 2
-  ProfileDisplay.x = 1
+  ProfileDisplay.h = Me.h - 100
+  ProfileDisplay.w = Me.w - 14
+  ProfileDisplay.Refresh()
 
 End
 
@@ -53,5 +53,17 @@ Public Sub Form_Close()
   Settings["Profiler/Window/Y"] = ProfilerInfo.y
   Settings["Profiler/Window/H"] = ProfilerInfo.h
   Settings["Profiler/Window/w"] = ProfilerInfo.w
+
+End
+
+Public Sub SortAddress_Click()
+
+  FMain.MyComputer.ProfileSortOrder = True
+
+End
+
+Public Sub SortCount_Click()
+
+  FMain.MyComputer.ProfileSortOrder = False
 
 End

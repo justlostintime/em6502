@@ -27,7 +27,7 @@ Fast Unsafe Public Sub count(address As Long, cycles As Integer)
 
 End
 
-Public Sub report(Optional start_address As Long = -1, prog_length As Integer = 0) As String[]
+Public Sub report(Optional start_address As Long = -1, prog_length As Integer = 0, SortOrder As Boolean = False) As String[]
 
   Dim Result As New String[]
   Dim pc_counter As Long = 0
@@ -40,10 +40,23 @@ Public Sub report(Optional start_address As Long = -1, prog_length As Integer = 
     Next
   Else
     Dim addrlist As String[] = profile.keys
-    addrlist.sort()
+    If SortOrder Then
+      addrlist.sort()
+    Else
+      Dim CntValues As New String[addrlist.count]
+      For i As Integer = 0 To addrlist.Max
+        CntValues[i] = Hex(profile[addrlist[i]], 12) & ":" & addrlist[i]
+      Next
+      Cntvalues.sort(gb.Descent)
+      addrList = New String[]
+      For i = 0 To CntValues.max
+        addrlist.Add(Split(CntValues[i], ":")[1])
+      Next
+
+    Endif
     For Each pc_index As String In addrList
       pc_counter = Eval("&h0" & pc_index)
-      Result.Add(Subst("&1 : &2", fmtptrval(profile[Hex(pc_counter, 4)]), Disassembler.Inst(UserCpu, pc_counter, True)))
+      Result.Add(Subst("&1 : &2", fmtptrval(profile[pc_index]), Disassembler.Inst(UserCpu, pc_counter, True)))
     Next
   Endif
 

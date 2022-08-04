@@ -6,7 +6,7 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-'Fast Unsafe
+Fast Unsafe
 MyCpu As CPU6502
 Running As Boolean
 Public MonitorList As Collection  ' format is [ HEXADDR:[start,end], HEXADDR:[start, end] ]
@@ -17,6 +17,7 @@ Property StartAddress As Long
 Property SetMemoryProtection As Boolean
 Property Profiling As Boolean
 Property Read ProfileInfo As String[]
+Property ProfileSortOrder As Boolean
 
 Event StatusInfo(Info As Cpustatus)
 Event NextInst(Info As String)
@@ -332,5 +333,17 @@ End
 Private Function ProfileInfo_Read() As String[]
 
   Return MyCpu.ProfileInfo
+
+End
+
+Private Function ProfileSortOrder_Read() As Boolean
+
+  Return MyCpu.ProfileSortOrder
+
+End
+
+Private Sub ProfileSortOrder_Write(Value As Boolean)
+
+  MyCpu.ProfileSortOrder = Value
 
 End

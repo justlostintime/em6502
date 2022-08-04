@@ -70,9 +70,9 @@ TRUE		equ	~FALSE
 ; easily be ported to other systems.  It has support for
 ; using a micro SD card for file storage/retrieval.
 ;
-KIM		equ	FALSE	;Basic KIM-1, no extensions
-XKIM		equ	FALSE	;Corsham Tech xKIM monitor
-CTMON65		equ	TRUE	;Corsham Tech CTMON65
+KIM             equ     FALSE           ;Basic KIM-1, no extensions
+XKIM            equ     FALSE           ;Corsham Tech xKIM monitor
+CTMON65         equ     TRUE            ;Corsham Tech CTMON65
 ;
 ;   Need to define some macros for the dasm assembler
 ;
@@ -87,27 +87,27 @@ CTMON65		equ	TRUE	;Corsham Tech CTMON65
 ;
 ; If set, include disk functions.
 ;
-DISK_ACCESS	equ	TRUE
+DISK_ACCESS       equ     TRUE
 ;
 ; If ILTRACE is set then dump out the address of every
 ; IL opcode before executing it.
 ;
-ILTRACE		equ	FALSE
+ILTRACE           equ     FALSE
 ;
 ; If FIXED is set, put the IL code and the user
 ; program space at fixed locations in memory.  This is
 ; meant only for debugging.
 ;
-FIXED		equ	FALSE
+FIXED             equ     FALSE
 ;
 ; Sets the arithmetic stack depth.  This is *TINY*
 ; BASIC, so keep this small!
 ;
-STACKSIZE         equ     20      ;number of entries in math stack
-ILSTACKSIZE       equ     40      ;number of entries in ilstack
-GOSUBSTACKSIZE    equ     16      ;Depth of gosub nesting max is 64 times TASKTABLE LENGTH must < 256
+MATHSTACKSIZE     equ     10      ;number of entries in math stack
+ILSTACKSIZE       equ     10      ;number of entries in ilstack
+GOSUBSTACKSIZE    equ     16      ;Depth of gosub/Fornext nesting max is 64 times TASKTABLE LENGTH must < 256
 TASKCOUNT         equ     10      ;Task Table count, up to 64 tasks
-TASKCYCLESDEFAULT equ     20      ;Default Task Switch 0-255 uses a single byte
+TASKCYCLESDEFAULT equ     200     ;Default Task Switch 0-255 uses a single byte
 ;
 ; Common ASCII constants
 ;
@@ -146,42 +146,62 @@ ERR_INVALID_PID         equ     16      ;Invalid PID provided
 ;=====================================================
 ; Zero page storage.
 ;
-            SEG.U  Data
-            org	$0040
+            SEG.U   Data
+            org     $0040
 
 ILTrace                 ds      1       ;non-zero means tracing
 variables               ds      26*2    ;2 bytes, A-Z
 variablesEnd            equ     *       ;End of variable space
-ILPC                    ds      2       ;IL program counter
-dpl                     ds      2
-tempIL                  ds      2       ;Temp IL programcounter storage
-tempIlY                 ds      1       ;Temp IL Y register storage
-offset                  ds      1       ;IL Offset to next inst when test fails
-lineLength              ds      1       ;Length of current line
+;
+; The context is used to locate a task switch
+; it copies from here till all task fields are saved/swapped
+; The max number of tasks is 256 / context length
+;
+CONTEXT                 equ     *
+
+ILPC                    ds      2           ; IL program counter
+ILSTACK                 ds      2           ; IL call stack
+ILSTACKPTR              ds      1
+MATHSTACK               ds      2           ; MATH Stack pointer
+MATHSTACKPTR            ds      1
+GOSUBSTACK              ds      2           ; pointer to gosub stack
+GOSUBSTACKPTR           ds      1           ; current offset in the stack, moved to task table
 ;
 ; CURPTR is a pointer to curent BASIC line being
 ; executed.  Always points to start of line, CUROFF
 ; is the offset to the current character.
 ; The order of these fields is important
-CURPTR                  ds      2           ;Pointer to current Basic line
-CUROFF                  ds      1           ;Current offset in Basic Line
+CURPTR                  ds      2           ; Pointer to current Basic line
+CUROFF                  ds      1           ; Current offset in Basic Line
 ;
 ;The order of these fields in important
-GOSUBSTACK              ds      2           ;pointer to gosub stack
-;GoSubStackPtr           ds      1           ;current offset in the stack, moved to task table
-
-;Defined in data segment here for refrence only
-;taskTable       ds      TASKCOUNT*4        ; Task Table Offset and pointer to Basic code, active flag
-;taskGoStacks    ds      TASKCOUNT*4        ; Table of assigned gosub stack locations and pointers
-;taskPtr         ds      1                  ; Current offset into task table 0, 4, 8, 12 ...
-;
 
 ;
-; R0 and R1 are used for arithmetic operations and
+; R0, R1 and MQ are used for arithmetic operations and
 ; general use.
 ;
-R0                      ds      2       ;arithmetic register 0
-R1                      ds      2       ;arithmetic register 1
+REGISTERS               equ     *           ;IL MATH REGISTERS
+REG0                    equ     0
+R0                      ds      2           ;arithmetic register 0
+REG1                    equ     2           ;offset of R1
+R1                      ds      2           ;arithmetic register 1
+REGMQ                   equ     4           ;offset og MQ
+MQ                      ds      2           ;used for some math
+REGISTERSEND            equ     *
+REGISTERSLEN            equ     REGISTERSEND-REGISTERS
+
+CONTEXTEND              equ     *                      ; End of swap context
+CONTEXTLEN              equ     CONTEXTEND - CONTEXT   ; length of the context
+
+dpl                     ds      2
+tempIL                  ds      2       ;Temp IL programcounter storage
+tempIlY                 ds      1       ;Temp IL Y register storage
+offset                  ds      1       ;IL Offset to next inst when test fails
+lineLength              ds      1       ;Length of current line
+
+taskIOPending           ds      1       ; 1 = pending Set when a task wants to read keyboard/ write to screen
+taskRDPending           ds      1       ; 1 = background read is pending
+
 ;
 ; This is zero if in immediate mode, or non-zero
 ; if currently running a program.  Any input from
@@ -257,20 +277,16 @@ cold2           jsr     puts
 ;
                 jsr     GetSizes           ;setup the free space available
 
-calcstack       lda     HighMem
-                clc
-                sbc     #(GOSUBSTACKSIZE*3*TASKCOUNT)&$FF
-                sta     GOSUBSTACK
-                lda     HighMem+1
-                sbc     #(GOSUBSTACKSIZE*3*TASKCOUNT)>>8
-                sta     GOSUBSTACK+1
-                jsr     taskSetGosubStack               ; setup all the task stacks
+calcstack       lda     #1
+                sta     taskCounter                 ; Initialize number of tasks to 1
+                sta     taskTable                   ; mark the main task as active
+                jsr     taskSetStacks               ; setup all the task stacks
                 lda     #IL&$ff
                 sta     ILPC
                 lda     #IL>>8
                 sta     ILPC+1
 ;
-                lda     #ProgramStart&$ff	;user prog
+                lda     #ProgramStart&$ff           ;user prog
                 sta     PROGRAMEND
                 lda     #ProgramStart>>8
                 sta     PROGRAMEND+1
@@ -321,13 +337,15 @@ coldtwo         jsr     SetOutConsole
                 lda     #ILTRACE&$ff
                 sta     ILTrace
 ;
+
                 lda     #0
                 sta     RunMode
                 sta     LINBUF
+
 ; Clear everything from the stacks
-                sta     mathStackPtr
-                sta     retStackPtr
-;                sta     GoSubStackPtr
+
+                sta     taskIOPending                ; No one waiting for io
+                sta     taskRDPending                ; No one waiting for bg io
                 jsr     taskReset
 ;
                 lda     #LINBUF&$ff
@@ -341,12 +359,19 @@ coldtwo         jsr     SetOutConsole
 ; by ILPC and adjusts ILPC to point to the next
 ; instruction to execute.
 ;
-NextIL          lda     ILTrace
+NextIL          jsr     iTaskSwitch           ;check for a task switch
+                lda     ILTrace
                 beq     NextIL2
                 jsr     dbgLine
 NextIL2         ldy     CUROFF
                 jsr     SkipSpaces
                 sty     CUROFF
+;Task IO Management
+                lda     taskRDPending         ; if it is zero then Nothing pending
+                beq     NextILStr
+                jsr     ReadLine              ; else Pending and poll keyboard
+                bcc     NextILStr             ; if carry is clear then no end of line yet
+                dec     taskRDPending         ; Carry is set if CR has been recievec
 ;
 NextILStr       jsr     getILByte
 ;
@@ -398,7 +423,7 @@ ILgood		tay		       ;move index into Y
 		sta	dpl
 		lda	ILTBL+1,y
 		sta	dpl+1
-		jmp	(dpl)	   ;go to handler
+		jmp	(dpl)	       ;go to handler
 ;
 ;=====================================================
 ; This is the IL jump table.  The IL opcode is
@@ -485,14 +510,17 @@ ILTBL       dw	iXINIT	;0
 	    dw  iRET          ;58       return from interupt
 	    dw  iINSTR        ;59       read a string return first char on top of stack
       dw  iMOD          ;60       returns remainder of division
-      dw  iTaskSwitch   ;61       switch to the next BASIC program task
-      dw  iTaskSet      ;62       sets a line number for the start of a task
-      dw  iETask        ;63       Terminates a task
-      dw  iNTask        ;64       goto next task
-      dw  iArray        ;65       Allow Variable to have a subscript
-      dw  iTaskKill     ;66       kill a running task
-      dw  iTaskStat     ;67       return the state of a task PID
-      dw  iHexOut       ;68       output the value on the stack as a hex string
+      dw  iTaskSet      ;61       sets a line number for the start of a task
+      dw  iETask        ;62       Terminates a task
+      dw  iNTask        ;63       goto next task
+      dw  iArray        ;64       Allow Variable to have a subscript
+      dw  iTaskKill     ;65       kill a running task
+      dw  iTaskStat     ;66       return the state of a task PID
+      dw  iHexOut       ;67       output the value on the stack as a hex string
+      dw  iReadComplete ;68       Called after a background read completes
+      dw  iReadStart    ;69       Called to start a background read request
+      dw  iStartIO      ;70       Lock task until io complete
+      dw  iEndIO        ;71       release task lock for io
 
 ILTBLend	equ	*
 ;
@@ -506,10 +534,11 @@ ILTBLend	equ	*
 ;
 ;
 iINIT           lda     #0                      ;clear IL stack pointer,gosub stack
-                sta     retStackPtr
-                sta     mathStackPtr
+                sta     ILSTACKPTR
+                sta     MATHSTACKPTR
+                sta     GOSUBSTACKPTR
+
                 jsr     taskReset
-;                sta     GoSubStackPtr
 ;
                 lda     #ProgramStart&$ff        ;user prog
                 sta     CURPTR
@@ -521,7 +550,7 @@ iINIT           lda     #0                      ;clear IL stack pointer,gosub st
                 sta     PROGRAMEND+1
                 lda     #1
                 sta     taskTable              ;Mark the first slot as active
-                sta     taskCount              ;there is always one task / Main task
+                sta     taskCounter            ;there is always one task / Main task
                 lda     #TASKCYCLESDEFAULT
                 sta     taskResetValue
                 sta     taskCurrentCycles      ; set up the task switch counts
@@ -534,13 +563,12 @@ iINIT           lda     #0                      ;clear IL stack pointer,gosub st
 ;
 iXINIT          sei                          ;ensure interupts are off
                 lda       #0
-                sta       mathStackPtr       ;clear math stack
                 sta       taskPtr            ;Set the first slot
                 sta       IRQPending         ; reset the irq pending
                 sta       IRQStatus          ; Make sure irqs are off
                 lda       #1
-                sta       taskCount          ;Number of actual tasks
-                jsr       taskClear          ;Clear the task table
+                sta       taskCounter        ;Number of actual tasks
+                jsr       taskReset          ;Clear the task table
 goodExit        jmp       NextIL
 ;
 ;=====================================================
@@ -555,68 +583,89 @@ BreakSet:
 BreakNo:
     lda #1
     rts
+
 ;
 ;=====================================================
-; Clear the task table
-taskClear
-                tya
-                pha
-                ldy     #4
-                lda     #0
-taskClearLoop   cpy     #TASKCOUNT*4
-                beq     taskClearDone
-                sta     taskTable,y
-                iny
-                iny
-                iny
-                iny
-                jmp     taskClearLoop
-taskClearDone   pla
-                tay
-                rts
-                
-;
-;=====================================================
-; Sets the pointers to the gosub stacks
-taskSetGosubStack
+; Sets the pointers to the math,IL and gosub stacks
+taskSetStacks
+                lda     #mathStack&$FF
+                sta     MATHSTACK
+                lda     #mathStack>>8
+                sta     MATHSTACK+1
+                lda     #ilStack&$ff
+                sta     ILSTACK
+                lda     #ilStack>>8
+                sta     ILSTACK+1
+                lda     #gosubStack&$FF
+                sta     GOSUBSTACK
+                lda     #gosubStack>>8
+                sta     GOSUBSTACK+1
                 ldx     #TASKCOUNT
                 ldy     #0
-taskGoSetLoop   lda     GOSUBSTACK
-                sta     taskGoStacks,y
-                lda     GOSUBSTACK+1
-                sta     taskGoStacks+1,y
-                iny
-                iny
-                iny
-                iny
-                dex
-                beq     taskGoSetDone
-                lda     #GOSUBSTACKSIZE*3   ; must be less than 256
+                jsr     ContextSave
+
+taskSetLoop     cpy     #TASKTABLELEN
+                bcs     taskSetDone
+
+                lda     GOSUBSTACK
                 clc
-                adc     GOSUBSTACK
+                adc     #GOSUBSTACKSIZE*4   ; must be less than 256
                 sta     GOSUBSTACK
-                lda     #0
-                adc     GOSUBSTACK+1
+                lda     GOSUBSTACK+1
+                adc     #0
                 sta     GOSUBSTACK+1
-                jmp     taskGoSetLoop
-                
-taskGoSetDone
-                lda     taskGoStacks      ; Restore the task 0 stack pointer
-                sta     GOSUBSTACK
-                lda     taskGoStacks+1
-                sta     GOSUBSTACK+1
+
+                lda      ILSTACK   ; must be less than 256
+                clc
+                adc     #ILSTACKSIZE*2
+                sta     ILSTACK
+                lda     ILSTACK+1
+                adc     #0
+                sta     ILSTACK+1
+
+                lda      MATHSTACK   ; must be less than 256
+                clc
+                adc     #MATHSTACKSIZE*2
+                sta     MATHSTACK
+                lda     MATHSTACK+1
+                adc     #0
+                sta     MATHSTACK+1
+
+                jsr     ContextSave
+                jmp     taskSetLoop
+
+taskSetDone
+                ldy     #0
+                jsr     ContextLoad
                 rts
-                
 ;
-;========================================================
-; Set the gosub stack pointer to the correct entry
-;
-taskUpdateGosubStack
-                ldy     taskPtr
-                lda     taskGoStacks,y
-                sta     GOSUBSTACK
-                lda     taskGoStacks+1,y
-                sta     GOSUBSTACK+1
+;=====================================================
+; Clear all task entries and task gosub stacks
+taskReset       tya
+                pha
+                ldy     #0
+                sty     taskPtr             ; Set the active task to 0 MAIN
+                jsr     ContextSave
+                ldy     #0
+taskResetLoop   jsr     ContextLoad         ; get the first task
+                lda     #0
+                sta     taskTable,y         ; clear any active tasks flags
+                sta     GOSUBSTACKPTR       ; clear all the task gosub pointers
+                sta     MATHSTACKPTR        ; Clear the math stack pointers
+                sta     ILSTACKPTR          ; Clear all the IL Stack Pointers
+                jsr     ContextSave         ; Save this context, returns y at next task entry
+
+                cpy     #TASKTABLELEN       ; Are we at the end yet
+                bcc     taskResetLoop       ; Go for more
+
+taskResetComplete
+                ldy     #0
+                lda     #1
+                sta     taskTable           ; mark main context as active
+                jsr     ContextLoad         ; Restore main context
+                pla
+                tay
+                rts
 
 ;
 ;=====================================================
@@ -817,7 +866,7 @@ REL_EQUAL	equ	%010
 REL_GT		equ	%100
 ;
 iCMPR   jsr   popR1
-        jsr   popMQ	;operator in MQ
+        jsr   popMQ                      ;operator in MQ
         jsr   popR0
 ;
 ; See if they are equal or not
@@ -888,26 +937,44 @@ iBranchFalse:
                 jmp   iXFER2
 ;
 ;=====================================================
+; Start a read of data in background
+iReadStart
+                lda    #'?          ; Prompt with question mark
+                ldx    1            ; Indicate to start read in background
+                jsr    GetLine      ; Call the getline to start read
+                jmp    NextIL       ; next instruction
+;
+;=====================================================
+; Complete the read and return the curptr, curoff pointing to data
+iReadComplete
+                jsr     pushLN
+                jsr     ReadComplete
+                jmp     NextIL
+                jsr     popLN
+                jmp     NextIL
+;=====================================================
 ; Get a line of text from the user, convert to a
 ; number, leave on top of stack.
 ;
 iINNUM
-    jsr pushLN
+                jsr     pushLN
 ;
-		lda	#'?
-		jsr	GetLine
-		jsr	getDecimal
-		jsr	pushR0       	;put onto stack
+                lda     #'?
+                ldx     #0              ;Wait for complete
+                jsr     GetLine
+                jsr     getDecimal
+                jsr     pushR0          ;put onto stack
 ;
-    jmp ExitIn
+                jmp     ExitIn
 ;
 ;=====================================================
 ; Get a line of text from the user, convert to a
-; String , leave on top of stack. up to 2 characters
+; character value , leave on top of stack. up to 2 characters
 ;
 iINSTR
                 jsr     pushLN
                 lda     #'?
+                ldx     #0            ;wait for read complete
                 jsr     GetLine
                 lda     (CURPTR),y
                 sta     R0
@@ -987,33 +1054,13 @@ iERR3           jsr     CRLF
 ; the program is in.
 ;
 ResetIL		lda	#0
-		sta	retStackPtr
+		sta	ILSTACKPTR
 		lda	errGoto
 		sta	ILPC
 		lda	errGoto+1
 		sta	ILPC+1
 		jmp	NextIL
-		
-;
-;=====================================================
-; Clear all task entries and task gosub stacks
-taskReset
-                lda   #0
-                ldy   #0
-                sta   taskPtr             ; Set the active task to 0 MAIN
-taskResetLoop   sta   taskTable,y         ; clear any active tasks
-                sta   taskGoStacks+2,y    ; clear all the task gosub pointers
-                iny
-                iny
-                iny
-                iny
-                cpy   #TASKCOUNT<<2
-                bne   taskResetLoop
-                lda   taskGoStacks        ; ensure the main task stack is active
-                sta   GOSUBSTACK
-                lda   taskGoStacks+1
-                sta   GOSUBSTACK+1
-                rts
+
 ;
 ;=====================================================
 ; Pop two items off stack, add them, then place the
@@ -1066,7 +1113,11 @@ iNEG2		jmp	pushR0nextIl
 ; 115 of "Microprocessor Programming for Computer
 ; Hobbyists" by Neill Graham.
 ;
-iMUL		jsr	popR0	;AC
+iMUL            jsr     iMultiply
+                jmp     NextIL
+
+iMultiply
+    jsr	popR0	;AC
 		jsr	popR1	;OP
 ;
 		lda	R0
@@ -1096,6 +1147,8 @@ multloop	asl	R0
 ;
 multno		dex		       ;did all bits yet?
 		bne	multloop
+		jsr	pushR0	     ;OP
+		rts
 ;
 pushR0nextIl
 		jsr	pushR0	     ;OP
@@ -1199,6 +1252,9 @@ iIND
 iArray
                 jsr     popR0
                 jsr     popR1
+                lda     R0              ; Verify that it is not zero
+                ora     R0+1
+                beq     iArrayError
                 dec     R0              ; Basic array index starts at 1
                 lda     R0
                 clc
@@ -1284,12 +1340,14 @@ iLstdone        jsr     SetOutConsole
 ; Get a line of text into LINBUF.  Terminate with a
 ; null byte.
 ;
-iGETLINE	lda	#'>	;prompt character
-		jsr	GetLine
+iGETLINE
+                lda     #'>            ;prompt character
+                ldx     0              ;Wait for read to complete
+                jsr     GetLine
 ;
-		lda	#0
-		sta	RunMode
-		jmp	NextIL
+                lda     #0
+                sta     RunMode
+                jmp     NextIL
 ;
 ;=====================================================
 ; This is called when the input buffer contains a line
@@ -1551,8 +1609,10 @@ iTSTLET         jsr     getILByte     ; Get the relative offset byte
                 jsr     SkipSpaces    ; skip any SkipSpaces
                 lda     (CURPTR),y    ; Get what should be an equal sign
                 cmp     #'=           ; check if equals
+                beq     iTSTLETGOOD   ; Yes that is fine
+                cmp     #'[           ; Can be a subscript as well
                 bne     iTSTfail      ; return it failed
-                jsr     restoreIL     ; restore the IL anyway
+iTSTLETGOOD     jsr     restoreIL     ; restore the IL anyway
                 jmp     NextIL        ; Then next instruction
 
 ;================================================jLIT=
@@ -1688,81 +1748,79 @@ tstPositive	clc
 ; Test for IRQ pending, and test if a break key pressed
 ; Yes I know but this handles all sorts of irq/break issues
 ;
-iTstIrq jsr getILByte       ; get the offset to next instruction when not in irq
-        sta  offset         ; Store the not true jump address offset
-        jsr  BreakSet       ; Check if the escape key was pressed
-        bne  irqNo          ; z not set of no break found
-        jmp  iFIN           ; Exit out of run mode
-irqNo   lda  IRQPending
-        beq  tstBranch
-        cmp  #1             ; only do this if set to first time
-        bne  tstBranch
-        sei                 ; disable the interupt until ireturn resets it
-irqbrk  inc  IRQPending     ; Set the pending to 2, so this ignores it, iret sets it to 0
-        jsr pushLN          ; Push the next line to be executed
-        bcs irqErra         ; Check if there was an error
-        lda  IRQEntry       ; Get the line number to branch to
-        sta  CURPTR         ; put line number into r0
-        lda  IRQEntry+1
-        sta  CURPTR+1
-        lda #3
-        sta CUROFF
-        jmp NextIL          ; Execute the next instruction should jmp statement
-irqErra         ldx     #12             ; Flag any error in line number
+iTstIrq         jsr     getILByte      ; get the offset to next instruction when not in irq
+                sta     offset         ; Store the not true jump address offset
+                jsr     BreakSet       ; Check if the escape key was pressed
+                bne     irqNo          ; z not set of no break found
+                jmp     iFIN           ; Exit out of run mode
+irqNo           lda     IRQPending
+                beq     tstBranch
+                cmp     #1             ; only do this if set to first time
+                bne     tstBranch
+                sei                    ; disable the interupt until ireturn resets it
+irqbrk          inc     IRQPending     ; Set the pending to 2, so this ignores it, iret sets it to 0
+                jsr     pushLN         ; Push the next line to be executed
+                bcs     irqErra        ; Check if there was an error
+                lda     IRQEntry       ; Get the line number to branch to
+                sta     CURPTR         ; put line number into r0
+                lda     IRQEntry+1
+                sta     CURPTR+1
+                lda     #3             ; Point to first byte of program text
+                sta     CUROFF
+                jmp     NextIL         ; Execute the next instruction should jmp statement
+irqErra         ldx     #12            ; Flag any error in line number
                 lda     #0             ; stop the execution
                 jmp     iErr2
 ;
-;================================================
-; iTaskSwitch   switch to new task if not interupt and
-;               count is excceded for task
+;======================================================
+; iTaskSwitch   switch to new task if not interrupt and
+;               count is exceded for task time slice
 ;
 iTaskSwitch
                 lda     IRQPending                ; Skip this if we are processing an irq
-                bne     iTaskSwitchDone
-                lda     taskCount
+                ora     taskIOPending             ; If set then don't switch
+                bne     iTaskSwitchDone           ; DO irq Higher priority than the Tasks
+
+iTaskMain       lda     taskCounter                 ; Number of tasks
                 cmp     #1                        ; if there is only one task must be main
-                bne     tasknext                  ; if it some other number continue to next
+                bne     itasknext                  ; if it some other number continue to next
+
                 ldy     taskPtr                   ; check if we have not just ended some other task
-                bne     tasknext                  ; if so then do a next anyway
+                bne     itasknext                  ; if so then do a next anyway
                 beq     iTaskSwitchDone           ; Skip this if main is only task
-tasknext
+
+itasknext
                 dec     taskCurrentCycles         ; Dec the current cycle count
                 bne     iTaskSwitchDone           ; Skip this if we are not end of cycle
+;
+; Save the current context this is moved from BASIC STMT LEVEL TO IL INSTRUCTION LEVEL
+;
                 ldy     taskPtr
-                lda     CURPTR
-                sta     taskTable+1,y
-                lda     CURPTR+1
-                sta     taskTable+2,y
-                lda     CUROFF
-                sta     taskTable+3,y
-taskLoop
-                iny
-                iny
-                iny
-                iny
-                cpy     #(TASKCOUNT-1)<<2
-                beq     TaskNextChk
-                bcc     TaskNextChk
-TaskResetTop    ldy     #0
-TaskNextChk
+                jsr     ContextSave              ; Save the current context, y points to next context
+itaskLoop
+                cpy     #TASKTABLELEN            ;Are we at end of task table
+                bcc     iTaskNextChk
+
+iTaskResetTop    ldy     #0                       ; reset to top of taskTable
+iTaskNextChk
                 lda     taskTable,y               ; there is always at least one entry in table
-                beq     taskLoop                  ; get next slot if this one empty
-                lda     taskTable+1,y
-                sta     CURPTR
-                lda     taskTable+2,y
-                sta     CURPTR+1
-                lda     taskTable+3,y
-                sta     CUROFF
-                lda     taskGoStacks,y            ; Point to correct stack
-                sta     GOSUBSTACK
-                lda     taskGoStacks+1,y
-                sta     GOSUBSTACK+1
-                sty     taskPtr
-                lda     taskResetValue
+                bne     iTaskLoadEntry             ; get next slot if this one empty
+                clc
+                tya
+                adc     #CONTEXTLEN+1             ; Next Table entry
+                tay
+                jmp     itaskLoop                  ; Check for busy entry
+
+
+iTaskLoadEntry
+                jsr     ContextLoad               ; load the next context
+                sty     taskPtr                   ; update the task pointer
+
+iTaskReloadCnt  lda     taskResetValue            ;reset the clock ticks
                 sta     taskCurrentCycles
-                
+
 iTaskSwitchDone
-                jmp     NextIL
+                rts
 ;
 ;=====================================================
 ; This places the number of free bytes on top of the
@@ -1906,7 +1964,7 @@ iCallRtn
 ;leave the number on top of the stack
 ;
 iGETCHAR:
-                jsr     pushLN      ;Save state befor getline
+;                jsr     pushLN      ;Save state before getline
                 jsr     GETCH
  if   CTMON65
                 pha
@@ -1918,7 +1976,7 @@ iGETCHAR:
                 sta     R0+1
                 jsr     pushR0
 ;
-                jsr     popLN
+;                jsr     popLN
                 jmp     NextIL
 ;===========================================jlit======
 ;Put a character to the terminal convert to
@@ -1993,32 +2051,57 @@ iTaskSet:       tya
                 pha
                 jsr     pushLN      ; Store the current line number
                 jsr     popR0       ; Get the line number to be saved
-                lda     R0
+                lda     R0          ; if the value is zero then return current task PID
                 ora     R0+1
                 beq     iTaskRetCurrent
+
+;Find the pointer to the line we need to start at
                 jsr     findLine    ; Get the offset of the line to start task at
                 beq     iTaskCont
                 pla
                 tay
                 jmp     iSetIrqErr  ; Bad line number provided
 iTaskCont
-                jsr     TaskEmpty   ; Find an empty slot
-                beq     iTaskNoEmpty; There are no more empty slots
-                inc     taskCount   ; Update the number of Tasks running
+                ldy     taskPtr     ; where to save the context
+                jsr     ContextSave ; Save the original context
+                jsr     TaskEmpty   ; Find an empty slot, y = new slot
+                bcc     iTaskNoEmpty; There are no more empty slots
+                lda     CURPTR
+                sta     rtemp1      ; Save the new line number for the new task
+                lda     CURPTR+1
+                sta     rtemp1+1     ; Save it
+                jsr     ContextLoad  ; load the context of the new task
+                lda     rtemp1
+                sta     CURPTR
+                lda     rtemp1+1
+                sta     CURPTR+1
+                lda     #3          ; Offset to first instruction
+                sta     CUROFF
+
                 lda     #1
                 sta     taskTable,y ; Mark as busy/used
-                lda     CURPTR
-                sta     taskTable+1,y
-                lda     CURPTR+1
-                sta     taskTable+2,y
-                lda     #3          ; Offset to first instruction
-                sta     taskTable+3,y
-                inc     taskCount
+
+                lda     #0
+                sta     ILSTACKPTR
+                sta     MATHSTACKPTR
+                sta     GOSUBSTACKPTR
+                lda     #STMT&$FF
+                sta     ILPC
+                lda     #STMT>>8       ; set ilpc to point to the STATEMENT processor
+                sta     ILPC+1
+                tya
+                pha
+                jsr     ContextSave
+                
+                inc     taskCounter    ; Update the number of Tasks running
+                ldy     taskPtr
+                jsr     ContextLoad    ; restore the original context
+                pla
+                tay
+
 iTaskGetCurrent
                 jsr     popLN
                 tya
-                lsr
-                lsr
                 sta     R0                ;Get the table entry value
                 lda     #0
                 sta     R0+1
@@ -2039,7 +2122,7 @@ iTaskRetCurrent                           ;Get if task number is zero Current ta
 ;================================================================
 ; Returns task Status
 iTaskStat
-                jsr     iTaskValid
+                jsr     iTaskValid     ; returns pointer to task entry
                 lda     #0
                 sta     R0+1
                 lda     taskTable,y
@@ -2048,16 +2131,13 @@ iTaskStat
 ;
 ;================================================================
 ; Validate the task number on top of the stack
-iTaskValid      jsr     popR0
+; on exit y points to the requested task entry
+;
+iTaskValid      jsr     popR0            ; get result of the multiply
                 lda     R0+1
-                bne     iTaskValidErr
+                bne     iTaskValidErr    ; high byte must be zero
                 lda     R0
-                cmp     #0
-                beq     iTaskValidErr
-                clc
-                rol
-                rol
-                cmp     #TASKCOUNT<<2
+                cmp     #TASKTABLELEN
                 bcc     iTaskIsValid
 
 iTaskValidErr   pla     ;remove return address
@@ -2073,7 +2153,7 @@ iTaskIsValid    tay
 ; Kill a running task, do nothing if already stopped
 iTaskKill       jsr     iTaskValid
                 lda     #0
-                sta     taskTable,y     ; Fall thru to go to next task
+                sta     taskTable,y     ; Fall thru to go to ntask - nexttask
 ;
 ;================================================================
 ;Skip to next task
@@ -2081,6 +2161,19 @@ iNTask
                 lda     #1
                 sta     taskCurrentCycles
                 jmp     NextIL
+;
+;=======================================================
+; Set task io lock
+iStartIO        inc    taskIOPending
+                jmp    NextIL
+;
+;=======================================================
+; Release the io lock
+iEndIO          lda   taskIOPending
+                beq   iEndIOExit
+                dec   taskIOPending
+iEndIOExit      jmp   NextIL
+
 ;
 ;================================================================
 ; Terminate a task
@@ -2091,39 +2184,38 @@ iETask          ldy     taskPtr
 iETaskCont
                 lda     #0
                 sta     taskTable,y               ; mark entry as free
-                sta     taskTable+1,y             ; Clear the entry in the table
-                sta     taskTable+2,y
-                sta     taskTable+3,y
-                dec     taskCount                 ; reduce the number of active tasks
-                sta     taskCurrentCycles         ; Set to zero
-                inc     taskCurrentCycles         ; Make it 1 as rtn will dec and check
+                dec     taskCounter               ; reduce the number of active tasks
+                lda     #1
+                sta     taskCurrentCycles         ; Make it 1 as rtn will dec and check
 iETaskExit
                 jmp     NextIL
 
 ;
 ;================================================================
-;Find an empty slot in the taskTable
-;Return the index in y
+; Find an empty slot in the taskTable
+; Return the index in y
+; on exit   c set if an empty slot is found
+;           c clear if not found
 ;================================================================
 ;
 TaskEmpty
-                ldy     #4                ;The first slot is always the main line
+                ldy     #CONTEXTLEN+1                ;The first slot is always the main line SKIP
 TaskLoop
                 lda     taskTable,y
                 beq     TaskEmptyFnd
-                iny
-                iny
-                iny
-                iny
-                cpy     #TASKCOUNT<<2   ; Task
-                beq     TaskNoSlot        ; No Empty Slots
+                tya
+                clc
+                adc     #CONTEXTLEN+1
+                tay
+                cpy     #TASKTABLELEN
                 bcc     TaskLoop          ; Y is never zero
 TaskNoSlot
-                lda     #0                ; Z set if not found
+                clc
                 rts
 TaskEmptyFnd
-                lda     #1
+                sec
                 rts
+
 ;
 ;=================================================================
 ;
@@ -2163,33 +2255,40 @@ IRQEntry        db      0,0       ; Basic code offset of IRQ Handler
 ; Task switches otherwise are prememtive, The cycle count defaults to 100.
 ; Task Zero is always the root task, main line program
 ;
-taskTable       ds      TASKCOUNT*4        ; Task Table Offset and pointer to Basic code, active flag
-taskGoStacks    ds      TASKCOUNT*4        ; Table of assigned gosub stack locations and pointers
-taskPtr         ds      1                  ; Current offset into task table 0, 4, 8, 12 ...
+; Layout is repeated for each configured task
+; Task Table Byte   use
+;            0      Bit 0           Active task
+;                   Bit 1           Task IO pending
+;            1..CONTEXTLEN          All saved data for the task
+taskPtr         ds      1                             ; Current offset into task table CONTEXTLEN modulo entry
+taskTable       ds      TASKCOUNT*(CONTEXTLEN+1)      ; Task Table Offset and pointer to Basic code, active flag
+TASKTABLEEND    equ     *                             ; End of task table
+TASKTABLELEN    equ     TASKTABLEEND-taskTable        ; actual length of the task table
+
 ;Task Cycle Counter and reset count
 taskCurrentCycles       ds      1
 taskResetValue          ds      1
-taskCount               ds      1           ; Count of active tasks
+taskCounter               ds      1           ; Count of active tasks
+
 ;
-; Math stack and IL cal return stack definitions
+; Math stack and IL call and Gosub/For-next return stack definitions
 ;
-mathStack       ds      STACKSIZE*2        ;Stack used for math expressions
-mathStackPtr    ds      1
-retStack        ds      ILSTACKSIZE*2      ;stack used by the IL for calls and returns
-retStackPtr     ds      1
-
-
-
-
+STACKSTART      equ     *
+mathStack       ds      MATHSTACKSIZE*2*TASKCOUNT    ;Stack used for math expressions
+ilStack         ds      ILSTACKSIZE*2*TASKCOUNT      ;stack used by the IL for calls and returns
+gosubStack      ds      GOSUBSTACKSIZE*4*TASKCOUNT   ;stack size for gosub stacks
+STACKEND        equ     *
+STACKLEN        equ     STACKEND-STACKSTART          ; total space used for stacks
 ;
 ;
 LINBUF          ds      BUFFER_SIZE
-getlinx         ds      1
+getlinx         ds      1         ;temp for x during GetLine functions
 printtx         ds      1         ;temp X for print funcs
+inputNoWait     ds      1         ;Wait no wait for line buff input
+promptChar      ds      1         ;the character to use for a prompt
 diddigit        ds      1         ;for leading zero suppression
 putsy           ds      1
 errGoto         ds      2         ;where to set ILPC on err
-MQ              ds      2         ;used for some math
 sign            ds      1         ;0 = positive, else negative
 rtemp1          ds      2         ;Temp for x and y
 random          ds      2

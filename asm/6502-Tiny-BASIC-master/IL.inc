@@ -318,36 +318,47 @@
   macro MODULO
     db 60
     endm
-; Task Switch
-  macro TASKSWITCH
-    db 61
-    endm
 ; Set a task line
   macro SETTASK
-    db 62
+    db 61
   endm
 ; End a task
   macro ETASK
-    db 63
+    db 62
   endm
 ; Skip to next task
   macro NTASK
-    db 64
+    db 63
     endm
 ; Subscript
   macro SUBSCRIPT
-    db 65
+    db 64
     endm
 ; KILL Task
   macro TASKKILL
-    db 66
+    db 65
     endm
 ; STAT Task
   macro TASKSTAT
-    db 67
+    db 66
     endm
 ;  output value as hex
     macro HEXPRT
-    db 68
+    db 67
     endm
-
+;  Read in background has completed
+    macro READCOMPLETE
+    db  68
+    endm
+;  ReadInput line
+   macro READSTART
+    db  69
+  endm
+; Startio request
+   macro STARTIO
+    db  70
+    endm
+; Endio
+   macro ENDIO
+    db  71
+   endm

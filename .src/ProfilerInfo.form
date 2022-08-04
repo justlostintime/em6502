@@ -1,13 +1,13 @@
 # Gambas Form File 3.0
 
 { Form Form
-  MoveScaled(0,0,155,121)
+  MoveScaled(0,0,80,55)
   { enableProfile RadioButton
-    MoveScaled(3,1,24,4)
+    MoveScaled(1,3,24,4)
     Text = ("Enable Profiling")
   }
   { disableProfile1 RadioButton
-    MoveScaled(31,1,20,4)
+    MoveScaled(1,0,20,4)
     Text = ("Disable Profiling")
     Value = True
   }
@@ -18,45 +18,57 @@
     Text = ("Show/Update Profile Info")
   }
   { Label1 Label
-    MoveScaled(82,1,20,4)
+    MoveScaled(28,6,20,4)
     Visible = False
-    Enabled = False
     Text = ("Profile From Address")
   }
-  { ProfileAddress TextBox
-    MoveScaled(103,1,16,4)
+  { !ProfileAddress TextBox
+    MoveScaled(48,6,11,4)
+    #Public = True
     Visible = False
-    Enabled = False
     ToolTip = ("Starting address in hex for profile reporting\nIf ommitted then all traed address space is reported")
   }
-  { ProfileLength TextBox
-    MoveScaled(135,1,16,4)
+  { !ProfileLength TextBox
+    MoveScaled(69,6,9,4)
+    #Public = True
     Visible = False
-    Enabled = False
     ToolTip = ("The length in hex of address space to report for profile\nthis is only valid if a start address is provided.")
   }
-  { ProfileDisplay TerminalView
-    MoveScaled(1,10,151,110)
+  { !ProfileDisplay TerminalView
+    MoveScaled(1,12,78,36)
+    #Public = True
     Expand = True
+    Limit = 2000
     ShowScrollBar = True
     ReadOnly = True
   }
   { Label2 Label
-    MoveScaled(122,1,11,4)
+    MoveScaled(60,6,8,4)
     Visible = False
-    Enabled = False
-    Text = ("For Length")
+    Text = ("length")
   }
   { Label3 Label
-    MoveScaled(1,5,15,5)
+    MoveScaled(1,7,15,5)
     Background = Color.LightBackground
     Alignment = Align.Center
     Text = ("Cycle Count\n in hex")
   }
   { Label4 Label
-    MoveScaled(16,5,10,5)
+    MoveScaled(16,7,10,5)
     Background = Color.LightGray
     Alignment = Align.Center
     Text = ("Address")
+  }
+  { Panel1 Panel
+    MoveScaled(22,0,24,7)
+    { SortAddress RadioButton
+      MoveScaled(2,0,20,4)
+      Text = ("Sort by Address")
+      Value = True
+    }
+    { SortCount RadioButton
+      MoveScaled(2,3,19,4)
+      Text = ("Sort By Cycles")
+    }
   }
 }

@@ -9,13 +9,13 @@
 ;
 EnableGetline   equ 0       ;Disable the Getline function
 EnableParse     equ 0       ;Disable the parse line function
-	    if EnableGetline 
+	    if EnableGetline
 		SEG.U   RomScratch
 BUFFER		ds	BUFFER_SIZE
 argc		ds	1
 argv		ds	MAX_ARGC
             endif
-		Seg	Code 
+		Seg	Code
 ;
 ;*********************************************************
 ; Print the string that follows the JSR to this code.
@@ -72,44 +72,44 @@ putsdone	rts
 ;
 getline
     if EnableGetline
-            ldx	#0
-            beq	getline1
+                ldx     #0
+                beq     getline1
 ;
 ; This outputs a bell.  Used when the user
 ; does something bad, like non-printable
 ; characters or exceeding line length.
 ;
 getline2	lda	#BELL
-            jsr	cout
+                jsr     cout
 ;
 ; Get the next character
 ;
-getline1	jsr	cin	;get character
-            cmp	#' '
-            bcc	getline2	;not printable
-            cmp	#'~'+1
-            bcs	getline2	;not printable
-            cmp	#CR	;end of input?
-            beq	getline3
-            cpx	#BUFFER_SIZE-1
-            beq	getline1	;too long
-            sta	BUFFER,x
-            jsr	cout	;echo, echo, echo...
-            inx
-            bne	getline1
+getline1        jsr     cin               ;get character
+                cmp     #' '              ;
+                bcc     getline2          ;not printable
+                cmp     #'~'+1
+                bcs     getline2          ;not printable
+                cmp     #CR               ;end of input?
+                beq     getline3
+                cpx     #BUFFER_SIZE-1
+                beq     getline1          ;too long
+                sta     BUFFER,x
+                jsr     cout              ;echo, echo, echo...
+                inx
+                bne     getline1
 ;
 ; Got a CR, so terminate the string.
 ;
-getline3	lda	#0
-            sta	BUFFER,x
-            txa		;will set/clear Z
-	endif
-            rts
+getline3        lda     #0
+                sta     BUFFER,x
+                txa                       ;will set/clear Z
+      endif
+                rts
 ;
 ;*********************************************************
 ; This converts the buffer to all lower case.
 ;
-ToLower		
+ToLower
              if EnableParse
 		ldx	#0
 ToLower1	lda	BUFFER,x

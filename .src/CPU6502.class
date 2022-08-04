@@ -6,41 +6,43 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-Public PC As Long = &H0000             ' Program counter
-Public SP As Byte = &HFF                   ' Stack Pointer 0x100-0x1ff 256 bytes fifo
+Public PC As Long = &H0000                ' Program counter
+Public SP As Byte = &HFF                  ' Stack Pointer 0x100-0x1ff 256 bytes fifo
 
 Public SR As Byte = (1 Shl 3)             ' Status Register start with irq disabled
 Public Enum SR_Carry, SR_Zero, SR_Interrupt, SR_Decimal, SR_Break, SR_Ignored, SR_Overflow, SR_Negative
 
-Public AC As Byte = &h0                    ' Acumulator
-Public X As Byte = &h0                       ' X register
-Public Y As Byte = &h0                       ' Y Register
+Public AC As Byte = &h0                   ' Acumulator
+Public X As Byte = &h0                    ' X register
+Public Y As Byte = &h0                    ' Y Register
 
-Public DataBus As Integer = &h0          ' Data on databus
-Public AddressBus As Long = &h0          ' Address Bus current address
+Public DataBus As Integer = &h0           ' Data on databus
+Public AddressBus As Long = &h0           ' Address Bus current address
 Property BreakPoints As Boolean Use $BreakPoints  ' turn on breakpoint checking
-Public BreakPointList As Long[]          ' an array of breakpoints
-Public InstProfile As Profiler           ' when profiling is on then this counts cycles per instruction
+Public BreakPointList As Long[]           ' an array of breakpoints
+Public InstProfile As Profiler            ' when profiling is on then this counts cycles per instruction
+Property ProfileSortOrder As Boolean Use $ProfileSortOrder
 
 'When the following Is False just Return $ff On a bad Memory Read Or Write
 Property ChkBadMemAccess As Boolean Use $ChkBadMemAccess = True ' turn on or off catching bad read or writes
 
-Public AddressMap As New Object[]        ' Address bus map object pointers
+Public AddressMap As New Object[]         ' Address bus map object pointers
+Public RealMemory As New Object[1024 * 64]  ' Used to map for read byte and write byte lots of space
 maphigh As New Long[]
 maplow As New Long[]
-Public SingleStep As Boolean                                                                                  ' Turn On single step mode
-Public DisplayStatus As Boolean                                                                            ' Turn On the status screen
-Public DisplayInstruction As Boolean                                                                   ' Cause the instruction to be executed to be displayed to the trace screen
-Public LastTraceInstruction As String                                                                   ' When trace is on this will contain the last data
-Public TotalInstructions As Long = 0                                                                     ' Number of instructions executed
+Public SingleStep As Boolean              ' Turn On single step mode
+Public DisplayStatus As Boolean           ' Turn On the status screen
+Public DisplayInstruction As Boolean      ' Cause the instruction to be executed to be displayed to the trace screen
+Public LastTraceInstruction As String     ' When trace is on this will contain the last data
+Public TotalInstructions As Long = 0      ' Number of instructions executed
 Property Read InstructionsPerSecond As Long Use $InstructionsPerSecond ' Number of instructions executed per second
 
-Public CpuClock As Timer                                                                                          ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
+Public CpuClock As Timer                  ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
 
-Property Read CyclesPerSecond As Long Use $CyclesPerSecond               ' will track the actual number of cycles per second
-Property Read TotalCycles As Long Use $TotalCycles                                     ' Total Number of Cycles executed
+Property Read CyclesPerSecond As Long Use $CyclesPerSecond          ' will track the actual number of cycles per second
+Property Read TotalCycles As Long Use $TotalCycles                  ' Total Number of Cycles executed
 
-Property SpeedScaler As Long Use $SpeedScaler                                             ' use this as each cpu we run on may have a different clock
+Property SpeedScaler As Long Use $SpeedScaler                       ' use this as each cpu we run on may have a different clock
 Property InteruptPending As Boolean Use $InteruptPending = False
 Property IRQPending As Boolean Use $IRQPending = False
 Property NMIPending As Boolean Use $NMIPending = False
@@ -50,9 +52,9 @@ Property Profiling As Boolean Use $Profiling = False
 Property Read ProfileInfo As String[]
 Property cpu65c02 As Boolean Use $cpu65c02 = False
 
-Property MillisecondTicks As Long Use $MillisecondTicks = 2000              ' based upon @mhz oscillator speed
-Property ExternalOssilator As Variant Use $ExternalOssilator = Null        ' will callback to this each millisecond
-Private OssilatorCounter As Long = 0                                                                    ' This is the counter used by the cpu to queue the call to ossilator
+Property MillisecondTicks As Long Use $MillisecondTicks = 2000        ' based upon @mhz oscillator speed
+Property ExternalOssilator As Variant Use $ExternalOssilator = Null   ' will callback to this each millisecond
+Private OssilatorCounter As Long = 0                                  ' This is the counter used by the cpu to queue the call to ossilator
 
 Event StatusInfo(information As Cpustatus)
 Event NextInst(Inst As String)
@@ -230,9 +232,9 @@ Fast Unsafe Public Sub Run()
       StepInfo()
     Endif
 
-    If counter = $SpeedScaler Then
+    If counter = $SpeedScaler Then     'This is also used to keep the GUI responsive to inputs
       Wait 0                           'This is used to check the GUI and throttle the cpu speed
-      counter = 0
+      counter = 0                      'The larger the number the faster the cpu functions
     Else
       Inc counter
     Endif
@@ -439,18 +441,26 @@ Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams 
   object.attach(dev, Me, "MyDevice")
 
   AddressMap.Add(Dev)
-  If len = 0 Then Return dev                                  ' allow devices which require no memory, such as buttons and switches
+  If len = 0 Then Return dev                            ' allow devices which require no memory, such as buttons and switches
 
   mapLow.Add(Start)
   mapHigh.Add(Start + len - 1)
+
+  For mem As Integer = Start To Start + len - 1        ' build a real map of the memory for speed later.. I know lots of wasted space
+    RealMemory[mem] = Dev
+  Next
 
   If Device.Exist("IoAddress") Then                    '  We allow a device to also have an io control address
     AddressMap.Add(Dev)
     mapLow.Add(Dev.IoAddress)
     If Device.Exist("IoLength") Then
       mapHigh.Add(Dev.IoAddress + (Dev.IoLength - 1))
+      For mem = Dev.IoAddress To (Dev.IoLength - 1)
+        RealMemory[mem] = Dev
+      Next
     Else
       mapHigh.Add(Dev.IoAddress)
+      RealMemory[Dev.IoAddress] = dev
     Endif
   Endif
 
@@ -482,11 +492,13 @@ Fast Unsafe Public Sub ReadByte()
 
   Dim dev As Object = Null
 
-  For i As Integer = 0 To maplow.Max
-    If AddressBus >= maplow[i] And If AddressBus <= maphigh[i] Then
-      dev = AddressMap[i]
-    Endif
-  Next
+  ' For i As Integer = 0 To maplow.Max
+  '   If AddressBus >= maplow[i] And If AddressBus <= maphigh[i] Then
+  '     dev = AddressMap[i]
+  '   Endif
+  ' Next
+
+  dev = RealMemory[AddressBus]
 
   If dev Then
     DataBus = dev[AddressBus]
@@ -505,11 +517,13 @@ Fast Unsafe Public Sub WriteByte()
   Dim dev As Object = Null
 
   'dev = GetDevice(AddressBus)
-  For i As Integer = 0 To maplow.Max
-    If AddressBus >= maplow[i] And If AddressBus <= maphigh[i] Then
-      dev = AddressMap[i]
-    Endif
-  Next
+  ' For i As Integer = 0 To maplow.Max
+  '   If AddressBus >= maplow[i] And If AddressBus <= maphigh[i] Then
+  '     dev = AddressMap[i]
+  '   Endif
+  ' Next
+
+  dev = RealMemory[AddressBus]
 
   If dev Then
     dev[AddressBus] = Databus
@@ -882,7 +896,7 @@ End
 Fast Unsafe Private Function ProfileInfo_Read() As String[]
 
   If InstProfile Then
-    Return InstProfile.report()
+    Return InstProfile.report(-1, 0, $ProfileSortOrder)
   Endif
 
 End

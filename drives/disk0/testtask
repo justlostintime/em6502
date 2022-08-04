@@ -24,9 +24,9 @@
 1017 ntask
 1020 goto 1010
 2000 Rem This is a fast task high load
-2010 let k[task(0)] = z
-2015 ?27$;"[";task(0)+10;";10H";"Task Gen PID ";task(0);" Started"
-2017 ?27$;"[";task(0)+10;";40H";"Task Gen PID ";task(0);" Alive ";k[task(0)]
-2020 let k[task(0)] = k[task(0)]+1
-2030 if k[task(0)]%j=z ?27$;"[";task(0)+10;";61H";k[task(0)]
+2010 let k[task(0)/21] = z
+2015 ?27$;"[";task(0)/21+10;";10H";"Task Gen PID ";task(0);" Started":ntask
+2017 ?27$;"[";task(0/21)+10;";40H";"Task Gen PID ";task(0);" Alive ";k[task(0)/21]:ntask
+2020 let k[task(0)/21] = k[task(0)/21]+1
+2030 if k[task(0)/21]%j=z ?27$;"[";task(0)/21+10;";61H";k[task(0)/21]
 2040 goto 2020

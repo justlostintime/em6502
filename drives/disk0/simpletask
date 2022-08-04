@@ -1,0 +1,98 @@
+10 print "Simple task test",r
+20 x = task(1000): ? "PID = ";x
+30 y = task(2000): ? "PID = ";y
+40 z = task(3000): ? "PID = ";z
+50 k = task(4000): ? "PID = ";k
+60 l = task(5000): ? "PID = ";l
+70 m = task(6000): ? "PID = ";m
+80 n = task(7000): ? "PID = ";n
+90 o = task(8000): ? "PID = ";o
+100 p = task(9000): ? "PID = ";p
+110 if stat(x) then ntask: goto 110
+120 if stat(y) then ntask: goto 120
+130 if stat(z) then ntask: goto 130
+140 if stat(k) then ntask: goto 140
+150 if stat(l) then ntask: goto 150
+160 if stat(m) then ntask: goto 160
+170 if stat(n) then ntask: goto 170
+180 if stat(o) then ntask: goto 180
+190 if stat(p) then ntask: goto 190
+191 print "End of loop ",r
+195 r = r + 1 : if r < 2000 goto 10
+200 print "Test complete"
+210 end
+
+1000 print "Begin new task 1000 PID=";PID
+1005 a = 0
+1010 a = a + 1
+1020 if a > 20 then goto 1040
+1030 goto 1010
+1040 print "End of task 1000 ";PID
+1050 etask
+
+2000 print "Begin new task 2000 PID=";PID
+2005 b = 0
+2010 b = b + 1
+2020 if b < 20 then goto 2010
+2040 print "End of task 2000 ";PID
+2050 etask
+
+3000 print "Begin new task 3000 PID=";PID
+3005 c = 0
+3010 c = c + 1
+3020 if c > 20 then goto 3040
+3030 goto 3010
+3040 print "End of task 3000 ";PID
+3050 etask
+
+4000 print "Begin new task 4000 PID=";PID
+4005 d = 0
+4010 d = d + 1
+4020 if c > 20 then goto 4040
+4030 goto 4010
+4040 print "End of task 4000 ";PID
+4050 etask
+
+5000 print "Begin new task 5000 PID=";PID
+5005 e = 0
+5010 e = e + 1
+5020 if e < 20 then goto 5010
+5040 print "End of task 5000 ";PID
+5050 etask
+
+6000 print "Begin new task 6000 PID=";PID
+6005 f = 0
+6010 f = f + 1
+6015 gosub 10000
+6020 if f < 20 then goto 6010
+6040 print "End of task 6000 ";PID, q
+6050 etask
+
+7000 print "Begin new task 7000 PID=";PID
+7005 g = 0
+7010 g = g + 1
+7015 gosub 10000
+7020 if g < 20 then goto 7010
+7040 print "End of task 7000 ";PID, q
+7050 etask
+
+8000 print "Begin new task 8000 PID=";PID
+8005 h = 0
+8010 h = h + 1
+8015 gosub 10000
+8020 if h < 20 then goto 8010
+8040 print "End of task 8000 ";PID, q
+8050 etask
+
+9000 print "Begin new task 9000 PID=";PID
+9005 i = 0
+9010 i = i + 1
+9015 gosub 10000
+9020 if i < 20 then goto 9010
+9040 print "End of task 9000 ";PID, q
+9050 etask
+
+10000 Rem gosub test
+10010 q = q + 1
+10020 return
+
