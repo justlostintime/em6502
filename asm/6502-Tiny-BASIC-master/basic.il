@@ -1,6 +1,7 @@
 ;LET
 ;=====================================================
 ;=====================================================
+                  seg  Code
 ;=====================================================
 ; This is the IL of the BASIC (or whatever) language.
 ; Because of the way macros are implemented by as65,
@@ -151,7 +152,8 @@ S7B
 ;===========================================================
 ; End of TASK process
 S8:
-        TST        S8G,"ETASK"     ; End task
+        TST        S8a1,"TASK"     ; Any Task COmmand
+        TST        S8G,"E"
         ETASK
         DONE                       ; Must be last thing on a line
         IJMP       STMT
@@ -159,18 +161,39 @@ S8:
 ;===========================================================
 ; The task gives up the rest of the cycles
 S8G:
-        TST        S8a,"NTASK"     ;Next task
+        TST        S8a,"N"         ;Next task
         NTASK
         NXT        CO              ;Next statement to execute
         IJMP       STMT
 ;
 ;===========================================================
-; Update a memory location with a value
+; Waits for a task or list of tasks to complete
 S8a:
-        TST        S8b,"POKE"        ;Poke a value into memory
-        CALL       EXPR              ;Get address to write to
-        TST        UNKNOWN,COMMA     ;Must have a coma
-        CALL       EXPR              ;Get the value to poke
+       TST        S8TASKNO,"W("   ;Wait for tasks
+S8TSK:
+       Call       EXPR            ;Gets the PID of task to wait for
+S8LOOP:
+       WTASK      S8LOOP          ;Chks for the task PID to finish in a loop, gives up time slice if not done
+       TST        S8aa,COMMA      ;Checks for more tasks
+       IJMP       S8TSK           ;Go for the next task number
+S8aa:
+       TST        S8TASKNO,")"     ;end of list
+       DONE
+       NXT        CO
+       IJMP       STMT            ;Next Statement
+S8TASKNO:
+UNKNOWNVEC1
+       IJMP      UNKNOWN
+
+;
+;===========================================================
+; Update a memory location with a value
+S8a1:
+        TST        S8b,"POKE("       ; Poke a value into memory
+        CALL       EXPR              ; Get address to write to
+        TST        UNKNOWN,COMMA     ; Must have a coma
+        CALL       EXPR              ; Get the value to poke
+        TST        UNKNOWN,")"       ; closing bracket
         POKEMEM
         DONE
         NXT        CO                ;AND SEQUENCE TO NEXT
@@ -297,6 +320,32 @@ UNKNOWN:
 
 ;-----------------------------------------------------
 EXPR:
+  TST        EXPRNOT,"NOT"
+  Call       EXPRLOGS
+  LOGNOT
+  RTN
+EXPRNOT:
+
+EXPRLOGS:
+  Call       EXPRCMP
+  TST        iLOG1,"AND"
+  Call       EXPRCMP
+  LOGAND
+  RTN
+iLOG1:
+  TST       iLOG2,"OR"
+  Call      EXPRCMP
+  LOGOR
+  RTN
+iLOG2:
+  TST     iLOG3,"XOR"
+  Call    EXPRCMP
+  LOGXOR
+  RTN
+iLOG3:
+  RTN
+
+EXPRCMP:
   Call       EXPR2           ; get the first expression
 	TST        iR0,"="
 	LIT        2               ;=
@@ -383,6 +432,14 @@ UNKNOWNVEC:
 ; first or else they'll be confused for variables.
 ;
 FACT:
+        TST       F1AA,"TRUE"
+        LIT       -1
+        RTN
+F1AA:
+        TST       F1AB,"FALSE"
+        LIT       0
+        RTN
+F1AB
         TST       F1A,"FREE()"
         FREE
         RTN
@@ -393,13 +450,13 @@ F1A:
 F1A2:
         TST       F2AZ,"PEEK("     ;Return a value from memory
         CALL      EXPR             ;Get the address to write to
-        TST       UNKNOWN,")"      ;Closing bracket
+        TST       UNKNOWNVEC,")"      ;Closing bracket
         PEEKMEM
         RTN
 F2AZ:
-        TST        F2A,"TASK("    ;Check if we are setting a task start
+        TST        F2A,"TASK("      ;Check if we are setting a task start
         CALL       EXPR             ;Get the LABEL .. line NUMBER
-        TST        UNKNOWN,")"      ;must be )
+        TST        UNKNOWNVEC,")"   ;must be )
         SETTASK                     ;Set the Task up and start it
         RTN                         ;Returns the Task number
 ;
@@ -414,7 +471,7 @@ F2A:
 	RTN
 F2A1:
 	CALL       FACT            ;GET RANGE
-	TST        UNKNOWN,")"
+	TST        UNKNOWNVEC,")"
 	RANDOM
 	RTN
 
@@ -433,8 +490,7 @@ F2B2:
         RTN
 F2Z:
         TST       F2ZA,"PID"
-        LIT       0
-        SETTASK
+        TASKPID
         RTN
 F2ZA:
         TST       F2C,"CALL("       ;call machine function

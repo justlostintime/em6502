@@ -23,7 +23,7 @@ Public AddrMode As New Integer[256]
 Public aaa As New Integer[256]
 Public cc As New Integer[256]
 
-Public SymbolsByName As New Collection(gb.ignoreCase)
+Public SymbolsByName As New Collection                  ' (gb.ignoreCase)
 Public SymbolsByAddress As New Collection(gb.ignoreCase)
 
 Public Sub _init()

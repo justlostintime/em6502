@@ -12,13 +12,13 @@
 ;		zpage
             seg.U ZEROPAGE
             org	ZERO_PAGE_START
-sptr		ds	2
-INL         	ds	1
-INH         	ds	1
-putsp		ds	2
+sptr        ds	2
+INL         ds	1
+INH         ds	1
+putsp       ds	2
 ;
 		SEG.U   rom
-		org	ROM_START
+		org     ROM_START
 ;
 ;=========================================================
 ; Jump table to common functions.  The entries in this
@@ -27,8 +27,8 @@ putsp		ds	2
 ; go at the end.  Many of these are internal functions
 ; and I figured they might be handy for others.
 ;
-RESET		ds	3
-WARM		ds	3
+RESET           ds      3
+WARM            ds      3
 ;
 ; These are the major and minor revision numbers so that
 ; code can check to see which CTMON65 version is running.
@@ -71,7 +71,7 @@ DiskRmFile	ds	3
 
 ;
 		SEG.U   Data
-		org	RAM_START
+		org     RAM_START
 ;
 ; The use of memory starting from here will remain
 ; constant through different versions of CTMON65.

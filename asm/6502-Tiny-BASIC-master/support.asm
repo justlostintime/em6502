@@ -8,7 +8,7 @@
 ;=====================================================
 ;GOSUBSTACKSIZE  equ     16        ;Depth of gosub nesting
 ;=====================================================
-	Seg Code
+                Seg Code
 ;=====================================================
 ; This gets the next two bytes pointed to by ILPC and
 ; returns them; X contains LSB, A contains MSB.  ILPC
@@ -614,39 +614,7 @@ getLineL3	inx		;count null at end
 ;		bne	getCLineL2
 ;getCLineL3	iny		;count null at end
 ;		rts
-;
-;=====================================================
-; Save Context Store the context to the TASK Table
-; on entry y contains the task table entry to save to
-; on exit y points to next task table entry
-;         x contains the number of bytes copied
-ContextSave     ldx   #0
-                iny             ;inc past the task flags
-ContextSvLoop   lda   CONTEXT,x
-                sta   taskTable,y
-                iny
-                inx
-                cpx   #CONTEXTLEN
-                bcc   ContextSvLoop
-                rts
-;
-; Load Context transfer context from task table to the Current Context
-; on entry y contains the task table entry to transfer
-; on exit y points to the original task table entry
-;         x contains the number of byts copied
-ContextLoad     tya
-                pha
-                ldx   #0
-                iny                 ;inc past the task flags
-ContextLDLoop   lda   taskTable,y
-                sta   CONTEXT,x
-                iny
-                inx
-                cpx   #CONTEXTLEN
-                bcc   ContextLDLoop
-                pla
-                tay
-                rts
+
 ;
 ;=====================================================
 ; This saves ILPC.  This saves to a single save area,

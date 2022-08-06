@@ -4,11 +4,11 @@
 40 y = y +1
 60 goto 30
 100 Print "Start New Task PID ";task(0)
-110 Print "Task PID ";task(0); " Index ";d
+110 Print "Task PID ";PID; " Index ";d
 120 d = d+1
 140 goto 110
 150 end
 200 print "Start new task2 PID ";task(0)
-210 ? "PID ";task(0); " Counter ";e
+210 ? "PID ";PID; " Counter ";e
 220 e = e+1
 230 goto 210

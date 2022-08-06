@@ -10,6 +10,8 @@
 'this makes the execution very slow but return valid cycle usage info
 'It prints out a dissasembled listing with counts for each address accessed
 
+Fast Unsafe
+
 profile As Collection
 UserCpu As CPU6502
 
@@ -21,7 +23,7 @@ Public Sub _new(TheCpu As CPU6502)
 
 End
 
-Fast Unsafe Public Sub count(address As Long, cycles As Integer)
+Public Sub count(address As Long, cycles As Integer)
 
   profile[Hex(address, 4)] += cycles
 

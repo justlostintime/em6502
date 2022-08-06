@@ -1,0 +1,15 @@
+5 ? "Started task"
+10 x = task(1000) : ? "Started task pid=";x
+15 y = task(1000) : ? "Started task pid=";y
+18 z = task(1000) : ? "Started task pid=";z
+20 ? "Wait For PID ";x,y: taskw(x,y,z)
+25 ? "Completed iteration = ";a
+30 if a > 1000  end
+40 a = a + 1
+50 goto  10
+
+
+1000 print "Started PID ";pid
+1010 if a=500  ? "Completed PID ";PID : taske
+1020 if a%100=0 ? a,
+1030 a=a+1:goto 1010

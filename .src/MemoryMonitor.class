@@ -6,6 +6,8 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
+Fast Unsafe
+
 MonitorWindow As New MemoryDumpOutput As "MyForm"
 Address As String = "0000"
 

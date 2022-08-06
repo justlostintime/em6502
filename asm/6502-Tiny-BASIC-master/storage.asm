@@ -10,12 +10,12 @@
 ;=====================================================
 ;=====================================================
 
-		seg.u	Data
-diskBufLength	ds    1
-diskBufOffset	ds    1
-DiskFileName	ds    14
+         seg.u      TBData
+diskBufLength       ds    1
+diskBufOffset       ds    1
+DiskFileName        ds    14
 
-		SEG Code
+        SEG Code
 
 ;
 ;=====================================================
@@ -60,7 +60,7 @@ Ropenok		lda	#0
 		sta	diskBufLength
 		jmp	NextIL
 	endif
-	
+
 ;
 ;==============================jlit 08/02/2022========
 ;Remove a file from the disk
@@ -164,9 +164,9 @@ iGetEOF		ldx	getlinx
 		jsr	SkipSpaces
 		jmp	NextIL
 	endif
-	
+
 ;
-; THIS IS CALLED TO DISPLAY THE CONTENTS OF THE 
+; THIS IS CALLED TO DISPLAY THE CONTENTS OF THE
 ; DISK
 ;
 iDDIR
@@ -181,13 +181,13 @@ DiskDirLoop	ldx	#DiskFileName/256	;pointer to buffer
                 bcs	DiskDirEnd		;carry = end of list
                 jsr	puts
                 db	"   ",0
-; Print the line to the console                
+; Print the line to the console
                 ldx	#DiskFileName/256	;pointer to buffer
                 ldy	#DiskFileName&$ff
                 lda 	0
                 jsr	PrtStr			;else print name
                 jsr	crlf
-                
+
                 jmp	DiskDirLoop		;do next entry
 DiskDirEnd	jmp	NextIL
 	endif

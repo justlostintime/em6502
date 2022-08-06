@@ -65,8 +65,8 @@ putsp		ds	2
 ;
 ; Non zero-page data
 ;
-		Seg.u   RomScratch
-		org	RAM_START
+            Seg.u   Data
+            org     RAM_START
 ;
 ; The use of memory starting from here will remain
 ; constant through different versions of CTMON65.

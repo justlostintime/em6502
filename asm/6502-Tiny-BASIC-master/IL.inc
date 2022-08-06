@@ -362,3 +362,30 @@
    macro ENDIO
     db  71
    endm
+; Logical not
+  macro LOGNOT
+    db  72
+    endm
+; Logical OR
+  macro LOGOR
+    db 73
+    endm
+;Logical and
+  macro LOGAND
+    db 74
+  endm
+;Logical XOR
+  macro LOGXOR
+    db 75
+  endm
+;Wait for task to complete, or list of tasks
+  macro WTASK
+    db 76
+    db	({1}-*)-1           ;(addr-*)-1
+  endm
+;Get the current task id
+  MACRO TASKPID
+    db 77
+    endm
+
+
