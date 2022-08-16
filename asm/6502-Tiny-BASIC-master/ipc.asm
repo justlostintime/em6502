@@ -119,7 +119,7 @@ ipc_enqueue:
               jsr     ipc_getcontext                 ; Get the PID's context into MQ
 
               ldy     #GOSUBPTRPOS                    ; pointer to required information
-              lda      (MQ),Y                         ; Get the stk ptr gosub queue
+              lda     (MQ),Y                          ; Get the stk ptr gosub queue
               ldy     #MSGPTRPOS                      ; Get the offset to the msg q ptr
               cmp     (MQ),y                          ; Test if there is already the max messages on stack
               bcs    ipc_enq_full                     ; Exit with queue full message
@@ -144,7 +144,7 @@ ipc_enqueue:
               sta     (R0),y                          ; Set the entry type
 
               dey
-              lda     R1                              ; Store the PID into queue
+              lda     taskPtr                              ; Store the PID into queue
               sta     (R0),y
               jsr     popR1                           ; Get the actual message value
               jsr     ipc_pushR1                      ; Store Message value into queue

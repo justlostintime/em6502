@@ -1,3 +1,8 @@
+* Mon Aug 15 2022 Justlostintime <justlostintime@gmail.com> 1.1.14
+- * new: speed improvement cpu emulator
+- * new: TB is now fully concurrent with up to 10 tasks
+- * bug: TB fixed
+
 * Sat Aug 06 2022 Justlostintime <justlostintime@gmail.com> 1.1.12
 - Many patches and upgrades
 

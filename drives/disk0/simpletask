@@ -1,4 +1,4 @@
-10 print "Simple task test",r
+10 print "Simple task test, to activate all tasks",r
 15 a = 2000 : b= 10 :c=1
 20 x = task(1000): ? "PID = ";x
 30 y = task(2000): ? "PID = ";y
@@ -10,7 +10,7 @@
 90 o = task(8000): ? "PID = ";o
 100 p = task(9000): ? "PID = ";p
 
-110 taskw(x,y,z,k,l,m,n,o,p)
+110 taskw(x,y,z,k,l,m,n,o,p)      : Rem wait for all the tasks to finish
 
 191 print "End of loop ",r
 195 r = r + c : if r < a goto b

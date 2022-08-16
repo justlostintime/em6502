@@ -165,7 +165,7 @@ ERR_NO_EMPTY_TASK_SLOT  equ     14      ;Unable to create a new task no/slots
 ERR_INDEX_OUT_OF_RANGE  equ     15      ;Subscript out of range
 ERR_INVALID_PID         equ     16      ;Invalid PID provided
 ERR_OUT_OF_MSG_SPACE    equ     17      ;Out of space for new messsages
-ERR_INVALID_STK_FRAME   equ     18      ;The stack fram was expected not found
+ERR_INVALID_STK_FRAME   equ     18      ;The stack frame was expected not found
 ;
 ;=====================================================
 ; Zero page storage.
