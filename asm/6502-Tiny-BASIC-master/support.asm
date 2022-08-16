@@ -15,22 +15,22 @@
 ; is advanced by two, and Y contains 0 on return.
 
 ;
-getILWord	jsr	getILByte	;LSB
-		tax
+getILWord       jsr     getILByte           ;LSB
+                tax
 ;
 ;=====================================================
 ; This gets the next byte pointed to by ILPC and
 ; returns it in A.  On return, X is unchanged but Y
 ; contains 0.
 ;
-getILByte	ldy	#0
-		lda	(ILPC),y	;get byte
-		php			;save status
-		inc	ILPC		;inc LSB
-		bne	getILb2		;branch if no overflow
-		inc	ILPC+1		;inc MSB
-getILb2		plp			;restore status
-		rts
+getILByte       ldy     #0
+                lda     (ILPC),y          ;get byte
+                php                       ;save status
+                inc     ILPC              ;inc LSB
+                bne     getILb2           ;branch if no overflow
+                inc     ILPC+1            ;inc MSB
+getILb2         plp                       ;restore status
+                rts
 ;
 ;=====================================================
 ; Decrement ILPC by one.
@@ -47,6 +47,8 @@ decIL2          dec     ILPC
 ; address to execute.
 ;
 pushILPC      ldy     ILSTACKPTR
+              cpy     #ILSTACKSIZE<<1
+              bcs     pushErr
               lda     ILPC
               clc
               adc     #2
@@ -59,6 +61,10 @@ pushILPC      ldy     ILSTACKPTR
               sta     (ILSTACK),y
               iny
               sty     ILSTACKPTR
+              clc
+              rts
+pushErr
+              sec
               rts
 ;
 ;=====================================================
@@ -66,6 +72,7 @@ pushILPC      ldy     ILSTACKPTR
 ; ILPC.
 ;
 popILPC       ldy     ILSTACKPTR
+              beq     pushErr
               dey
               lda     (ILSTACK),y
               sta     ILPC+1
@@ -73,6 +80,7 @@ popILPC       ldy     ILSTACKPTR
               lda     (ILSTACK),y
               sta     ILPC
               sty     ILSTACKPTR
+              clc
               rts
 ;
 ;=====================================================
@@ -296,57 +304,58 @@ dectableend	equ	*
 ; a value like "123456789" will produce something,
 ; but not what you had expected.
 ;
-getDecimal      lda	#0
-                sta	R0
-                sta	R0+1
-                sta	dpl	;temporary negative flag
+getDecimal      lda     #0
+                sta     R0
+                sta     R0+1
+                sta     dpl             ;temporary negative flag
 ;
 ; See if it's negative...
 ;
-                sty $0013
-                lda	(CURPTR),y
-                cmp	#'-
-                bne	getDecLoop
-                inc	dpl	;it's negative
+                ;sty     $0013         Removed as no idea why here JUSTLOSTINTIME
+                lda     (CURPTR),y
+                cmp     #'-
+                bne     getDecLoop
+                inc     dpl             ;it's negative
 ;
-getDecLoop	lda	(CURPTR),y
-                cmp	#'0
-                bcc	getDdone
-                cmp	#'9+1
-                bcs	getDdone
+getDecLoop      lda     (CURPTR),y
+                beq     getDdone         ;Added this incase we hit eol JUSTLOSTINTIME
+                cmp     #'0
+                bcc     getDdone
+                cmp     #'9+1
+                bcs     getDdone
                 sec
-                sbc	#'0	;convert to binary
+                sbc     #'0             ;convert to binary
                 pha
 ;
 ; Now multiply R0 by 10.  Remember that
 ; 2*N + 8*N = 10*N.
 ;
-                asl	R0
-                rol	R0+1	;*2
-                lda	R0
-                sta	R1
-                lda	R0+1
-                sta	R1+1
-                asl	R0
-                rol	R0+1	;*4
-                asl	R0
-                rol	R0+1	;*8
-                clc		;now add the partial sums...
-                lda	R0	;...to get *10
-                adc	R1
-                sta	R0
-                lda	R0+1
-                adc	R1+1
-                sta	R0+1
+                asl     R0
+                rol     R0+1            ;*2
+                lda     R0
+                sta     R1
+                lda     R0+1
+                sta     R1+1
+                asl     R0
+                rol     R0+1            ;*4
+                asl     R0
+                rol     R0+1            ;*8
+                clc                     ;now add the partial sums...
+                lda     R0              ;...to get *10
+                adc     R1
+                sta     R0
+                lda     R0+1
+                adc     R1+1
+                sta     R0+1
 ;
 ; Add in the new digit
 ;
                 pla
                 clc
-                adc	R0
-                sta	R0
-                bcc	getD2
-                inc	R0+1
+                adc     R0
+                sta     R0
+                bcc     getD2
+                inc     R0+1
 ;
 ; Move to next character
 ;
@@ -357,69 +366,35 @@ getD2           iny
 ; negative.  If zero, then don't check for negative
 ; flag.  Ie, -0 is stored as 0.
 ;
-getDdone        lda	R0
+getDdone        lda     R0
                 ora     R0+1
-                beq	getDone2	;zero
-                lda	dpl
-                beq	getDone2	;positive
+                beq     getDone2            ;zero
+                lda     dpl
+                beq     getDone2            ;positive
 ;
 ; Invert all the bits, then add one.
 ;
-                lda	R0
-                eor	#$ff
-                sta	R0
-                lda	R0+1
-                eor	#$ff
-                sta	R0+1
+                lda     R0
+                eor     #$ff
+                sta     R0
+                lda     R0+1
+                eor     #$ff
+                sta     R0+1
 ;
-                inc	R0
-                bne	getDone2
-                inc	R0+1
+                inc     R0
+                bne     getDone2
+                inc     R0+1
 getDone2
-                lda R0
-                sta $0010
-                lda R0+1
-                sta $0011
-                lda dpl
-                sta $012
+; removed next few lines as no idea why they are here JUSTLOSTINTIME
+                ;lda     R0
+                ;sta     $0010
+                ;lda     R0+1
+                ;sta     $0011
+                ;lda     dpl
+                ;sta     $012
 
                 rts
-;
-;=====================================================
-; Print the string that immediately follows the JSR to
-; this function.  Stops when a null byte is found,
-; then returns to the instruction immediately
-; following the null.
-;
-; Thanks to Ross Archer for this code.
-; http://www.6502.org/source/io/primm.htm
-;
-	if KIM
-puts		sty	putsy
-		pla		;low part of "return" address
-           			;(data start address)
-		sta	dpl
-		pla
-		sta	dpl+1	;high part of "return" address
-             			;(data start address)
-             			;Note: we're pointing one short
-psinb       	ldy	#1
-		lda	(dpl),y	;Get next string character
-		inc	dpl	;update the pointer
-		bne	psinc	;if not, we're pntng to next char
-		inc	dpl+1	;account for page crossing
-psinc		ora	#0	;Set flags according to contents of
-             			;   Accumulator
-		beq	psix1	;don't print the final NULL
-		jsr	OUTCH	;write it out
-		jmp	psinb	;back around
-psix1		inc	dpl
-		bne	psix2
-		inc	dpl+1	;account for page crossing
-psix2		ldy	putsy
-		jmp	(dpl)	;return to byte following NULL
-	endif
-;
+
 ;=====================================================
 ; Gets a line of input into LINBUF.
 ;
@@ -439,9 +414,9 @@ GetLine         jsr     ReadPrompt
                 beq     GetLineRetry
                 ldx     taskPtr
                 lda     taskTable,x
-                cmp     #$03            ;Task Active and waiting for IO
-                beq     taskWaitingIO
-                ora     #$02            ;Mark Task as waiting for IO
+                and     #TASKWAITIO     ;Task Active and waiting for IO
+                bne     taskWaitingIO
+                ora     #TASKWAITIO     ;Mark Task as waiting for IO
                 sta     taskTable,x     ;Mark the state for task as waiting io
                 dec     taskWaitingIO   ;Start polling the input and make task wait
                 beq     taskWaitingIO   ;Get out of here and wait for io to complete
@@ -476,13 +451,13 @@ ReadComplete    ldy     #0
                 jsr     ReadPromptRetry
                 ldx     taskPtr                ;if this task is waiting for IO
                 lda     taskTable,x            ;then get out, wait for line to
-                cmp     #3                     ;Complete again
-                beq     taskWaitingIO
+                and     #TASKWAITIO            ;Complete again
+                bne     taskWaitingIO
                 jmp     GetLineRetry           ;If the IO is wait then jump to start
 
 GetLineDone
                 ldx     taskPtr
-                lda     #1
+                lda     #TASKACTIVE
                 sta     taskTable,x          ;IO is complete
 
 taskWaitingIO
@@ -505,9 +480,9 @@ ReadPrompt      sta     promptChar
 ReadPromptRetry lda     promptChar
                 ora     #0                ;any prompt?
                 beq     getlinenp
-                jsr     OUTCH
+                jsr     VOUTCH
                 lda     #$20
-                jsr     OUTCH             ;Space after prompt
+                jsr     VOUTCH             ;Space after prompt
 ;
 getlinenp       ldx     #0                ;offset into LINBUF
                 stx     getlinx
@@ -527,10 +502,10 @@ ReadLine
                 beq     getline1
                 jsr     ISCHAR           ; if there is no character just get out
                 beq     GetLineNoWait
-getline1        jsr     GETCH
+getline1        jsr     VGETCH
         if  CTMON65
                 pha
-                jsr     cout              ;echo echo echo
+                jsr     VOUTCH              ;echo echo echo
                 pla
         endif
                 cmp     #CR
@@ -568,7 +543,7 @@ getlinepbs      jsr     puts
                 db      27,"[K",0
                 jmp     getline1
 getlineEOL      lda     #SPACE
-                jsr     OUTCH
+                jsr     VOUTCH
                 bne     getlinepbs
 ;
 ;=====================================================
@@ -640,6 +615,8 @@ restoreIL	lda	tempIL
 ;
 pushR0          sty     rtemp1
                 ldy     MATHSTACKPTR
+                cpy     #MATHSTACKSIZE<<1
+                bcs     pusherr
                 lda     R0
                 sta     (MATHSTACK),y
                 iny
@@ -648,6 +625,7 @@ pushR0          sty     rtemp1
                 iny
                 sty     MATHSTACKPTR
                 ldy     rtemp1
+                clc
                 rts
 
 ;=====================================================
@@ -656,9 +634,10 @@ pushR0          sty     rtemp1
 
 pushLN
                 sty     rtemp1
+                lda     MESSAGEPTR              ; stack and msg Q grow together see if they cross!
+                cmp     GOSUBSTACKPTR
+                bcc     pusherr                 ; No error
                 ldy     GOSUBSTACKPTR           ; Get the Go Stack Pointer
-                cpy     #GOSUBSTACKSIZE*4       ; Is there space available
-                beq     pusherr                 ; No error
                 ldx     #0                      ; Start of bytes to copy
 pushLoop
                 lda     CURPTR,x                ; Get the current pointer Start address
@@ -668,7 +647,7 @@ pushLoop
                 cpx     #3                      ; 4 bytes per entry on the stack
                 bne     pushLoop                ; Jump if not done for next byte
 
-pushDone        lda     #1                      ; Type of stack entry, 1 gosub, 2 for , 3 next
+pushDone        lda     #GOSUB_RTN              ; Type of stack entry
                 sta     (GOSUBSTACK),y          ; Store Type of stack entry
                 iny                             ; Next entry
 
@@ -712,6 +691,7 @@ PopDone         sty     GOSUBSTACKPTR
                 ldy     rtemp1
                 clc
                 rts
+
 poperr          sec
                 rts
 
@@ -726,6 +706,8 @@ popSkipEntry    dey
 ;
 pushR1          sty     rtemp1
                 ldy     MATHSTACKPTR
+                cpy     #MATHSTACKSIZE<<1
+                bcs     poperr
                 lda     R1
                 sta     (MATHSTACK),y
                 iny
@@ -734,6 +716,7 @@ pushR1          sty     rtemp1
                 iny
                 sty     MATHSTACKPTR
                 ldy     rtemp1
+                clc
                 rts
 ;
 ;=====================================================
@@ -741,6 +724,7 @@ pushR1          sty     rtemp1
 ;
 popR0           sty     rtemp1
                 ldy     MATHSTACKPTR
+                beq     poperr
                 dey
                 lda     (MATHSTACK),y
                 sta     R0+1
@@ -749,6 +733,7 @@ popR0           sty     rtemp1
                 sta     R0
                 sty     MATHSTACKPTR
                 ldy     rtemp1
+                clc
                 rts
 
 ;
@@ -757,6 +742,7 @@ popR0           sty     rtemp1
 ;
 popR1           sty     rtemp1
                 ldy     MATHSTACKPTR
+                beq     poperr
                 dey
                 lda     (MATHSTACK),y
                 sta     R1+1
@@ -772,6 +758,7 @@ popR1           sty     rtemp1
 ;
 popMQ         sty     rtemp1
               ldy     MATHSTACKPTR
+              beq     poperr
               dey
               lda     (MATHSTACK),y
               sta     MQ+1
@@ -861,43 +848,139 @@ restoresigns2
 ; either the last character in the line, or the first
 ; non-space character.
 ;
-skipsp2		iny
-SkipSpaces	lda	(CURPTR),y
-		beq	Skip3	;end of line
-		cmp	#SPACE
-		beq	skipsp2
-Skip3		rts
+
+skipsp2         iny
+SkipSpaces      lda     (CURPTR),y
+                beq     Skip3               ;end of line
+                cmp     #SPACE
+                beq     skipsp2
+Skip3           rts
+;*********************************************************
+; Output a CR/LF combination to the console.  Preserves
+; all registers.
+;
+tbcrlf          pha
+                lda     #CR
+                jsr     VOUTCH
+                lda     #LF
+                jsr     VOUTCH
+                pla
+                rts
+;
+;=====================================================
+; Some logic to print the Line of basic code being executed
+idbgBasic       bit     ILTrace
+                bvc     dbgBasicNone
+                tya
+                pha
+                jsr     SetOutDebug
+                jsr     PrtPrgLine
+                jsr     CRLF
+                lda     ILTrace
+                and     #$01                ; Check if the Basic debug should be interactive
+                beq     dbgBasicDone
+                jsr     SetInDebug
+                jsr     puts
+                db      "Press s - Stop",CR,LF,"d - display Vars",CR,LF,"anything else to step",CR,LF," > ",0
+dbgBasicLoop
+                jsr     VGETCH
+                jsr     CRLF
+                jsr     SetInConsole
+
+                cmp     #'s                 ; Quit program
+                beq     dbgBasicStop
+
+                cmp     #'d                 ; Display Variables
+                bne     dbgBasicDone
+
+                jsr     PrintAllVars
+                clc
+                bcc     dbgBasicLoop        ; Next char
+
+dbgBasicDone    jsr     SetOutConsole
+                pla
+                tay
+dbgBasicNone    jmp     NextIL
+
+dbgBasicStop
+                jsr     SetOutConsole
+                pla
+                tay
+               jmp     iFIN
 ;
 ;=====================================================
 ; This is some debug logic which displays the current
 ; value of the ILPC and the line buffer.
 ;
-dbgLine		jsr	puts
-		db	"ILPC: ",0
-		lda	ILPC+1
-		jsr	OUTHEX
-		lda	ILPC
-		jsr	OUTHEX
-		lda	#SPACE
-		jsr	OUTCH
-		ldy	#0
-		lda	(ILPC),y
-		jsr	OUTHEX
+dbgLine         bit     ILTrace
+                bmi     dbgPrt
+                rts
+dbgPrt
+                jsr     SetOutDebug
+                jsr     puts
+                db      "ILPC: ",0
+                lda     ILPC+1
+                jsr     OUTHEX
+                lda     ILPC
+                jsr     OUTHEX
+                lda     #SPACE
+                jsr     VOUTCH
+                ldy     #0
+                lda     (ILPC),y
+                jsr     OUTHEX
 ;
 ; Display the CURPTR value and offset
 ;
-		jsr	puts
-		db	", CURPTR: ",0
-		lda	CURPTR+1
-		jsr	OUTHEX
-		lda	CURPTR
-		jsr	OUTHEX
-		lda	#'+
-		jsr	OUTCH
-		lda	CUROFF
-		jsr	OUTHEX
+                jsr     puts
+                db      ", CURPTR: ",0
+                lda     CURPTR+1
+                jsr     OUTHEX
+                lda     CURPTR
+                jsr     OUTHEX
+                lda     #'+
+                jsr     VOUTCH
+                lda     CUROFF
+                jsr     OUTHEX
 ;
-		jmp	CRLF
+                jsr     CRLF
+                jsr     SetOutConsole
+                jsr     ILChkRange
+                bcs     dbgLineErr
+                clc
+                rts
+
+dbgLineErr
+                jsr     SetOutDebug
+                jsr     puts
+                db      "Outside Valid IL Address Range",CR,LF,0
+                jsr     SetOutConsole
+                sec
+                rts
+
+ILChkRange      lda   ILPC+1
+                cmp   #IL>>8
+                bcc   ILBadRange
+                bne   ILChkHigh
+
+                lda   ILPC
+                cmp   #IL&$ff
+                bcc   ILBadRange
+
+ILChkHigh       lda   ILPC+1
+                cmp   #ILEND>>8
+                bcc   ILGoodRange
+                bne   ILBadRange
+
+                lda   ILPC
+                cmp   #ILEND&$ff
+                bcs   ILBadRange
+
+ILGoodRange     clc
+                rts
+ILBadRange
+                sec
+                rts
+
 ;
 ;=====================================================
 ; This function might go away eventually, but was
@@ -910,24 +993,24 @@ GetSizes
 ; Here is machine specific code to get the highest
 ; memory location that can be used by BASIC.
 ;
-	if ProgramStart < $2000
-		lda	#$ff
-		sta	HighMem	;$13ff for KIM-1
-		lda	#$DE    ;#$13
-		sta	HighMem+1
-	else
-		lda	#$ff
-		sta	HighMem	;$CFFF otherwise
-		lda	#$cf
-		sta	HighMem+1
-	endif
+          if ProgramStart < $2000
+                lda     #$ff
+                sta     HighMem               ;$13ff for KIM-1
+                lda     #$DE                  ;#$13
+                sta     HighMem+1
+          else
+                lda     #$ff
+                sta     HighMem               ;$CFFF otherwise
+                lda     #$cf
+                sta     HighMem+1
+          endif
 ;
 ; This computes the available memory remaining.
 ;
-		sec
-		lda	HighMem
-		sbc	PROGRAMEND
-		sta	FreeMem
+                sec
+                lda     HighMem
+                sbc     PROGRAMEND
+                sta     FreeMem
 		sta	R0
 		lda	HighMem+1
 		sbc	PROGRAMEND+1
@@ -950,27 +1033,84 @@ GetSizes
 ; Set output vector to the console output function
 ;
 SetOutConsole
+                pha
                 lda     #OUTCH&$ff
                 sta     BOutVec
-                lda     #OUTCH/256
+                lda     #OUTCH>>8
                 sta     BOutVec+1
+                pla
                 rts
-;
+
+SetInConsole
+                pha
+                lda     #GETCH&$ff
+                sta     BInVec
+                lda     #GETCH>>8
+                sta     BInVec+1
+                pla
+                rts
+
 ;=====================================================
-; Jump to the output function in BOutVec
+; Jump to the output/input function in BOutVec/BInVec
 ;
 VOUTCH          jmp     (BOutVec)
+VGETCH          jmp     (BInVec)
+;
+;=====================================================
+; Print the string that immediately follows the JSR to
+; this function.  Stops when a null byte is found,
+; then returns to the instruction immediately
+; following the null.
+;
+; Thanks to Ross Archer for this code.
+; http://www.6502.org/source/io/primm.htm
+;
+
+tbputs          pla                       ;Get the low part of "return" address
+                                          ;(data start address)
+                sta       PrtFrom
+                pla
+                sta       PrtFrom+1       ;Get the high part of "return" address
+                                          ;(data start address)
+                                          ;Note: actually we're pointing one short
+PSINB           ldy       #1
+                lda       (PrtFrom),y     ;Get the next string character
+                inc       PrtFrom         ;update the pointer
+                bne       PSICHO          ;if not, we're pointing to next character
+                inc       PrtFrom+1       ;account for page crossing
+PSICHO          ora       #0              ;Set flags according to contents of
+                                          ;   Accumulator
+                beq       PSIX1           ;don't print the final NULL
+                jsr       VOUTCH          ;write it out
+                jmp       PSINB           ;back around
+PSIX1           inc       PrtFrom
+                bne       PSIX2
+                inc       PrtFrom+1       ;account for page crossing
+PSIX2           jmp       (PrtFrom)       ;return to byte following final NULL
+
+;
 
 ;====================================================
-PrtTerm         equ     rtemp1
+PrtTerm         equ     tempy
 
-; Print Y has the offset to use
-PrtQuoted       lda     CURPTR
+; on exit Print Y has the offset to use
+; input y =     addr low
+;       x =     addr high
+;       a =     termination string
+
+PrtPrgLine
+                lda    #0
+                sta     PrtTerm
+                beq     PrtPrgText
+
+PrtQuoted       lda     #'"
+                sta     PrtTerm
+
+PrtPrgText      ldy     CUROFF
+                lda     CURPTR
                 sta     PrtFrom
                 lda     CURPTR+1
                 sta     PrtFrom+1
-                lda     #'"
-                sta     PrtTerm
                 jmp     PrtLoop
 
 ; Print a string pointed to by x= h, y=l terminated by a
@@ -980,18 +1120,42 @@ PrtStr          stx      PrtFrom+1
                 sty      PrtFrom
                 sta      PrtTerm
                 ldy      #0
-
+;
+; On entry here ptrfrom and prtterm point to area to print
+;
 PrtLoop         lda     (PrtFrom),y
                 cmp     PrtTerm
                 beq     PrtEnd
-                cmp     #0              ; always end if 0 is found
+                cmp     #0                    ; always end if 0 is found
                 beq     PrtEnd
-                jsr     OUTCH
+                jsr     VOUTCH
                 iny
                 jmp     PrtLoop
-PrtEnd          iny                     ;return byte after the copy
+PrtEnd          iny                           ;return byte after the copy
                 rts
-
+;=====================================================
+; Print character in A as two hex digits to the
+; current output device (console or file).
+;
+HexToOut    pha                               ;save return value
+            pha
+            lsr                               ;a  ;move top nibble to bottom
+            lsr                               ;a
+            lsr                               ;a
+            lsr                               ;a
+            jsr     hexta                     ;output nibble
+            pla
+            jsr     hexta
+            pla                               ;restore
+            rts
+;
+hexta       and     #%0001111
+            cmp     #$0a
+            clc
+            bmi     hexta1
+            adc     #7
+hexta1      adc     #'0                       ;then fall into...
+            jmp    VOUTCH
 ;====================================================
 ;Clear the terminal assume it is ansii or vt100
 ;
@@ -999,3 +1163,130 @@ iCLEARSCREEN
                 jsr     puts
                 db      $1b,'[,'3,'J,0
                 jmp     NextIL
+
+;====================================================
+; Push true and false onto math stack
+pushTrue
+                lda    #$ff
+pushTF          sta    R0
+                sta    R0+1
+                jsr    pushR0
+                rts
+pushFalse       lda    #0
+                beq    pushTF
+
+;======================================================
+; Copy stack top to R1
+CopyStackR1
+                tya
+                pha
+                ldy    MATHSTACKPTR
+                dey
+                lda    (MATHSTACK),y
+                sta    R1+1
+                dey
+                lda    (MATHSTACK),y
+                sta    R1
+                pla
+                tay
+                rts
+
+
+;====================================================
+;Swap the out debug call for standard calls
+
+SetOutDebug
+          if    USEDEBUGPORT
+                lda    #OUTDEBUG&$ff         ; Put the Debug output
+                sta    BOutVec
+                lda    #OUTDEBUG>>8
+                sta    BOutVec+1
+          endif
+                rts
+SetInDebug
+         if     USEDEBUGPORT
+                lda   #INDEBUG&$ff
+                sta   BInVec
+                lda   #INDEBUG>>8
+                sta   BInVec+1
+         endif
+                rts
+;
+;====================================================
+; Output to the debug console
+;     x = high address byte
+;     y = low address byte
+;     a = Terminator for string
+DebugWrite
+                jsr     SetOutDebug
+                jsr     PrtStr
+                jsr     SetOutConsole
+                rts
+
+OUTDEBUG
+                sta     DEBUGPORT+1             ;Dont check anything just output the byte
+                RTS
+
+INDEBUG         lda     DEBUGPORT
+                and     #$01
+                beq     INDEBUG
+                lda     DEBUGPORT+1
+                rts
+;
+;=======================================================
+; Print all Variables
+PrintAllVars
+                ldy     #0
+                lda     #'A
+PrintAllVarsLoop
+                pha
+                lda     (VARIABLES),y
+                sta     R0
+                iny
+                lda     (VARIABLES),y
+                sta     R0+1
+
+                pla     ;get the current letter
+                pha
+                jsr     VOUTCH
+                jsr     puts
+                db      "=",0
+                pla
+                tax
+                inx
+                txa
+                pha                           ;
+
+                tya
+                pha
+                jsr     PrintDecimal
+                jsr     puts
+                db      " ",0
+                pla
+                tay
+                iny
+                cpy     #26<<1                  ; A-Z 2 bytes each
+                bcc     PrintAllVarsLoop
+                jsr     CRLF
+
+                pla
+                rts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

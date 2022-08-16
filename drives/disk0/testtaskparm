@@ -1,0 +1,24 @@
+10 rem test passing parameters to tasks: Print "Test RETURN() interface"
+20 a = task(1000,1,2,3,4,5)
+30 taskw(a)
+40 print "Task Returns "; a!^;
+50 if a!^ <> 134 ? " - Failed test should be 134"
+60 if a!^ = 134 ?  " - Test Completed correctly"
+70 Print "test taske() interface "
+120 a = task(2000,1,2,3,4,5)
+130 taskw(a)
+140 print "Task Returns "; a!^;
+150 if a!^ <> 1*2*3*4*5 ? " - Failed test should be ";1*2*3*4*5
+160 if a!^ = 1*2*3*4*5 ?  " - Test Completed correctly"
+170 end
+
+
+1000 rem print the parameters and exit
+1010 print "Parameters Passed : ";#[0],#[1],#[2],#[3],#[4]
+1020 REM Test returning a value
+1030 Return(#[0]*#[1]*#[2]*#[3]*#[4])
+
+2000 rem print the parameters and exit
+2010 print "Parameters Passed : ";#[0],#[1],#[2],#[3],#[4]
+2020 REM Test returning a value
+2030 taske(#[0]*#[1]*#[2]*#[3]*#[4])

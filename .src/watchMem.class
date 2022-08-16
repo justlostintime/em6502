@@ -1,0 +1,122 @@
+' Gambas class file
+
+' Author Westwood JustLostintime
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+Fast Unsafe
+ItemsWatchedList As New Watchitem[]
+
+
+Public Sub NewWatch(Symbol As String, StartAddress As String, Optional length As Integer = 2)
+
+  Dim a As New Watchitem(Symbol, StartAddress, ItemsWatchedList.count, length) As "memupdater"
+
+  ItemsWatchedList.Add(a)
+
+  WatchList.Rows.Count = ItemsWatchedList.count
+
+  WatchMem.Refresh()
+
+End
+
+Public Sub memupdater_updaterow(rownumber As Integer, info As String)
+
+  Try WatchList[rownumber, 2].text = info
+
+End
+
+
+Public Sub Form_Open()
+
+  WatchList.Columns.count = 3
+  WatchList.Columns[0].title = "Symbols"
+  WatchList.Columns[1].title = "Address"
+  WatchList.Columns[2].title = "Data"
+
+  Me.w = Settings["WatchWindow/w", Me.w]
+  Me.h = Settings["WatchWindow/h", Me.h]
+  Me.x = Settings["WatchWindow/x", Me.x]
+  Me.y = Settings["WatchWindow/y", Me.y]
+
+  If FMain.MyComputer.MemoryUpdates <> True Then
+    EnableDisableWatch.text = "Enable"
+  Else
+    EnableDisableWatch.text = "Disable"
+  Endif
+
+End
+
+Public Sub Form_Close()
+
+  Settings["WatchWindow/w"] = Me.w
+  Settings["WatchWindow/h"] = Me.h
+  Settings["WatchWindow/x"] = Me.x
+  Settings["WatchWindow/y"] = Me.y
+
+End
+
+Public Sub Form_Resize()
+
+  WatchList.w = Me.w - 8
+  WatchList.h = Me.h - WatchList.y - 4 - WatchButtons.h
+  WatchButtons.y = WatchList.y + WatchList.h + 2
+
+End
+
+
+Public Sub WatchList_Data(Row As Integer, Column As Integer)
+
+  Select Case column
+    Case 0
+      WatchList.Data.text = ItemsWatchedList[Row].Symbol
+    Case 1
+      WatchList.Data.text = "$" & ItemsWatchedList[Row].Address
+    Case 3
+      WatchList.Data.text = ItemsWatchedList[Row].DisplayData
+  End Select
+
+End
+
+Public Sub RemoveWatch_Click()
+
+  Dim theselection As Integer[] = WatchList.Rows.Selection
+
+  For i As Integer = theselection.max DownTo 0
+    ItemsWatchedList[theselection[i]].ShutDown()
+    WatchList.Rows.Remove(theselection[i])
+    ItemsWatchedList.Remove(theselection[i])
+  Next
+
+  For i = 0 To ItemsWatchedList.max
+    ItemsWatchedList[i].DisplayRow = i
+  Next
+
+End
+
+Public Sub ClearAll_Click()
+
+  FMain.MyComputer.MemoryUpdates = False
+
+  WatchList.Clear()
+  WatchList.Rows.Count = 0
+  For Each a As Watchitem In ItemsWatchedList
+    a.ShutDown()
+  Next
+  ItemsWatchedList.Clear()
+
+End
+
+Public Sub EnableDisableWatch_Click()
+
+  If FMain.MyComputer.MemoryUpdates = True Then
+    FMain.MyComputer.MemoryUpdates = False
+    EnableDisableWatch.text = "Enable"
+  Else
+    FMain.MyComputer.MemoryUpdates = True
+    EnableDisableWatch.text = "Disable"
+  Endif
+
+End

@@ -163,6 +163,8 @@
       }
       { DeviceList TableView
         MoveScaled(1,42,80,49)
+        Font = Font["+4"]
+        ToolTip = ("Select your required device from the list. If it is the second or more device of this type you must add a  colon and index after the device type\nexample     ttydev:1\nor your device will not be recognized. \nThe second colum contains the starting address for the device and the next colum contains the length of memory required by the device.\nThe forth colum contains device specific parameters.\nExample for a rom contains the binary file to be loaded.\nfor ram it contains the if any the binary to load at boot.\n\n")
       }
       { Label25 Label
         MoveScaled(0,30,80,4)
@@ -176,7 +178,7 @@
         Text = ("Remove")
       }
       { Label27 Label
-        MoveScaled(10,35,70,6)
+        MoveScaled(13,35,66,6)
         Text = ("To add a device Click in an empty first Column and Select the Device from\n the dropdown. Changes are not permenant until Comp Config is saved.")
       }
     }
@@ -274,7 +276,7 @@
   { AllControls Panel
     MoveScaled(84,1,111,100)
     { LoadPanel Panel
-      MoveScaled(0,0,74,70)
+      MoveScaled(1,1,74,70)
       { EnableBreakPoints CheckBox
         MoveScaled(2,1,25,5)
         ToolTip = ("Must be selected/deselected  to enable/disable  breakpoints")
@@ -310,22 +312,23 @@
         Text = ("Enter Breakpoint addresses into this box")
       }
       { BreakPointList ListEditor
-        MoveScaled(1,6,33,37)
+        MoveScaled(1,6,28,37)
         Font = Font["Monospace"]
         ToolTip = ("Enter Breakpoint address into this box")
       }
       { !SymbolTable ListView
-        MoveScaled(41,6,32,37)
+        MoveScaled(38,6,35,37)
         #Public = True
         Font = Font["Monospace,-1"]
         Sorted = True
+        ScrollBar = Scroll.Vertical
       }
       { AddAddress Button
-        MoveScaled(35,20,5,3)
+        MoveScaled(31,20,5,3)
         Text = ("<--")
       }
       { RemoveAddress Button
-        MoveScaled(35,24,5,3)
+        MoveScaled(31,24,5,3)
         Text = ("-->")
       }
       { LoadSymbols Button
@@ -343,9 +346,19 @@
         ToolTip = ("List of symbol tables loaded")
       }
       { RemoveAll Button
-        MoveScaled(34,30,7,3)
+        MoveScaled(30,30,7,3)
         ToolTip = ("Clear All Break Point")
         Text = ("Clear")
+      }
+      { RestoreBreakpoints Button
+        MoveScaled(29,34,9,3)
+        ToolTip = ("Restore the breakpoints from the last debug session")
+        Text = ("Restore")
+      }
+      { WatchSymbol Button
+        MoveScaled(30,12,7,3)
+        ToolTip = ("Adds a location to watch to the watch window.")
+        Text = ("Watch")
       }
     }
     { ControlPanel Panel
@@ -440,7 +453,7 @@
       Border = Border.Etched
       { DumpMem Button
         MoveScaled(1,9,16,3)
-        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory")
+        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory. This is a staic display.")
         Text = ("Dump Mem")
       }
       { Label2 Label
@@ -461,8 +474,13 @@
       }
       { MoniorMemSet Button
         MoveScaled(18,9,16,3)
-        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory dynamically.\nTrace must be enabled for this to be updated.")
+        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory dynamically.\nThis will not show anything until the next single step or if\nTrace is enabled it will update after every instruction..")
         Text = ("Monitor Mem")
+      }
+      { ShowWatchWindow Button
+        MoveScaled(1,13,33,3)
+        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory. This is a staic display.")
+        Text = ("Show Hide Watch Window")
       }
     }
     { CPUInfoPanel Panel
@@ -558,7 +576,7 @@
         ReadOnly = True
       }
       { AddrBus_Info TextBox
-        MoveScaled(11,71.1429,23,4)
+        MoveScaled(11,71.2,23,4)
         ReadOnly = True
       }
       { DataBus_INFO TextBox
@@ -566,11 +584,11 @@
         ReadOnly = True
       }
       { Label8 Label
-        MoveScaled(1,71.1429,9,5)
+        MoveScaled(1,71.2,9,5)
         Text = ("Adr Bus")
       }
       { Label9 Label
-        MoveScaled(1,75.1429,9,4)
+        MoveScaled(1,75.2,9,4)
         Text = ("Data Bus")
       }
       { Label10 Label

@@ -1,49 +1,15 @@
-5 Rem I am cheating a little, Task Table entries are 21 bytes long
-10 PRINT "START GOSUB TEST"
-20 let m[1]=task(4000):let m[2]=task(5000):let m[3]=task(4000):let m[4]=task(5000)
-25 let m[5]=task(4000):let m[6]=task(5000):let m[7]=task(4000):let m[8]=task(5000)
-27 let m[9]=task(4000)
-29 c[PID/21+1] = 0
-30 GOSUB 100
-40 C[PID/21+1] = c[PID/21+1]+1
-50 if c[PID/21+1] < 10 goto 30
-55 a = 0
-56 rem now wait for the tasks to finish
-58 a = a + 1
-60 if stat(a*21) then ? "Waiting for Task ";a*21;" to end ":ntask:goto 60
-65 ? "Task PID ";a;" Has Terminated"
-70 if a < 9  goto 58
-75 b = b+1:if b < 5 goto 10
-80 print "End of test"
-90 end
+10 Rem Test gosub functioning
+20 print "Begin Gosub testing"
+30 gosub 1000(1,2,3,4,b)
+35 B=B+1
+40 print "Returned from Gosub"
+50 if b < 100 goto 30
+60 a =  gofn 2000(1,2,3,4,b) + 23 : print " Returned to line"
+60 ? "The result is : ";#[0],a
+70 end
 
+1000 print "Parameters ";#[0],#[1],#[2],#[3],#[4]
+1010 return
 
-100 PRINT "IN SUB 100 ";PID;":";c[PID/21+1]
-110 gosub  2000
-120 RETURN
-
-
-2000 print "In Sub 2000 ";PID;":";c[PID/21+1]
-2010 gosub 3000
-2020 RETURN
-
-
-3000 print "In Sub 3000 ";PID;":";c[PID/21+1]
-3010 return
-
-
-4000 Print "Start Task 4000 ";PID
-4005 let c[PID/21+1] = 0
-4010 gosub 100
-4020 let c[PID/21+1] = c[PID/21+1] + 1
-4030 if c[PID/21+1] > 50 etask
-4040 goto 4010
-
-
-
-5000 ? "Start Task 5000 ";PID
-5005 let c[PID/21+1] = 0
-5010 gosub 100
-5020 let c[PID/21+1] = c[PID/21+1] + 1
-5030 if c[PID/21+1] > 50 etask
-5040 goto 5010
+2000 print "Parameters ";#[0],#[1],#[2],#[3],#[4]
+2010 return(#[0]*#[1]*#[2]*#[3]*#[4])

@@ -62,6 +62,7 @@ End
 Public Sub Form_Close()
 
   SaveEditDefaults()
+  SaveDebugList()
 
   Settings["FMain/Window/X"] = FMain.X
   Settings["FMain/Window/Y"] = FMain.Y
@@ -275,7 +276,9 @@ End
 
 Public Sub DumpMem_Click()
 
+  If FromAddr.text = "" Then Return
   FromAddr.text = PadNumber(FromAddr.text)
+  If ToAddr.text = "" Then ToAddr.text = "0100"
   ToAddr.text = PadNumber(ToAddr.text)
 
   FMain.Refresh()
@@ -285,7 +288,7 @@ Public Sub DumpMem_Click()
   Dim fromAdr As Long = Eval("&h0" & FromAddr.text)
   Dim ToAdr As Long = Eval("&h0" & ToAddr.text)
   If FromAdr >= ToAdr Then
-    Message.Error("The start address must be lessthan the en address", "OK")
+    Message.Error(("The start address must be less than the en address"), ("OK"))
     Return
   Endif
   Dim TheDump As String = MyComputer.DumpMem(FromAdr, toAdr)
@@ -298,7 +301,7 @@ End
 
 Sub ShutdownMemMonitors()
 
-  For Each mon As MemoryMonitor In MemoryMonitors
+  For Each mon As Variant In MemoryMonitors
     Mon.shutdown()
   Next
   MemoryMonitors.Clear()
@@ -314,7 +317,7 @@ Public Sub MoniorMemSet_Click()
   Dim fromAdr As Long = Eval("&h0" & FromAddr.text)
   Dim ToAdr As Long = Eval("&h0" & ToAddr.text)
   If FromAdr >= ToAdr Then
-    Message.Error("The start address must be lessthan the en address", "OK")
+    Message.Error(("The start address must be less than the end address"), ("OK"))
     Return
   Endif
 
@@ -640,6 +643,47 @@ Public Sub AddAddress_Click()
 
 End
 
+Public Sub RestoreDebugList()
+
+  Dim debugbreaks As String = ""
+  Dim dbgitem As String
+
+  debugbreaks = Settings["debugbreaks", ""]
+  If debugbreaks = "" Then Return
+  Dim breaklist As String[] = Split(debugBreaks, "|", "\"", True, False)
+  For Each s As String In breaklist
+    Try dbgitem = Disassembler.SymbolsByName[s]                                 ' look it up the address may have changed
+    If Error Then Continue
+    If dbgitem = "" And IsHexa(s) Then dbgitem = s
+    BreakPointList.Add(dbgitem & "  " & s)
+  Next
+
+  SetNextBreak()
+
+End
+
+Public Sub SaveDebugList()
+
+  Dim debugbreaks As String = ""
+  Dim dbgitem As String[]
+
+  If BreakPointList.List.count = 0 Then Return
+
+  For Each s As String In BreakPointList.list
+    dbgitem = Split(s, " ", "", True, False)
+    If dbgitem.count = 1 Then
+      debugbreaks &= "|" & dbgitem[0]
+    Else
+      debugbreaks &= "|" & dbgitem[1]
+    Endif
+  Next
+
+  Settings["debugbreaks"] = debugbreaks
+
+End
+
+
+
 Public Sub LoadedList_DblClick()
 
   If LoadedList.Selection.count > 0 Then
@@ -650,7 +694,9 @@ End
 
 Public Sub RemoveAddress_Click()
 
-  BreakPointList.Remove(BreakPointList.Index)
+  If breakpointList.Index >= 0 Then
+    BreakPointList.Remove(BreakPointList.Index)
+  Endif
 
 End
 
@@ -907,5 +953,37 @@ Public Sub Form_Resize()
   Disassembly.w = EditProg.W
   Disassembly.h = InfoSection.h - Disassembly.y - 30
   SearchPaths.w = EditorButtons.w - SearchPaths.x - 10
+
+End
+
+Public Sub RestoreBreakpoints_Click()
+
+  RestoreDebugList()
+
+End
+
+
+Public Sub ShowWatchWindow_Click()
+
+  If watchMem.Visible Then
+    watchMem.hide()
+  Else
+    watchMem.Show()
+  Endif
+
+End
+
+Public Sub WatchSymbol_Click()
+
+  If Not WatchMem.visible Then watchMem.Show()
+
+  Dim WatchSet As String[] = SymbolTable.Selection
+
+  For Each s As String In WatchSet
+    Dim entry As String[] = Split(s, ":")
+    WatchMem.NewWatch(entry[0], entry[1])
+  Next
+
+
 
 End

@@ -76,23 +76,23 @@ DiskRmFile	ds	3
 ; The use of memory starting from here will remain
 ; constant through different versions of CTMON65.
 ;
-IRQvec		    ds	2
-NMIvec		    ds	2
+IRQvec            ds      2
+NMIvec            ds      2
 ;
 ; Before a L(oad) command, these are set to $FF.
 ; After loading, if they are different, jump to
 ; that address.
 ;
-AutoRun         ds	2
+AutoRun           ds      2
 ;
 ; Pointer to the subroutine that gets the next input
 ; character.  Used for doing disk/console input.
 ;
-inputVector     ds	2
+inputVector       ds      2
 ;
 ; Same thing for output.
 ;
-outputVector	ds	2
+outputVector      ds      2
 ;
 ; Buffer for GETLINE
 ;

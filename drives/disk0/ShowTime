@@ -1,0 +1,73 @@
+10 rem Test the clock
+15 rem Read the clock
+17 cls :putch(27):?"[?25l";:rem  print "Start the irqs going"
+19 gosub 900
+20 gosub 200
+45 rem delay for a while
+50 rem gosub 800
+55 rem after waiting for a while then print time again
+60 rem gosub 200
+75 rem ? "Wait a while to display them"
+80 rem gosub 800
+85 rem ? "Stop the irqs"
+90 rem gosub 950
+95 rem ? "Display date one more time"
+100 rem gosub 200
+110 goto 20
+105 rem ? " Done with test "
+199 end
+200 rem read the clock
+210 putch(27):?"[10;20H";
+220 poke 57360,7
+230 a = peek(57360)
+240 gosub 500
+250 ? "-";
+260 gosub 500
+270 ? "-";
+280 gosub 500
+290 gosub 500
+300 ? " ";
+310 gosub 500
+320 ? ":";
+330 gosub 500
+340 ? ":";
+350 gosub 500
+360 ? " Day of week ";
+370 gosub 600
+380 ?
+390 return
+500 rem print bcd value from pia
+510 a = peek(57360)
+520 b = a / 16
+530 c = a - (b*16)
+540 ? b ;
+550 ? c ;
+560 return
+600 rem print day of the week
+610 a = peek(57360)
+620 if a = 0 then print "Sunday";
+630 if a = 1 then print "Monday";
+640 if a = 2 then print "Tuesday";
+650 if a = 3 then print "Wednesday";
+660 if a = 4 then print "Thursday";
+670 if a = 5 then print "Friday";
+680 if a = 6 then print "Saturday";
+690 return
+800 rem delay some amount of time
+810 a = 250
+820 if a = 0 then return
+830 a = a - 1
+840 goto 820
+900 rem set the timeout to 1 second
+910 poke 57360,30
+920 poke 57360,9
+925 a = peek(57360)
+930 return
+950 rem set timeout off
+960 poke(57360,30)
+970 poke(57360,0)
+975 a = peek(57360)
+980 return
+
+
+

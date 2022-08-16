@@ -33,6 +33,7 @@ maplow As New Long[]
 Public SingleStep As Boolean              ' Turn On single step mode
 Public DisplayStatus As Boolean           ' Turn On the status screen
 Public DisplayInstruction As Boolean      ' Cause the instruction to be executed to be displayed to the trace screen
+Public DisplayMemory As Boolean           ' Causes the update of all memory monitor Watch list etc
 Public LastTraceInstruction As String     ' When trace is on this will contain the last data
 Public TotalInstructions As Long = 0      ' Number of instructions executed
 Property Read InstructionsPerSecond As Long Use $InstructionsPerSecond ' Number of instructions executed per second
@@ -61,6 +62,7 @@ Event NextInst(Inst As String)
 Event breakpoint(pc As Long)
 Event BinaryLoaded(address As Long, BinName As String, info As String)
 Event Abort(Reason As String)
+Event MemUpdated()
 
 Fast Unsafe Public Sub _new()
 
@@ -185,51 +187,57 @@ Fast Unsafe Public Sub Run()
   Dim counter As Long = 0
 
   While Not $halted
-    If $BreakPoints Then
-      If BreakPointList.ExistSorted(pc) Then
-        SingleStep = True
-        $Breakpoints = False
-        Raise breakpoint(pc)
-        StepInfo()
-        Return
+    If $Breakpoints Or $InteruptPending Then
+      If $BreakPoints Then
+        If BreakPointList.ExistSorted(pc) Then
+          SingleStep = True
+          $Breakpoints = False
+          Raise breakpoint(pc)
+          StepInfo()
+          Return
+        Endif
+      Endif
+
+      If $InteruptPending Then
+        $InteruptPending = False
+        If $ResetPending Then
+          Reset()
+          CycleCount += 9
+        Else If $NMIPending Then
+          NMI()
+          CycleCount += 5
+        Else If $IRQPending Then
+          IRQ()
+          CycleCount += 5
+        Endif
       Endif
     Endif
 
-    If $InteruptPending Then
-      $InteruptPending = False
-      If $ResetPending Then
-        Reset()
-        CycleCount += 9
-      Else If $NMIPending Then
-        NMI()
-        CycleCount += 5
-      Else If $IRQPending Then
-        IRQ()
-        CycleCount += 5
-      Endif
-    Endif
-
-    If OssilatorCounter = 0 Then
-      OssilatorCounter = $MillisecondTicks
-      If $ExternalOssilator Then                              '  If some device want emulated millisecond ticks
+    If $ExternalOssilator Then
+      If OssilatorCounter = 0 Then
+        OssilatorCounter = $MillisecondTicks
         $ExternalOssilator.Tick()
+      Else
+        Dec OssilatorCounter
       Endif
-    Else
-      Dec OssilatorCounter
     Endif
 
     ExecuteInstruction()
 
-    If DisplayStatus Then
-      Dim pinfo As New CpuStatus(pc, sp, ac, X, Y, sr, DataBus, AddressBus, TotalInstructions, $InstructionsPerSecond, $TotalCycles, $CyclesPerSecond)
-      Raise StatusInfo(pinfo)
-    Endif
+    If (DisplayMemory Or SingleStep Or DisplayInstruction Or DisplayMemory) Then
+      If DisplayStatus Then
+        Dim pinfo As New CpuStatus(pc, sp, ac, X, Y, sr, DataBus, AddressBus, TotalInstructions, $InstructionsPerSecond, $TotalCycles, $CyclesPerSecond)
+        Raise StatusInfo(pinfo)
+      Endif
 
-    If SingleStep Then
-      StepInfo()
-      Return
-    Else If DisplayInstruction Then
-      StepInfo()
+      If SingleStep Then
+        StepInfo()
+        Return
+      Else If DisplayInstruction Then
+        StepInfo()
+      Else If DisplayMemory Then
+        Raise MemUpdated()
+      Endif
     Endif
 
     If counter = $SpeedScaler Then     'This is also used to keep the GUI responsive to inputs

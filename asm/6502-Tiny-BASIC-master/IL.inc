@@ -50,6 +50,7 @@
 ;
 		macro SAV
 		db	8
+		db  {1}
 		endm
 ;
 		macro RSTR
@@ -319,7 +320,7 @@
     db 60
     endm
 ; Set a task line
-  macro SETTASK
+  macro TASKCREATE
     db 61
   endm
 ; End a task
@@ -387,5 +388,81 @@
   MACRO TASKPID
     db 77
     endm
+;Trace the basic execution
+  Macro TRACEPROGRAM
+    db 78
+  endm
+;Do a basic program Trace
+  Macro DEBUGBASIC
+    db 79
+    endm
+
+; Inter Process communications instructions
+  Macro IPCSEND
+    db 80
+    endm
+  Macro IPCRECEIVE
+    db 81
+    endm
+  Macro IPCCHECK
+    db 82
+   endm
+  Macro IPCIO
+    db 83
+   endm
+  Macro PUSHMATHSTACK
+    db 84
+    endm
+  Macro POPMATHSTACK
+    db 85
+    endm
+  Macro SAVEMATHSTACK
+    db 86
+    endm
+  Macro RESTOREMATHSTACK
+    db 87
+    endm
+  Macro INCPARMCOUNT
+    db 88
+    endm
+  Macro TASKGETMATHSTACK
+    db 89
+    endm
+  Macro TASKENABLE
+    db 90
+    endm
+  Macro TASKSUSPEND
+    db 91
+    endm
+  Macro TASKPUTMATHPTR
+    db 92
+    endm
+; Test for an extension type of variable that allows access to a tasks variables
+; Using  PID!<Var name>
+  Macro  TSTVT
+    db 93
+    db	({1}-*)-1           ;(addr-*)-1
+    endm
+
+; Provide access to R2 for the IL program
+  Macro SETR2
+    db 94
+    db {1}               ; R2 is only one byte
+    endm
+;Move stack top to temp
+  Macro STK2TMP
+   db  95
+   endm
+
+  Macro TMP2STK
+   db 96
+   endm
+
+  Macro TSTBYTE
+    db  97
+    db ({1}-*)-1           ; (addr-*)-1 goto if match
+    dw {2}                ; address to check
+    db {3}                ; Value to compare
+  endm
 
 

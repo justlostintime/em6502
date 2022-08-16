@@ -24,6 +24,8 @@ Public Databuffer As Byte[]
 Public EchoChar As Boolean = false
 Public MyObs As Observer
 
+TTYNAME as string = "TTYForm"
+
 Property read name as string use $name
 Property Read hidden as boolean use $hidden = false
 
@@ -31,18 +33,23 @@ TTYFORM As Form
 
 Public Sub _new(Start As Long, len As Long, StartMessage As string)
 
-  openTTYWindow()
+  TTYNAME &= Hex(Start, 6)
 
   MemoryStart = Start
-  MemoryEnd = Start
-  MemoryLen = 16
-  TermOut.Print("Ready at " & Hex(Start, 6) & "\n\r")
-  Debug "TTY Defined at : "; Hex(Start, 6); " For length("; len; ")"; Hex(len)
+  MemoryEnd = Start+len-1
+  MemoryLen = len
+
+  openTTYWindow()
+
+  TermOut.Print("Ready at $" & Hex(Start, 6) & "\n\r")
+  if len <> 16 then DEBUG ("TTY warning length should be 16 bytes Assuming 16 bytes")
+  Debug "TTY Defined at : $"; Hex(Start, 6); " For length("; len; ") $"; Hex(len)
   if StartMessage <> "" then
   TermOut.Print(StartMessage & "\n\r")
   endif
   DataBuffer = New Byte[]
   $name = "TTY"
+
 End
 
 Public sub halt()
@@ -52,7 +59,7 @@ Public sub halt()
 end
 
 Public Sub _Put(Value As Byte, address as long)
-   'print "TTY: Write Request Address=$";hex(address,4);;"With Data=$";hex(Value,2)
+  'print "TTY: Write Request Address=$";hex(address,4);;"With Data=$";hex(Value,2)
   if $hidden then
       TTYForm.Show()
       $hidden = false
@@ -111,7 +118,6 @@ Public Sub KeyPress(bkeypress As Byte)
 
 End
 
-
 Public Sub _InRange(Address As Long) As Boolean
 
   If Address >= MemoryStart And Address <= MemoryEnd Then Return True
@@ -122,7 +128,7 @@ End
 Sub openTTYWindow()
 
   TTYForm = New Form As "MyTerminal"
-  TTYFORM.title = " 6502 tty "
+  TTYFORM.title = " em6502 : TTY"& hex(MemoryStart,6)
   TTYForm.persistent = true
   TTYForm.arrangement = arrange.fill
 
@@ -138,20 +144,19 @@ Sub openTTYWindow()
 End
 
 Public Sub MyTerminal_open()
-
-  TTYForm.x = Settings["TTYForm/Window/X", 100]
-  TTYForm.y = Settings["TTYForm/Window/Y", 100]
-  TTYForm.h = Settings["TTYForm/Window/H", 700]
-  TTYForm.w = Settings["TTYForm/Window/w", 600]
+  TTYForm.x = Settings[TTYNAME&"/Window/X", 100]
+  TTYForm.y = Settings[TTYNAME&"/Window/Y", 100]
+  TTYForm.h = Settings[TTYNAME&"/Window/H", 700]
+  TTYForm.w = Settings[TTYNAME&"/Window/w", 600]
 
 End
 
 Public Sub MyTerminal_close()
 
-  Settings["TTYForm/Window/X"] = TTYForm.X
-  Settings["TTYForm/Window/Y"] = TTYForm.y
-  Settings["TTYForm/Window/H"] = TTYForm.h
-  Settings["TTYForm/Window/w"] = TTYForm.w
+  Settings[TTYNAME&"/Window/X"] = TTYForm.X
+  Settings[TTYNAME&"/Window/Y"] = TTYForm.y
+  Settings[TTYNAME&"/Window/H"] = TTYForm.h
+  Settings[TTYNAME&"/Window/w"] = TTYForm.w
   Settings.Save()
 
 End

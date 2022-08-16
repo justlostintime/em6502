@@ -18,6 +18,7 @@ Property SetMemoryProtection As Boolean
 Property Profiling As Boolean
 Property Read ProfileInfo As String[]
 Property ProfileSortOrder As Boolean
+Property MemoryUpdates As Boolean
 
 Event StatusInfo(Info As Cpustatus)
 Event NextInst(Info As String)
@@ -157,6 +158,13 @@ Public Sub A_CPU_NextInst(info As String)
 
 End
 
+Public Sub A_CPU_MemUpdated()
+
+  DisplayMemory()                        ' update any memory monitor running
+
+End
+
+
 Public Sub A_CPU_BreakPoint(pc As Long)
 
   Raise Breakpoint(pc)
@@ -218,11 +226,14 @@ Sub DisplayMemory()
 End
 
 
-Public Sub DumpMem(fromAdr As Long, toAdr As Long, Optional linelen As Integer = 16) As String
+Public Sub DumpMem(fromAdr As Long, toAdr As Long, Optional linelen As Integer = 15) As String
 
   Dim result As String = ""
   Dim j As Integer
   Dim AsChrs As String = ""
+  Dim TotLen As Long = ToAdr - fromAdr + 1
+
+  If lineLen > TotLen Then LineLen = TotLen
 
   For i As Long = FromAdr To ToAdr Step linelen
     result &= Hex(i, 4) & " "
@@ -345,5 +356,17 @@ End
 Private Sub ProfileSortOrder_Write(Value As Boolean)
 
   MyCpu.ProfileSortOrder = Value
+
+End
+
+Private Function MemoryUpdates_Read() As Boolean
+
+  Return MyCpu.DisplayMemory
+
+End
+
+Private Sub MemoryUpdates_Write(Value As Boolean)
+
+  MyCpu.DisplayMemory = value
 
 End

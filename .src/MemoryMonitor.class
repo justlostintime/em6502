@@ -13,6 +13,9 @@ Address As String = "0000"
 
 Public Sub _new(StartAddress As String, EndAddress As String)
 
+  FMain.MyComputer.MemoryUpdates = True
+  watchMem.Show()
+
   Address = StartAddress
   MonitorWindow.w = 600
   MonitorWindow.h = 400
@@ -22,7 +25,7 @@ Public Sub _new(StartAddress As String, EndAddress As String)
   MonitorWindow.title = ("Monitoring Memory Address") & " $" & StartAddress & " " & ("To") & " $" & EndAddress
   MonitorWindow.MemDumpOut.w = MonitorWindow.w - 2
   MonitorWindow.MemDumpOut.h = MonitorWindow.h - 2
-  MonitorWindow.MemDumpOut.text = ("Memory Dump Begins")
+  MonitorWindow.MemDumpOut.text = ("Memory Dump Begins after next Step instruction. Or if Trace is active")
   MonitorWindow.Show()
 
 End
@@ -32,7 +35,6 @@ Public Sub updatemem(data As String)
   MonitorWindow.SetFocus()
   MonitorWindow.MemDumpOut.text = data
   MonitorWindow.MemDumpOut.Refresh()
-  Wait 0.001
 
 End
 
@@ -47,6 +49,10 @@ Public Sub MyForm_Close()
 
   Fmain.MyComputer.MonitorList.Remove(Address)
   FMain.MemoryMonitors.Remove(Address)
+
+  If FMain.MemoryMonitors.count = 0 Then
+    Fmain.MyComputer.MemoryUpdates = False
+  Endif
 
 End
 

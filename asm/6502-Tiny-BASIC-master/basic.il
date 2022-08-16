@@ -32,6 +32,7 @@ XEC:
 
 ;STATEMENT EXECUTOR DO not change the NAME as task manager uses this
 STMT:
+        DEBUGBASIC                ;Check if we are doing a debug for this session
         TSTIRQ      notirq        ;if it is an irq posted, this will cause transfer to irq handler
 notirq:
         TSTLET      LET           ;Test if second field is =
@@ -73,20 +74,41 @@ S1Z:
         CALL       EXPR            ;GET LABEL
         XFER                       ;SET UP AND JUMP
 S2:
-        TST        ERRVEC,"SUB"    ;ERROR IF NO MATCH
-        CALL       EXPR            ;GET DESTINATION
-        DONE                       ;ERROR IF CR NOT NEXT
-        SAV                        ;SAVE RETURN LINE
-        XFER                       ;AND JUMP
+;===========================================================================
+; Process gosub / function
+;
+        TST        ERRVEC,"SUB"     ;ERROR IF NO MATCH
+        CALL       GOSUBSTATEMENT   ;Do the gosub
+        DONE                        ;ERROR IF CR NOT NEXT
+        SAV        GOSUB_RTN        ;SAVE RETURN LINE
+        XFER                        ;AND JUMP
+;
+; End of gosub processing
+;==========================================================================
+; Return from a gosub
 S2b:
         TST        S3,"RE"         ;Speed up pocessing but more memory
         TST        S2a,"T"
-        TST        S2aa,"URN"      ;RETURN STATEMENT
+        TST        S2aa,"URN"      ; RETURN STATEMENT
 S2aa:
-        DONE                       ;MUST BE CR
-        RSTR                       ;RESTORE LINE NUMBER OF CALL
-        NXT        CO              ;SEQUENCE TO NEXT STATEMENT
+        SETR2     0                ; Default no return value
+        TST       S2RetDone,"("    ; Check if we will return some value
+        SETR2     1                ; Indicate a return value provided
+        CALL      EXPR
+        TST       ERRVEC,")"       ; Now a value is on the stack
+
+S2RetDone:
+        DONE                          ; MUST BE CR or :
+        RSTR                          ; RESTORE LINE NUMBER OF CALL
+        TSTBYTE    S2RetFunc,R2,1     ; In This case jumps if equal
+        NXT        CO                 ; SEQUENCE TO NEXT STATEMENT
         IJMP       STMT
+S2RetFunc:
+        IJMP       GOFNRet              ; Back into the Function
+;
+; End of return from gosub
+;============================================================================
+; Process REM statement
 S2a:
         TST        S3,"M"          ;REMark.  Skip rest of line
         NXT        CO
@@ -154,6 +176,14 @@ S7B
 S8:
         TST        S8a1,"TASK"     ; Any Task COmmand
         TST        S8G,"E"
+        TST        S8NoParm,"("
+        CALL       EXPR
+        TST        UNKNOWNLnk,")"
+        ETASK
+        DONE
+        IJMP       STMT
+S8NoParm
+        LIT        0
         ETASK
         DONE                       ; Must be last thing on a line
         IJMP       STMT
@@ -182,8 +212,9 @@ S8aa:
        NXT        CO
        IJMP       STMT            ;Next Statement
 S8TASKNO:
-UNKNOWNVEC1
-       IJMP      UNKNOWN
+
+UNKNOWNLnk
+       iJMP       UNKNOWN
 
 ;
 ;===========================================================
@@ -191,9 +222,9 @@ UNKNOWNVEC1
 S8a1:
         TST        S8b,"POKE("       ; Poke a value into memory
         CALL       EXPR              ; Get address to write to
-        TST        UNKNOWN,COMMA     ; Must have a coma
+        TST        UNKNOWNV,COMMA     ; Must have a coma
         CALL       EXPR              ; Get the value to poke
-        TST        UNKNOWN,")"       ; closing bracket
+        TST        UNKNOWNV,")"       ; closing bracket
         POKEMEM
         DONE
         NXT        CO                ;AND SEQUENCE TO NEXT
@@ -235,111 +266,124 @@ S11:
         NXT        CO              ;SEQUENCE TO NEXT
         IJMP       STMT
 S13:
-	TST        S14,"END"
-	FIN
+        TST        S14,"END"
+        FIN
+
+UNKNOWNV:
+        IJMP      UNKNOWN
 
 S14:
-  TST        S14Z,"IRQ"      ;Check if we are setting IRQ HANDLER
-  CALL       EXPR            ;Get the LABEL .. line NUMBER
-  DONE                       ;must be CR
-  SETIRQ                     ;Set the line number now
-  NXT        CO              ;SEQUENCE TO NEXT STATEMENT
-  IJMP       STMT
+        TST        S14Z,"IRQ"      ;Check if we are setting IRQ HANDLER
+        CALL       EXPR            ;Get the LABEL .. line NUMBER
+        DONE                       ;must be CR
+        SETIRQ                     ;Set the line number now
+        NXT        CO              ;SEQUENCE TO NEXT STATEMENT
+        IJMP       STMT
 
 S14Z:
-  TST       S14S1,"KILL"     ; Kill A running Task
-  CALL      EXPR
-  DONE
-  TASKKILL
-  NXT       CO
-  IJMP      STMT
+        TST       S14S1,"KILL"     ; Kill A running Task
+        CALL      EXPR
+        DONE
+        TASKKILL
+        NXT       CO
+        IJMP      STMT
 
 S14S1:
-	TST        S15,"LIST"      ;LIST COMMAND
-	DONE
-	LST
-	IJMP       CO
+        TST        S15,"LIST"      ;LIST COMMAND
+        DONE
+        LST
+        IJMP       CO
 S15:
-	TST        S16,"RUN"       ;RUN COMMAND
-	DONE
-	VINIT                      ;clear variables
-	LIT        1               ;GOTO line 1
-	XFER                       ;Bob's addition
+        TST        S16,"RUN"       ;RUN COMMAND
+        DONE
+        VINIT                      ;clear variables
+        LIT        1               ;GOTO line 1
+        XFER                       ;Bob's addition
 ; EXIT
-	IJMP       STMT            ;and run!
+        IJMP       STMT            ;and run!
 S16:
-	TST        S17A,"NEW"      ;clear program
-	DONE
-	IJMP       START
+        TST        S16A,"NEW"      ;clear program
+        DONE
+        IJMP       START
+
+S16A:
+        TST        S17A,"TRACE("     ;Are we going to trace
+        CALL       EXPR
+        TST        UNKNOWN,")"
+        TRACEPROGRAM
+        DONE
+        NXT        CO
+        IJMP       STMT
 
 S17A:
-	TST        S17B,"EXIT"      ;allow them to exit BASIC
-	EXIT
+        TST        S17B,"EXIT"      ;allow them to exit BASIC
+        EXIT
 
 ;
 ; Commands related to saving/restoring programs
 ; to/from mass storage.
 ;
 S17B:
-	if	(XKIM || CTMON65) && DISK_ACCESS
+      if      (XKIM || CTMON65) && DISK_ACCESS
 
-	TST        S17C,"SAVE"
-	OPENWRITE
-	DLIST
-	DCLOSE
-	IJMP       CO
+        TST        S17C,"SAVE"
+        OPENWRITE
+        DLIST
+        DCLOSE
+        IJMP       CO
 
 S17C:
-	TST        S18,"LOAD"
-	OPENREAD
+        TST        S18,"LOAD"
+        OPENREAD
 S17CLP:
-	DGETLINE                   ;get line from file
-	TSTL       S17EOL          ;no line num means EOL
-	INSERT                     ;put it into the program
-	IJMP       S17CLP          ;keep going
+        DGETLINE                   ;get line from file
+        TSTL       S17EOL          ;no line num means EOL
+        INSERT                     ;put it into the program
+        IJMP       S17CLP          ;keep going
 S17EOL:
-	DCLOSE                     ;close disk file
-	IJMP	CO                 ;back to start
+        DCLOSE                     ;close disk file
+        IJMP       CO                 ;back to start
 
-S18:	TST 	S19,"DIR"
-	DDIR			   ;Display the directory content
-	IJMP	CO
-	endif
+S18:
+        TST        S19,"DIR"
+        DDIR                      ;Display the directory content
+        IJMP       CO
+      endif
 
-S19:	TST 	UNKNOWN,"ERASE"
-	RMFILE			   ;Erase the file from the disk
-	IJMP	CO
-	endif
+S19:    TST        UNKNOWN,"ERASE"
+        RMFILE                    ;Erase the file from the disk
+        IJMP       CO
+      endif
 
 ;
 ; Else, unknown command.
 ;
 UNKNOWN:
-  ENDIO
-	ERRMSG     ERR_SYNTAX      ;SYNTAX ERROR
+        ENDIO
+        ERRMSG     ERR_SYNTAX      ;SYNTAX ERROR
 
 ;-----------------------------------------------------
 EXPR:
-  TST        EXPRNOT,"NOT"
-  Call       EXPRLOGS
-  LOGNOT
-  RTN
+        TST        EXPRNOT,"NOT"
+        Call       EXPR
+        LOGNOT
+        RTN
 EXPRNOT:
 
 EXPRLOGS:
-  Call       EXPRCMP
-  TST        iLOG1,"AND"
-  Call       EXPRCMP
-  LOGAND
-  RTN
+        Call       EXPRCMP
+        TST        iLOG1,"AND"
+        Call       EXPR
+        LOGAND
+        RTN
 iLOG1:
-  TST       iLOG2,"OR"
-  Call      EXPRCMP
+        TST       iLOG2,"OR"
+  Call      EXPR
   LOGOR
   RTN
 iLOG2:
   TST     iLOG3,"XOR"
-  Call    EXPRCMP
+  Call    EXPR
   LOGXOR
   RTN
 iLOG3:
@@ -425,7 +469,7 @@ T3                           ; Finish processing the Term
   RTN
 
 UNKNOWNVEC:
-	IJMP       UNKNOWN
+        IJMP       UNKNOWN
 
 ;
 ; Factor an expression.  Always test for functions
@@ -448,39 +492,81 @@ F1A:
         GETCHAR
         RTN
 F1A2:
-        TST       F2AZ,"PEEK("     ;Return a value from memory
-        CALL      EXPR             ;Get the address to write to
+        TST       F2AZ,"PEEK("        ;Return a value from memory
+        CALL      EXPR                ;Get the address to write to
         TST       UNKNOWNVEC,")"      ;Closing bracket
         PEEKMEM
         RTN
 F2AZ:
-        TST        F2A,"TASK("      ;Check if we are setting a task start
-        CALL       EXPR             ;Get the LABEL .. line NUMBER
+        TST        F2AZ1,"TASK("      ;Check if we are setting a task start
+        CALL       EXPR               ;Get the LABEL .. line NUMBER
+        TASKCREATE                    ;Allocate the task and initialize it, Suspended
+        TST        F2AZNoParms,COMMA  ;Parameters to be passed to task
+        SAVEMATHSTACK                 ;Push The mathstack
+        TASKGETMATHSTACK              ;Make the New Task Stack The current stack
+F2AZLOOP:
+        CALL       EXPR               ;do the expression leave answer on tasks stack
+        TST        F2AZEndParm,COMMA  ;Parameters to be passed tp task
+        IJMP       F2AZLOOP           ;check for more
+F2AZEndParm
+        RESTOREMATHSTACK              ;Back to normal stack
+        TASKPUTMATHPTR                ;Update the tasks stack pointer with parameter count
+F2AZNoParms:
         TST        UNKNOWNVEC,")"   ;must be )
-        SETTASK                     ;Set the Task up and start it
+        TASKENABLE                  ;Enable the task to execute
         RTN                         ;Returns the Task number
+F2AZ1:
+        TST        F2A,"IPC"        ;Test if one of the IPC functions
+        TST        F2AZa,"S("       ;IPCS - send a message
+        CALL       EXPR             ;Get the message value
+        TST        UNKNOWNVEC,COMMA
+        CALL       EXPR             ;Get pid of task to send to
+        TST        UNKNOWNVEC,")"
+        IPCSEND                     ;Send msg and clear pid msg pending
+        RTN
+F2AZa:
+        TST        F2AZb,"R("       ;IPCR recieve a message , wait if none
+        TST        F2AZa1,")"
+        LIT        0               ;We dont want the pid returned to us
+        IPCIO                      ;Set the io bit and suspend the task till message
+        IPCRECEIVE                 ;Get the message
+        RTN
+F2AZa1
+        TSTV       UNKNOWNVEC      ;must be a variable to return pid of message to
+        TST        UNKNOWNVEC,")"
+        IPCIO                      ;Set the io bit and exit task till message
+        IPCRECEIVE                 ;Get the message
+        RTN
+F2AZb:
+        TST        UNKNOWNVEC,"C()";Returns number of messages on the message queue
+        IPCCHECK
+        RTN
+
+UNKNOWNID:
+        IJMP    UNKNOWN
 ;
 ; RND() is supposed to have an argument but if none
 ; was provided, just assume a large value.
 ;
 F2A:
-	TST        F2B,"RND("
-	TST        F2A1,")"
-	LIT        32766
-	RANDOM
-	RTN
+        TST        F2B,"RND("
+        TST        F2A1,")"
+        LIT        32766
+        RANDOM
+        RTN
+
 F2A1:
-	CALL       FACT            ;GET RANGE
-	TST        UNKNOWNVEC,")"
-	RANDOM
-	RTN
+        CALL       FACT            ;GET RANGE
+        TST        UNKNOWNVEC,")"
+        RANDOM
+        RTN
 
 F2B:
-	TST        F2B2,"ABS("
-	CALL       FACT            ;get value
-	TST        UNKNOWNVEC,")"
-	ABS
-	RTN
+        TST        F2B2,"ABS("
+        CALL       EXPR            ;get value
+        TST        UNKNOWNVEC,")"
+        ABS
+        RTN
 
 F2B2:
         TST       F2Z,"STAT("
@@ -493,36 +579,69 @@ F2Z:
         TASKPID
         RTN
 F2ZA:
-        TST       F2C,"CALL("       ;call machine function
+        TST       F2FUNC,"CALL("                    ;call machine function
         CALL      EXPR
         TST       F2B2A,COMMA
         CALL      EXPR
         TST       UNKNOWNVEC,")"
         CALLFUNC
         RTN
-F2B2A:  TST       UNKNOWNVEC,")"
+                                  ; Run the gosub within this function
+F2B2A:
+        TST       UNKNOWNID,")"
         LIT       0
         CALLFUNC
         RTN
+        
+F2FUNC  TST        F2C,"GOFN"
+        Call       GOSUBSTATEMENT
+        SAV        GOSUB_RTN_VALUE               ;SAVE RETURN LINE
+        XFER
+GOFNRet
+        RTN   
 F2C:
         TSTV       F0
+        TST        F2CLocalTask,"!"
+        IND                             ; we just got a pid
+        TSTVT      UNKNOWNID            ; if it is not another variabe then error, Call test var. task
+
+F2CLocalTask
         TST        F2C1,"["
         CALL       EXPR
-        TST        UNKNOWNVEC,"]"
+        TST        UNKNOWNID,"]"
         SUBSCRIPT
 F2C1:
-        IND                        ;YES, GET THE VALUE.
+        IND                            ;YES, GET THE VALUE.
         RTN
 F0:
-        TSTN       F1              ;NUMBER, GET ITS VALUE.
+        TSTN       F1                  ;NUMBER, GET ITS VALUE.
         RTN
 F1:
-        TST        F2A,"("         ;PARENTHESIZED EXPR.
+        TST        F2RTN,"("           ;PARENTHESIZED EXPR.
         CALL       EXPR
         TST        F2,")"
+F2RTN:
         RTN
 
 F2:
-        ERRMSG     ERR_SYNTAX      ;ERROR.
-
+        ERRMSG     ERR_SYNTAX          ;ERROR.
+;
+;=============================================================
+; Gosub can be both a Function and a Subroutine
+GOSUBSTATEMENT
+        CALL       EXPR            ;GET DESTINATION
+        TST        GOSUBDONE,"("   ;Check if any Parameters
+        STK2TMP                    ;Transfer stack top to temp
+        PUSHMATHSTACK              ;Record stack frame for return
+GOSUBLOOP:
+        CALL       EXPR            ; Allows what ever fits onto stack
+        INCPARMCOUNT
+        TST        GOSUBParmDONE,COMMA
+        IJMP       GOSUBLOOP
+GOSUBParmDONE
+        TST        F2,")"
+        TMP2STK                    ;Restore line to goto
+GOSUBDONE
+        RTN
+        
 ILEND           equ     *

@@ -1,0 +1,49 @@
+' Gambas class file
+
+' Author Westwood JustLostintime
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+Fast Unsafe
+
+Public Address As String = "0000"
+Public Symbol As String = "Symbol"
+Public DisplayData As String = ""
+Public DisplayRow As Integer = 0
+Public MemLength As Integer
+
+Event updaterow(RowNumber As Integer, DisplayInfo As String)
+
+Public Sub _new(SymbolName As String, StartAddress As String, RowNumber As Integer, Optional length As Integer = 2)
+
+  Dim EndAddress As Long = Eval("&H0" & StartAddress) + length - 1
+
+  Address = StartAddress
+  DisplayRow = RowNumber
+  MemLength = length
+  Symbol = SymbolName
+
+  Fmain.MyComputer.MonitorList.Add([Eval("&H0" & StartAddress), EndAddress], StartAddress)
+  Fmain.MemoryMonitors.Add(Me, StartAddress)
+
+End
+
+
+Public Sub ShutDown()
+
+  Fmain.MyComputer.MonitorList.Remove(Address)    ' Sends the update event
+  FMain.MemoryMonitors.Remove(Address)            ' Send the shutdown event
+  If FMain.MemoryMonitors.count = 0 Then
+    Fmain.MyComputer.MemoryUpdates = False
+  Endif
+
+End
+
+Public Sub updatemem(data As String)
+
+  DisplayData = Left(Right(data, -5), -1)
+  Raise updaterow(DisplayRow, DisplayData)
+
+End

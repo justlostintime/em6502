@@ -23,52 +23,52 @@ DiskFileName        ds    14
 ; thing on the line should be the filename.
 ;
 iOPENREAD
-	if	XKIM || CTMON65
-		ldy	CUROFF
-		lda	(CURPTR),y
-		bne	iOPENfn		;might be filename
+          if    XKIM || CTMON65
+                ldy     CUROFF
+                lda     (CURPTR),y
+                bne     iOPENfn               ;might be filename
 ;
 ; No filename supplied.
 ;
-iOPENnofn	lda	#0
-		ldx	#ERR_NO_FILENAME
-		jmp	iErr2
+iOPENnofn       lda     #0
+                ldx     #ERR_NO_FILENAME
+                jmp     iErr2
 ;
 ; Add the offset into the buffer start
 ;
-iOPENfn		clc
-		tya
-		adc	CURPTR
-		tay			;LSB
-		lda	CURPTR+1
-		adc	#0
-		tax
-		jsr	DiskOpenRead	;attempt to open file
-		bcc	Ropenok		;branch if opened ok
+iOPENfn         clc
+                tya
+                adc     CURPTR
+                tay                       ;LSB
+                lda     CURPTR+1
+                adc     #0
+                tax
+                jsr     DiskOpenRead      ;attempt to open file
+                bcc     Ropenok           ;branch if opened ok
 ;
 ; Open failed
 ;
-Rdfail		ldx	#ERR_READ_FAIL
-Rdfail2		lda	#0
-		jmp	iErr2
+Rdfail          ldx     #ERR_READ_FAIL
+Rdfail2         lda     #0
+                jmp     iErr2
 ;
 ; Clear counts and offsets so the next read will
 ; cause the file to be read.
 ;
-Ropenok		lda	#0
-		sta	diskBufOffset
-		sta	diskBufLength
-		jmp	NextIL
-	endif
+Ropenok         lda     #0
+                sta     diskBufOffset
+                sta     diskBufLength
+                jmp     NextIL
+          endif
 
 ;
-;==============================jlit 08/02/2022========
+;==============================JUSTLOSTINTIME 08/02/2022========
 ;Remove a file from the disk
 iRMFILE
-	if	XKIM || CTMON65
-		ldy	CUROFF
-		lda	(CURPTR),y
-		beq	iRMnofn
+          if	XKIM || CTMON65
+                ldy     CUROFF
+                lda     (CURPTR),y
+                beq     iRMnofn
 ;
 		clc
 		tya
@@ -170,46 +170,47 @@ iGetEOF		ldx	getlinx
 ; DISK
 ;
 iDDIR
-	if	XKIM || CTMON65
-		jsr	DiskDir
+          if    XKIM || CTMON65
+                jsr     DiskDir
 ;
 ; Get/Display each entry
 ;
-DiskDirLoop	ldx	#DiskFileName/256	;pointer to buffer
-                ldy	#DiskFileName&$ff
-                jsr	DiskDirNext		;get next entry
-                bcs	DiskDirEnd		;carry = end of list
-                jsr	puts
-                db	"   ",0
+DiskDirLoop     ldx     #DiskFileName>>8              ;pointer to buffer
+                ldy     #DiskFileName&$ff
+                jsr     DiskDirNext                   ;get next entry
+                bcs     DiskDirEnd                    ;carry = end of list
+                jsr     puts
+                db      "   ",0
 ; Print the line to the console
-                ldx	#DiskFileName/256	;pointer to buffer
-                ldy	#DiskFileName&$ff
-                lda 	0
-                jsr	PrtStr			;else print name
-                jsr	crlf
+                ldx     #DiskFileName>>8              ;pointer to buffer
+                ldy     #DiskFileName&$ff
+                lda     0
+                jsr     PrtStr                        ;else print name
+                jsr     crlf
 
-                jmp	DiskDirLoop		;do next entry
-DiskDirEnd	jmp	NextIL
-	endif
+                jmp     DiskDirLoop                   ;do next entry
+                
+DiskDirEnd      jmp     NextIL
+          endif
 ;
 ;=====================================================
 ; Does a LIST to a Disk file.
 ;
 iDLIST
-	if	XKIM || CTMON65
-		jsr	SetOutDisk
-		jmp	iLST2
-	endif
+          if    XKIM || CTMON65
+                jsr     SetOutDisk
+                jmp     iLST2
+          endif
 ;
 ;=====================================================
 ; Closes any pending disk file.  Okay to call if there
 ; is no open file.
 ;
 iDCLOSE
-	if	XKIM || CTMON65
-		jsr	DiskClose
-		jmp	NextIL
-	endif
+          if     XKIM || CTMON65
+                jsr     DiskClose
+                jmp     NextIL
+          endif
 ;
 ;=====================================================
 ; This gets the next byte from an open disk file.  If
@@ -217,59 +218,59 @@ iDCLOSE
 ; Else, C is clear and A contains the character.
 ;
 getNextFileByte
-	if	XKIM || CTMON65
-		ldx 	diskBufOffset
-		cpx	diskBufLength
-		bne	hasdata		;branch if still data
+          if    XKIM || CTMON65
+                ldx     diskBufOffset
+                cpx     diskBufLength
+                bne     hasdata                 ;branch if still data
 ;
 ; There is no data left in the buffer, so read a
 ; block from the SD system.
 ;
-		lda	#BUFFER_SIZE
-		ldx	#buffer>>8
-		ldy	#buffer&$ff
-		jsr	DiskRead
-		bcs	getNextEof
+                lda     #BUFFER_SIZE
+                ldx     #buffer>>8
+                ldy     #buffer&$ff
+                jsr     DiskRead
+                bcs     getNextEof
 ;
 ; A contains the number of bytes actually read.
 ;
-		sta	diskBufLength	;save length
-		cmp	#0		;shouldn't happen
-		beq	getNextEof
+                sta     diskBufLength               ;save length
+                cmp     #0                          ;shouldn't happen
+                beq     getNextEof
 ;
-		ldx	#0
-hasdata		lda	buffer,x
-		inx
-		stx	diskBufOffset
-		clc
-		rts
+                ldx     #0
+hasdata         lda     buffer,x
+                inx
+                stx     diskBufOffset
+                clc
+                rts
 ;
-getNextEof	lda	#0
-		sta	diskBufOffset
-		sta	diskBufLength
-		sec
-		rts
+getNextEof      lda     #0
+                sta     diskBufOffset
+                sta     diskBufLength
+                sec
+                rts
 ;
 ;=====================================================
 ; Set output vector to the disk output function
 ;
-SetOutDisk	lda	#DOUT&$ff
-		sta	BOutVec
-		lda	#DOUT/256
-		sta	BOutVec+1
-		rts
+SetOutDisk      lda     #DOUT&$ff
+                sta     BOutVec
+                lda     #DOUT/256
+                sta     BOutVec+1
+                rts
 ;
 ;=====================================================
 
-DOUT		sta	buffer
-		lda	#1
-		ldy	#buffer&$ff
-		ldx	#buffer/256
-		jsr	DiskWrite
+DOUT            sta     buffer
+                lda     #1
+                ldy     #buffer&$ff
+                ldx     #buffer>>8
+                jsr     DiskWrite
 ;
 ; need error checking here
 ;
-		rts
-	endif
+                rts
+          endif
 
 
