@@ -1,18 +1,20 @@
 10 REM test ipc is working
+15 cls
 20 a = Task(2000) : b = task(3000,a)
 30 taskw(a,b)
-40 print " test completed "
+40 ? : ? : print "Test completed  a's exitcode =";a!^; "  B's exit code = ";b!^
 50 end
 
 2000 Rem this task will wait for a message
-2005 print "PID : ";PID, "Waiting for message"
+2005 print "PID : ";PID, "Waiting for message" : ?
 2010 a = ipcr(b)
-2020 print "I am PID : ";PID,"Recieved msg : ";a, "From PID : ",b
-2030 taske
+2020 print "I am PID : ";PID,"Recieved msg : ";a, "From PID : ",b : ?
+2030 taske(94)
 
 3000 Rem Send a message to another task
 3010 a = #[0] : Rem should be the pid start for first task
 3020 Print "PID : ";PID, " Sending message to PID : ";a
-3030 print "Result of sending msg = ";:if ipcs(300, a) ? "Sent" : taske
-3040 print "Failed"
-3050 taske
+
+3030 print "Result of sending msg = ";:if ipcs(300, a) ? "Sent" : return(84)
+
+3040 print "Failed": taske(84)

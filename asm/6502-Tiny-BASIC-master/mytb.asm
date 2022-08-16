@@ -714,6 +714,9 @@ iRET            jsr     popLN
 ; Return from GOSUB function
 ;
 iRSTR           ldy     GOSUBSTACKPTR
+                beq     iRSTRNoValue
+                lda     R2
+                sta     MQ
                 dey
                 lda     (GOSUBSTACK),y
                 cmp     #GOSUB_RTN_VALUE
@@ -731,7 +734,7 @@ iRSTRExit
 
 iRSTRErr        lda     taskPtr               ; Check if this is task zero
                 beq     taskZeroEnd           ; this is task zero just stop with error
-                lda     R2
+                lda     MQ
                 bne     taskRet
                 jsr     pushFalse             ; the result code by default is 0
 taskRet:
