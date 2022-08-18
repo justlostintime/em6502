@@ -111,19 +111,19 @@ popILPC       ldy     ILSTACKPTR
 ;
 
 findLine
-                lda     #ProgramStart&$ff     ;Start of program -> CURPTR
+                lda     ProgramStart         ;Start of program -> CURPTR
                 sta     CURPTR
-                lda     #ProgramStart>>8
+                lda     ProgramStart+1
                 sta     CURPTR+1
 ;
 ; At end of code?
 ;
 iXFER1
                 lda     CURPTR                ; chk CURPTR = END PROGRAM
-                cmp     PROGRAMEND            ; at end of program then stop run
+                cmp     ProgramEnd            ; at end of program then stop run
                 bne     xfer2                 ; not end
                 lda     CURPTR+1
-                cmp     PROGRAMEND+1
+                cmp     ProgramEnd+1
                 bne     xfer2                 ;Not at end
 ;
 ; Line not found and the end of the program was
@@ -151,7 +151,7 @@ xfer2           lda     R0
 ; See if this line is greater than the one we're
 ; searching for.
 ;
-xfernotit       ldy     #2              ;Changed from to skip leading length and lesat significat digit
+xfernotit       ldy     #2              ;Changed from to skip leading length and least significat digit
                 lda     (CURPTR),y      ;compare MSB first
                 cmp     R0+1
                 bcc     xfer3
@@ -170,8 +170,8 @@ xfer4:          sec             ;We found a line number greater
 ; Not the line (or droid) we're looking for.  Move to
 ; the next line.
 ;
-xfer3		jsr	FindNextLine
-		jmp	iXFER1
+xfer3           jsr     FindNextLine
+                jmp     iXFER1
 ;
 ;=====================================================
 ; This advances CURPTR to the next line.  If there
@@ -182,27 +182,28 @@ xfer3		jsr	FindNextLine
 ; Update this points to the 1 byte line length  ****************
 ;
 FindNextLine
-		ldy	#3		;skip line number and length byte
-		sty	CUROFF		;this is the new offset
-		ldy     #0
-		lda     (CURPTR),y       ;Get the length
-		clc
-		adc	CURPTR
-		sta	CURPTR
-		bcc	FindNext4	;exit
-		inc	CURPTR+1
-FindNext4	rts
+                ldy     #3                ;skip line number and length byte
+                sty     CUROFF            ;this is the new offset
+                ldy     #0
+                lda     (CURPTR),y        ;Get the length
+                clc
+                adc     CURPTR
+                sta     CURPTR
+                lda     CURPTR+1
+                adc     #0
+                sta     CURPTR+1
+FindNext4       rts
 ;
 ;=====================================================
 ; This compares CURPTR to PROGRAMEND and returns Z set
 ; if they are equal, Z clear if not.
 ;
-AtEnd		lda	CURPTR
-		cmp	PROGRAMEND
-		bne	atendexit
-		lda	CURPTR+1
-		cmp	PROGRAMEND+1
-atendexit	rts
+AtEnd           lda     CURPTR
+                cmp     ProgramEnd
+                bne     atendexit
+                lda     CURPTR+1
+                cmp     ProgramEnd+1
+atendexit       rts
 ;
 ;=====================================================
 ; Print the contents of R0 as a signed decimal number.
@@ -289,11 +290,11 @@ pplusok		sta	R0+1
 ;
 ; Table of powers-of-ten
 ;
-dectable	dw	10000
-            dw	1000
-            dw	100
-            dw	10
-dectableend	equ	*
+dectable        dw      10000
+                dw      1000
+                dw      100
+                dw      10
+dectableend     equ     *
 ;
 ;=====================================================
 ; Convert an ASCII string to a number.  On input,
@@ -981,54 +982,7 @@ ILBadRange
                 sec
                 rts
 
-;
-;=====================================================
-; This function might go away eventually, but was
-; added to provide data for other pieces of code.
-; It has some ties to the operating environment that
-; will need to be customized for the target system.
-;
-GetSizes
-;
-; Here is machine specific code to get the highest
-; memory location that can be used by BASIC.
-;
-          if ProgramStart < $2000
-                lda     #$ff
-                sta     HighMem               ;$13ff for KIM-1
-                lda     #$DE                  ;#$13
-                sta     HighMem+1
-          else
-                lda     #$ff
-                sta     HighMem               ;$CFFF otherwise
-                lda     #$cf
-                sta     HighMem+1
-          endif
-;
-; This computes the available memory remaining.
-;
-                sec
-                lda     HighMem
-                sbc     PROGRAMEND
-                sta     FreeMem
-		sta	R0
-		lda	HighMem+1
-		sbc	PROGRAMEND+1
-		sta	FreeMem+1
-		sta	R0+1
-;
-; This computes the size of the current user program.
-;
-		sec
-		lda	PROGRAMEND
-		sbc	#ProgramStart&$ff
-		sta	UsedMem
-		lda	PROGRAMEND+1
-		sbc	#ProgramStart>>8
-		sta	UsedMem+1
-;
-		rts
-;
+
 ;=====================================================
 ; Set output vector to the console output function
 ;
@@ -1161,7 +1115,7 @@ hexta1      adc     #'0                       ;then fall into...
 ;
 iCLEARSCREEN
                 jsr     puts
-                db      $1b,'[,'3,'J,0
+                db      $1b,'[,'2,'J,0
                 jmp     NextIL
 
 ;====================================================

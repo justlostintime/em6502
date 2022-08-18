@@ -11,7 +11,8 @@
 '' device. This is configured to work with the
 '' CTMON65 default rom, but may be used more generally
 
-fast unsafe
+'fast unsafe
+
 use "gb.form"
 use "gb.form.terminal"
 
@@ -24,6 +25,20 @@ Public Databuffer As Byte[]
 Public EchoChar As Boolean = false
 Public MyObs As Observer
 
+Public isTask as boolean = false
+
+Public $InPipe as string = ""
+Public $OutPipe as string = ""
+
+Public $RdPipe as file                  'Device read interface
+Public $WrPipe as file                  'device Write interface
+
+Public $tRdPipe as file                 'TaskRead interface
+Public $tWrPipe as file                 'TaskWrite interface
+
+Public TTYTermProcess as process
+
+
 TTYNAME as string = "TTYForm"
 
 Property read name as string use $name
@@ -34,22 +49,48 @@ TTYFORM As Form
 Public Sub _new(Start As Long, len As Long, StartMessage As string)
 
   TTYNAME &= Hex(Start, 6)
+  $InPipe  = temp("I_"&TTYNAME)
+  $OutPipe = temp("O_"&TTYNAME)
 
-  MemoryStart = Start
-  MemoryEnd = Start+len-1
-  MemoryLen = len
+  'if not isTask then
+      MemoryStart = Start
+      MemoryEnd = Start+len-1
+      MemoryLen = len
+      DataBuffer = New Byte[]
+      $name = "TTY"
 
-  openTTYWindow()
+      try $WrPipe = pipe $OutPipe for write
+      if error then
+        print "Error opening Output pipe Driver Side ";$OutPipe
+      else
+        try $RdPipe = pipe $InPipe for read watch
+        if error then
+           print "Error opening Input pipe Driver Side ";$InPipe
+        endif
+      endif
+  'else
+      try $tWrPipe = pipe $InPipe for write
+      if error then
+        print "Error opening Output pipe Task Side ";$INPipe
+      else
+        try $tRdPipe = pipe $OutPipe for read watch
+        if error then
+           print "Error opening Output pipe Task Side ";$InPipe
+        endif
+      endif
 
-  TermOut.Print("Ready at $" & Hex(Start, 6) & "\n\r")
-  if len <> 16 then DEBUG ("TTY warning length should be 16 bytes Assuming 16 bytes")
-  Debug "TTY Defined at : $"; Hex(Start, 6); " For length("; len; ") $"; Hex(len)
-  if StartMessage <> "" then
-  TermOut.Print(StartMessage & "\n\r")
-  endif
-  DataBuffer = New Byte[]
-  $name = "TTY"
+      openTTYWindow()
 
+      Write #$WrPipe, "Ready at $" & Hex(Start, 6) & "\n\r"
+      if len <> 16 then DEBUG ("TTY warning length should be 16 bytes Assuming 16 bytes")
+      Debug "TTY Defined at : $"; Hex(Start, 6); " For length("; len; ") $"; Hex(len)
+
+      if StartMessage <> "" then
+          Write #$WrPipe, StartMessage & "\n\r"
+      endif
+  'endif
+  Catch
+    print "TTY Device error :" ; Error.text, Error.where
 End
 
 Public sub halt()
@@ -58,7 +99,7 @@ Public sub halt()
    TTYFORM.close()
 end
 
-Public Sub _Put(Value As Byte, address as long)
+fast unsafe Public Sub _Put(Value As Byte, address as long)
   'print "TTY: Write Request Address=$";hex(address,4);;"With Data=$";hex(Value,2)
   if $hidden then
       TTYForm.Show()
@@ -69,15 +110,15 @@ Public Sub _Put(Value As Byte, address as long)
    ' if value = 10 or value = 13 then
    '   TermOut.Print("\n\r")
    ' else
-      TermOut.Print(Chr(Value))
-      TermOut.refresh()
+      write #$WrPipe, Value as byte
+      'TermOut.refresh()
    ' endif
   else                                              'Write Status and config stuff
     'print "Status set ACIA"&bin(Value)
   endif
 End
 
-Public Sub _get(address As Long) As Byte
+fast unsafe Public Sub _get(address As Long) As Byte
  'print "TTY: Read Request Address=$";hex(address,4)
  if $hidden then
       TTYForm.Show()
@@ -105,20 +146,20 @@ Public Sub _get(address As Long) As Byte
 
 End
 
-Public Sub KeyPress(bkeypress As Byte)
+fast unsafe Public Sub KeyPress(bkeypress As Byte)
 
- 'if bkeypress = 13 then bKeyPress = 10
+ if bkeypress = 127 then bKeyPress = 8
  DataBuffer.Add(bKeypress, 0)
  If EchoChar Then
-    TermOut.Print(Chr(bKeyPress))
+    write #$WrPipe, Chr(bKeyPress)
     If bkeypress = 13 Then
-      TermOut.Print("\n")
+      write #$WrPipe, "\n"
     Endif
  Endif
 
 End
 
-Public Sub _InRange(Address As Long) As Boolean
+fast unsafe Public Sub _InRange(Address As Long) As Boolean
 
   If Address >= MemoryStart And Address <= MemoryEnd Then Return True
   Return False
@@ -140,7 +181,18 @@ Sub openTTYWindow()
   TermOut.Y = 1
   TermOut.X = 1
   TTYFORM.show()
-  TermOut.print("\e[32m")
+
+
+  try TermOut.ConnectTo($tWrPipe, $tRdPipe,me)
+  if error then
+    print "TTY Device Error at openTTYWindow;ConnectTo : ";error.text,error.where
+  endif
+
+  Write #$WrPipe, "\e[32m"              ' set text color to green
+
+  Catch
+     print "TTY Device Error at openTTYWindow : ";error.text,error.where
+
 End
 
 Public Sub MyTerminal_open()
@@ -171,12 +223,50 @@ Public Sub MyTerminal_hide()
 END
 
 
-Public Sub MyView_KeyPress()
- dim mykey as string = key.text
- 'print key.text;
- if isAscii(mykey)          'isletter(mykey) or isnumber(mykey) or ispunct(mykey) or mykey = "\n" or mykey = "\r" OR isSpace(mykey) Then
-      KeyPress(Asc(Key.text))
- endif
+'Public Sub MyView_KeyPress()
+' dim mykey as string = key.text
+' print key.text;
+' if isAscii(mykey)          'isletter(mykey) or isnumber(mykey) or ispunct(mykey) or mykey = "\n" or mykey = "\r" OR isSpace(mykey) Then
+'      KeyPress(Asc(Key.text))
+' Endif
+'
+'End
+
+'' this function should be called when the pipe recieves data from the terminal keyboard
+fast unsafe Public Sub file_read()
+
+  Dim Buffer As string
+
+  while lof($RdPipe)
+    Read #$RdPipe, Buffer, 1
+    Debug  asc(buffer);
+    KeyPress(asc(buffer[0]))
+    'error "Keypress value = ";asc(buffer[0])
+  wend
+  
+  Catch
+  print "TTY Device File Read : ";Error.text
+
+End
+
+'' This function is our preprocess filter
+'' all we are doing here is to translate \n to \r\n
+'' it recieves the data, and the length of the data
+Public Sub PreProcess(ByRef data As Variant, ByRef len As Variant) As Boolean
+'
+'  Debug "Process Called len = "; len
+'  If len = 1 Then
+'    Select Case data
+'      Case "\r"
+'        data = Replace(data, "\r", "\n\r")
+'   End Select
+'  Else
+'    Data = Replace(data, "\n", "\r\n")
+'  Endif
+'
+  'error "To display : ";data
+ ' error len
+ Return True
 
 End
 

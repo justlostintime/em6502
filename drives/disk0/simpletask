@@ -1,5 +1,6 @@
-10 print "Simple task test, to activate all tasks",r
-15 a = 2000 : b= 10 :c=1
+
+10 a=10:b=15:r=0
+15 print "Simple task test, to activate all tasks",r
 20 x = task(1000): ? "PID = ";x
 30 y = task(2000): ? "PID = ";y
 40 z = task(3000): ? "PID = ";z
@@ -12,68 +13,67 @@
 
 110 taskw(x,y,z,k,l,m,n,o,p)      : Rem wait for all the tasks to finish
 
-191 print "End of loop ",r
-195 r = r + c : if r < a goto b
+195 inc r : if r < a goto b
 200 print "Test complete"
 210 end
 
 1000 print "Begin new task 1000 PID=";PID
-1005 a = 0 : b = 20 :c = 1040 : d= 1010 :e=1
-1010 a = a + e
+1005 a = 0 : b = 80 :c = 1040 : d= 1010 :e=1
+1010 inc a
 1020 if a > b then goto c
 1030 goto d
 1040 print "End of task 1000 ";PID
 1050 taske
 
 2000 print "Begin new task 2000 PID=";PID
-2005 b = 0 : s =20 : c=2010 :d=1: a = 3
-2010 b = b + d
+2005 b = 0 : s =3 : c=2010 :d=1: a = 3
+2010 inc b
 2020 if b < s then goto c
 2040 print "End of task 2000 ";PID
 2050 taske
 
 3000 print "Begin new task 3000 PID=";PID
-3005 c = 0 : a=20 :b=3040 :d = 3010 :h=1
-3010 c = c + h
+3005 c = 0 : a=50 :b=3040 :d = 3010 :h=1
+3010 inc c
 3020 if c > a then goto b
 3030 goto d
 3040 print "End of task 3000 ";PID
 3050 taske
 
 4000 print "Begin new task 4000 PID=";PID
-4005 d = 0 :e=20 : f=4040 : g=4010 : h =1
-4010 d = d + h
+4005 d = 0 :e=3 : f=4040 : g=4010 : h =1
+4010 inc d
 4020 if d > e then goto f
 4030 goto g
 4040 print "End of task 4000 ";PID
 4050 taske
 
 5000 print "Begin new task 5000 PID=";PID
-5005 e = 0 :f = 20 :g=5010 : h = 1
-5010 e = e + h
+5005 e = 0 :f = 100 :g=5010 : h = 1
+5010 inc e
 5020 if e < f then goto g
 5040 print "End of task 5000 ";PID
 5050 taske
 
 6000 print "Begin new task 6000 PID=";PID
-6005 f = 0 : a=1 :b=10000 :c=20:d=6010
-6010 f = f + a
+6005 f = 0 : a=1 :b=10000 :c=40 :d=6010
+6010 inc f
 6015 gosub b
 6020 if f < c then goto d
 6040 print "End of task 6000 ";PID, q
 6050 taske
 
 7000 print "Begin new task 7000 PID=";PID
-7005 g = 0 : a=1 :b=10000:c=7010:d=20
-7010 g = g + a
+7005 g = 0 : a=1 :b=10000:c=7010:d=6
+7010 inc g
 7015 gosub b
 7020 if g < d then goto c
 7040 print "End of task 7000 ";PID, q
 7050 taske
 
 8000 print "Begin new task 8000 PID=";PID
-8005 h = 0 : a = 1 :b=8010 : c=20 : d=10000
-8010 h = h + a
+8005 h = 0 : a = 1 :b=8010 : c=15 : d=10000
+8010 inc h
 8015 gosub d
 8020 if h < c then goto b
 8040 print "End of task 8000 ";PID, q
@@ -81,13 +81,14 @@
 
 9000 print "Begin new task 9000 PID=";PID
 9005 i = 0 : j = 1 : k = 9010 : a=20 : b = 10000
-9010 i = i + j
+9010 inc i
 9015 gosub b
 9020 if i < a then goto k
 9040 print "End of task 9000 ";PID, q
 9050 taske
 
 10000 Rem gosub test
-10010 q = q + 1
+10005 a = 0
+10010 inc q
 10020 return
 

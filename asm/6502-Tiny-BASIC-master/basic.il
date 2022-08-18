@@ -53,6 +53,20 @@ LETBE:
         NXT        CO              ;AND SEQUENCE TO NEXT
         IJMP       STMT
 S1:
+        TST        S1Dec,"INC"     ;Increment variable
+        TSTV       ERRVEC
+        INCVAR
+        DONE
+        NXT        CO
+        IJMP       STMT
+S1Dec:
+        TST        S1Iret,"DEC"     ;Increment variable
+        TSTV       ERRVEC
+        DECVAR
+        DONE
+        NXT        CO
+        IJMP       STMT
+S1Iret:
         TST        S1S1,"IRET"     ;test return from interupt
         TST        S1Sa,"URN"
 S1Sa:
@@ -307,6 +321,14 @@ S16:
         IJMP       START
 
 S16A:
+        TST        S16Trace,"SLICE"
+        CALL       EXPR
+        SLICE
+        DONE
+        NXT         CO
+        IJMP        STMT
+
+S16Trace:
         TST        S17A,"TRACE("     ;Are we going to trace
         CALL       EXPR
         TST        UNKNOWN,")"
@@ -342,7 +364,7 @@ S17CLP:
         IJMP       S17CLP          ;keep going
 S17EOL:
         DCLOSE                     ;close disk file
-        IJMP       CO                 ;back to start
+        IJMP       CO              ;back to start
 
 S18:
         TST        S19,"DIR"
@@ -592,13 +614,13 @@ F2B2A:
         LIT       0
         CALLFUNC
         RTN
-        
+
 F2FUNC  TST        F2C,"GOFN"
         Call       GOSUBSTATEMENT
         SAV        GOSUB_RTN_VALUE               ;SAVE RETURN LINE
         XFER
 GOFNRet
-        RTN   
+        RTN
 F2C:
         TSTV       F0
         TST        F2CLocalTask,"!"
@@ -643,5 +665,5 @@ GOSUBParmDONE
         TMP2STK                    ;Restore line to goto
 GOSUBDONE
         RTN
-        
+
 ILEND           equ     *

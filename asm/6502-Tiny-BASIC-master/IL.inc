@@ -465,4 +465,16 @@
     db {3}                ; Value to compare
   endm
 
+  Macro INCVAR
+   db 98
+   endm
+  Macro DECVAR
+   db 99
+   endm
+   
+  Macro SLICE
+   db 100
+   endm
+
+
 

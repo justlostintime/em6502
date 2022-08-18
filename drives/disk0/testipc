@@ -9,7 +9,7 @@
 2005 print "PID : ";PID, "Waiting for message" : ?
 2010 a = ipcr(b)
 2020 print "I am PID : ";PID,"Recieved msg : ";a, "From PID : ",b : ?
-2030 taske(94)
+2030 taske(a)
 
 3000 Rem Send a message to another task
 3010 a = #[0] : Rem should be the pid start for first task

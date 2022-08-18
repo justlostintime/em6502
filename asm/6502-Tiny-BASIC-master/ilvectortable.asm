@@ -114,4 +114,7 @@
       dw  iStk2Tmp      ;95       Move top of stack to temp
       dw  iTmp2Stk      ;96       Move Temp to stack
       dw  iTSTBYTE      ;97       Test byte and branch if true
+      dw  iINCVAR       ;98       Increment variable
+      dw  iDECVAR       ;99       Decrement variable
+      dw  iSLICE        ;100      set the time slice for tasks
 

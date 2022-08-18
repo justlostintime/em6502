@@ -3,7 +3,7 @@
 ; Data required by task management
 ; currently each context is about 30 bytes and is swapped
 ; into and out of page zero on each task switch....
-; LOL yes it is slow, but works for this itteration.
+; LOL yes it is slow, but works for this iteration.
 ;
 
                 Seg Code
@@ -125,8 +125,14 @@ taskResetComplete
 ;
 iTaskSwitch     tya
                 pha
+                
                 lda     taskResetValue            ; Always reset the counter value
                 sta     taskCurrentCycles         ; Update the counter with the new value
+                dec     taskCurrentCycles+1       ; dec high order byte
+                bne     iTaskSwitchDone           ; Exit if not zero
+                
+                lda     taskResetValue+1
+                sta     taskCurrentCycles+1
 
                 lda     IRQPending                ; Skip this if we are processing an irq
                 ora     taskIOPending             ; If set then don't switch
@@ -345,6 +351,7 @@ iTaskKill       jsr     iTaskValid
 iNTask
                 lda     #1
                 sta     taskCurrentCycles
+                sta     taskCurrentCycles+1
                 jmp     NextIL
 ;
 ;=======================================================
@@ -364,7 +371,7 @@ iWTASKWAIT:
                 jsr     pushR0                  ; Push R0 back onto the stack
                 lda     #1
                 sta     taskCurrentCycles       ; Give up the cycles
-
+                sta     taskCurrentCycles+1
                 jsr     restoreIL
                 jmp     tstBranch
 ;
@@ -401,6 +408,7 @@ iETaskCont
                 dec     taskCounter               ; reduce the number of active tasks
                 lda     #1
                 sta     taskCurrentCycles         ; Make it 1 as rtn will dec and check
+                sta     taskCurrentCycles+1
                 jsr     TaskSetExitCode
 iETaskExit
                 jmp     NextIL
@@ -431,6 +439,22 @@ iTaskPutMathPtr
                 ldy     #MATHSTACKPTRPOS
                 sta     (MQ),y
                 jmp     NextIL
+;
+;================================================================
+; Set the time slice for each task
+iSLICE
+                jsr   popR0
+                lda   R0
+                sta   taskResetValue
+                lda   R0+1
+                sta   taskResetValue+1
+                bne   iSliceSet
+                inc   taskResetValue+1             ; must be at least 1 high counter
+                lda   #1
+                sta   taskCurrentCycles
+                sta   taskCurrentCycles+1
+iSliceSet
+                jmp   NextIL
 ;================================================================
 ; Find an empty slot in the taskTable
 ; Return the index in y

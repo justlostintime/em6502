@@ -115,7 +115,8 @@ ILSTACKSIZE       equ     20      ;number of entries in ilstack
 GOSUBSTACKSIZE    equ     16      ;Depth of gosub/For-Next nesting max is 64 times TASKTABLE LENGTH must < 256
 VARIABLESSIZE     equ     27      ;26 variables + 1 for exit code
 TASKCOUNT         equ     10      ;Task Table count, up to 64 tasks
-TASKCYCLESDEFAULT equ     200     ;Default Task Switch 0-255 uses a single byte
+TASKCYCLESDEFAULT equ     255     ;Default Task Switch 0-255 uses a single byte
+TASKCYCLESHIGH    equ     2       ;hi order count
 MESSAGESMAX       equ     GOSUBSTACKSIZE      ;Not used msg q and gosub grow towards each other and over flow when they meet
 ;
 ; Gosub entry types
@@ -227,14 +228,6 @@ CONTEXTEND              equ     *                      ; End of swap context
 CONTEXTLEN              equ     CONTEXTEND - CONTEXT   ; length of the context
 
 dpl                     ds      2       ;Used as a pointer to call il instructions
-tempIL                  ds      2       ;Temp IL programcounter storage
-tempIlY                 ds      1       ;Temp IL Y register storage
-offset                  ds      1       ;IL Offset to next inst when test fails
-lineLength              ds      1       ;Length of current line
-
-taskIOPending           ds      1       ; 1 = pending Set when a task wants to read keyboard/ write to screen
-taskRDPending           ds      1       ; 1 = background read is pending
-
 ;
 ; This is zero if in immediate mode, or non-zero
 ; if currently running a program.  Any input from
@@ -252,7 +245,22 @@ FROM                    ds      2       ;Used for basic prog insert/remove
 ;
 PrtFrom                 ds      2      ; FROM
 ;
-
+;=====================================================
+;Pointers for memory Management
+;Allocated block are not chained but can be followed for all memory by the associated length
+; Mem block format is
+;       0-1   pointer to next block for free blocks
+;       0-1   for allocated blocks
+;         0   type of block, blob | array bytes, ints ,string | single type byte or integer
+;         1   refrence counter ... lol only up to 256 but it is something
+;       2-3   length constant for exevy type of memory block
+; Memory is recombined as it is released
+; The memory manager is not interupted durring allocation
+; or freeing of memory
+;====================================================
+MemFreeList            ds       2                 ; list of free blocks of memory
+MemR0                  ds       2                 ; source for copy/move/Init
+MemR1                  ds       2                 ; Destination for copy/move
 ;
 ;=====================================================
 ;
@@ -309,7 +317,7 @@ cold2           jsr     SetOutConsole
                 db      "Concurrent Tiny BASIC v1.0.3  IRQs/Tasks"
                 db      CR,LF,0
 ;
-                jsr     GetSizes           ;setup the free space available
+                jsr     MemInit                     ;setup the free space available
 
 calcstack       lda     #1
                 sta     taskCounter                 ; Initialize number of tasks to 1
@@ -321,10 +329,16 @@ calcstack       lda     #1
                 lda     #IL>>8
                 sta     ILPC+1
 ;
-                lda     #ProgramStart&$ff           ; user prog
-                sta     PROGRAMEND
-                lda     #ProgramStart>>8
-                sta     PROGRAMEND+1
+;                lda     ProgramStart               ; user prog
+;                sta     ProgramEnd
+;                lda     ProgramStart+1
+;                sta     ProgramEnd+1
+;
+;  Init time slices defaults
+                lda     #TASKCYCLESHIGH
+                sta     taskResetValue+1
+                lda     #TASKCYCLESDEFAULT
+                sta     taskResetValue
 ;
 ; Initialize the pseudo-random number sequence...
 ;
@@ -495,21 +509,22 @@ iINIT           lda     #0                      ;clear IL stack pointer,gosub st
                 lda     #GOSUBSTACKSIZE*4
                 sta     MESSAGEPTR              ; message ptr is bottom stack space
 ;
-                lda     #ProgramStart&$ff        ;user prog
+                lda     ProgramStart            ;user prog
                 sta     CURPTR
                 sta     taskTable+1
-                sta     PROGRAMEND
-                lda     #ProgramStart>>8
+                sta     ProgramEnd
+                lda     ProgramStart+1
                 sta     CURPTR+1
                 sta     taskTable+2
-                sta     PROGRAMEND+1
+                sta     ProgramEnd+1
                 lda     #TASKACTIVE
                 sta     taskTable              ;Mark the first slot as active
                 lda     #1
                 sta     taskCounter            ;there is always one task / Main task
-                lda     #TASKCYCLESDEFAULT
-                sta     taskResetValue
+                lda     taskResetValue
                 sta     taskCurrentCycles      ; set up the task switch counts
+                lda     taskResetValue+1
+                sta     taskCurrentCycles+1
 ;
 ; fall into XINIT...
 ;
@@ -1243,19 +1258,19 @@ iArrayError     jsr     popR0
 ; tempIly, and dpl.
 ;
 iLST            jsr     SetOutConsole
-iLST2           lda     #ProgramStart&$ff
+iLST2           lda     ProgramStart
                 sta     dpl
-                lda     #ProgramStart>>8
+                lda     ProgramStart+1
                 sta     dpl+1
 ;
 ; dpl/dph point to the current line.  See if we're at
 ; the end of the program.
 ;
 iLSTloop        lda      dpl
-                cmp     PROGRAMEND
+                cmp     ProgramEnd
                 bne     iLstNotEnd
                 lda     dpl+1
-                cmp     PROGRAMEND+1
+                cmp     ProgramEnd+1
                 beq     iLstdone
 ;
 iLstNotEnd      ldy     #1              ;Change:  Skip first byte length
@@ -1321,142 +1336,143 @@ iGETLINE
 ; Insert the line into the program or delete the line
 ; if there is nothing after the line number,
 ;
-iINSRT		ldy	#0
-		jsr	getDecimal	;convert line #
-		jsr	SkipSpaces      ;Ignore any spaces after the line number
-		sty	offset		;Save the start of the program line text
+iINSRT          ldy     #0
+                jsr     getDecimal      ;convert line #
+                jsr     SkipSpaces      ;Ignore any spaces after the line number
+                sty     offset          ;Save the start of the program line text
 ;
 ; Now find the line OR the next higher line OR the
 ; end of the program.
 ;
-		jsr	findLine        ; Look for the line number in the current program
-					; Returns Z and curptr point to the line if found
-					; Returns C and curptr at next higher line if not found and there is a higher line
-					; Returns ZC clear and curptr to end of program if higher than all other lines
+                jsr     findLine        ; Look for the line number in the current program
+                                        ; Returns Z and curptr point to the line if found
+                                        ; Returns C and curptr at next higher line if not found and there is a higher line
+                                        ; Returns ZC clear and curptr to end of program if higher than all other lines
 ;
 ; If the line exists, it needs to be removed.
 ;
-		bne	insert2		;jump if no line found higer or a higher line number found, at end of program curptr points to program end
+                bne     insert2         ;jump if no line found higer or a higher line number found, at end of program curptr points to program end
 ;
 ; Get length of line to be removed, we fall thru to here if we find a matching line
 ;
-;		jsr	getCURPTRLength	;results in Y , curptr is pointing to point we need to insert the line
-                ldy	#0
-		lda	(CURPTR),y	;Change the length is now at beginning of the line
-		tay
-					;If it is equal we delete the line and replace it, get length
-					;then adjust all program line after up or down depending on len of line
-					;If next higher then just move everythimg down by length bytes
-					;This call will return how many bytes in the line we found
-		sty	lineLength      ;Save the length of the line we found
+;               jsr     getCURPTRLength ;results in Y , curptr is pointing to point we need to insert the line
+                ldy     #0
+                lda     (CURPTR),y      ;Change the length is now at beginning of the line
+                tay                     
+                                        ;If it is equal we delete the line and replace it, get length
+                                        ;then adjust all program line after up or down depending on len of line
+                                        ;If next higher then just move everythimg down by length bytes
+                                        ;This call will return how many bytes in the line we found
+                sty     lineLength      ;Save the length of the line we found
 ;
 ; Compute the new end of the program first.
 ;
-		sec                     ;Set the carry bit
-		lda	PROGRAMEND      ;Get low byte of program end
-		sbc	lineLength      ;Subtract the length of the current line
-		sta	PROGRAMEND      ;save it
-		lda	PROGRAMEND+1
-		sbc	#0              ;Process the carry
-		sta	PROGRAMEND+1    ;We now have the new end of program with the line removed
+                sec                     ;Set the carry bit
+                lda     ProgramEnd      ;Get low byte of program end
+                sbc     lineLength      ;Subtract the length of the current line
+                sta     ProgramEnd      ;save it
+                lda     ProgramEnd+1
+                sbc     #0              ;Process the carry
+                sta     ProgramEnd+1    ;We now have the new end of program with the line removed
 ;
 ; Copy CURPTR into R1 for working
 ;
-		lda	CURPTR          ;Save the current position to r1 copy destination
-		sta	R1
-		lda	CURPTR+1
-		sta	R1+1
+                lda     CURPTR          ;Save the current position to r1 copy destination
+                sta     R1
+                lda     CURPTR+1
+                sta     R1+1
 ;
 ; See if we're at the end.
 ;
-InsDelChk	lda	R1             ;Compare the copy dest to end of memory to check if we are finished copy
-		cmp	PROGRAMEND
-		bne	InsDelLoop
-		lda	R1+1
-		cmp	PROGRAMEND+1
-		beq	insert2       ;Now the existing line was removed lets go insert the new line
+InsDelChk       lda     R1                       ;Compare the copy dest to end of memory to check if we are finished copy
+                cmp     ProgramEnd
+                bne     InsDelLoop
+                lda     R1+1
+                cmp     ProgramEnd+1
+                beq     insert2       ;Now the existing line was removed lets go insert the new line
 ;
 ; Move one byte, move to next location.
 ;
-InsDelLoop  	ldy	lineLength    ;Move a byte up to remove the space
-		beq	insert2       ;if this is zero it is a big oops
-		lda	(R1),y
-		ldy	#0
-		sta	(R1),y
-		inc	R1
-		bne	InsDelChk
-		inc	R1+1
-		jmp	InsDelChk     ; Check if we have moved the last byte
+InsDelLoop      ldy     lineLength    ;Move a byte up to remove the space
+                beq     insert2       ;if this is zero it is a big oops
+                lda     (R1),y
+                ldy     #0
+                sta     (R1),y
+                inc     R1
+                bne     InsDelChk
+                inc     R1+1
+                jmp     InsDelChk       ; Check if we have moved the last byte
 ;
 ; Deletion is done.
 ; If the new line is empty we're done.  Now we have to open a space for the line we are inserting
 ;
-insert2		ldy	offset		;get back ptr  Get the current offset
-		lda	LINBUF,y	;next byte     Get the next byte o be stored
-		beq	mvUpFini	;empty line    if there is a null then we were deleting a line, no content
+insert2         ldy     offset          ; get back ptr  Get the current offset
+                lda     LINBUF,y        ;next byte     Get the next byte o be stored
+                beq     mvUpFini        ;empty line    if there is a null then we were deleting a line, no content
 ;
 ; CURPTR points to where the line will be inserted.
 ;
-		jsr	getLineLength	;get bytes needed Reload the number of bytes required for the new line
+                jsr     getLineLength   ;get bytes needed Reload the number of bytes required for the new line
 ;
-		lda	PROGRAMEND      ;Load the start address for the copy
-		                        ;At this point curptr still contains the location we will insert data
-		sta	FROM
-		lda	PROGRAMEND+1
-		sta	FROM+1
+                lda     ProgramEnd      ;Load the start address for the copy
+                                        ;At this point curptr still contains the location we will insert data
+                sta     FROM
+                lda     ProgramEnd+1
+                sta     FROM+1
 ;
-mvup1		ldy	#0		;always zero from From copy position to use indirect addressing
-		lda	(FROM),y
-		ldy	lineLength      ;Now load y with new offset downward to store the byte
-		sta	(FROM),y        ;Save the new byte
+mvup1           ldy     #0              ;always zero from From copy position to use indirect addressing
+                lda     (FROM),y
+                ldy     lineLength      ;Now load y with new offset downward to store the byte
+                sta     (FROM),y        ;Save the new byte
 ;
-		lda	FROM            ;Check if we have copies the last byte
-		cmp	CURPTR
-		bne	mvUpMore
-		lda	FROM+1
-		cmp	CURPTR+1
-		beq	mvUpDone        ; yes from now equals curptr where we insert the new line
+                lda     FROM            ;Check if we have copied the last byte
+                cmp     CURPTR
+                bne     mvUpMore
+                lda     FROM+1
+                cmp     CURPTR+1
+                beq     mvUpDone        ; yes from now equals curptr where we insert the new line
 ;
 ; Not done yet
 ;
-mvUpMore	lda	FROM	    	;decrement FROM to copy the next byte
-		bne	mvUpMore2
-		dec	FROM+1
-mvUpMore2	dec	FROM
-		jmp	mvup1           ;Loop until everything is moved
+mvUpMore        lda     FROM            ;decrement FROM to copy the next byte
+                bne     mvUpMore2
+                dec     FROM+1
+mvUpMore2       dec     FROM
+                jmp     mvup1           ;Loop until everything is moved
 ;
 ; All done with copy.
 ;
-mvUpDone	clc                     ;Ok, We are now ready to copy the new line to the program
-		lda	lineLength      ;Number of bytes to copy from line buff
-		adc	PROGRAMEND      ;Now pdate the end of program address for space we just opened
-		sta	PROGRAMEND
-		lda	PROGRAMEND+1
-		adc	#0
-		sta	PROGRAMEND+1    ;Program end now points to the correct enpty space
+mvUpDone	
+                clc                     ;Ok, We are now ready to copy the new line to the program
+                lda     lineLength      ;Number of bytes to copy from line buff
+                adc     ProgramEnd      ;Now pdate the end of program address for space we just opened
+                sta     ProgramEnd
+                lda     ProgramEnd+1
+                adc     #0
+                sta     ProgramEnd+1    ;Program end now points to the correct enpty space
 ;
 ;===================jlit use length before line newline
 
-		ldy	#0		;Set offset of copy
+                ldy     #0              ;Set offset of copy
                 lda     lineLength      ;We will insert the actual length of the line first
                 sta     (CURPTR),y      ;Store the length
                 iny
-		lda	R0              ;Store the line number next
-		sta	(CURPTR),y
-		iny
-		lda	R0+1
-		sta	(CURPTR),y
-		iny
+                lda     R0              ;Store the line number next
+                sta     (CURPTR),y
+                iny
+                lda     R0+1
+                sta     (CURPTR),y
+                iny
 ;
-		ldx	offset         ;Load the offset into line buffer in page zero
-mvUpLoop2	lda	LINBUF,x       ;get a byte
-		sta	(CURPTR),y     ;Store into Space opened, copies the closing null as well
-		beq	mvUpFini       ;hit the null at end of line then we are done
-		inx
-		iny
-		bne	mvUpLoop2      ;in case y wraps past 256 bytes stop
+                ldx     offset         ;Load the offset into line buffer in page zero
+mvUpLoop2       lda     LINBUF,x       ;get a byte
+                sta     (CURPTR),y     ;Store into Space opened, copies the closing null as well
+                beq     mvUpFini       ;hit the null at end of line then we are done
+                inx
+                iny
+                bne     mvUpLoop2      ;in case y wraps past 256 bytes stop
 ;
-mvUpFini	jmp	NextIL
+mvUpFini        jmp     NextIL
 ;
 ;=====================================================
 ; Pops the top value of the ILPC stack and stores it
@@ -1646,6 +1662,37 @@ iTSTDONEtrue
 tstBranchLink   jmp   tstBranch
 ;
 ;=====================================================
+; Inc and dec a variable , faster than a = a + 1
+iINCVAR:
+               jsr      popR0
+               ldy      #0
+               clc
+               lda      #1
+               adc      (R0),y
+               sta      (R0),y
+               bcc      iINCDONE
+               iny
+               lda      #0
+               adc      (R0),y
+               sta      (R0),y
+iINCDONE:
+               jmp      NextIL
+iDECVAR:
+               jsr      popR0
+               ldy      #0
+               sec
+               lda     (R0),y
+               sbc     #1
+               sta     (R0),y
+               iny
+               lda     (R0),y
+               adc     #0
+               sta     (R0),y
+               jmp     NextIL
+
+
+;
+;=====================================================
 ; TSTV is followed by an 8 bit signed offset.  If the
 ; value at (CURPTR),CUROFF appears to be a variable
 ; name, move to the next IL statement.  Else, add the
@@ -1735,9 +1782,9 @@ iTSTVcontinue
 iTSTVat
                 iny
                 sty     CUROFF                 ;it is a valid variable
-                lda     PROGRAMEND             ;set flag to let evaluator to use PROGRAMEND as the root
+                lda     ProgramEnd             ;set flag to let evaluator to use PROGRAMEND as the root
                 sta     R0
-                lda     PROGRAMEND+1
+                lda     ProgramEnd+1
                 sta     R0+1
                 jmp     pushR0nextIl           ;place this onto the stack
 
@@ -1867,7 +1914,7 @@ ErrStkOver      ldx     #ERR_STACK_OVER_FLOW            ; Flag any error in line
 ; This places the number of free bytes on top of the
 ; stack.
 ;
-iFREE           jsr     GetSizes
+iFREE           jsr     MemFree
                 jsr     pushR0
                 jmp     NextIL
 ;
@@ -2152,6 +2199,7 @@ iTRACEPROG      jsr     popR0
                 org       PROGEND
 ;=================================================================
 ;
+                include  "mem.asm"
                 include  "gosub.asm"
                 include  "tasks.asm"
                 include  "ipc.asm"
@@ -2206,8 +2254,8 @@ TASKTABLEEND    equ     *                             ; End of task table
 TASKTABLELEN    equ     TASKTABLEEND-taskTable        ; actual length of the task table
 
 ;Task Cycle Counter and reset count
-taskCurrentCycles       ds      1
-taskResetValue          ds      1
+taskCurrentCycles       ds      2
+taskResetValue          ds      2
 taskCounter             ds      1                     ; Count of active tasks
 
 ;
@@ -2237,6 +2285,16 @@ random          ds      2
 BOutVec         ds      2         ; This is used by functions to vector to the current output rtn
 BInVec          ds      2         ; This is used by fuction to vector to current input rtn
 tempy           ds      1         ;temp y storage
+
+; Moved from page zero as one clock cycle diff gives more space on page zero
+tempIL                  ds      2       ;Temp IL programcounter storage
+tempIlY                 ds      1       ;Temp IL Y register storage
+offset                  ds      1       ;IL Offset to next inst when test fails
+lineLength              ds      1       ;Length of current line
+
+taskIOPending           ds      1       ; 1 = pending Set when a task wants to read keyboard/ write to screen
+taskRDPending           ds      1       ; 1 = background read is pending
+
         if      XKIM
 buffer          ds      BUFFER_SIZE
         endif
@@ -2246,7 +2304,8 @@ buffer          ds      BUFFER_SIZE
 ; it's where the next line added to the end will be
 ; placed.
 ;
-PROGRAMEND      ds      2         ; End of users basic program
+ProgramStart    ds      2         ; Start Of usable memory
+ProgramEnd      ds      2         ; End of users basic program
 HighMem         ds      2         ; highest location
 UsedMem         ds      2         ; size of user program
 FreeMem         ds      2         ; amount of free memory
@@ -2264,7 +2323,8 @@ FreeMem         ds      2         ; amount of free memory
 	if FIXED
 		org	$2000
 	endif
-ProgramStart	equ	*
+
+FreeMemStart      equ *
 /*
 	if	CTMON65 || XKIM
 		SEG Code
