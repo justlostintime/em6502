@@ -48,8 +48,11 @@ Public Sub Form_Open()
   DeviceList.Rows.Count = 50
   DeviceList.Header = GridView.Horizontal
   DeviceList.Columns[0].text = "Device Name       "
+  DeviceList.Columns[0].Width = 100
   DeviceList.Columns[1].Text = "Start "
+  DeviceList.Columns[1].Width = 75
   DeviceList.Columns[2].text = "Length"
+  DeviceList.Columns[2].Width = 75
   DeviceList.Columns[3].text = "Device Specific Parameters"
 
   FMain.Text = Application.Title & " " & Application.Version & " Computer Name : " & CurrentComputerDefinition
@@ -796,17 +799,20 @@ End
 
 Public Sub SetAsDefault_Click()
 
-  DefaultComputerDefinition = Computers.Selection[0]
+  If Computers.Selection.count = 0 Then
+    If ComputerName.text <> "" Then DefaultComputerDefinition = ComputerName.text
+  Else
+    DefaultComputerDefinition = Computers.Selection[0]
+  Endif
 
 End
 
 Public Sub MakeActive_Click()
 
   If Computers.Selection.count = 0 Then Return
-  CurrentComputerDefinition = Computers.Selection[0]
+  CurrentComputerDefinition = IIf(Computers.Selection.count = 0, ComputerName.text, Computers.Selection[0])
   FMain.Hide()
   Form_Close()
-  MyComputer = New Computer As "the_computer"
   Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
   LoadedList.Clear()
   SymLoadedList.Clear()
@@ -815,6 +821,9 @@ Public Sub MakeActive_Click()
   BreakPointList.Clear()
   ShutdownMemMonitors()
   FMain.Show()
+
+  'CliInterface.RunComputer(CurrentComputerDefinition)
+  MyComputer = New Computer As "the_computer"
   MyComputer.Configure(Comp)
 
 End
@@ -953,6 +962,10 @@ Public Sub Form_Resize()
   Disassembly.w = EditProg.W
   Disassembly.h = InfoSection.h - Disassembly.y - 30
   SearchPaths.w = EditorButtons.w - SearchPaths.x - 10
+  CompDefs.w = InfoSection.w
+  CompDefs.h = InfoSection.h
+  DeviceList.w = CompDefs.w - 10
+  DeviceList.h = CompDefs.h - DeviceList.y - 30
 
 End
 

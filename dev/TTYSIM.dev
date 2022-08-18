@@ -46,6 +46,7 @@ Property Read hidden as boolean use $hidden = false
 
 TTYFORM As Form
 
+'==================================================================================================
 Public Sub _new(Start As Long, len As Long, StartMessage As string)
 
   TTYNAME &= Hex(Start, 6)
@@ -92,13 +93,19 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
   Catch
     print "TTY Device error :" ; Error.text, Error.where
 End
-
+'======================================================================================
 Public sub halt()
-   debug "TTY Halted"
+   try close $WrPipe
+   try close $RdPipe
+   try close $tRdPipe
+   try close $tWrPipe
+   
+   error "TTY Halted"
    TTYFORM.persistent = false
    TTYFORM.close()
+   
 end
-
+'===================================================================================================
 fast unsafe Public Sub _Put(Value As Byte, address as long)
   'print "TTY: Write Request Address=$";hex(address,4);;"With Data=$";hex(Value,2)
   if $hidden then
@@ -117,7 +124,7 @@ fast unsafe Public Sub _Put(Value As Byte, address as long)
     'print "Status set ACIA"&bin(Value)
   endif
 End
-
+'================================================================================
 fast unsafe Public Sub _get(address As Long) As Byte
  'print "TTY: Read Request Address=$";hex(address,4)
  if $hidden then
@@ -145,7 +152,7 @@ fast unsafe Public Sub _get(address As Long) As Byte
   return status
 
 End
-
+'==========================================================================
 fast unsafe Public Sub KeyPress(bkeypress As Byte)
 
  if bkeypress = 127 then bKeyPress = 8
@@ -158,14 +165,14 @@ fast unsafe Public Sub KeyPress(bkeypress As Byte)
  Endif
 
 End
-
+'====================================================================================
 fast unsafe Public Sub _InRange(Address As Long) As Boolean
 
   If Address >= MemoryStart And Address <= MemoryEnd Then Return True
   Return False
 
 End
-
+'===================================================================================
 Sub openTTYWindow()
 
   TTYForm = New Form As "MyTerminal"
@@ -194,7 +201,7 @@ Sub openTTYWindow()
      print "TTY Device Error at openTTYWindow : ";error.text,error.where
 
 End
-
+'=================================================================
 Public Sub MyTerminal_open()
   TTYForm.x = Settings[TTYNAME&"/Window/X", 100]
   TTYForm.y = Settings[TTYNAME&"/Window/Y", 100]
@@ -202,7 +209,7 @@ Public Sub MyTerminal_open()
   TTYForm.w = Settings[TTYNAME&"/Window/w", 600]
 
 End
-
+'===========================================================================
 Public Sub MyTerminal_close()
 
   Settings[TTYNAME&"/Window/X"] = TTYForm.X
@@ -212,17 +219,17 @@ Public Sub MyTerminal_close()
   Settings.Save()
 
 End
-
+'================================================================================
 Public sub MyTerminal_resize()
     TermOut.h = TTYForm.h - 2
     TermOut.w = TTYForm.w - 2
 end
-
+'==========================================================================================
 Public Sub MyTerminal_hide()
     $Hidden = true
 END
 
-
+'===========================================================================================
 'Public Sub MyView_KeyPress()
 ' dim mykey as string = key.text
 ' print key.text;
@@ -231,7 +238,7 @@ END
 ' Endif
 '
 'End
-
+'===========================================================================================================
 '' this function should be called when the pipe recieves data from the terminal keyboard
 fast unsafe Public Sub file_read()
 
@@ -243,12 +250,12 @@ fast unsafe Public Sub file_read()
     KeyPress(asc(buffer[0]))
     'error "Keypress value = ";asc(buffer[0])
   wend
-  
+
   Catch
   print "TTY Device File Read : ";Error.text
 
 End
-
+'===========================================================================================
 '' This function is our preprocess filter
 '' all we are doing here is to translate \n to \r\n
 '' it recieves the data, and the length of the data

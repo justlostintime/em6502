@@ -1,7 +1,7 @@
 # Gambas Form File 3.0
 
 { Form Form
-  MoveScaled(0,0,195,106)
+  MoveScaled(0,0,238,132)
   { helpMe Menu
     Text = ("Help")
     { ToolsIncluded Menu
@@ -72,8 +72,9 @@
     }
     Index = 1
     Text = ("Computers")
-    { Panel2 Panel
-      MoveScaled(0,0,82,92)
+    { CompDefs Panel
+      MoveScaled(0,0,82,86)
+      Background = Color.SoftBlue
       Expand = True
       AutoResize = True
       { !Computers ListView
@@ -162,9 +163,10 @@
         Text = ("Make Active")
       }
       { DeviceList TableView
-        MoveScaled(1,42,80,49)
-        Font = Font["+4"]
+        MoveScaled(1,42,80,35)
         ToolTip = ("Select your required device from the list. If it is the second or more device of this type you must add a  colon and index after the device type\nexample     ttydev:1\nor your device will not be recognized. \nThe second colum contains the starting address for the device and the next colum contains the length of memory required by the device.\nThe forth colum contains device specific parameters.\nExample for a rom contains the binary file to be loaded.\nfor ram it contains the if any the binary to load at boot.\n\n")
+        Padding = 8
+        Header = GridView.Horizontal
       }
       { Label25 Label
         MoveScaled(0,30,80,4)
