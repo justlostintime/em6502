@@ -4,17 +4,21 @@
   MoveScaled(0,0,97,97)
   { DevAddress TextBox
     MoveScaled(2,9,14,4)
+    ToolTip = ("This is the address the Device should be mapped to in memory. \n\nFor the ct65mon the default io address block is e000-efff.\n                                                                Rom occupies  f000-ffff\n                                                                Ram  must 0-01fff\n                                                                Ram other 0200-dfff\n")
   }
   { DevLength TextBox
     MoveScaled(19,9,13,4)
+    ToolTip = ("The size of the memory window required by the devide.\n\nFor ctmon65      ram can be 0-DFFF long aor any block size  in that range\n                                   io devices are expected to use at least 16 bytes, but do not have to\n")
   }
   { DevParameters TextBox
     MoveScaled(35,9,51,4)
+    ToolTip = ("This is a text string wich is passed to the device being loaded.\nExample:\nfor ram : \"mytb.bin\"\nfor rom: \"ctmon65.bin\"\n\nFor a TTYSIM device : \"This is the dislayed intro text\"")
   }
   { WriteData Button
     MoveScaled(75,25,14,4)
     Enabled = False
-    Text = ("Write Data")
+    ToolTip = ("Write the Data to the device")
+    Text = ("Send Data")
   }
   { DataToSend TextBox
     MoveScaled(2,25,48,4)
@@ -33,19 +37,21 @@
     ToolTip = ("decimal number of bytes to read")
   }
   { ReadAutoInc CheckBox
-    MoveScaled(2,45,34,4)
+    MoveScaled(2,45,41,4)
     Text = ("Auto Increment on reading data")
   }
   { LoadDevice Button
     MoveScaled(2,15,14,4)
+    ToolTip = ("This will load your device into memory and begin to execute it.")
     Text = ("Load Device")
   }
   { WriteAutoInc CheckBox
-    MoveScaled(2,30,32,4)
+    MoveScaled(2,30,39,4)
+    ToolTip = ("This will Cause the address to be incremented after each byte is send to the device")
     Text = ("Auto Increment on sending data")
   }
   { Label1 Label
-    MoveScaled(2,5,14,4)
+    MoveScaled(1,5,17,4)
     Text = ("Device StartAdr")
   }
   { Label2 Label
@@ -54,7 +60,7 @@
     Text = ("Mem Length")
   }
   { Label3 Label
-    MoveScaled(36,5,35,4)
+    MoveScaled(36,5,48,4)
     Text = ("Device Specific parameters")
   }
   { Label4 Label
@@ -67,22 +73,26 @@
     Text = ("Hex Address")
   }
   { Label6 Label
-    MoveScaled(7,35,11,3)
+    MoveScaled(6,35,14,3)
+    Font = Font["Ubuntu Mono"]
     Text = ("Hex Address")
   }
   { Label7 Label
-    MoveScaled(24,35,20,3)
+    MoveScaled(24,35,25,3)
+    Font = Font["Ubuntu Mono"]
     Text = ("Number Bytes to read")
   }
   { DeviceInTest TextBox
     MoveScaled(2,56,43,5)
-    Background = Color.Transparent
+    Background = Color.LightBackground
+    ToolTip = ("The Name of the device being tested")
     ReadOnly = True
     Border = False
   }
   { DevStatus TextBox
-    MoveScaled(2,60,40,4)
-    Background = Color.Transparent
+    MoveScaled(2,62,43,5)
+    Background = Color.LightBackground
+    ToolTip = ("The status of the device being tested.")
     ReadOnly = True
     Border = False
   }
@@ -92,6 +102,7 @@
   }
   { DataTransmitted TextArea
     MoveScaled(72,35,22,59)
+    ToolTip = ("This is the list of bytes written to the device")
     ReadOnly = True
   }
   { Label10 Label
@@ -107,12 +118,18 @@
   { ReadData Button
     MoveScaled(51,39,14,4)
     Enabled = False
+    ToolTip = ("This will actually do the read from your device")
     Text = ("Read Data")
   }
-  { StatusInfo TextArea
+  { !StatusInfo TextArea
     MoveScaled(2,69,43,25)
+    #Public = True
+    ToolTip = ("Status information about the current test being conducted.")
+    Text = ("Nothing Yet.")
+    ReadOnly = True
   }
   { DataRecieved TextArea
     MoveScaled(48,47,22,47)
+    ToolTip = ("This lists the bytes received from the device")
   }
 }

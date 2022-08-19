@@ -4,6 +4,8 @@ CurrentFile As String = ""
 MyScript As New ScriptManager(True, FMain.AsmDeviceDirectory)
 Originaltext As String = ""
 
+Public CurrentDeviceClass As Class = Null
+
 Public Sub OpenDev_Click()
 
   Dialog.path = FMain.AsmDeviceDirectory & "/"
@@ -91,8 +93,6 @@ Public Sub Selectalldev_Click()
   DeviceEditor.SelectAll()
 
 End
-
-Public CurrentDeviceClass As Class = Null
 
 Public Sub devcompile_Click()
 

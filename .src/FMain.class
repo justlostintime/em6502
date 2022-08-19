@@ -905,7 +905,7 @@ Public Sub creditDue_Click()
 
   Dim a As New WebInfoViewer
 
-  a.SetUrl("https://github.com/justlostintime/6502Emulator-DevEnv/wiki", "Developed by JustLostInTime@gmail.com")
+  a.SetUrl("https://github.com/justlostintime/em6502/wiki", "Developed by JustLostInTime@gmail.com")
   a.Show()
   Wait 0.001
 
@@ -915,7 +915,7 @@ Public Sub m6502help_Click()
 
   Dim a As New WebInfoViewer
 
-  a.SetUrl("https://github.com/justlostintime/6502Emulator-DevEnv/wiki", "Developed by JustLostInTime@gmail.com")
+  a.SetUrl("https://github.com/justlostintime/em6502/wiki", "Developed by JustLostInTime@gmail.com")
   a.Show()
   Wait 0.001
 
@@ -998,5 +998,15 @@ Public Sub WatchSymbol_Click()
   Next
 
 
+
+End
+
+Public Sub M65C02Assemblerxa_Click()
+
+  Dim a As New WebInfoViewer
+
+  a.SetUrl("http://www.floodgap.com/retrotech/xa/", "Developed by André Fachat Maintained By  Cameron Kaiser")
+  a.Show()
+  Wait 0.001
 
 End

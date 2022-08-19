@@ -43,7 +43,10 @@ public sub _new(address as long, len as long, parameters as string)
   $MemoryStart = Address
   $MemoryEnd = Address + Len
   $MemoryLen = Len
-  $Period = val(trim(parameters))
+  try $Period = val(trim(parameters))
+  if error then
+    error "IrqTimer expects the Parameter field to hold a decimal time length only\nGot Error : ";error.text
+  endif
   debug $Name;;"Default timeout set to :";;$Period
   $SysTimer = new Timer as "TheTimer"
   $SysTimer.ignore = true
@@ -80,12 +83,12 @@ public sub _put(Value as byte, address as long)
      case $MemoryStart              ' enable/disable the timer status 0 off, 1 on
 
         if Value = 1 then
-        
+
           $Systimer.Stop()
           $IRQPending = false
           $IRQDisabled = false
           $Systimer.Start()
-        
+
         else if Value = 0 then
           $SysTimer.Stop()
           $IRQPending = false

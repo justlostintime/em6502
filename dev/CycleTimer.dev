@@ -48,6 +48,10 @@ public sub _new(address as long, len as long, parameters as string)
   $MemoryEnd = Address + Len
   $MemoryLen = Len
   $Period = val(trim(parameters))
+  if error then
+    error "CycleTimer  expects the Parameter field to hold a decimal time length only\nGot Error : ";error.text
+  endif
+  
   debug $Name;;"Default timeout set to :";;$Period
 
 end
@@ -117,7 +121,7 @@ public sub _put(Value as byte, address as long)
 end
 
 public sub Tick()
-  
+
   if $IRQDisabled or if $IRQPENDING then return
   dec $CountDown
   if $CountDown = 0 then

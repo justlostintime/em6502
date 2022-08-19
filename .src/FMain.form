@@ -95,6 +95,7 @@
         AutoResize = True
         { ComputerName TextBox
           MoveScaled(17,2,34,4)
+          Text = ("Enter a name here if you are creating a new computer definition.\nThis will also display the name  of  any selected computer to the left.\nIf you want to make a copy of a computer, just click on it then change the name here and then click save.\n ")
         }
         { Label23 Label
           MoveScaled(1,2,16,4)
@@ -106,8 +107,8 @@
         }
         { SpeedDef SliderBox
           MoveScaled(17,8,35,4)
-          ToolTip = ("Sets the amount of time between instructions, Gambas is not\nable to get a time at a small enough timeslot to make this\nmore acurate. Hence the name speed not MHZ.\nThis is use only when autostart is comfigured.\nIt defaults to 500 otherwise.\n")
-          MaxValue = 500
+          ToolTip = ("Sets the amount of time between instructions, Gambas is not\nable to get a time at a small enough time slot to make this\nmore accurate. Hence the name speed not MHZ.\nThis is use only when auto-start is com figured.\nIt defaults to 500 otherwise. 1000 is the fastest speed")
+          MaxValue = 1000
           Value = 500
         }
         { AutoStartActive CheckBox
@@ -116,6 +117,7 @@
         }
         { AutoStartAddress TextBox
           MoveScaled(17,13,15,4)
+          ToolTip = ("If an address is entered here, when the computer starts the program counter will be set to this address just before the cpu starts to execute.")
         }
       }
       { !NewComp Button
@@ -143,6 +145,7 @@
       { ActiveComputer TextBox
         MoveScaled(17,1,18,4)
         Background = Color.Transparent
+        Text = ("Displays the name of the currently executing computer definition")
         ReadOnly = True
         Border = False
       }
@@ -150,6 +153,8 @@
         MoveScaled(55,1,17,4)
         #Public = True
         Background = Color.Transparent
+        ToolTip = ("Displays the name of the current system default computer definition. That is the computer displayed here will be automatically loaded and started when the em6502 is run.")
+        Text = ("Default")
         ReadOnly = True
         Border = False
       }
@@ -204,22 +209,27 @@
       Background = Color.SelectedBackground
       { SaveProg Button
         MoveScaled(13,1,12,3)
+        ToolTip = ("Save an assempler source file")
         Text = ("Save")
       }
       { SaveAsProg Button
         MoveScaled(26,1,12,3)
-        Text = ("Save As")
+        ToolTip = ("Save the current Source  with a new name and possible location")
+        Text = ("Save")
       }
       { NewProg Button
         MoveScaled(40,1,17,3)
+        ToolTip = ("Create a new empty assempler source file")
         Text = ("New")
       }
       { AsmbProg Button
         MoveScaled(60,1,17,3)
+        ToolTip = ("Invokes the assembler, and creats the binary output if there are no errors. See the AsmOuput tab for results. It should auto switch you to that tab after to complete the assembly.\nDefaults to the dasm assembler unless the xa assembler is installed.\nDasm executable is included as part of this project. and is always available by default.")
         Text = ("Assemble")
       }
       { OpenProg Button
         MoveScaled(1,1,11,3)
+        ToolTip = ("OPen an assempler source file")
         Text = ("Open")
       }
       { !AsmDasmSelect RadioButton
@@ -252,6 +262,7 @@
     { !AsmOutput TerminalView
       MoveScaled(1,1,81,86)
       #Public = True
+      ToolTip = ("Displays the ouptput from the last assembly.")
       ShowScrollBar = True
       ReadOnly = True
     }
@@ -287,6 +298,7 @@
       { LastBreakAddress TextBox
         MoveScaled(49,1,22,5)
         Background = Color.Transparent
+        ToolTip = ("The address of the next executable instruction. after a break point halts the cpu")
         ReadOnly = True
         Border = False
       }
@@ -322,11 +334,13 @@
         MoveScaled(38,6,35,37)
         #Public = True
         Font = Font["Monospace,-1"]
+        ToolTip = ("List of symbols from any *.sym files found for the loaded binaries. This searches ~/6502/asm for these files")
         Sorted = True
         ScrollBar = Scroll.Vertical
       }
       { AddAddress Button
         MoveScaled(31,20,5,3)
+        ToolTip = ("Adds any selected break address to the break list. Don't forget to enable the breakpoints. These will only have an effect if the enable break points is selected.")
         Text = ("<--")
       }
       { RemoveAddress Button
@@ -354,7 +368,7 @@
       }
       { RestoreBreakpoints Button
         MoveScaled(29,34,9,3)
-        ToolTip = ("Restore the breakpoints from the last debug session")
+        ToolTip = ("Restore the breakpoints from the last debug session. Keeps track of any address changes of symbols since last used. Any symbol that has disappeared from the new executable is dropped from the list. Except if addresses have been entered manually.")
         Text = ("Restore")
       }
       { WatchSymbol Button
@@ -455,7 +469,7 @@
       Border = Border.Etched
       { DumpMem Button
         MoveScaled(1,9,16,3)
-        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory. This is a staic display.")
+        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory. This is a staic display.\nWill not be updated.\nThis can be used while a 6502 program is running to get a snap shot of the memory.")
         Text = ("Dump Mem")
       }
       { Label2 Label
@@ -476,18 +490,19 @@
       }
       { MoniorMemSet Button
         MoveScaled(18,9,16,3)
-        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory dynamically.\nThis will not show anything until the next single step or if\nTrace is enabled it will update after every instruction..")
+        ToolTip = ("Opens the Monitor output window and the Watch Window\nand will then displays the content of the \nmemory dynamically at the next instruction  cycle when the Watch is enabled or when in single step mode \n\nThis will not show anything until the next single step or if\nTrace or Watch is enabled it will update after every instruction..\n**This is very very slow, the CPU will crawl**")
         Text = ("Monitor Mem")
       }
       { ShowWatchWindow Button
         MoveScaled(1,13,33,3)
-        ToolTip = ("Opens the dump output window\nand then displays the content of the \nmemory. This is a staic display.")
+        ToolTip = ("Hides or shows the Watch Window")
         Text = ("Show Hide Watch Window")
       }
     }
     { CPUInfoPanel Panel
       MoveScaled(75,0,35,80)
       Background = Color.LightBackground
+      ToolTip = ("Dynamically when status is enabled display the current status of the 6502 cpu")
       Border = Border.Sunken
       { Label15 Label
         MoveScaled(3,33,16,4)
@@ -543,26 +558,32 @@
       }
       { Flag_i CheckBox
         MoveScaled(1,52,24,4)
+        ToolTip = ("Flag Not used ignored by cpu")
         Text = ("ignored")
       }
       { Flag_B CheckBox
         MoveScaled(1,55,24,4)
+        ToolTip = ("Brk instruction being processed")
         Text = ("Break")
       }
       { Flag_IRQ CheckBox
         MoveScaled(1,61,24,4)
+        ToolTip = ("Interupts are disabled. Except for NMI")
         Text = ("IRQ Disabled")
       }
       { Flag_Z CheckBox
         MoveScaled(1,64,24,4)
+        ToolTip = ("Flag Zer is set")
         Text = ("Zero")
       }
       { Flag_C CheckBox
         MoveScaled(1,67,24,4)
+        ToolTip = ("Flag carry is set")
         Text = ("Carry")
       }
       { Flag_D CheckBox
         MoveScaled(1,58,24,4)
+        ToolTip = ("The cpu is in bcd arithmatic mode")
         Text = ("Decimal(BCD Arithmatic)")
       }
       { Label1 Label
@@ -571,18 +592,22 @@
       }
       { SR_info TextBox
         MoveScaled(2,42,17,4)
+        Text = ("Displays the CPU flag register as a value")
         ReadOnly = True
       }
       { Total_inst TextBox
         MoveScaled(2,30,17,4)
+        ToolTip = ("Provides the number of cpu cycles since the last start of go is clicked.")
         ReadOnly = True
       }
       { AddrBus_Info TextBox
         MoveScaled(11,71.2,23,4)
+        Text = ("Current contents of the address bus set by the cpu")
         ReadOnly = True
       }
       { DataBus_INFO TextBox
         MoveScaled(11,75,10,4)
+        ToolTip = ("Current content of the data bus written by the CPU or provided by one of the RAM/ROM or peripheral devices")
         ReadOnly = True
       }
       { Label8 Label
@@ -606,6 +631,7 @@
       { !InstructionsPerSecond TextBox
         MoveScaled(20,30,14,4)
         #Public = True
+        Text = ("Displayes the estimated cpu performace. This is not very reliable.")
         ReadOnly = True
       }
       { Label16 Label
@@ -618,10 +644,12 @@
       }
       { TotalCycles TextBox
         MoveScaled(2,36,17,4)
+        ToolTip = ("Displays the number of lapsed simulated clock cycles sine the cpu was last started. This is the sum of all clock cycles required by the exected 6502 instructions")
         ReadOnly = True
       }
       { CyclesPerSecond TextBox
         MoveScaled(20,36,14,4)
+        Text = ("This kind of gives you an idea of how many simulated clock cycles are happening every real world second.")
         ReadOnly = True
       }
       { MHZ TextBox

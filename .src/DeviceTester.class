@@ -1,6 +1,7 @@
 ' Gambas class file
 
 testdev As Object = Null
+TestCpu As CPU6502
 
 Public Sub SetDevice(devName As String)
 
@@ -15,16 +16,19 @@ Public Sub LoadDevice_Click()
     Dim Length As Long = Eval("&H0" & DevLength.text)
     Dim ParmString As String = "" & DevParameters.text
     Try testdev = DeviceDevelopement.CurrentDeviceClass.New([address, length, ParmString])
-    object.attach(testdev, Me, "TestDevice")
     If Error Then
       Message.Error("Unable to start the device\n" & Error.text)
       DevStatus.text = "Failed to initiate"
       Return
     Else
+      TestCpu = New CPU6502 As "acpu"
+      testdev.TheCpu = TestCpu
+      object.attach(testdev, Me, "TestDevice")
       DeviceInTest.text &= " " & testdev.name
       DevStatus.text = "Loaded And Ready"
       WriteData.enabled = True
       ReadData.Enabled = True
+      DeviceTester.refresh()
     Endif
   Endif
 
@@ -130,8 +134,15 @@ End
 
 Public Sub TestDevice_Reset()
 
-  StatusInfo.text &= "IRQ Recieved\n"
+  StatusInfo.text &= "Reset Recieved\n"
   StatusInfo.Refresh()
 
 End
 
+
+Public Sub Form_Open()
+
+  Me.title = "Device Test for " & DeviceDevelopement.CurrentDeviceClass.Name
+  DeviceInTest.text = DeviceDevelopement.CurrentDeviceClass.name
+
+End
