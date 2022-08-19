@@ -119,6 +119,8 @@ public sub TheTimer_timer()
   $SysTimer.Stop()
   $TheCpu.IRQPending = true
   $TheCpu.InteruptPending = true
+  catch
+     error "IrqTimer error : ";Error.text
 end
 
 'this can be called by other devices or the computer

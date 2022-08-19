@@ -130,6 +130,9 @@ public sub Tick()
     $TheCpu.InteruptPending = true
     debug "Cycle timer ticked";; $period ;; "ticks, real time waited = ";;Timer-LastTime
   endif
+  catch
+  error "CycleTimer error : ";error.text
+
 end
 
 'this can be called by other devices or the computer
