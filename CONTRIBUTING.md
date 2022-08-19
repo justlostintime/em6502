@@ -5,10 +5,11 @@ If you haven't already, come find us in the Dicussion Board. We want you working
 
 **Here are some important resources:**
 
-[Gambas3 Wiki](https://gambaswiki.org/wiki) for Developers tells you what the tools are for development.
-Checkout the https://github.com/justlostintime/em6502/wiki for day to day updates and documentation.
+See the [Gambas3 Wiki](https://gambaswiki.org/wiki) for Developers is tells you what the tools are for development.
 
-Disscusion: Find us in the Dicussion Board We're usually there during business hours.
+Checkout the [em6502 wiki](https://github.com/justlostintime/em6502/wiki) for day to day updates and documentation.
+
+Disscusion: Find us in the [Dicussion Board](https://github.com/justlostintime/em6502/discussions/3) We're usually there during business hours.
 
 **Testing**
 We have a number of works in progress features. Please write Gambas Test examples
