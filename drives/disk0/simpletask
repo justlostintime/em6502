@@ -23,14 +23,14 @@
 1020 if a > b then goto c
 1030 goto d
 1040 print "End of task 1000 ";PID
-1050 taske
+1050 return
 
 2000 print "Begin new task 2000 PID=";PID
 2005 b = 0 : s =3 : c=2010 :d=1: a = 3
 2010 inc b
 2020 if b < s then goto c
 2040 print "End of task 2000 ";PID
-2050 taske
+2050 return
 
 3000 print "Begin new task 3000 PID=";PID
 3005 c = 0 : a=50 :b=3040 :d = 3010 :h=1
@@ -38,7 +38,7 @@
 3020 if c > a then goto b
 3030 goto d
 3040 print "End of task 3000 ";PID
-3050 taske
+3050 return
 
 4000 print "Begin new task 4000 PID=";PID
 4005 d = 0 :e=3 : f=4040 : g=4010 : h =1
@@ -46,14 +46,14 @@
 4020 if d > e then goto f
 4030 goto g
 4040 print "End of task 4000 ";PID
-4050 taske
+4050 return
 
 5000 print "Begin new task 5000 PID=";PID
 5005 e = 0 :f = 100 :g=5010 : h = 1
 5010 inc e
 5020 if e < f then goto g
 5040 print "End of task 5000 ";PID
-5050 taske
+5050 return
 
 6000 print "Begin new task 6000 PID=";PID
 6005 f = 0 : a=1 :b=10000 :c=40 :d=6010
@@ -61,7 +61,7 @@
 6015 gosub b
 6020 if f < c then goto d
 6040 print "End of task 6000 ";PID, q
-6050 taske
+6050 return
 
 7000 print "Begin new task 7000 PID=";PID
 7005 g = 0 : a=1 :b=10000:c=7010:d=6
@@ -69,7 +69,7 @@
 7015 gosub b
 7020 if g < d then goto c
 7040 print "End of task 7000 ";PID, q
-7050 taske
+7050 return
 
 8000 print "Begin new task 8000 PID=";PID
 8005 h = 0 : a = 1 :b=8010 : c=15 : d=10000
@@ -77,7 +77,7 @@
 8015 gosub d
 8020 if h < c then goto b
 8040 print "End of task 8000 ";PID, q
-8050 taske
+8050 return
 
 9000 print "Begin new task 9000 PID=";PID
 9005 i = 0 : j = 1 : k = 9010 : a=20 : b = 10000
@@ -85,7 +85,7 @@
 9015 gosub b
 9020 if i < a then goto k
 9040 print "End of task 9000 ";PID, q
-9050 taske
+9050 return
 
 10000 Rem gosub test
 10005 a = 0
