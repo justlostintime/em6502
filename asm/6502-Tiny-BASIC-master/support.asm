@@ -205,96 +205,7 @@ AtEnd           lda     CURPTR
                 cmp     ProgramEnd+1
 atendexit       rts
 ;
-;=====================================================
-; Print the contents of R0 as a signed decimal number.
-; Does leading zero suppression.
-;
-PrintDecimal
-		lda	R0+1	;MSB has sign
-		bpl	pplus		;it's a positive number
-;
-; Negative numbers need more work.  Invert all the bits,
-; then add one.
-;
-		lda	#'-
-		jsr	VOUTCH		;print the negative sign
-;
-		lda	R0		;invert bits
-		eor	#$ff
-		sta	R0
-		lda	R0+1
-		eor	#$ff
-		sta	R0+1
-		inc	R0		;add one
-		bne	pplus
-		inc	R0+1
-;
-; Print the value in R0 as a positive number.
-;
-pplus		ldx	#0	;start of subtraction table
-		stx	diddigit	;no digits yet
-pploop		ldy	#0		;result of division
-pploop2		lda	R0		;LSB
-		sec
-		sbc	dectable,x
-		sta	R0
-		lda	R0+1
-		sbc	dectable+1,x
-		bpl	pplusok	;no underflow
-;
-; Else, underflow.  Add back in the LSB of the
-; table to R0.
-;
-		clc
-		lda	R0
-		adc	dectable,x
-		sta	R0
-;
-; Print the value in Y.  Actually, see if Y is zero and
-; whether any digit has been printed yet.  If Y isn't
-; zero or we've printed a digit, go ahead and print.
-;
-		stx	printtx
-		tya
-		ora	#0		;set flags
-		bne	pprintit	;non-zero, print
-;
-		lda	diddigit
-		beq	pprintno	;don't print
-;
-pprintit	tya
-		ora	#'0
-		sta	diddigit
-		jsr	VOUTCH
-pprintno	ldx	printtx
-;
-; Move to the next table entry
-;
-		inx
-		inx
-		cpx	#dectableend-dectable
-		bne	pploop	;not at end
-;
-; At the end.  R0 contains the final value
-; to print.
-;
-		lda	R0
-		ora	#'0
-		jmp	VOUTCH
-;
-; Finish doing the subtraction.
-;
-pplusok		sta	R0+1
-		iny
-		bne	pploop2
-;
-; Table of powers-of-ten
-;
-dectable        dw      10000
-                dw      1000
-                dw      100
-                dw      10
-dectableend     equ     *
+
 ;
 ;=====================================================
 ; Convert an ASCII string to a number.  On input,
@@ -1087,29 +998,7 @@ PrtLoop         lda     (PrtFrom),y
                 jmp     PrtLoop
 PrtEnd          iny                           ;return byte after the copy
                 rts
-;=====================================================
-; Print character in A as two hex digits to the
-; current output device (console or file).
-;
-HexToOut    pha                               ;save return value
-            pha
-            lsr                               ;a  ;move top nibble to bottom
-            lsr                               ;a
-            lsr                               ;a
-            lsr                               ;a
-            jsr     hexta                     ;output nibble
-            pla
-            jsr     hexta
-            pla                               ;restore
-            rts
-;
-hexta       and     #%0001111
-            cmp     #$0a
-            clc
-            bmi     hexta1
-            adc     #7
-hexta1      adc     #'0                       ;then fall into...
-            jmp    VOUTCH
+
 ;====================================================
 ;Clear the terminal assume it is ansii or vt100
 ;

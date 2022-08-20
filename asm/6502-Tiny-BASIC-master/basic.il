@@ -172,16 +172,28 @@ ERRVEC:
 ;
 ; Get here if there is an expression to print
 S7:
-        TST        S7A,"$"
+        TST        S7AUnsigned,"$"
         CALL       EXPR
         HEXPRT
         IJMP       S5
+        
+S7AUnsigned
+      
+        TST        S7A,"%"
+        CALL       EXPR
+        SETR2      1
+        PRN
+        IJMP       S5
+        
 S7A
+ 
         CALL       EXPR
         TST        S7B,"$"
         PUTCHAR
         IJMP       S5
+
 S7B
+        SETR2      0
         PRN                        ;PRINT IT
         IJMP       S5              ;IS THERE MORE?
 ;

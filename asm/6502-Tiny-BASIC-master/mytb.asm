@@ -595,9 +595,9 @@ iPRS		ldy	CUROFF
 ; Pop the top off the stack and print it as a signed
 ; decimal number.
 ;
-iPRN		jsr	popR0
-		jsr	PrintDecimal
-		jmp	NextIL
+iPRN            jsr   popR0
+                jsr   PrintDecimal
+                jmp   NextIL
 ;
 ;=====================================================
 ; Space to next zone.  Currently the code does not
@@ -1358,7 +1358,7 @@ iINSRT          ldy     #0
 ;               jsr     getCURPTRLength ;results in Y , curptr is pointing to point we need to insert the line
                 ldy     #0
                 lda     (CURPTR),y      ;Change the length is now at beginning of the line
-                tay                     
+                tay
                                         ;If it is equal we delete the line and replace it, get length
                                         ;then adjust all program line after up or down depending on len of line
                                         ;If next higher then just move everythimg down by length bytes
@@ -1442,7 +1442,7 @@ mvUpMore2       dec     FROM
 ;
 ; All done with copy.
 ;
-mvUpDone	
+mvUpDone
                 clc                     ;Ok, We are now ready to copy the new line to the program
                 lda     lineLength      ;Number of bytes to copy from line buff
                 adc     ProgramEnd      ;Now pdate the end of program address for space we just opened
@@ -1478,22 +1478,22 @@ mvUpFini        jmp     NextIL
 ; Pops the top value of the ILPC stack and stores it
 ; in ILPC.  Ie, return from an IL subroutine.
 ;
-iRTN            jsr       popILPC
-                jmp       NextIL
+iRTN            jsr     popILPC
+                jmp     NextIL
 ;
 ;=====================================================
 ; NLINE print a newline
 ;
-iNLINE		jsr	CRLF	;user supplied sub
-		jmp	NextIL
+iNLINE          jsr     CRLF                ;user supplied sub
+                jmp     NextIL
 ;
 ;=====================================================
 ; This saves the current ILPC value on the stack, then
 ; jumps to the address specified by the next two bytes.
 ;
-iCALL     jsr   pushILPC                    ;save ILPC
-          bcc   iJMP
-          jmp   ErrStkOver                  ; Check if there was an error
+iCALL         jsr   pushILPC                    ;save ILPC
+              bcc   iJMP
+              jmp   ErrStkOver                  ; Check if there was an error
 ;
 ; Jmp to a specific location in the IL code.  The new
 ; address immediately follows the opcode.
@@ -1509,7 +1509,7 @@ iJMP            jsr     getILWord
 ; Push the next two bytes onto the arithmetic stack.
 ;
 iSetR2          jsr     getILByte
-                stx     R2
+                sta     R2
                 jmp     NextIL
 ;
 ;=====================================================
@@ -2199,6 +2199,7 @@ iTRACEPROG      jsr     popR0
                 org       PROGEND
 ;=================================================================
 ;
+                include  "print.asm"
                 include  "mem.asm"
                 include  "gosub.asm"
                 include  "tasks.asm"
