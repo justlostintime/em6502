@@ -1,22 +1,35 @@
                 Seg   Code
 ;---------------------------
-; Print 24-bit decimal number, unsigned 16 bit integers as well
+; Print 24-bit decimal number or  16bit unsigned 
 ; ---------------------------
 ; On entry, R0=number to print
-;           pad=0 or pad character (eg '0' or ' ')
-; On entry at PrDec24Lp1, positive numbers only
-;           Y=(number of digits)*3-3, eg 21 for 8 digits
+;           Defaults to pad=0 , y=21 default
+;           R2 = 1 unsigned 16 bit
+;           R2 = 0 Signed   16 bit
+
+; On entry at PrintDecPadded:
+;           X = padding, Y=(number of digits)*3-3, eg 21 for 8 digits
+
 ; On exit,  A,X,Y,num,pad corrupted
 ; Size      129 bytes, Table 24 bytes  --- total 153
 ; -----------------------------------------------------------------
 
-PrintDecimal: 
+PrintDecimal:
+                lda     #0
+                sta     pad
+                LDY     #21                                   ; Offset to powers of ten
+                JMP     PrintDo
+
+PrintDecPadded:
+                stx     pad
+                
+PrintDo
                 lda     #0
                 sta     R1
-                sta     pad
+                
                 lda     R2
                 bne     PrintPos
-                
+
                 lda     R0+1              ;MSB has sign
                 bpl     PrintPos          ;it's a positive number;
 
@@ -26,7 +39,7 @@ PrintDecimal:
 
                 lda     #'-
                 jsr     VOUTCH        ;print the negative sign
-                
+
                 lda     #$FF
                 sta     R1
                 lda     R0            ;invert bits
@@ -44,7 +57,7 @@ PrintDecimal:
                 bne     PrintPos
                 inc     R1
 PrintPos:
-                LDY #21                                   ; Offset to powers of ten
+
 PrDec24Lp1:
                 LDX #$FF
                 SEC                                       ; Start with digit=-1
@@ -84,8 +97,14 @@ PrDec24Next:
                 DEY
                 DEY
                 DEY
+                beq PrDec24LastDigit
                 BPL PrDec24Lp1                             ; Loop for next digit
                 RTS
+PrDec24LastDigit
+                LDX #'0
+                STX pad                                    ; No more zero padding
+                BNE  PrDec24Lp1                            ; Loop for last digit
+                
 pad             db    0
 PrDec24Tens:
                 dw 1
@@ -94,20 +113,20 @@ PrDec24Tens:
                 db 10 / 65536
                 dw 100
                 db 100 / 65536
-                dw 1000 
+                dw 1000
                 db 1000 / 65536
                 dw 10000
                 db 10000 / 65536
                 dw 100000
                 db 100000 / 65536
-                dw 1000000 
+                dw 1000000
                 db 1000000 / 65536
                 dw 10000000
                 db 10000000 / 65536
 ;=====================================================
 ; Print character in A as two hex digits to the
 
-                
+
 HexToOut    pha                               ;save return value
             pha
             lsr                               ;a  ;move top nibble to bottom
