@@ -105,7 +105,7 @@ Fast Unsafe Public Sub Halt()
   Wait 0.001
   For Each o As Object In AddressMap
     If Object.Class(o).Exist("halt") Then
-      o.halt()                                                                                ' tell each device to shutdown if needed
+      o.halt()                                                          ' tell each device to shutdown if needed
       Wait 0.001
     Endif
   Next

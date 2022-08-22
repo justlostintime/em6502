@@ -1,7 +1,7 @@
 # Gambas Form File 3.0
 
 { Form Form
-  MoveScaled(0,0,238,132)
+  MoveScaled(0,0,202,112)
   { helpMe Menu
     Text = ("Help")
     { ToolsIncluded Menu
@@ -38,7 +38,7 @@
   { DeviceInfo Menu
     Text = ("Device Management")
     { devtest Menu
-      Text = ("Develope and Test")
+      Text = ("Develop  and Test")
     }
     { DeleteDevice Menu
       Text = ("Delete Device")
@@ -451,10 +451,10 @@
         Text = ("IRQ")
       }
       { SpeedScaler SliderBox
-        MoveScaled(18,14,48,5)
+        MoveScaled(19,14,48,5)
         ToolTip = ("Control the execution speed of the cpu\n0 is slowest, Higher numbers are faster")
         MaxValue = 1000
-        Value = 2
+        Value = 500
       }
       { SingleStepSet RadioButton
         MoveScaled(2,5,14,3)
@@ -592,7 +592,7 @@
       }
       { SR_info TextBox
         MoveScaled(2,42,17,4)
-        Text = ("Displays the CPU flag register as a value")
+        ToolTip = ("Displays the CPU flag register as a value")
         ReadOnly = True
       }
       { Total_inst TextBox
@@ -631,7 +631,7 @@
       { !InstructionsPerSecond TextBox
         MoveScaled(20,30,14,4)
         #Public = True
-        Text = ("Displayes the estimated cpu performace. This is not very reliable.")
+        ToolTip = ("Displays the estimated cpu performace. This is not very reliable.")
         ReadOnly = True
       }
       { Label16 Label
@@ -649,7 +649,7 @@
       }
       { CyclesPerSecond TextBox
         MoveScaled(20,36,14,4)
-        Text = ("This kind of gives you an idea of how many simulated clock cycles are happening every real world second.")
+        ToolTip = ("This kind of gives you an idea of how many simulated clock cycles are happening every real world second.")
         ReadOnly = True
       }
       { MHZ TextBox
