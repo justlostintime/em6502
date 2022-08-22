@@ -2,6 +2,11 @@
 This emulator Development environment is written in gambas3
 you will need the latest gambas build from gambas daily builds or 3.17
 
+## Some version before 1.1.19
+Some versions of the emulator release before 1.1.19 may have required a newer version of the Gambas bytecode
+than is available in the stable Gambas package. Version 1.1.19 fixes this issue.
+Sorry for any issues this caused.
+
 ## Special Note 09/04/2022
   As of this week updates to how Gabas3 implements the gui for gtk/Qt a patch in the em6502 code was required, please
   Download the latest version.
