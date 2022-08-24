@@ -1328,6 +1328,7 @@ iGETLINE
 ;
                 lda     #0
                 sta     RunMode
+                sta     CUROFF
                 jmp     NextIL
 ;
 ;=====================================================
@@ -1717,7 +1718,7 @@ iTSTVV          jsr     getILByte      ;offset
                 jmp     tstBranchLink       ;if we are at the end of line just get out with error
 ;
 iTSTVnext:
-                cmp     #'@             ;allow access to all unused memory as an array or integers
+                cmp     #'@             ;allow access to all unused memory as an array of integers
                 beq     iTSTVat         ;Setup to do a pointer to unused memory
 
                 cmp     #'#             ; parameters passed to this task

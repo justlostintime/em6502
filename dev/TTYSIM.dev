@@ -99,11 +99,11 @@ Public sub halt()
    try close $RdPipe
    try close $tRdPipe
    try close $tWrPipe
-   
+
    error "TTY Halted"
    TTYFORM.persistent = false
    TTYFORM.close()
-   
+
 end
 '===================================================================================================
 fast unsafe Public Sub _Put(Value As Byte, address as long)
@@ -273,6 +273,7 @@ Public Sub PreProcess(ByRef data As Variant, ByRef len As Variant) As Boolean
 '
   'error "To display : ";data
  ' error len
+ TermOut.refresh()
  Return True
 
 End

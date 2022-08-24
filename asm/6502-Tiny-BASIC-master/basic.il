@@ -345,7 +345,7 @@ S14:
         SETIRQ                     ;Set the line number now
         NXT        CO              ;SEQUENCE TO NEXT STATEMENT
         IJMP       STMT
-        
+
 ;=========================================================================
 ; KILL PID-expression   kill a running task
 ;  ignored of task has already stopped
@@ -357,7 +357,7 @@ S14Z:
         TASKKILL
         NXT       CO
         IJMP      STMT
-        
+
 ;============================================================================
 ; List all program lines
 ;
@@ -384,7 +384,7 @@ S16:
         TST        S16A,"NEW"      ;clear program
         DONE
         IJMP       START
-        
+
 ;========================================================================
 ; Slice(slice legth expression)
 ;   set the length of time between task switches
@@ -469,7 +469,7 @@ EXPR:
         Call       EXPR
         LOGNOT
         RTN
-        
+
 ;=========================================================
 ;Look for logical operators
 EXPRLOGS:
@@ -521,9 +521,9 @@ iR6:
 	LIT        4               ;>
 iRFound:
   Call       EXPR           ; get the right side of the expression
-  CMPR                       ; Push the value of the true false onto the stack
+  CMPR                      ; Push the value of the true false onto the stack
   RTN
-  
+
 iRDone:
   RTN
 
@@ -612,7 +612,7 @@ F1A2:
         RTN
 ;=======================================================================================
 ; TASK(line-num expr,[Parm1,....]) start a task with or without Parameters
-; 
+;
 F2AZ:
         TST        F2AZ1,"TASK("      ;Check if we are setting a task start
         CALL       EXPR               ;Get the LABEL .. line NUMBER

@@ -87,7 +87,7 @@ popILPC       ldy     ILSTACKPTR
 ; This searches for a specific line number that is in
 ; R0.  There are three possible return conditions:
 ; Line numbers are now the third byte, the first byte is now **************
-; a pointer to the next line, of course no longer that 53 byte
+; a pointer to the next line, of course no longer that 254 bytes
 ; per line.
 ;
 ; Exact match was found:
