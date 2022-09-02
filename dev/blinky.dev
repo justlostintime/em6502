@@ -1,0 +1,155 @@
+'Gambas class definition - 6502 device prototype
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+'' Memory maped io or memory
+'' Anything with two leading '' will
+'' be displayed as part of the help system
+'' so be verbose here
+'' any function you see here are manditory to
+'' correctly interface to the virtual machine
+'' These are written in gambas and you may want to visit the site
+'' http://gambas.sourceforge.net or https://gambaswiki.org/wiki
+
+'Enabling this will improve performance a very great amount
+'
+'Fast Unsafe                                       ' use this to compile to binary
+'' This device is a set of 320 bits wide by 200  bit high array of leds
+'' 8 bit color for each led.
+'' write data by address 0 value of led color, 
+''               address 1 row address of led
+''               address 2-3 column address of led    2 high order address, 3 low order address
+''               address 4   write 1 to actually write the info to the led
+''                           write 2 to auto increment after each write to address 0, starts where ever the address 1 row, and 2,3 are poining to when set
+''                           treats the matrix as a linear array
+''               address 5   Sets the page 320x200 to be displayed up to 10 pages
+
+
+'====================================================================================================
+' These are the memory constraints this device will occupy in the 6502 memory map
+'
+Property MemoryStart As Long use $MemoryStart = 0                    ' Start of this block of memory
+Property MemoryEnd As Long use $MemoryEnd = 0                        ' If this is zero then the device has no mapped memory
+Property MemoryLen As Long use $MemoryLen = 0                        ' Length of this memory block
+
+'======================================================================================================
+'' If required the Device may request a secondary control address area
+'' See MMU for example This is Looked for  by the CPU as configuration time.
+'
+'Property IoAddress as long use $IoAddress = 0                       ' IoAddress control area
+'Property IoLength as long  use $IoLength  = 5                       ' IoAddress Space Length
+
+'This is an example of memory implementation but is not required, if your device does something else
+'see the reset button example
+DevPage as new byte[320,200]              ' the led array to be displayed
+DevPages as new variant[]                 ' an array of pages for the screen
+DevRow as integer = 0                     ' the address of the current row
+DevCol as integer = 0                     ' address of the current color
+DevValue as byte = 0                      ' the color to be written to the row col address
+DevMode as integer = 0                    ' The current write mode 1 = immediate, write and increment wrap at end
+
+
+'========================================================================================================
+'These are required and provided by you .. see _new()
+'
+Property read Name as string use $name
+
+'===================================================================================================================
+'This is expected to contain the text parameter list passed to your device
+'during configuration
+Property read Parameters as string use $Parameters  ' coma seperated list of all loaded binaries/Or anything else your device requires
+
+'========================================================================================================================
+' These are the possible interupts the device may raise to the cpu
+' Example usage:
+' if ButtonPress then Raise IRQ()
+'
+Event IRQ()                                ' Device can create an IRQ
+Event NMI()                                ' Device can create an NMI
+Event Reset()                              ' Device can force a reset of the CPU
+Event Halt(Reason as string)               ' A device can raise this event to terminate the computer session
+
+'======================================================================================================
+The emulator will pass the following information when your device is loaded
+' Start    This is the start location your device will occupy
+' Length   This is the number of memory mapped bytes required by your device
+' UserDefinedParameters - This is any configuration information your device requires at startup
+' Configuration information is split using comma seperation by default
+'
+public sub _new(address as long, len as long, parameters as string)
+  MyParms as string[] = split(parameters)                    ' any parameters you may need for your device
+
+  MemoryStart = Start
+  MemoryEnd = start + Length - 1
+  MemoryLen = Length
+  Mem = New Byte[Length]                ' this is an example of needing memory, see the TTYSIM for ther example
+  $Name = "blinky"                      ' this may be anything you like, but should be unique to your device
+  $Parameters = UserDefinedParameters   ' save the config parameters
+  'Debug $Name;;"Defined at : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length)
+
+end
+
+'=================================================================================================
+' The get is used by the emulater to request a byte from your device
+' this is an example of ram interface
+' The emulater validates the address for your device before it is called
+' See the RamMemory or the ResetButtom devices for examples
+'
+public sub _get(address as long) as byte
+
+   debug "read ", address
+   return DevMemory[address]
+
+end
+
+'=====================================================================================
+' This is called by the emulater to pass a byte to your device
+' This is an example of simple memory
+' See the RamMemory or the ResetButtom devices for examples
+'
+public sub _put(Value as byte, address as long)
+
+  debug "write",address, Value
+  devmemory[address] = value
+
+end
+
+'============================================================================================
+'this can be called by other devices or the computer
+'the cpu keeps its own dictionary of device addresses
+'
+Public Sub _InRange(Address As Long) As Boolean
+
+' If Address >= $IoAddress and if address < $IoAddress + $IoLength then return true
+  If Address >= $MemoryStart And Address <= $MemoryEnd Then Return True
+  Return False
+
+End
+
+'===========================================================================
+' This will be called as the computer shuts down
+' Can be implemented if required to clean anything up
+'
+Public sub halt()
+   ' close any open windows etc
+end
+
+'==========================================================================
+' This is called when Cpu is reset
+' This shoud only change the internal state of the device
+'
+Public Sub Reset()
+  Debug "Device Reset"
+end
+
+'==========================================================================
+
+'' The emulator looks for this when the defined computer tries to load device specific
+'' files
+'
+public sub load(Parmlist as string)
+  dim parameters as string[] = split(ParmList,",","",true,false)
+
+end

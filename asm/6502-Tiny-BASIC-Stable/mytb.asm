@@ -1328,6 +1328,12 @@ iGETLINE
 ;
                 lda     #0
                 sta     RunMode
+iGetParseLine:
+                lda     CUROFF
+                pha
+                jsr     ParseInputLine
+                pha
+                sta     CUROFF
                 jmp     NextIL
 ;
 ;=====================================================
@@ -2199,6 +2205,7 @@ iTRACEPROG      jsr     popR0
                 org       PROGEND
 ;=================================================================
 ;
+                include  "tokenizer.asm"
                 include  "print.asm"
                 include  "mem.asm"
                 include  "gosub.asm"

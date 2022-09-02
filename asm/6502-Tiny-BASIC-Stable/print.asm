@@ -1,6 +1,6 @@
                 Seg   Code
 ;---------------------------
-; Print 24-bit decimal number or  16bit unsigned 
+; Print 24-bit decimal number or  16bit unsigned
 ; ---------------------------
 ; On entry, R0=number to print
 ;           Defaults to pad=0 , y=21 default
@@ -15,6 +15,10 @@
 ; -----------------------------------------------------------------
 
 PrintDecimal:
+                TXA
+                pha
+                tya
+                pha
                 lda     #0
                 sta     pad
                 LDY     #21                                   ; Offset to powers of ten
@@ -22,11 +26,11 @@ PrintDecimal:
 
 PrintDecPadded:
                 stx     pad
-                
+
 PrintDo
                 lda     #0
                 sta     R1
-                
+
                 lda     R2
                 bne     PrintPos
 
@@ -99,12 +103,16 @@ PrDec24Next:
                 DEY
                 beq PrDec24LastDigit
                 BPL PrDec24Lp1                             ; Loop for next digit
+                pla
+                tay
+                pla
+                tax
                 RTS
 PrDec24LastDigit
                 LDX #'0
                 STX pad                                    ; No more zero padding
                 BNE  PrDec24Lp1                            ; Loop for last digit
-                
+
 pad             db    0
 PrDec24Tens:
                 dw 1

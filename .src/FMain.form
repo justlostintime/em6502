@@ -60,7 +60,7 @@
     { !Disassembly TerminalView
       MoveScaled(0,3,82,90)
       #Public = True
-      Font = Font["Ubuntu Mono,+1"]
+      Font = Font["Ubuntu Mono,+3"]
       ToolTip = ("Display the disassembled instruction of the next\ninstruction to be executed.\nKeeps a list of the last 1000 instructions executed.")
       Expand = True
       ShowScrollBar = True
