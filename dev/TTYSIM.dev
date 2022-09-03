@@ -83,6 +83,7 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
       openTTYWindow()
 
       Write #$WrPipe, "Ready at $" & Hex(Start, 6) & "\n\r"
+      
       if len <> 16 then DEBUG ("TTY warning length should be 16 bytes Assuming 16 bytes")
       Debug "TTY Defined at : $"; Hex(Start, 6); " For length("; len; ") $"; Hex(len)
 
@@ -99,11 +100,11 @@ Public sub halt()
    try close $RdPipe
    try close $tRdPipe
    try close $tWrPipe
-   
+
    error "TTY Halted"
    TTYFORM.persistent = false
    TTYFORM.close()
-   
+
 end
 '===================================================================================================
 fast unsafe Public Sub _Put(Value As Byte, address as long)
@@ -181,6 +182,7 @@ Sub openTTYWindow()
   TTYForm.arrangement = arrange.fill
 
   TermOut = New TerminalView(TTYForm) As "MyView"
+  TermOut.font = font["Arial,12,bold"]
   TermOut.Enabled = True
   TermOut.ReadOnly = False
   TermOut.Width = TTYForm.width - 2
