@@ -471,10 +471,21 @@
   Macro DECVAR
    db 99
    endm
-   
+
   Macro SLICE
    db 100
    endm
 
-
+  Macro TSTB 
+    db 101
+    db ({1}-*)-1
+    db {2}
+  endm
+  
+  Macro TSTW
+    db 102
+    db ({1}-*)-1
+    dw {2}
+  endm
+    
 

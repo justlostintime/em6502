@@ -200,7 +200,14 @@ PrtPrgLine
                 sta     PrtTerm
                 beq     PrtPrgText
 
-PrtQuoted       lda     #'"
+PrtQuoted       
+                lda     #'"
+                ldy     CUROFF
+                cmp     (CURPTR),y            ; the opening quote, can to " or ' so long as they match
+                bne     PrtNoInc
+                iny 
+                sty     CUROFF
+PrtNoInc
                 sta     PrtTerm
 
 PrtPrgText      ldy     CUROFF
@@ -230,7 +237,7 @@ PrtLoop         lda     (PrtFrom),y
                 jmp     PrtLoop
 PrtEnd          iny                           ;return byte after the copy
                 rts
-                
+
 ;
 ;=======================================================
 ; Print all Variables

@@ -115,10 +115,33 @@ Public Sub WriteConfig()
 
 End
 
+'' Source code debugging sort of using listings
+Public StepRequesters As New DebugSource[]
+
+Public Sub RegisterForStep(Debugs As DebugSource)
+
+  If Not StepRequesters.Exist(Debugs) Then
+    StepRequesters.Add(Debugs)
+  Endif
+
+End
+
+Public Sub UnRegisterForStep(Debugs As DebugSource)
+
+  If StepRequesters.Exist(Debugs) Then
+    StepRequesters.remove(StepRequesters.Find(Debugs))
+  Endif
+
+End
+
+
 Public Sub The_Computer_NextInst(info As String)
 
   Disassembly.Print(info & "\n\r")
   Disassembly.Refresh()
+  For Each Debugs As DebugSource In StepRequesters
+    Debugs.Step(Left(info, 4))                        ' just pass the address as it is all we need
+  Next
   Wait 0.001
 
 End
@@ -552,8 +575,6 @@ Public Sub SetNextBreak()
 
   If EnableBreakPoints.value = True Then
     MyComputer.SetBreakPoints(BreakPointList.list)
-  Else
-
   Endif
 
 End
@@ -997,8 +1018,6 @@ Public Sub WatchSymbol_Click()
     WatchMem.NewWatch(entry[0], entry[1])
   Next
 
-
-
 End
 
 Public Sub M65C02Assemblerxa_Click()
@@ -1008,5 +1027,25 @@ Public Sub M65C02Assemblerxa_Click()
   a.SetUrl("http://www.floodgap.com/retrotech/xa/", "Developed by André Fachat Maintained By  Cameron Kaiser")
   a.Show()
   Wait 0.001
+
+End
+
+Public Sub SymLoadedList_DblClick()
+
+  Dim NewFile As String[] = SymLoadedList.Selection
+
+  Dim ListingFileName As String = AsmSourceDirectory &/ NewFile[0] & ".lst"
+
+  Dim SourceDebugger As New DebugSource(MyComputer, ListingFileName)
+
+  SourceDebugger.Show()
+
+End
+
+Public Sub OpenSourceDebug_Click()
+
+  Dim SourceDebugger As New DebugSource(MyComputer, "")
+
+  SourceDebugger.Show()
 
 End

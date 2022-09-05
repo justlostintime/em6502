@@ -4,10 +4,12 @@ DEBUGPARSER       equ     TRUE                   ; Print debugging information
 ; Define the types of tokens found, and identifiers
 KeywordsMax       equ     $7F                    ; Allow to be range  1 to 127  key words, high order bit must be 0 for it to be a key word
 tVa               equ     $80                    ; Variable A = 1, .... Z = 26   ^ = 27
-tVb               equ     130                    ; Variables 128 - 157  $80-$9D
-tVhat             equ     155                    ; Variable ^
-tVhash            equ     156                    ; Variable #
-tVat              equ     157                    ; Variable @ = 0
+tVb               equ     $81                    ; Variables 128 - 157  $80-$9D
+tVz               equ     tVa+25                 ; Value of the last variable
+
+tVhat             equ     $9B                    ; Variable ^
+tVhash            equ     $9C                    ; Variable #
+tVat              equ     $9D                    ; Variable @ = 0
 
 
 tString           equ     $A0                    ; String all start with this byte and end with  byte value 0 strings can be accessed with array slicing
@@ -16,73 +18,146 @@ tByte             equ     $A2                    ; Unsigned byte value
 tArray            equ     $A3                    ; Identifies Array Type, the byte following defines the length of each element
                                                  ; Arrays of string are arrays of pointers 2 bytes
 tPointer          equ     $A4                    ; Pointer to another variable
-tVariable         equ     $A5                    ; Variable index  = A-Z and ^ variables
 tIndirect         equ     $A6                    ; Points to an address that points to the data
 
-Operators: BYTE "<>","<=",">=",'+,0,'<,0,'=,0,">",0,"-",0,"/",0,"%",0,"*",0,"(",0,")",0,",",0,";",0,"[",0,"]",0
+Operators: BYTE "<>","<=",">=",'+,0,'<,0,'=,0,">",0,"-",0,"/",0,"%",0,"*",0,"(",0,")",0,",",0,";",0,"[",0,"]",0,":",0,"$",0,"!",0
 OperatorLen equ *-Operators
 
-OperValues: BYTE  $F5,$F3,$F6,$F0,$F1,$F2,$F4,$F7,$F8,$F9,$FA,$E0,$E1,$E2,$E3,$E4,$E5
-OPCount    equ   * - OperValues
+OperValues: BYTE  $F5,$F3,$F6,$F0,$F1,$F2,$F4,$F7,$F8,$F9,$FA,$E0,$E1,$E2,$E3,$E4,$E5,$E6,$E7,$E8
+
+oNotEqual         equ     $F5
+oLessEqual        equ     $F3
+oGreaterEqual     equ     $F6
+oPlus             equ     $F0
+oLess             equ     $F1
+oEqual            equ     $F2
+oGreater          equ     $F4
+oMinus            equ     $F7
+oDivide           equ     $F8
+oModulo           equ     $F9
+oPercent          equ     oModulo
+oMultiply         equ     $FA
+oLeftBracket      equ     $E0
+oRightBracket     equ     $E1
+oComma            equ     $E2
+oSemiColon        equ     $E3
+oLeftSQBracket    equ     $E4
+oRightSQBracket   equ     $E5
+oColon            equ     $E6
+oDollar           equ     $E7
+oBang             equ     $E8
+
+OPCount           equ   * - OperValues
 
 tOperatorX        equ     $F0 ;+ operator Value  ; stores the value used to do the relational operator compare
-                                               
+
 tError            equ      $FF                   ; Error should never happen
 ;
-; Keyword table contains 48 keywords
+; Keyword table contains 49 keywords
 KeyWordTable:
              db     "leT"                        ; 1, we only have 0 at end of program or line
+kLet         equ     1
              db     "inC"
+kInc         equ     2
              db     "deC"
+kDec         equ     3
              db     "ireturN"
+kIreturn     equ     4
              db     "iF"
+kIf          equ     5
              db     "theN"
+kThen        equ     6
              db     "gotO"
+kGoto        equ     7
              db     "gosuB"
+kGosub       equ     8
              db     "returN"
+kReturn      equ     9
              db     "reM"
 kRem         equ    10
              db     "prinT"
 kPrint       equ    11                   ; should be entry for print
              db     "taskE"
+kTaske       equ    12
              db     "taskN"
+kTaskn       equ    13
              db     "taskW"
+kTaskw       equ    14
              db     "pokE"
+kPoke        equ    15
              db     "putcH"
+kPutch       equ    16
              db     "clS"
+kCls         equ    17
              db     "inpuT"
+kInput       equ    18
              db     "enD"
+kEnd         equ    19
              db     "irQ"
+kIrq         equ    20
              db     "kilL"
+kKill        equ    21
              db     "lisT"
+kList        equ    22
              db     "ruN"
+kRun         equ    23
              db     "neW"
+kNew         equ    24
              db     "slicE"
+kSlice       equ    25
              db     "tracE"
+kTrace       equ    26
              db     "exiT"
+kExit        equ    27
              db     "savE"
+kSave        equ    28
              db     "loaD"
+kLoad        equ    29
              db     "erasE"
+kErase       equ    30
              db     "noT"
+kNot         equ    31
              db     "oR"
+kOr          equ    32
              db     "xoR"
+kXor         equ    33
              db     "anD"
+kAnd         equ    34
              db     "truE"
+kTrue        equ    35
              db     "falsE"
+kFalse       equ    36
              db     "diR"
+kDir         equ    37
 ;functions returning values
              db     "freE"
+kFree        equ    38
              db     "getcH"
+kGetch       equ    39
              db     "peeK"
+kPeek        equ    40
              db     "tasK"
+kTask        equ    41
              db     "ipcc"
+kIpcc        equ    42
              db     "ipcS"
+kIpcs        equ    43
              db     "ipcR"
+kIpcr        equ    44
              db     "rnD"
+kRnd         equ    45
              db     "staT"
+kStat        equ    46
              db     "abS"
+kAbs         equ    47
              db     "calL"
+kCall        equ    48
              db     "gofN"
+kGofn        equ    49
+             db     "ireT"
+kIret        equ    50
+             db     "piD"
+kPid         equ    51
              db     0,0
 KeyWordTableEnd      equ      *
 KeyWordTableLength   equ      * - KeyWordTable
@@ -151,19 +226,22 @@ ParseKeepChar:                             ; if it does not parse just keep it s
                 bne    ParseInputLoop
 
 ParseComplete:
-                stx     TOKENBUFFER        ; Place size into buffer start
                 lda     #0
                 sta     TOKENBUFFER,x      ; null terminate the line of tokens
+                inx
+                stx     TOKENBUFFER        ; Place size including null into buffer start
+
                 pla
                 tay
                 pla
                 tax
                 pla
                 sta     CUROFF
+                
  if DEBUGPARSER
 
                 jsr     printTokenBuffer
-                jsr     PrintProgramLine
+                jsr     DebugPrintProgramLine
                 jsr     SetOutConsole
 
  endif
@@ -214,7 +292,7 @@ ParseKeyFound:
                 lda     R0                     ; get the keyword index
                 cmp     #kRem                  ; remark statement
                 beq     ParseMoveLine          ; Move everything until the end of line to the token buffer
-                
+
 ParseKeySpecial:
                 iny                            ; point past the last character
                 sty     CUROFF
@@ -356,10 +434,10 @@ ParseNumInvalid                                         ;Not a valid Numeric
 ;               not found then c is set
 ;      x is preserved
 ;
-;Operators: BYTE "<>","<=",">=",'+,0,'<,0,'=,0,">",0,"-",0,"/",0,"%",0,"*",0,"(",0,")",0,",",0,";",0,"[",0,"]",0
+;Operators: BYTE "<>","<=",">=",'+,0,'<,0,'=,0,">",0,"-",0,"/",0,"%",0,"*",0,"(",0,")",0,",",0,";",0,"[",0,"]",0,":",0
 ;OperatorLen equ *-Operators
 ;
-;OperValues BYTE  $F5,$F3,$F6,$F0,$F1,$F2,$F4,$F7,$F8,$F9,$FA,$E0,$E1,$E2,$E3,$E4,$E5
+;OperValues BYTE  $F5,$F3,$F6,$F0,$F1,$F2,$F4,$F7,$F8,$F9,$FA,$E0,$E1,$E2,$E3,$E4,$E5,$E6
 ;OPCount    equ   * - OperValues
 
 ParseForOperator:
@@ -470,7 +548,7 @@ printTokenBuffer:
             ldx   TOKENBUFFER               ; get the length of the buffer
             inx                             ; we want to show the last zero byte
             ldy   #0
-            
+
 printHexLoop:
             lda   TOKENBUFFER,y             ; get the character
             jsr   HexToOut                  ; print it
@@ -562,11 +640,31 @@ TOKEN2R0:
                 dex
                 sta     R0+1
                 rts
+DPL2R0:
+                lda     (dpl),y
+                sta     R0
+                iny
+                dex
+                lda     (dpl),y
+                iny
+                dex
+                sta     R0+1
+                rts
 
 ;==========================================================================================================
-; Decode and print a line of grogram text
-; Prints line number from R0 upto line number in R1 if r1 is 0 then prints to end
-; if R0 and R1 = 0 then print entire program.
+;Debug   Print a Program Line from compile buffer
+;
+DebugPrintProgramLine:
+                pha
+                lda     #TOKENBUFFER&$FF
+                sta     dpl
+                lda     #TOKENBUFFER>>8
+                sta     dpl+1
+                pla
+
+; Decode and print a line of program text
+; on entry      dpl points to line of code to print
+; on exit       no change in reg of dpl
 ;
 PrintProgramLine:
 
@@ -576,25 +674,28 @@ PrintProgramLine:
 
                 ldy     #1              ; index into the token buffer
                 sty     R2              ; print unsigned decimal
-                ldx     TOKENBUFFER     ; get number of bytes
+                ldy     #0
+                lda     (dpl),y         ; get number of bytes
+                tax                     ; place pointer into x
+                iny
                 dex                     ; Deduct the length byte
-                jsr     TOKEN2R0        ; Print the line number
+                jsr     DPL2R0        ; Print the line number
                 jsr     PrintDecimal
                 lda     #$20
                 jsr     VOUTCH
 
 PrintProgLoop:
-                lda     TOKENBUFFER,y   ; Get a character
+                lda     (dpl),y   ; Get a character
                 beq     PrintProgramComplete
                 and     #%10000000       ; check for Keyword or Variable/operator
                 beq     PrintKeyword    ; It uses the index in a to find a keyword
 
 PrintProgVars:
-                lda    TOKENBUFFER,y
+                lda    (dpl),y
                 and    #$E0              ; Check for operators and punctuation
                 cmp    #$E0
                 beq    PrintProgOperatorVect
-                lda    TOKENBUFFER,y
+                lda    (dpl),y
                 cmp    #$9D+1
                 bcc    PrintProgVariableVec
                 cmp    #tString
@@ -605,14 +706,14 @@ PrintProgVars:
                 lda    #0
                 sta    R0+1
                 sta    R2               ; Set to print signed number
-                lda    TOKENBUFFER,y
+                lda    (dpl),y
                 sta    R0
                 pla
                 cmp    #tInteger
                 bne    PrintProgNumDone
                 iny
                 dex
-                lda    TOKENBUFFER,y
+                lda    (dpl),y
                 sta    R0+1
 
 PrintProgNumDone:
@@ -632,27 +733,28 @@ PrintProgramComplete:
                 ldx    printStorage
                 ldy    printStorage+1
                 pla
-                
+
                 rts
 ;=================================================================================================================
 ; Print a string variable including the quotes
+; On Input      y is offset into buffer
+; On Exit       y is updated to new offset
+
 PrintStringVariable:
                 iny
                 lda  #'"
                 jsr  VOUTCH
                 iny
-                lda  #TOKENBUFFER&$FF
+                lda  dpl
                 sta  PrtFrom
-                lda  #TOKENBUFFER>>8
+                lda  dpl+1
                 sta  PrtFrom+1
                 lda  #'"
                 sta  PrtTerm
                 jsr PrtLoop
                 lda  #'"
                 jsr  VOUTCH
-                iny
                 jmp PrintProgNext
-                
 
 PrintProgVariableVec
                 bcc PrintProgVariable
@@ -661,13 +763,13 @@ PrintProgOperatorVect
 ;===============================================================================================================
 PrintKeyword:
 
-                lda   TOKENBUFFER,y
+                lda   (dpl),y
                 dex
                 iny
                 sta    R0              ; the counter save area
                 sta    R0+1            ; to refer to later if needed
                 stx    printStorage+2
-                
+
                 ldx    #0
 PrintKeyLoop
                 dec   R0              ; Keyword indexes are 1 relative, adjust to zero relative
@@ -696,19 +798,20 @@ PrintChkRem:
                 cmp   R0+1
                 bne   PrintKeyDone
 PrintKeyRem:
-                lda  #TOKENBUFFER&$FF              ; if it is a rem then we must print the entire line
+                lda  dpl              ; if it is a rem then we must print the entire line
                 sta  PrtFrom
-                lda  #TOKENBUFFER>>8
+                lda  dpl+1
                 sta  PrtFrom+1
                 lda  #0
                 sta  PrtTerm
                 jsr  PrtLoop
+                dey                   ; point back to the terminating null value
 PrintKeyDone:
                 jmp  PrintProgNext
 ;==================================================================================================================
 ;Print Variable, number or operator
 PrintProgOperator:
-                lda   TOKENBUFFER,y
+                lda   (dpl),y
                 iny
                 dex
                 stx    printStorage+2
@@ -740,7 +843,7 @@ PrintOprDone
 ;tVhash            equ     156                    ; Variable #
 ;tVat              equ     157                    ; Variable @ = 0
 PrintProgVariable:
-                lda    TOKENBUFFER,y
+                lda    (dpl),y
                 iny
                 dex
                 cmp    tVhat

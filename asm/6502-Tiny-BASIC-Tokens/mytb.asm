@@ -420,8 +420,8 @@ NextIlNow       lda     ILTrace               ;Do we need to trace this
                 jsr     dbgLine               ;Print the IL trace information
 
 NextIL2         ldy     CUROFF
-                jsr     SkipSpaces
-                sty     CUROFF
+;                jsr     SkipSpaces
+;                sty     CUROFF
 ;Task IO Management
                 lda     taskRDPending         ; if it is zero then Nothing pending
                 beq     NextILStr
@@ -543,14 +543,14 @@ goodExit        jmp       NextIL
 ; This check if the escape key has been entered
 ; then changes out of run mode. z Set if esc found
 BreakSet:
-    jsr ISCHAR
-    beq BreakNo
-    jsr VGETCH
-    cmp #$1B
-    rts
+                jsr       ISCHAR
+                beq       BreakNo
+                jsr       VGETCH
+                cmp       #$1B
+                rts
 BreakNo:
-    lda #1
-    rts
+                lda       #1
+                rts
 
 ;
 
@@ -559,10 +559,9 @@ BreakNo:
 ; If there is, generate an error.
 ;
 iDONE           ldy     CUROFF
-                jsr     SkipSpaces
                 lda     (CURPTR),y
                 beq     doneadv
-                cmp     #COLON           ; is it a  ':' or eol
+                cmp     #oColon           ; is it a  ':' or eol
                 bne     idoneErr
                 sty     CUROFF
                 jmp     NextIL           ; continue on this line
@@ -575,38 +574,34 @@ idoneErr
 ; Advance to the next line
 ;
 doneadv
-;               jsr     FindNext2
                 jmp     NextIL
 ;
 ;=====================================================
 ; Print the string until a closing quote
 ;
-iPRS		ldy	CUROFF
-;
-; Odd logic here.  The main loop skipped any leading
-; whitespace inside the quoted text, so move back to
-; the quote, then move forward again.
-;
-		jsr	PrtQuoted
-		sty	CUROFF
-		jmp	NextIL
+iPRS:
+                jsr     PrtQuoted
+                sty     CUROFF
+                jmp     NextIL
 ;
 ;=====================================================
 ; Pop the top off the stack and print it as a signed
 ; decimal number.
 ;
-iPRN            jsr   popR0
-                jsr   PrintDecimal
-                jmp   NextIL
+iPRN:
+                jsr     popR0
+                jsr     PrintDecimal
+                jmp     NextIL
 ;
 ;=====================================================
 ; Space to next zone.  Currently the code does not
 ; keep track of which column the output is on, so
 ; just print a tab.
 ;
-iSPC		lda	#TAB
-		jsr	VOUTCH
-		jmp	NextIL
+iSPC
+                lda     #TAB
+                jsr     VOUTCH
+                jmp     NextIL
 ;
 ;=====================================================
 ; If in immediate mode, jump to the address following
@@ -622,12 +617,10 @@ iNXT            lda     RunMode
 ;
 iNxtRun
                 ldy     CUROFF
-                jsr     SkipSpaces
                 lda     (CURPTR),y
-                cmp     #COLON
+                cmp     #oColon
                 bne     iNxtRunGo
                 iny
-                jsr     SkipSpaces
                 sty     CUROFF
                 jmp     iNxtRun2
 
@@ -1273,32 +1266,34 @@ iLSTloop        lda      dpl
                 cmp     ProgramEnd+1
                 beq     iLstdone
 ;
-iLstNotEnd      ldy     #1              ;Change:  Skip first byte length
-                lda     (dpl),y         ;line number LSB
-                sta     R0
-                iny
-                lda     (dpl),y	        ;line number MSB
-                sta     R0+1
-                iny
-                sty     tempIlY
-                jsr     PrintDecimal
-                lda     #SPACE
-                jsr     VOUTCH
-                ldy     tempIlY
-iLSTl2          lda     (dpl),y
-                beq     iLST3           ;end of this line 0 value
-                sty     tempIlY
-                jsr     VOUTCH
-                ldy     tempIlY
-                iny
-                bne     iLSTl2          ;do next char
+iLstNotEnd       jsr     PrintProgramLine
+;                ldy     #1              ;Change:  Skip first byte length
+;                lda     (dpl),y         ;line number LSB
+;                sta     R0
+;                iny
+;                lda     (dpl),y	        ;line number MSB
+;                sta     R0+1
+;                iny
+;                sty     tempIlY
+;                jsr     PrintDecimal
+;                lda     #SPACE
+;                jsr     VOUTCH
+;                ldy     tempIlY
+;iLSTl2          lda     (dpl),y
+;                beq     iLST3           ;end of this line 0 value
+;                sty     tempIlY
+;                jsr     VOUTCH
+;                ldy     tempIlY
+;                iny
+;                bne     iLSTl2          ;do next char
 ;
 ; End of this line.  Print CR/LF, then move to the
 ; next line.
 ;
-iLST3           iny                     ;Move to next line
+iLST3           ldy     #0              ;Move to next line
+                lda     (dpl),y         ;Current line length
                 clc                     ;Clear the carry flag
-                tya                     ;Current Offset
+;                tya
                 adc     dpl             ;Add the offset to the pointer
                 sta     dpl             ;Save the new value
                 lda     dpl+1           ;Next byte
@@ -1308,10 +1303,10 @@ iLST3           iny                     ;Move to next line
 ; Have to manually do CR/LF so it uses the vectored
 ; output function.
 ;
-                lda     #CR
-                jsr     VOUTCH
-                lda     #LF
-                jsr     VOUTCH
+;                lda     #CR
+;                jsr     VOUTCH
+;                lda     #LF
+;                jsr     VOUTCH
                 jmp     iLSTloop        ;do next line
 ;
 iLstdone        jsr     SetOutConsole
@@ -1329,10 +1324,16 @@ iGETLINE
                 lda     #0
                 sta     RunMode
 iGetParseLine:
-                lda     CUROFF
-                pha
+               ; lda     CUROFF
+               ; pha
                 jsr     ParseInputLine
-                pha
+               ; pla
+              ;  sta     CUROFF
+                lda     #TOKENBUFFER&$FF
+                sta     CURPTR
+                lda     #TOKENBUFFER>>8
+                sta     CURPTR+1
+                lda     #1
                 sta     CUROFF
                 jmp     NextIL
 ;
@@ -1342,10 +1343,11 @@ iGetParseLine:
 ; Insert the line into the program or delete the line
 ; if there is nothing after the line number,
 ;
-iINSRT          ldy     #0
-                jsr     getDecimal      ;convert line #
-                jsr     SkipSpaces      ;Ignore any spaces after the line number
-                sty     offset          ;Save the start of the program line text
+iINSRT          ; On entry here the TOKEBUFFER contains the Parsed input line completely
+                lda     TOKENBUFFER+1   ; Get the first byte of the line number
+                sta     R0              ; place the number into R0
+                lda     TOKENBUFFER+2   ; Get hi byte of line number
+                STA     R0+1            ; Place it into
 ;
 ; Now find the line OR the next higher line OR the
 ; end of the program.
@@ -1412,13 +1414,17 @@ InsDelLoop      ldy     lineLength    ;Move a byte up to remove the space
 ; Deletion is done.
 ; If the new line is empty we're done.  Now we have to open a space for the line we are inserting
 ;
-insert2         ldy     offset          ; get back ptr  Get the current offset
-                lda     LINBUF,y        ;next byte     Get the next byte o be stored
-                beq     mvUpFini        ;empty line    if there is a null then we were deleting a line, no content
+insert2        ; ldy     offset               ; get back ptr  Get the current offset
+                lda     TOKENBUFFER          ; Get the length
+                cmp     #4                   ; empty lines only have 4 bytes { len(1), linenum(2) ,null(1) }
+;               lda     LINBUF,y             ;next byte     Get the next byte to be stored
+                beq     mvUpFini             ;empty line    if there is a null then we were deleting a line, no content
 ;
 ; CURPTR points to where the line will be inserted.
 ;
-                jsr     getLineLength   ;get bytes needed Reload the number of bytes required for the new line
+;               jsr     getLineLength   ;get bytes needed Reload the number of bytes required for the new line
+                ldx     TOKENBUFFER
+                stx     lineLength      ; So update, the TOKENBUFFER already has the line length
 ;
                 lda     ProgramEnd      ;Load the start address for the copy
                                         ;At this point curptr still contains the location we will insert data
@@ -1460,21 +1466,26 @@ mvUpDone
 ;===================jlit use length before line newline
 
                 ldy     #0              ;Set offset of copy
-                lda     lineLength      ;We will insert the actual length of the line first
-                sta     (CURPTR),y      ;Store the length
-                iny
-                lda     R0              ;Store the line number next
-                sta     (CURPTR),y
-                iny
-                lda     R0+1
-                sta     (CURPTR),y
-                iny
+;                lda     lineLength      ;We will insert the actual length of the line first
+;                sta     (CURPTR),y      ;Store the length
+;                iny
+;                lda     R0              ;Store the line number next
+;                sta     (CURPTR),y
+;                iny
+;                lda     R0+1
+;                sta     (CURPTR),y
+;                iny
 ;
-                ldx     offset         ;Load the offset into line buffer in page zero
-mvUpLoop2       lda     LINBUF,x       ;get a byte
+;                ldx     offset         ; Load the offset into line buffer in page zero
+                ldx     #0              ; the token buffer is ready to copy
+mvUpLoop2
+;                lda     LINBUF,x       ;get a byte
+                lda     TOKENBUFFER,x       ;get a byte
                 sta     (CURPTR),y     ;Store into Space opened, copies the closing null as well
-                beq     mvUpFini       ;hit the null at end of line then we are done
+
                 inx
+                cpx     TOKENBUFFER    ; Check if we have copied all that we need to
+                bcs     mvUpFini       ;hit the null at end of line then we are done
                 iny
                 bne     mvUpLoop2      ;in case y wraps past 256 bytes stop
 ;
@@ -1551,10 +1562,10 @@ iVINIT          jsr     subVINIT
 ; Set the address of the error handler.  After any
 ; error, set to the ILPC to the specified location.
 ;
-iERRGOTO	jsr	getILWord
-		stx	errGoto
-		sta	errGoto+1
-		jmp	NextIL
+iERRGOTO        jsr     getILWord
+                stx     errGoto
+                sta     errGoto+1
+                jmp     NextIL
 ;
 ;=====================================================
 ; TST is followed by an 8 bit signed offset, then a
@@ -1613,20 +1624,25 @@ iTSTLET         jsr     getILByte     ; Get the relative offset byte
                 jsr     saveIL        ; save to restore when done if fail
 
                 ldy     CUROFF        ; Get the current offset into the buffer
-                jsr     SkipSpaces    ; Skipp leading spaces reall only for command line execution
-                iny                   ; skip the Variable name, the leading spaces are always removed
-                jsr     SkipSpaces    ; skip any SkipSpaces
-                lda     (CURPTR),y    ; Get what should be an equal sign
-                cmp     #'=           ; check if equals
-                beq     iTSTLETGOOD   ; Yes that is fine
-                cmp     #'[           ; Can be a subscript as well
-                bne     iTSTfail      ; return it failed
+                lda     (CURPTR),y    ; Get the byte
+                cmp     #kLet         ; Is it a let keyword
+                beq     iTSTLETGOOD   ; We have a good let statement
+                cmp     #tVa          ; lets check for a variable
+                bcc     iTSTfail      ; Less than variable range
+                cmp     #tVat+1       ; Test if it is greater that the last variable
+                bcc    iTSTGOODVAR    ; No it failed get out Fast
+                bcs     iTSTfail      ; return it failed
 
 iTSTLETGOOD
+                iny
+                sty     CUROFF        ; If it was a let then inc past the let word
+iTSTGOODVAR
                 jmp     NextIL        ; Then next instruction
 
 ;=================================================JLIT=
-;
+; Test a byte at an indirect address
+; fails if byte is not equal to the value at the address
+; The tests an indirect byte and branches if true
 iTSTBYTE        jsr     getILByte     ; Get the relative offset byte
                 sta     offset        ; Save the jump offset for fails
                 jsr     saveIL        ; save to restore when done if fail
@@ -1642,28 +1658,63 @@ iTSTBYTE        jsr     getILByte     ; Get the relative offset byte
 iTSTByteNotEqual
                jmp     NextIL        ; Then next instruction
 
+;=================================================JLIT=
+; Test a byte  branch if it fails
+iTSTB           jsr     getILByte     ; Get the relative offset byte
+                sta     offset        ; Save the jump offset for fails
+                jsr     saveIL        ; save to restore when done if fail
+                jsr     getILByte     ; Get a word into RO
+                ldy     CUROFF        ; Get offset in the stream
+                cmp     (CURPTR),y
+                beq     iTSTBMatch    ; Yes it matched move on
+                jmp     iTSTfail      ; REcover and move on to next test
+
+iTSTBMatch
+               jmp     NextIL        ; Then next instruction
+
+;=================================================JLIT=
+; Test a byte  branch if it fails
+iTSTW           jsr     getILByte     ; Get the relative offset byte
+                sta     offset        ; Save the jump offset for fails
+                jsr     saveIL        ; save to restore when done if fail
+                jsr     getILWord     ; Get a word into RO
+                stx     R0
+                sta     R0+1
+                ldy     CUROFF        ; Get offset in the stream
+                txa
+                cmp     (CURPTR),y    ; Test if low order byte matches
+                beq     iTSTBMatch    ; Yes it matched move on
+                jmp     iTSTfail      ; REcover and move on to next test
+iTSTWM1:        iny
+                lda     R0+1
+                cmp     (CURPTR),y    ; Check high order byte
+                beq     iTSTWMatch
+                jmp     iTSTfail
+
+iTSTWMatch
+                jmp     NextIL        ; Then next instruction
 
 ;================================================jLIT=
 ;Test for end of line
 ;
-iTSTDONE        jsr     getILByte
-		    sta     offset
-		    jsr	   saveIL
-		    ldy	CUROFF
-		    sty	dpl
-		    jsr	SkipSpaces
-		    lda	(CURPTR),y
-		    beq	iTSTDONEtrue
-		    cmp #COLON
-		    beq iTSTDONEtrue
-		    ldy	dpl
-		    sty	CUROFF
-		    jmp	iTSTfail
+iTSTDONE:
+                jsr     getILByte
+                sta     offset
+                jsr     saveIL
+                ldy     CUROFF
+                sty     dpl
+                lda     (CURPTR),y
+                beq     iTSTDONEtrue
+                cmp     #oColon
+                beq     iTSTDONEtrue
+                ldy     dpl
+                sty     CUROFF
+                jmp     iTSTfail
 ;
 ; Advance to the next line
 ;
 iTSTDONEtrue
-    jmp	NextIL
+                jmp	NextIL
 
 tstBranchLink   jmp   tstBranch
 ;
@@ -1710,36 +1761,34 @@ iTSTVT          jsr     popR1                 ; The task top has the context id(
                 sta     R2
                 beq     iTSTVV
 
-iTSTV           lda     #1
+iTSTV           lda     #1                    ; set a process Flag
                 sta     R2
 
-iTSTVV          jsr     getILByte      ;offset
+iTSTVV          jsr     getILByte             ;offset
                 sta     offset
 ;
-                ldy     CUROFF
-                jsr     SkipSpaces
-                lda     (CURPTR),y
-                bne     iTSTVnext
-                jmp     tstBranchLink       ;if we are at the end of line just get out with error
+                ldy     CUROFF                ; Get the pointer into the program
+                lda     (CURPTR),y            ; Get the next byte to process
+                bne     iTSTVnext             ; if is not null then process it
+                jmp     tstBranchLink         ;if we are at the end of line just get out with error
 ;
 iTSTVnext:
-                cmp     #'@             ;allow access to all unused memory as an array or integers
-                beq     iTSTVat         ;Setup to do a pointer to unused memory
+                cmp     #tVat                 ;allow access to all unused memory as an array or integers
+                beq     iTSTVat               ;Setup to do a pointer to unused memory
 
-                cmp     #'#             ; parameters passed to this task
+                cmp     #tVhash               ; parameters passed to this task
                 beq     iTSTVParm
 
-                cmp    #'^               ; task exit code
+                cmp    #tVhat               ; task exit code
                 bne    iTSTV_A2Z
                 lda    #TASKEXITCODE
                 bne    iTSTVContinue
 
 iTSTV_A2Z:
-                ora     #$20            ;make lower then upper
-                eor     #$20            ;allow lower case here
-                cmp     #'A
+
+                cmp     #tVa
                 bcc     tstBranchLink
-                cmp     #'Z+1
+                cmp     #tVz+1
                 bcs     tstBranchLink
 
 
@@ -1747,8 +1796,7 @@ iTSTV_A2Z:
 ; The condition is true, so convert to an index, push
 ; it onto the stack and continue running.
 ;
-                sec
-                sbc     #'A                   ;index is zero based
+                and     #%01111111            ;Mask off the high bit
                 asl                           ;multiply by two
 
 iTSTVContinue:
@@ -1815,18 +1863,16 @@ iTSTL           jsr   getILByte
                 sta   offset
 ;
                 ldy   CUROFF
-		jsr	SkipSpaces
-		lda	(CURPTR),y
+                lda  (CURPTR),y
 ;
-		cmp	#'0
-		bcc	tstBranch
-		cmp	#'9+1
-		bcs	tstBranch
-;
+                iny
+                ora  (CURPTR),y
+                beq   tstBranch
+                
+                iny
 ; It's a digit, so convert to a number.
 ;
-		jsr	getDecimal
-		jmp	NextIL
+               jmp	NextIL
 ;
 ;=====================================================
 ; TSTN checks for a number.  This is very simplistic;
@@ -1837,24 +1883,62 @@ iTSTN           jsr     getILByte
                 sta     offset
 ;
                 ldy     CUROFF
-                jsr     SkipSpaces
+                lda     #0
+                sta     dpl
                 lda     (CURPTR),y
-                beq     tstBranch
-                cmp     #'-             ;negative?
-                beq     iTSTN_1
-                cmp     #'0
-                bcc     tstBranch
-                cmp     #'9+1
-                bcs     tstBranch
+                cmp     #oMinus
+                bne     chkByte
+                inc     dpl
+
+chkByte:
+                cmp     tByte
+                bne     chkInteger
+                lda     #0
+                sta     R0+1
+                iny
+                lda     (CURPTR),y
+                sta     R0
+                iny
+                jmp     iTSTN_1
+                
+chkInteger:
+                cmp     tInteger
+                bne     tstBranch
+                iny
+                lda     (CURPTR),y
+                sta     R0
+                iny
+                lda     (CURPTR),y
+                sta     R0+1
+                iny
 ;
-; It's a digit, so convert to a number.
+; Check if it is negative and make it so
 ;
 iTSTN_1
-                jsr     getDecimal
                 sty     CUROFF
+                
+                lda     dpl
+                beq     iTSTN_2              ;positive
+;
+                lda     R0
+                ora     R0+1
+                beq     iTSTN_2              ;zero
+               
+; Invert all the bits, then add one.
+;
+                lda     R0
+                eor     #$ff
+                sta     R0
+                lda     R0+1
+                eor     #$ff
+                sta     R0+1
+;
+                inc     R0
+                bne     iTSTN_2
+                inc     R0+1
+iTSTN_2:
                 jsr     pushR0          ;save onto stack
                 jmp     NextIL
-
 ;
 ; Common jump point for all TSTx instructions that
 ; fail to meet the requirements.  This takes the

@@ -325,8 +325,9 @@
         MoveScaled(1,42,40,4)
         Text = ("Enter Breakpoint addresses into this box")
       }
-      { BreakPointList ListEditor
+      { !BreakPointList ListEditor
         MoveScaled(1,6,28,37)
+        #Public = True
         Font = Font["Monospace"]
         ToolTip = ("Enter Breakpoint address into this box")
       }
@@ -357,9 +358,10 @@
         ToolTip = ("Clear all symbol table entries")
         Text = ("Clear Symbols")
       }
-      { SymLoadedList ListView
+      { !SymLoadedList ListView
         MoveScaled(30,50,26,19)
-        ToolTip = ("List of symbol tables loaded")
+        #Public = True
+        ToolTip = ("List of symbol tables loaded\nDouble Click to open source code \ndebbuger for a selected binary")
       }
       { RemoveAll Button
         MoveScaled(30,30,7,3)
@@ -375,6 +377,11 @@
         MoveScaled(30,12,7,3)
         ToolTip = ("Adds a location to watch to the watch window.")
         Text = ("Watch")
+      }
+      { OpenSourceDebug Button
+        MoveScaled(57,65,15,4)
+        ToolTip = ("Open a source code debugger\nYou must select the listing file which matches the loaded binary.\nIf you have a symbol table loaded then\nyou can just select the sym entry and double click to open the source")
+        Text = ("Src Debug")
       }
     }
     { ControlPanel Panel

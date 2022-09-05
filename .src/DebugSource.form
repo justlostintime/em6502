@@ -1,0 +1,48 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,218,149)
+  Expand = True
+  AutoResize = True
+  { !SourceCodeTracking TextEditor
+    MoveScaled(2,1,215,138)
+    #Public = True
+    Font = Font["Ubuntu Mono,+2"]
+    Mouse = Cursor.Arrow
+    ShowPreview = True
+    Highlight = "C"
+    Mode = "Custom"
+    ReadOnly = True
+    TabSize = 8
+    ShowPosition = True
+    ShowLimit = True
+    ShowCurrent = True
+    ShowLineNumber = True
+    ShowIcon = True
+    ShowExpand = True
+  }
+  { ButtonPanel Panel
+    MoveScaled(2,141,215,7)
+    { SourceStep Button
+      MoveScaled(2,1,20,5)
+      Text = ("Step")
+    }
+    { SourcStepOver Button
+      MoveScaled(26,1,20,5)
+      Text = ("Step Over")
+    }
+    { SourceGo Button
+      MoveScaled(48,1,20,5)
+      Text = ("Go")
+    }
+    { !SourceCodeFile TextBox
+      MoveScaled(142,1,71,5)
+      #Public = True
+      ReadOnly = True
+    }
+    { SourceFileOpen Button
+      MoveScaled(119,1,21,5)
+      Text = ("Open Source File")
+    }
+  }
+}

@@ -1,0 +1,274 @@
+' Gambas class file
+
+Public SourceBreakPoints As New Integer[]
+Public SourceBookMarks As New Integer[]
+Property MYCPU As CPU6502 Use $MYCPU
+Property MYCOMPUTER As Computer Use $MYCOMPUTER
+Property DebugFile As String Use $DebugFile
+ListingFileText As String = ""
+DisplayFileText As String = ""
+AddressPerLine As New String[]                                    ' contains an entry for every line of the diplayed text
+SourceArray As String[]
+StepOver As String = ""
+
+'' Create the form and set the cpu and computer running
+'' The file name must be the full path to a listing file
+Public Sub _new(TheComputer As Computer, TheListing As String)
+
+  $MYCOMPUTER = TheComputer
+  $DebugFile = TheListing
+
+  If TheListing Then
+    OpenDebugFile(TheListing)
+  Else
+    $DebugFile = ""
+  Endif
+
+End
+
+
+Sub OpenDebugFile(FileName As String)
+
+  Try ListingFileText = File.Load(FileName)
+  If Error Then
+    Message("Unable to open source listing file " & filename & " " & Error.text)
+    Return
+  Endif
+  MakeFileReady()
+  SourceBreakPoints = New Integer[]
+  SourceCodeTracking.BreakPoints = SourceBreakPoints
+  SourceCodeTracking.Text = SourceArray.join("\n")
+  Me.title = "Debugging File : " & Quote(FileName)
+
+End
+
+
+Public Sub Form_Open()
+
+  Dim setName As String = IIf($DebugFile = "", "SourcDebugDefault", $DebugFile)
+
+  Me.top = Settings[setName &/ "Top", Me.top]
+  Me.Left = Settings[setName &/ "Left", Me.Left]
+  Me.Height = Settings[SetName &/ "Height", Me.height]
+  Me.Width = Settings[SetName &/ "Width", Me.width]
+  Me.Title = "Debugging File : " & Quote(setName)
+
+  SourceCodeTracking.BreakPoints = SourceBreakPoints
+
+  FMain.RegisterForStep(Me)
+
+End
+
+Public Sub Form_Close()
+
+  Dim setName As String = IIf($DebugFile = "", "SourcDebugDefault", $DebugFile)
+
+  Settings[setName &/ "Top"] = Me.top
+  Settings[setName &/ "Left"] = Me.Left
+  Settings[SetName &/ "Height"] = Me.Height
+  Settings[SetName &/ "Width"] = Me.Width
+
+  FMain.UnRegisterForStep(Me)
+
+End
+
+Public Sub Step(Address As String)
+
+  Dim i As Integer = AddressPerLine.Find(Address)
+
+  If i = -1 Then Return                           ' not withing this source code
+  Dim j As Integer = i + 1
+  While j < AddressPerLine.count
+    If AddressPerLine[j] = Address Then
+      Inc i
+      Inc j
+    Else
+      Break
+    Endif
+  Wend
+
+  SourceCodeTracking.Goto(0, i)
+  If StepOver = address Then
+    SourceCodeTracking_DblClick()
+    StepOver = ""
+  Endif
+
+End
+
+
+Sub MakeFileReady()
+
+  SourceArray = Split(ListingFileText, "\n", "", False, True)
+
+  For i As Integer = SourceArray.max DownTo 0
+    If Left(SourceArray[i], 4) == "----" Or If SourceArray[i] = "" Then
+      SourceArray.Remove(i)
+    Endif
+  Next
+
+  For Each s As String In SourceArray
+
+    Dim SourceLine As String[] = Split(s, "\t", "", False, True)
+    Dim SourceAddress As String[] = Split(SourceLine[0], " ", "", True, False)
+    If SourceAddress.Count >= 2 Then
+      AddressPerLine.Add(Upper(SourceAddress[1]))
+    Else
+      AddressPerLine.add("----")
+    Endif
+  Next
+
+  For i = 0 To SourceArray.Max
+    SourceArray[i] = IIf(AddressPerLine[i][0] = "U", AddressPerLine[i], " " & AddressPerLine[i]) & Right(ConvertTabs(SourceArray[i], 8), -30)
+  Next
+
+End
+
+Sub ConvertTabs(source As String, tablen As Integer) As String
+
+  Dim dest As String = ""
+
+  For i As Integer = 0 To source.len - 1
+    If source[i] = "\t" Then
+      Dest &= " "
+      While (Dest.len Mod tablen) <> 0
+        Dest &= " "
+      Wend
+    Else
+      Dest &= source[i]
+    Endif
+  Next
+  Return dest
+
+End
+
+
+Public Sub SourceFileOpen_Click()
+
+  Dialog.Title = "Choose the listing file for loaded application to Debug"
+  Dialog.filter = ["*.lst", "Assembler Listing", "*", "All Files"]
+
+  If Dialog.OpenFile(False) Then Return
+  SourceCodeFile.text = Dialog.Path
+  OpenDebugFile(SourceCodeFile.text)
+
+End
+
+Public Sub SourceCodeTracking_DblClick()
+
+  Dim lineno As Integer = SourceCodeTracking.Line
+  Dim breaklist As String[] = FMain.BreakPointList.List
+
+  If SourceBreakPoints.Exist(lineno) Then
+    SourceBreakPoints.Remove(SourceBreakPoints.Find(lineno))
+    SourceCodeTracking.Breakpoints = SourceBreakPoints
+    Dim idx As Integer = breaklist.Find(AddressPerLine[lineno] & " " & AddressPerLine[lineno])
+    FMain.BreakPointList.Remove(idx)
+    FMain.SetNextBreak()
+
+  Else
+
+    If AddressPerLine[lineno][0] == "U" Then
+      Message("Line addresses beginning with a U are in Data Space\nYou may not set a breakpoint here!")
+      Return
+    Else If Trim(Mid(SourceArray[lineno], 6, 4)) = "" Then
+      Message("You may only place a breakpoint at a valid Assembly instruction")
+      Return
+    Else If SourceArray[lineno] Like "* equ *" Or If SourceArray[lineno] Like "*.word*" Or If SourceArray[lineno] Like "*.byte*" Then
+      Message("You may not add a breakpoint to a value definition ")
+      Return
+    Endif
+    SourceBreakPoints.Add(lineno)
+    SourceCodeTracking.Breakpoints = SourceBreakPoints
+
+    If Not breaklist.Exist(AddressPerLine[lineno] & " " & AddressPerLine[lineno]) Then
+      FMain.BreakPointList.Add(AddressPerLine[lineno] & " " & AddressPerLine[lineno])
+      FMain.SetNextBreak()
+    Endif
+
+  Endif
+
+  SourceCodeTracking.HideSelection()
+
+End
+
+Public Sub Form_Resize()
+
+  SourceCodeTracking.top = 1
+  SourceCodeTracking.Left = 1
+  SourceCodeTracking.width = Me.width - 2
+  SourceCodeTracking.height = Me.height - 4 - ButtonPanel.height
+  ButtonPanel.top = SourceCodeTracking.height + 2
+
+End
+
+
+Public Sub SourceStep_Click()
+
+  FMain.StepNow_Click()
+
+End
+
+Public Sub SourceGo_Click()
+
+  FMain.GoNow_Click()
+
+End
+
+Public Sub SourcStepOver_Click()
+
+  Dim lineno As Integer = SourceCodeTracking.Line
+  Dim breaklist As String[] = FMain.BreakPointList.List
+
+  If SourceArray[lineno] Like "*{jsr,JSR}*" Then
+    lineno = NextValidLine(lineno)
+    If SourceBreakPoints.Exist(lineno) Then Return
+
+    StepOver = AddressPerLine[LineNo]
+
+    SourceBreakPoints.Add(lineno)
+    SourceCodeTracking.Breakpoints = SourceBreakPoints
+
+    If Not breaklist.Exist(AddressPerLine[lineno] & " " & AddressPerLine[lineno]) Then
+      FMain.BreakPointList.Add(AddressPerLine[lineno] & " " & AddressPerLine[lineno])
+      FMain.SetNextBreak()
+    Endif
+
+    SourceStep_Click()
+    SourceGo_Click()
+
+  Else
+    SourceStep_Click()
+  Endif
+
+End
+
+Sub NextValidLine(lineno As Integer) As Integer
+
+  Inc lineno
+
+  While lineno < SourceArray.count
+
+    If AddressPerLine[lineno][0] == "U" Or If Trim(Mid(SourceArray[lineno], 6, 4)) = "" Or If SourceArray[lineno] Like "* equ *" Or If SourceArray[lineno] Like "*.word*" Or If SourceArray[lineno] Like "*.byte*" Then
+      Inc lineno
+    Else
+      Break
+    Endif
+
+  Wend
+
+  Dim Address As String = AddressPerLine[Lineno]
+
+  Dim j As Integer = LineNo + 1
+  While j < AddressPerLine.count
+    If AddressPerLine[j] = Address Then
+      Inc LineNo
+      Inc j
+    Else
+      Break
+    Endif
+  Wend
+
+  Return lineno
+
+End
+
