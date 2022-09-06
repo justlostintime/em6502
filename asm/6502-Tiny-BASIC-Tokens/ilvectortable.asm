@@ -119,4 +119,5 @@
       dw  iSLICE        ;100      set the time slice for tasks
       dw  iTSTB         ;101      Test if byte equals
       dw  iTSTW         ;102      Test If word equals
+      dw  iOnGoto       ;103      Branch to table entry based upon buffer value
 

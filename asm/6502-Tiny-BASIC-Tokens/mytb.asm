@@ -1001,32 +1001,32 @@ ResetIL         lda     #0
 ; Pop two items off stack, add them, then place the
 ; result back onto the stack.
 ;
-iADD            jsr   popR0
-                jsr   popR1
+iADD            jsr     popR0
+                jsr     popR1
 iADDfast:
                 clc
-                lda   R0
-                adc   R1
-                sta   R0
-                lda   R0+1
-                adc   R1+1
-                sta   R0+1
-                jmp   pushR0nextIl
+                lda     R0
+                adc     R1
+                sta     R0
+                lda     R0+1
+                adc     R1+1
+                sta     R0+1
+                jmp     pushR0nextIl
 ;
 ;=====================================================
 ; Pop two items off the stack.  Subtract the top of
 ; stack from the lower entry.
 ;
-iSUB		jsr	popR1
-		jsr	popR0
-		sec
-		lda	R0
-		sbc	R1
-		sta	R0
-		lda	R0+1
-		sbc	R1+1
-		sta	R0+1
-		jmp	pushR0nextIl
+iSUB            jsr     popR1
+                jsr     popR0
+                sec
+                lda     R0
+                sbc     R1
+                sta     R0
+                lda     R0+1
+                sbc     R1+1
+                sta     R0+1
+                jmp     pushR0nextIl
 ;
 ;=====================================================
 ; Negate the top of stack.
@@ -1670,7 +1670,9 @@ iTSTB           jsr     getILByte     ; Get the relative offset byte
                 jmp     iTSTfail      ; REcover and move on to next test
 
 iTSTBMatch
-               jmp     NextIL        ; Then next instruction
+               iny
+               sty     CUROFF         ; Point to the next byte
+               jmp     NextIL         ; Then next instruction
 
 ;=================================================JLIT=
 ; Test a byte  branch if it fails
@@ -1692,6 +1694,8 @@ iTSTWM1:        iny
                 jmp     iTSTfail
 
 iTSTWMatch
+                iny
+                sty     CUROFF
                 jmp     NextIL        ; Then next instruction
 
 ;================================================jLIT=
@@ -1734,6 +1738,7 @@ iINCVAR:
                sta      (R0),y
 iINCDONE:
                jmp      NextIL
+
 iDECVAR:
                jsr      popR0
                ldy      #0
@@ -1743,7 +1748,7 @@ iDECVAR:
                sta     (R0),y
                iny
                lda     (R0),y
-               adc     #0
+               sbc     #0
                sta     (R0),y
                jmp     NextIL
 
@@ -1859,20 +1864,25 @@ iTSTVParm
 ; value in R0 instead of pushing onto stack.
 ; This tests for a valid line number
 ;
-iTSTL           jsr   getILByte
-                sta   offset
+iTSTL           jsr     getILByte
+                sta     offset
 ;
-                ldy   CUROFF
-                lda  (CURPTR),y
-;
+                ldy     CUROFF
+                lda     (CURPTR),y
                 iny
-                ora  (CURPTR),y
-                beq   tstBranch
-                
+                ora     (CURPTR),y
+                beq     iTSTLNotLineNo
+
+
+; In Both cases we need to point to the first usefull byte to process.
                 iny
-; It's a digit, so convert to a number.
-;
-               jmp	NextIL
+                sty     CUROFF
+                jmp     NextIL
+iTSTLNotLineNo:
+                iny
+                sty     CUROFF
+                jmp     tstBranch
+
 ;
 ;=====================================================
 ; TSTN checks for a number.  This is very simplistic;
@@ -1891,7 +1901,7 @@ iTSTN           jsr     getILByte
                 inc     dpl
 
 chkByte:
-                cmp     tByte
+                cmp     #tByte
                 bne     chkInteger
                 lda     #0
                 sta     R0+1
@@ -1900,9 +1910,9 @@ chkByte:
                 sta     R0
                 iny
                 jmp     iTSTN_1
-                
+
 chkInteger:
-                cmp     tInteger
+                cmp     #tInteger
                 bne     tstBranch
                 iny
                 lda     (CURPTR),y
@@ -1916,14 +1926,14 @@ chkInteger:
 ;
 iTSTN_1
                 sty     CUROFF
-                
+
                 lda     dpl
                 beq     iTSTN_2              ;positive
 ;
                 lda     R0
                 ora     R0+1
                 beq     iTSTN_2              ;zero
-               
+
 ; Invert all the bits, then add one.
 ;
                 lda     R0

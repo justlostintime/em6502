@@ -797,7 +797,7 @@ idbgBasic       bit     ILTrace
 dbgBasicLoop
                 jsr     VGETCH
                 jsr     CRLF
-                jsr     SetInConsole
+                jsr     SetInDebugEnd
 
                 cmp     #'s                 ; Quit program
                 beq     dbgBasicStop
@@ -809,13 +809,13 @@ dbgBasicLoop
                 clc
                 bcc     dbgBasicLoop        ; Next char
 
-dbgBasicDone    jsr     SetOutConsole
+dbgBasicDone    jsr     SetOutDebugEnd
                 pla
                 tay
 dbgBasicNone    jmp     NextIL
 
 dbgBasicStop
-                jsr     SetOutConsole
+                jsr     SetOutDebugEnd
                 pla
                 tay
                jmp     iFIN
@@ -855,7 +855,7 @@ dbgPrt
                 jsr     OUTHEX
 ;
                 jsr     CRLF
-                jsr     SetOutConsole
+                jsr     SetOutDebugEnd
                 jsr     ILChkRange
                 bcs     dbgLineErr
                 clc
@@ -865,7 +865,7 @@ dbgLineErr
                 jsr     SetOutDebug
                 jsr     puts
                 db      "Outside Valid IL Address Range",CR,LF,0
-                jsr     SetOutConsole
+                jsr     SetOutDebugEnd
                 sec
                 rts
 
@@ -960,9 +960,16 @@ CopyStackR1
 
 ;====================================================
 ;Swap the out debug call for standard calls
-
+  if    USEDEBUGPORT
+DebugIOSave     ds     2
+DebugInSave     ds     2
+  endif
 SetOutDebug
           if    USEDEBUGPORT
+                lda    BOutVec
+                sta    DebugIOSave
+                lda    BOutVec+1
+                sta    DebugIOSave+1
                 lda    #OUTDEBUG&$ff         ; Put the Debug output
                 sta    BOutVec
                 lda    #OUTDEBUG>>8
@@ -971,9 +978,29 @@ SetOutDebug
                 rts
 SetInDebug
          if     USEDEBUGPORT
+                lda    BInVec
+                sta    DebugInSave
+                lda    BInVec+1
+                sta    DebugInSave+1
                 lda   #INDEBUG&$ff
                 sta   BInVec
                 lda   #INDEBUG>>8
+                sta   BInVec+1
+         endif
+                rts
+SetOutDebugEnd
+      if     USEDEBUGPORT
+                lda   DebugIOSave
+                sta   BOutVec
+                lda   DebugIOSave+1
+                sta   BOutVec+1
+         endif
+                rts
+SetInDebugEnd
+      if     USEDEBUGPORT
+                lda   DebugInSave
+                sta   BInVec
+                lda   DebugIOSave+1
                 sta   BInVec+1
          endif
                 rts
@@ -986,7 +1013,7 @@ SetInDebug
 DebugWrite
                 jsr     SetOutDebug
                 jsr     PrtStr
-                jsr     SetOutConsole
+                jsr     SetOutDebugEnd
                 rts
 
 OUTDEBUG
@@ -999,8 +1026,82 @@ INDEBUG         lda     DEBUGPORT
                 lda     DEBUGPORT+1
                 rts
 
+;======================================================================
+;Copy Quoted string to buffer, terminate with 0 byte
+; R0  Source tring points to tString type
+; x is terminator
+; R1 points to destinition location
+; On exit R0 contains length of copy Plus Term and leading bytes
 
+qstrcpy
+                jsr     pushR0
+                jsr     IncR0                           ; point past the tString
+                jsr     IncR0                           ; Point Past the opening "
+                ldx     #'"                             ; copy Termination
+                jsr     pstrcpy
+                jsr     IncR0                           ; point to "
+                jsr     IncR0                           ; Point to next free byte
+                jsr     popR1
+                sec
+                lda     R0
+                sbc     R1
+                sta     R0
+                lda     R0+1
+                sbc     R1+1
+                sta     R0+1
+                rts
 
+;=========================================================================
+;Copy string from R0 to R1, terminator in x
+; On exit    R0 contains the length of the copy
+pstrcpy: 
+                ldy     #0
+                stx     R2
+
+strcpyLoop:
+                lda     (R0),y
+                cmp     R2
+                beq     strcpyDone
+                sta     (R1),y
+                jsr     IncR0
+                jsr     IncR1
+                bcc     strcpyLoop
+strcpyDone:     
+                lda     #0
+                sta     (R1),y
+               
+                rts
+
+;=========================================================================
+; on exit c is set on overflow
+IncR1:
+                pha
+                clc
+                lda     #1
+                adc     R1
+                sta     R1
+                bcc     IncR1Done
+                lda     #0
+                adc     R1+1
+                sta     R1+1
+IncR1Done:
+                pla
+                rts
+;=========================================================================
+; on exit c is set on overflow
+IncR0:
+                pha
+                clc
+                lda     #1
+                adc     R0
+                sta     R0
+                bcc     IncR0Done
+                lda     #0
+                adc     R0+1
+                sta     R0+1
+IncR0Done:
+                pla
+                rts
 
 
 

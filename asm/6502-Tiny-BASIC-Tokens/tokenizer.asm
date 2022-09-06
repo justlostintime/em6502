@@ -237,12 +237,12 @@ ParseComplete:
                 tax
                 pla
                 sta     CUROFF
-                
+
  if DEBUGPARSER
 
                 jsr     printTokenBuffer
                 jsr     DebugPrintProgramLine
-                jsr     SetOutConsole
+                jsr     SetOutDebugEnd
 
  endif
                 rts
@@ -868,7 +868,42 @@ PrintTheVar:
                 jsr   VOUTCH
                 jmp   PrintProgNext
 
+;=========================================================================
+; Read an IL byte lookit up in the table, of words
+; set the next ilpc to point to that address
+; if not found then do ussual filter stuff
+; ongoto ilvectortable, not found address
+iOnGoto:        jsr     getILWord                             ; places the word into r0, pointer to table
+                stx     R0
+                sta     R0+1
+                
+                ldy     CUROFF
+                lda     (CURPTR),y                            ; get the operation byte
+                ldy     #0
+                sec
+                sbc     (R0),y                                ; Subract the base value
+                iny
+                cmp     (R0),y                                ; Check if we are in range
+                bcs     iOnGotoInvalid
+                inc     CUROFF                                ; Save the offset
+          
+                asl
+                tay                                           ; Turn into vector
+                iny                                           ; Inc must include the table base and entry count
+                iny
+                
+                lda     (R0),y
+                sta     ILPC
+                iny
+                lda     (R0),y
+                sta     ILPC+1
+                jmp     NextIL
 
+iOnGotoInvalid:
+                jsr     getILWord
+                stx     ILPC
+                sta     ILPC+1
+                jmp     NextIL            
 
 
 

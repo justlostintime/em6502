@@ -1329,11 +1329,11 @@ iGETLINE
                 lda     #0
                 sta     RunMode
 iGetParseLine:
-                lda     CUROFF
-                pha
-                jsr     ParseInputLine
-                pha
-                sta     CUROFF
+;                lda     CUROFF
+;                pha
+;                jsr     ParseInputLine
+;                pha
+;                sta     CUROFF
                 jmp     NextIL
 ;
 ;=====================================================
@@ -1692,7 +1692,7 @@ iDECVAR:
                sta     (R0),y
                iny
                lda     (R0),y
-               adc     #0
+               sbc     #0
                sta     (R0),y
                jmp     NextIL
 

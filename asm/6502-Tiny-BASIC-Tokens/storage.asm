@@ -13,7 +13,7 @@
          seg.u      TBData
 diskBufLength       ds    1
 diskBufOffset       ds    1
-DiskFileName        ds    14
+DiskFileName        ds    64
 
         SEG Code
 
@@ -24,25 +24,7 @@ DiskFileName        ds    14
 ;
 iOPENREAD
           if    XKIM || CTMON65
-                ldy     CUROFF
-                lda     (CURPTR),y
-                bne     iOPENfn               ;might be filename
-;
-; No filename supplied.
-;
-iOPENnofn       lda     #0
-                ldx     #ERR_NO_FILENAME
-                jmp     iErr2
-;
-; Add the offset into the buffer start
-;
-iOPENfn         clc
-                tya
-                adc     CURPTR
-                tay                       ;LSB
-                lda     CURPTR+1
-                adc     #0
-                tax
+                jsr     setFileName       ;Set the file name to open
                 jsr     DiskOpenRead      ;attempt to open file
                 bcc     Ropenok           ;branch if opened ok
 ;
@@ -60,62 +42,75 @@ Ropenok         lda     #0
                 sta     diskBufLength
                 jmp     NextIL
           endif
+          
+;===============================================================
+; Set file name
+setFileName:
+                ldy     CUROFF
+                lda     (CURPTR),y
+                cmp     #tString                        ;Must be a quoted string
+                bne     setFileNameNotFound             ;Must be a filename
+
+                clc
+                tya
+                adc     CURPTR
+                sta     R0                              ;LSB
+                lda     CURPTR+1
+                adc     #0
+                sta     R0+1
+                lda     #DiskFileName&$ff
+                sta     R1
+                lda     #DiskFileName>>8
+                sta     R1+1
+                jsr     qstrcpy                          ; on exit R0 contains the total copy length index accross source not dest
+                lda     R0
+                clc
+                adc     CUROFF                           ; add the current offset
+                sta     CUROFF                           ; Update the buffer pointer after complete
+                
+                ldy     #DiskFileName&$ff
+                ldx     #DiskFileName>>8
+                clc
+                rts
+
+setFileNameNotFound:
+                pla
+                pla                                     ; remove the return address from the stack
+                lda     #0
+                ldx     #ERR_NO_FILENAME
+                jmp     iErr2
 
 ;
 ;==============================JUSTLOSTINTIME 08/02/2022========
 ;Remove a file from the disk
 iRMFILE
-          if	XKIM || CTMON65
-                ldy     CUROFF
-                lda     (CURPTR),y
-                beq     iRMnofn
-;
-		clc
-		tya
-		adc	CURPTR
-		tay			;LSB
-		lda	CURPTR+1
-		adc	#0
-		tax
-		jsr	DiskRmFile	;attempt to remove file
-		bcc	wrmOk		;branch if removed ok
-		lda	#0
-		ldx	#ERR_FILE_NOT_FOUND
-		jmp	iErr2
-wrmOk		jmp	NextIL
+          if    XKIM || CTMON65
+                jsr     setFileName
+                jsr     DiskRmFile          ;attempt to remove file
+                bcc     wrmOk               ;branch if removed ok
+                lda     #0
+                ldx     #ERR_FILE_NOT_FOUND
+                jmp     iErr2
+wrmOk
+                jmp     NextIL
 
-; No filename supplied.
-;
-iRMnofn	lda	#0
-		ldx	#ERR_NO_FILENAME
-		jmp	iErr2
-	endif
+        endif
 ;
 ;=====================================================
 iOPENWRITE
-	if	XKIM || CTMON65
-		ldy	CUROFF
-		lda	(CURPTR),y
-		beq	iRMnofn
-;
-		clc
-		tya
-		adc	CURPTR
-		tay			;LSB
-		lda	CURPTR+1
-		adc	#0
-		tax
-		jsr	DiskOpenWrite	;attempt to open file
-		bcc	Wopenok		;branch if opened ok
+      if        XKIM || CTMON65
+                jsr     setFileName
+                jsr     DiskOpenWrite       ;attempt to open file
+                bcc     Wopenok             ;branch if opened ok
 ;
 ; Open failed
 ;
-Wdfail		lda	#0
-		ldx	#ERR_WRITE_FAIL
-		jmp	iErr2
+Wdfail          lda     #0
+                ldx     #ERR_WRITE_FAIL
+                jmp     iErr2
 ;
-Wopenok		jmp	NextIL
-	endif
+Wopenok         jmp     NextIL
+      endif
 ;
 ;=====================================================
 ; Gets a line of input from the disk file and puts it
@@ -159,10 +154,15 @@ iGetEOL         ldx     getlinx               ;blank line?
 iGetEOF         ldx     getlinx
                 lda     #0
                 sta     LINBUF,x
-                sta     CUROFF
                 ldy     #0
                 jsr     SkipSpaces
                 jsr     ParseInputLine
+                lda     #TOKENBUFFER&$ff
+                sta     CURPTR
+                lda     #TOKENBUFFER>>8
+                sta     CURPTR+1
+                lda     #1
+                sta     CUROFF
                 jmp     NextIL
     endif
 

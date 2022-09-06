@@ -471,10 +471,10 @@
   Macro DECVAR
    db 99
    endm
-   
+
   Macro SLICE
    db 100
    endm
-
+  
 
 
