@@ -134,6 +134,10 @@ S1:
         TSTB       S1Dec,kInc                     ; Increment variable
 ekInc:
         TSTV       ERRVEC2                        ; Verify we have a variable
+        TSTB       eDoInc,oBang                   ; Allow to inc or dec other tasks variables
+        IND                                       ; we just got a pid
+        TSTVT      ERRVEC2                      ; if it is not another variabe then error, Call test var. task
+eDoInc:
         INCVAR                                    ; Do the increment of the variable
         DONE                                      ; Test for end of line or end of statement ":"
         NXT        CO                             ; Get the next statement, branch CO if end of program
@@ -142,11 +146,15 @@ S1Dec:
         TSTB       S1Iret,kDec                    ; Dec variable
 ekDec:
         TSTV       ERRVEC2                        ; Must be followed by a variable
+        TSTB       eDoDec,oBang                   ; Allow to inc or dec other tasks variables
+        IND                                       ; we just got a pid
+        TSTVT      ERRVEC2                        ; if it is not another variabe then error, Call test var. task
+eDoDec:
         DECVAR                                    ; Decrement the actual variable
         DONE                                      ; Test if end of line or : statement
         NXT        CO                             ; If at end of program then got the console
         IJMP       STMT                           ; Process the next statement of command line
-;====================================================================
+;=============================================================================================================================
 ; iret or ireturn, Return from interupt process
 ;
 S1Iret:
@@ -156,7 +164,7 @@ ekIreturn:
         DONE                                      ; Must be only thing on the line
         IRET                                      ; RESTORE LINE NUMBER OF CALL
         IJMP       STMT
-;=======================================================================
+;==============================================================================================================================
 ;Process if statement, if true then process all statements until end of line reached
 S1S1:
         TSTB       S1Z,kIf                        ; IF STATEMENT
@@ -167,7 +175,7 @@ ekThen:
 S1W:
         IBRANCH                                   ; PERFORM COMPARISON -- PERFORMS NXT IF FALSE calls iBranch
         IJMP       STMT
-;===============================================================
+;===============================================================================================================================
 ; Test for GOTO
 S1Z:
         TSTB       S2,kGoto                       ; YES...TO, OR...SUB
@@ -175,7 +183,7 @@ ekGoto:
         CALL       EXPR                           ; GET LABEL
         XFER                                      ; SET UP AND JUMP
 
-;===========================================================================
+;===============================================================================================================================
 ; Process gosub / function
 ;
 S2:
@@ -187,7 +195,7 @@ ekGosub:
         XFER                                      ; AND JUMP to sub rtn
 ;
 ; End of gosub processing
-;==========================================================================
+;===============================================================================================================================
 ; Return from a gosub
 S2b:
         TSTB       S2a,kReturn                    ; Speed up pocessing but more memory
@@ -208,7 +216,7 @@ S2RetFunc:
         IJMP       GOFNRet                        ; Back into the Function
 ;
 ; End of return from gosub
-;============================================================================
+;==================================================================================================================================
 ; Process REM statement
 ;
 S2a:
@@ -216,7 +224,7 @@ S2a:
 ekRem:
         NXT        CO                             ; The rest of the line is ignored
         IJMP       STMT                           ; Process the next statement
-;============================================================================
+;==================================================================================================================================
 ; Print statement
 ;
 S3:
@@ -552,7 +560,7 @@ ekErase:
 ;
 UNKNOWN:
         ENDIO
-        
+
 NotKnownStatement:
 
         ERRMSG     ERR_SYNTAX      ;SYNTAX ERROR
@@ -872,7 +880,7 @@ FactVariable:
         TSTV        F0
         TSTB        F2CLocalTask,oBang
         IND                                       ; we just got a pid
-        TSTVT       UNKNOWNID                      ; if it is not another variabe then error, Call test var. task
+        TSTVT       UNKNOWNID                     ; if it is not another variabe then error, Call test var. task
 
 F2CLocalTask
         TSTB        F2C1,oLeftSQBracket

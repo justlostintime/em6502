@@ -6,7 +6,7 @@
 110 taskw(m,n,o,p,q,r,s,t,u)
 
 195 incc:ifc<agotob
-200 ?"Test complete"
+200 ?"Test complete, Total count = ";z
 210 end
 
 1000 a=0:b=20:c=1010
@@ -42,7 +42,7 @@
 8050 taske
 
 9000 i=0:k=9010:a=20:b = 10000
-9010 inci:incZ:Z:gosubb:ifi<agotok
+9010 inci:incZ!Z:gosubb:ifi<agotok
 9050 taske
 
 10000 a=0:incq
