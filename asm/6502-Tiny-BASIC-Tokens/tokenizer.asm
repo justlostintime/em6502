@@ -20,23 +20,43 @@ tArray            equ     $A3                    ; Identifies Array Type, the by
 tPointer          equ     $A4                    ; Pointer to another variable
 tIndirect         equ     $A6                    ; Points to an address that points to the data
 
-Operators: BYTE "<>","<=",">=",'+,0,'<,0,'=,0,">",0,"-",0,"/",0,"%",0,"*",0,"(",0,")",0,",",0,";",0,"[",0,"]",0,":",0,"$",0,"!",0
-OperatorLen equ *-Operators
+Operators: BYTE "<>"
+           BYTE "<="
+           BYTE ">="
+           BYTE "<",0
+           BYTE "=",0
+           BYTE ">",0
+           BYTE "+",0
+           BYTE "-",0
+           BYTE "/",0
+           BYTE "%",0
+           BYTE "*",0
+           BYTE "(",0
+           BYTE ")",0
+           BYTE ",",0
+           BYTE ";",0
+           BYTE "[",0
+           BYTE "]",0
+           BYTE ":",0
+           BYTE "$",0
+           BYTE "!",0
+           BYTE "?",0
+           BYTE 0,0
 
-OperValues: BYTE  $F5,$F3,$F6,$F0,$F1,$F2,$F4,$F7,$F8,$F9,$FA,$E0,$E1,$E2,$E3,$E4,$E5,$E6,$E7,$E8
+OperValues: BYTE  oNotEqual,oLessEqual,oGreaterEqual,oLess,oEqual,oGreater
+            BYTE  oPlus, oMinus, oDivide, oModulo, oMultiply
+            BYTE  oLeftBracket, oRightBracket, oComma, oSemiColon, oLeftSQBracket, oRightSQBracket
+            BYTE  oColon, oDollar, oBang, oQuestion
 
-oNotEqual         equ     $F5
-oLessEqual        equ     $F3
-oGreaterEqual     equ     $F6
-oPlus             equ     $F0
+oQuestion         equ     kPrint
+
 oLess             equ     $F1
 oEqual            equ     $F2
+oLessEqual        equ     $F3
 oGreater          equ     $F4
-oMinus            equ     $F7
-oDivide           equ     $F8
-oModulo           equ     $F9
-oPercent          equ     oModulo
-oMultiply         equ     $FA
+oNotEqual         equ     $F5
+oGreaterEqual     equ     $F6
+
 oLeftBracket      equ     $E0
 oRightBracket     equ     $E1
 oComma            equ     $E2
@@ -47,118 +67,154 @@ oColon            equ     $E6
 oDollar           equ     $E7
 oBang             equ     $E8
 
-OPCount           equ   * - OperValues
+
+oPlus             equ     $E9
+oMinus            equ     $EA
+oDivide           equ     $EB
+oModulo           equ     $EC
+oMultiply         equ     $ED
+oPercent          equ     oModulo
 
 tOperatorX        equ     $F0 ;+ operator Value  ; stores the value used to do the relational operator compare
 
 tError            equ      $FF                   ; Error should never happen
+;============================================================================================
+; Keyword and seperator values
+'
+kBeginKey    equ     kLet
+;
+kLet         equ     1
+kInc         equ     kLet+1
+kDec         equ     kInc+1
+kIreturn     equ     kDec+1
+kIf          equ     kIreturn+1
+kThen        equ     kIf+1
+kGoto        equ     kThen+1
+kGosub       equ     kGoto+1
+kReturn      equ     kGosub+1
+kRem         equ     kReturn+1
+kPrint       equ     kRem+1
+kTaske       equ     kPrint+1
+kTaskn       equ     kTaske+1
+kTaskw       equ     kTaskn+1
+kPoke        equ     kTaskw+1
+kPutch       equ     kPoke+1
+kCls         equ     kPutch+1
+kInput       equ     kCls+1
+kEnd         equ     kInput+1
+kIrq         equ     kEnd+1
+kKill        equ     kIrq+1
+kList        equ     kKill+1
+kRun         equ     kList+1
+kNew         equ     kRun+1
+kSlice       equ     kNew+1
+kTrace       equ     kSlice+1
+kExit        equ     kTrace+1
+kSave        equ     kExit+1
+kLoad        equ     kSave+1
+kErase       equ     kLoad+1
+kDir         equ     kErase+1
+;
+; End of actual key words
+;
+kKeyCount    equ     kDir-kBeginKey
+;
+; Logical operators
+;
+kNot         equ     kDir+1
+kOr          equ     kNot+1
+kXor         equ     kOr+1
+kAnd         equ     kXor+1
+
+; numeric functions
+;
+kBeginFunc   equ     kTrue
+;
+; Truth operators
+;
+kTrue        equ     kAnd+1
+kFalse       equ     kTrue+1
+; Functions
+kFree        equ     kFalse+1
+kGetch       equ     kFree+1
+kPeek        equ     kGetch+1
+kTask        equ     kPeek+1
+kIpcc        equ     kTask+1
+kIpcs        equ     kIpcc+1
+kIpcr        equ     kIpcs+1
+kRnd         equ     kIpcr+1
+kStat        equ     kRnd+1
+kAbs         equ     kStat+1
+kCall        equ     kAbs+1
+kGofn        equ     kCall+1
+kPid         equ     kGofn+1
+;
+kFuncCount   equ     kPid - kBeginFunc
+
 ;
 ; Keyword table contains 49 keywords
 KeyWordTable:
-             db     "leT"                        ; 1, we only have 0 at end of program or line
-kLet         equ     1
-             db     "inC"
-kInc         equ     2
-             db     "deC"
-kDec         equ     3
-             db     "ireturN"
-kIreturn     equ     4
-             db     "iF"
-kIf          equ     5
-             db     "theN"
-kThen        equ     6
-             db     "gotO"
-kGoto        equ     7
-             db     "gosuB"
-kGosub       equ     8
-             db     "returN"
-kReturn      equ     9
-             db     "reM"
-kRem         equ    10
-             db     "prinT"
-kPrint       equ    11                   ; should be entry for print
-             db     "taskE"
-kTaske       equ    12
-             db     "taskN"
-kTaskn       equ    13
-             db     "taskW"
-kTaskw       equ    14
-             db     "pokE"
-kPoke        equ    15
-             db     "putcH"
-kPutch       equ    16
-             db     "clS"
-kCls         equ    17
-             db     "inpuT"
-kInput       equ    18
-             db     "enD"
-kEnd         equ    19
-             db     "irQ"
-kIrq         equ    20
-             db     "kilL"
-kKill        equ    21
-             db     "lisT"
-kList        equ    22
-             db     "ruN"
-kRun         equ    23
-             db     "neW"
-kNew         equ    24
-             db     "slicE"
-kSlice       equ    25
-             db     "tracE"
-kTrace       equ    26
-             db     "exiT"
-kExit        equ    27
-             db     "savE"
-kSave        equ    28
-             db     "loaD"
-kLoad        equ    29
-             db     "erasE"
-kErase       equ    30
-             db     "noT"
-kNot         equ    31
-             db     "oR"
-kOr          equ    32
-             db     "xoR"
-kXor         equ    33
-             db     "anD"
-kAnd         equ    34
-             db     "truE"
-kTrue        equ    35
-             db     "falsE"
-kFalse       equ    36
-             db     "diR"
-kDir         equ    37
+             db     kLet,"leT"                        ; 1, we only have 0 at end of program or line
+             db     kInc,"inC"
+             db     kDec,"deC"
+             db     kIreturn,"ireturN"
+             db     kIf,"iF"
+             db     kThen,"theN"
+             db     kGoto,"gotO"
+             db     kGosub,"gosuB"
+             db     kReturn,"returN"
+             db     kRem,"reM"
+             db     kPrint,"prinT"
+             db     kTaske,"taskE"
+             db     kTaskn,"taskN"
+             db     kTaskw,"taskW"
+             db     kPoke,"pokE"
+             db     kPutch,"putcH"
+             db     kCls,"clS"
+             db     kInput,"inpuT"
+             db     kEnd,"enD"
+             db     kIrq,"irQ"
+             db     kKill,"kilL"
+             db     kList,"lisT"
+             db     kRun,"ruN"
+             db     kNew,"neW"
+             db     kSlice,"slicE"
+             db     kTrace,"tracE"
+             db     kExit,"exiT"
+             db     kSave,"savE"
+             db     kLoad,"loaD"
+             db     kErase,"erasE"
+             db     kDir,"diR"
+;Short form for statements:
+            db      kIreturn,"ireT"
+            db      kReturn,"reT"
+
+;Logical and truth operators
+             db     kNot,"noT"
+             db     kOr,"oR"
+             db     kXor,"xoR"
+             db     kAnd,"anD"
+; Truth values
+             db     kTrue,"truE"
+             db     kFalse,"falsE"
+
 ;functions returning values
-             db     "freE"
-kFree        equ    38
-             db     "getcH"
-kGetch       equ    39
-             db     "peeK"
-kPeek        equ    40
-             db     "tasK"
-kTask        equ    41
-             db     "ipcc"
-kIpcc        equ    42
-             db     "ipcS"
-kIpcs        equ    43
-             db     "ipcR"
-kIpcr        equ    44
-             db     "rnD"
-kRnd         equ    45
-             db     "staT"
-kStat        equ    46
-             db     "abS"
-kAbs         equ    47
-             db     "calL"
-kCall        equ    48
-             db     "gofN"
-kGofn        equ    49
-             db     "ireT"
-kIret        equ    50
-             db     "piD"
-kPid         equ    51
+
+             db     kFree,"freE"
+             db     kGetch,"getcH"
+             db     kPeek,"peeK"
+             db     kTask,"tasK"
+             db     kIpcc,"ipcC"
+             db     kIpcs,"ipcS"
+             db     kIpcr,"ipcR"
+             db     kRnd,"rnD"
+             db     kStat,"staT"
+             db     kAbs,"abS"
+             db     kCall,"calL"
+             db     kGofn,"gofN"
+             db     kPid,"piD"
              db     0,0
+
 KeyWordTableEnd      equ      *
 KeyWordTableLength   equ      * - KeyWordTable
 TOKENBUFFER  ds    256                    ; placed here as temp for testing the Code
@@ -174,6 +230,7 @@ printStorage ds    3
 ;  if fails then test for keywords
 ;  if fails then test for variables and arrays
 ;  if fails check for operators/seperators  + - < > = % / * () [] , ; :
+
 ParseInputLine:
  if DEBUGPARSER
                 jsr     SetOutDebug
@@ -241,7 +298,7 @@ ParseComplete:
  if DEBUGPARSER
 
                 jsr     printTokenBuffer
-                jsr     DebugPrintProgramLine
+                ;jsr     DebugPrintProgramLine
                 jsr     SetOutDebugEnd
 
  endif
@@ -255,75 +312,86 @@ ParseComplete:
 ;
 ParseLookupKey:
                 stx      R2
-                ldy      CUROFF
-                ldx      #0
-                lda      #1
-                sta      R0                    ; at the end this will contain the index of the keyword
+                ldy      #0
+                lda      #KeyWordTable&$FF        ; Key Table longer than 256 bytes
+                sta      R1
+                lda      #KeyWordTable>>8
+                sta      R1+1                     ; R1 points to first entry in keyword table
+                lda      (R1),y                   ; Get the Key Token value for first keyword
+                sta      R0                       ; Save until next keyword
+                iny                               ; Point to first character of keyword
+                ldx      CUROFF                   ; X points to the character in the input buffer
+
   if DEBUGPARSER
-              ;  jsr DebugKeyword
+            ;    jsr DebugKeyword
   endif
-                lda      #'?                   ; check for fast form of print
-                cmp      LINBUF,y
-                bne      ParseLookupLoop       ; Skip to loop if not ?
-                lda      #kPrint               ; Number for print
-                bne      ParseKeySpecial       ; Get out with the special case
 
 ParseLookupLoop:
-                lda      KeyWordTable,x        ; Check both upper and lower characters
+                lda      (R1),y                ; Get the first character of the keyword
                 and      #%11011111            ; Force Keyword to upper case
-                cmp      LINBUF,y
-                beq      ParseNextLetter
+                cmp      LINBUF,x              ; Check the input buffer
+                beq      ParseNextLetter       ; If it equals then do next letter
                 ora      #%00100000            ; Force Keyword to lowercase
-                cmp      LINBUF,y
-                bne      ParseNextEntry
+                cmp      LINBUF,x              ; Compare value to upercase
+                bne      ParseNextEntry        ; Not equal then move to next entry in the keyword table
 
 ParseNextLetter:
-                lda      KeyWordTable,x       ; Check if we just processed the last letter
-                and      #%00100000           ; if this bit not set then end of keyword, Last char is always uppercase
-                beq      ParseKeyFound
-                inx
-                iny
+                lda      (R1),y                ; Check if we just processed the last letter is upper
+                and      #%00100000            ; if this bit not set then end of keyword, Last char is always uppercase
+                beq      ParseKeyFound         ; If we are at end of keyword and all match then we found the key
+                inx                            ; Point to next char in the input buffer
+                iny                            ; Point to the next character in the Keyword table
                 lda     #0                     ; Check if we are at the end of the input buffer
-                cmp     LINBUF,y
-                beq     ParseNextEntry         ; End of buffer but no keyword
-                bne     ParseLookupLoop
+                cmp     LINBUF,x               ; Check if we are at the end of the input buffer
+                beq     ParseNextEntry         ; End of buffer but no keyword, ext keyword entry
+                bne     ParseLookupLoop        ; Go back and check the next characters
 
 ParseKeyFound:
                 lda     R0                     ; get the keyword index
                 cmp     #kRem                  ; remark statement
                 beq     ParseMoveLine          ; Move everything until the end of line to the token buffer
 
-ParseKeySpecial:
-                iny                            ; point past the last character
-                sty     CUROFF
-                ldx     R2                     ; preserved the X pointer
-                sta     TOKENBUFFER,x
-                inx
-                clc
+ParseKeyDone:
+                inx                            ; point past the last character
+                stx     CUROFF                 ; update to point to next character in the input buffer
+                ldx     R2                     ; Restore the original x pointer
+                sta     TOKENBUFFER,x          ; store the Token into the compiled buffer
+                inx                            ; Point to next position in the output buffer
+                clc                            ; C flag clear, we found it
                 rts
 
 ; Move forward to the next entry in table
 ParseNextEntry:
-                lda   KeyWordTable,x
-                and   #%00100000
-                beq   ParseEndOfEntry
-                inx
-                bne   ParseNextEntry
+                lda   (R1),y                   ; Get the next character in the token
+                and   #%00100000               ; Is it the last character
+                beq   ParseEndOfEntry          ; Yes then end of this entry found
+                iny                            ; Point to next char in the entry
+                bne   ParseNextEntry           ; loop until we find the end character
 
 ParseEndOfEntry:
-                inx
+                iny                            ; Point to the byte after the last character
+                tya                            ; Move into a as we must add this to the pointer in R1, more that 256 keyword characters in table
+                clc                            ; table May be longer than 256 so increment r1 to next entry
+                adc   R1
+                sta   R1
+                lda   R1+1
+                adc   #0
+                sta   R1+1                     ; Now pointing to start of next entry in the table
+                ldy   #0                       ; Reset the index back to zero
+                lda   (R1),y                   ; get keyword value
+                beq   ParseNoneFound           ; Check for end of the table -> 0
+                sta   R0                       ; save the next token value
+                iny                            ; Inc past token value
+
   if DEBUGPARSER
             ;    jsr DebugKeyword
   endif
-                inc   R0                        ; Point to next index
-                ldy   CUROFF                    ; Restore Y to start of the parse
-                lda   KeyWordTable,x
-                beq   ParseNoneFound
-                bne   ParseLookupLoop
+                ldx   CUROFF                    ; Restore x to last position in the input buffer
+                jmp   ParseLookupLoop           ; branch back for next key word
 
 ParseNoneFound:
-                ldx   R2
-                sec
+                ldx   R2                        ; it did not faind one, restore x to position in output buffer
+                sec                             ; c clear, not found
                 rts
 
 ;===============================================================================
@@ -428,32 +496,31 @@ ParseNumInvalid                                         ;Not a valid Numeric
                rts
 
 ;=========================================================================================================
-;Parse for operators
-; +($F0), <($F1),=($F2),<=($F3), >($F4), <>($F5), >=($F6), -($F7), /($F8), %($F9), *($FA), (($FB), )($FC)
+;Parse for operators and seperators
 ; on exit the A has the oper code, c is clear
 ;               not found then c is set
 ;      x is preserved
 ;
-;Operators: BYTE "<>","<=",">=",'+,0,'<,0,'=,0,">",0,"-",0,"/",0,"%",0,"*",0,"(",0,")",0,",",0,";",0,"[",0,"]",0,":",0
-;OperatorLen equ *-Operators
-;
-;OperValues BYTE  $F5,$F3,$F6,$F0,$F1,$F2,$F4,$F7,$F8,$F9,$FA,$E0,$E1,$E2,$E3,$E4,$E5,$E6
-;OPCount    equ   * - OperValues
-
 ParseForOperator:
                 stx     R2
                 ldy     CUROFF
-                ldx     0
+                ldx     #0
   if DEBUGPARSER
-               ; jsr    DebugPrintOP
+          ;      jsr    DebugPrintOP
   endif
+  
 ParseOpLoop:
-                lda     Operators,x
-                cmp     LINBUF,y
+                lda     Operators,x                 ; First byte of operator
+                beq     ParseOpNotFound             ; Last entry os 0,0 
+                
+                cmp     LINBUF,y                    ; Check the first byte
                 bne     ParseOpNext
+                
                 iny
+                
                 lda     Operators+1,x
-                beq     ParseOpFoundSingle
+                beq     ParseOpFoundSingle          ; Single Character op
+                
                 cmp     LINBUF,y
                 bne     ParseOpNext
 
@@ -476,13 +543,12 @@ ParseOpFoundSingle:
 ParseOpNext:
                 inx
                 inx
-                cpx    #OperatorLen
-                bcs    ParseOpNotFound
+                
   if DEBUGPARSER
-             ;   jsr    DebugPrintOP
+        ;       jsr    DebugPrintOP
   endif
                 ldy    CUROFF                ; reset the y pointer to beginning
-                bne    ParseOpLoop
+                jmp    ParseOpLoop
 
 ParseOpNotFound
                 ldx   R2
@@ -491,24 +557,23 @@ ParseOpNotFound
 ;=========================================================================================================
   if DEBUGPARSER
 ;Print the text of a keyword
-;Input x = offset into table
+;Input R1    = offset into table
 DebugKeyword:
+            tya
             pha
-            txa
-            pha
+            ldy     #1
 DebugKeyLoop
-            lda     KeyWordTable,x
+            lda     (R1),y
             jsr     VOUTCH
             and     #%00100000
             beq     DebugKeyDone
-            inx
+            iny
             bne     DebugKeyLoop
 
 DebugKeyDone:
             jsr     CRLF
             pla
-            tax
-            pla
+            tay
             rts
 ;========================================
 DebugPrintOP:
@@ -630,6 +695,8 @@ R02TOKEN:
                 inx
                 clc
                 rts
+;=========================================================================
+; Transfer word in Token Buffer to R0
 TOKEN2R0:
                 lda     TOKENBUFFER,y
                 sta     R0
@@ -640,6 +707,9 @@ TOKEN2R0:
                 dex
                 sta     R0+1
                 rts
+;==========================================================================
+; Transfer     Display Buffer position to R0
+;
 DPL2R0:
                 lda     (dpl),y
                 sta     R0
@@ -672,40 +742,53 @@ PrintProgramLine:
                 sty     printStorage+1
                 pha
 
-                ldy     #1              ; index into the token buffer
-                sty     R2              ; print unsigned decimal
+                ldy     #1                      ; index into the token buffer
+                sty     R2                      ; print unsigned decimal
                 ldy     #0
-                lda     (dpl),y         ; get number of bytes
-                tax                     ; place pointer into x
+                lda     (dpl),y                 ; get number of bytes
+                tax                             ; place pointer into x
                 iny
-                dex                     ; Deduct the length byte
-                jsr     DPL2R0        ; Print the line number
+                dex                             ; Deduct the length byte
+                jsr     DPL2R0                  ; Print the line number
                 jsr     PrintDecimal
                 lda     #$20
                 jsr     VOUTCH
 
 PrintProgLoop:
-                lda     (dpl),y   ; Get a character
-                beq     PrintProgramComplete
-                and     #%10000000       ; check for Keyword or Variable/operator
-                beq     PrintKeyword    ; It uses the index in a to find a keyword
+                lda     (dpl),y                 ; Get a character
+                beq     PrintProgramComplete    ; If zero then at end of line
+                and     #%10000000              ; check for Keyword or Variable/operator
+                beq     PrintKeyword            ; It uses the index in a to find a keyword
 
 PrintProgVars:
                 lda    (dpl),y
-                and    #$E0              ; Check for operators and punctuation
+                and    #$E0                     ; Check for operators and punctuation
                 cmp    #$E0
                 beq    PrintProgOperatorVect
-                lda    (dpl),y
+
+                lda    (dpl),y                  ; Get char back again and check for var
                 cmp    #$9D+1
                 bcc    PrintProgVariableVec
+                and    #$A0                     ; Check for a valid datatype
+                cmp    #$A0
+                beq    PrintDataType            ; if not just print the character
+                lda    (dpl),y                  ; Get char back again and check for data type
+                dex                             ; Ok we are prcessing it
+                iny
+                bne    PrintContinue            ; Print and do the next character
+                
+PrintDataType:
+                lda    (dpl),y                  ; Get char back again and check for data type
                 cmp    #tString
                 beq    PrintStringVariable
-                iny                     ; we have a numerical value
+
+PrintProgNumber:
+                iny                             ; we have a numerical integer value
                 dex
                 pha
                 lda    #0
                 sta    R0+1
-                sta    R2               ; Set to print signed number
+                sta    R2                       ; Set to print signed number
                 lda    (dpl),y
                 sta    R0
                 pla
@@ -723,6 +806,7 @@ PrintProgNumDone:
 
 PrintProgNext:
                 lda    #$20
+PrintContinue:
                 jsr    VOUTCH
 PrintProgSkipSpace:
                 cpx    #0
@@ -757,55 +841,82 @@ PrintStringVariable:
                 jmp PrintProgNext
 
 PrintProgVariableVec
-                bcc PrintProgVariable
+                jmp PrintProgVariable
+                
 PrintProgOperatorVect
                 jmp  PrintProgOperator
 ;===============================================================================================================
+; On entry dpl points to the buffer we are printing from
+;          y   current offset into the dpl buffer
+; all registers preserved
+;
 PrintKeyword:
 
-                lda   (dpl),y
-                dex
-                iny
-                sta    R0              ; the counter save area
-                sta    R0+1            ; to refer to later if needed
-                stx    printStorage+2
+                lda   (dpl),y                ; Get the Keyword token to lookup
+                sta    R0                    ; The value we are looking for
+                iny                          ; Inc i to point to the next char to be printed
+                
+                tya                          ; Save y and x for the return
+                pha
+                txa
+                pha
+                
+                lda    #KeyWordTable&$FF     ; R1 to point to the entry in the keyword table
+                sta    R1
+                lda    #KeyWordTable>>8
+                sta    R1+1
 
-                ldx    #0
+               
 PrintKeyLoop
-                dec   R0              ; Keyword indexes are 1 relative, adjust to zero relative
-                lda   #0
-                cmp   R0
-                Beq   PrintKeyFound   ; We have the correct index, now print it
+                ldy    #0                    ; Index into the keyword entry
+                lda   (R1),y                 ; Get token value for this entry
+                iny                          ; Point to first byte of key
+                cmp   R0                     ; Compare to the token we are looking for
+                Beq   PrintKeyFound          ; We have the correct Token, now print it
+               
 PrintKeyNext
-                lda   KeyWordTable,x
-                inx                   ; Point to next byte always
-                and   #%00100000
-                beq   PrintKeyLoop
-                bne   PrintKeyNext
+                lda   (R1),y                 ; Get key letter
+                iny                          ; Point to next byte always
+                and   #%00100000             ; Check for last character in key work
+                bne   PrintKeyNext           ; If it is not set then get next character
+                
+                tya                          ; Trabsfer y to a for the addition
+                clc                          ; Table > 256 bytes
+                adc  R1
+                sta  R1
+                lda  #0
+                adc  R1+1
+                sta  R1+1
+                jmp  PrintKeyLoop
 
 PrintKeyFound:
-                lda   KeyWordTable,x
-                pha
-                ora   #%00100000
-                jsr   VOUTCH
-                inx
+                lda   (R1),y                ; letter from key table
+                pha                         ; Save it for later check
+                ora   #%00100000            ; Force it to lower case
+                jsr   VOUTCH                ; Print it out
+                iny                         ; Point to next character
+                pla                         ; Restore the value
+                and   #%00100000            ; Check if it was last char in keyword
+                bne   PrintKeyFound         ; Yes, then goto all done printing
+                
+                pla                         ; Restore the x and y values
+                tax
                 pla
-                and   #%00100000
-                bne   PrintKeyFound
-                ldx  printStorage+2
+                tay
+                
 PrintChkRem:
                 lda   #kRem
-                cmp   R0+1
+                cmp   R0
                 bne   PrintKeyDone
 PrintKeyRem:
-                lda  dpl              ; if it is a rem then we must print the entire line
+                lda  dpl                    ; if it is a rem then we must print the entire line
                 sta  PrtFrom
                 lda  dpl+1
                 sta  PrtFrom+1
                 lda  #0
                 sta  PrtTerm
                 jsr  PrtLoop
-                dey                   ; point back to the terminating null value
+                dey                         ; point back to the terminating null value
 PrintKeyDone:
                 jmp  PrintProgNext
 ;==================================================================================================================
@@ -876,7 +987,7 @@ PrintTheVar:
 iOnGoto:        jsr     getILWord                             ; places the word into r0, pointer to table
                 stx     R0
                 sta     R0+1
-                
+
                 ldy     CUROFF
                 lda     (CURPTR),y                            ; get the operation byte
                 ldy     #0
@@ -886,12 +997,12 @@ iOnGoto:        jsr     getILWord                             ; places the word 
                 cmp     (R0),y                                ; Check if we are in range
                 bcs     iOnGotoInvalid
                 inc     CUROFF                                ; Save the offset
-          
+
                 asl
                 tay                                           ; Turn into vector
                 iny                                           ; Inc must include the table base and entry count
                 iny
-                
+
                 lda     (R0),y
                 sta     ILPC
                 iny
@@ -903,8 +1014,35 @@ iOnGotoInvalid:
                 jsr     getILWord
                 stx     ILPC
                 sta     ILPC+1
-                jmp     NextIL            
-
+                jmp     NextIL
+;
+;==========================================================================================
+; Test the token for relop and push the value onto the stack if true
+;
+iTSTRELOP:
+              jsr       getILByte
+              sta       offset
+              
+              ldy       CUROFF
+              lda       (CURPTR),y
+              pha
+              and       #$F0
+              cmp       #$F0
+              bne       iTSTRELOPNOT
+              pla
+              and       #$0F                  ; get the actual value
+              sta       R0                    ; save it for later
+              lda       #0
+              sta       R0+1
+              jsr       pushR0
+              iny
+              sty       CUROFF                ; save the y pointer
+              jmp       NextIL
+              
+iTSTRELOPNOT:
+              pla
+              jmp       tstBranch
+              
 
 
 

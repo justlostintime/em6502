@@ -493,4 +493,9 @@
     dw {1}
     dw {2}
   endm
-  
+
+ Macro TSTRELOP
+    db 104
+    db ({1}-*)-1
+  endm
+

@@ -49,7 +49,7 @@
       dw    iOPENWRITE   ;40
       dw    iDCLOSE      ;41
       dw    iDGETLINE    ;42 Life, universe, everything(hitch hiker)
-      dw    iDLIST       ;43 Did you remeber your towel?
+      dw    iDLIST       ;43 Did you remember your towel?
       dw    iDDIR        ;44
       dw    iRMFILE      ;45
 	else
@@ -120,4 +120,5 @@
       dw  iTSTB         ;101      Test if byte equals
       dw  iTSTW         ;102      Test If word equals
       dw  iOnGoto       ;103      Branch to table entry based upon buffer value
+      dw  iTSTRELOP     ;104      Test relop, push mask onto stack if true, branch otherwise
 

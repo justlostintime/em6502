@@ -1,6 +1,6 @@
 
-10 a=10:b=15:c=0:d=1000:e=2000:f=3000:g=4000:h=5000:i=6000:j=7000:k=8000:l=9000
-15 ?"Simple task test, to activate all tasks",c
+10 a=100:b=15:c=0:d=1000:e=2000:f=3000:g=4000:h=5000:i=6000:j=7000:k=8000:l=9000
+15 ?"Simple task test, to activate all tasks",c,Z
 20 m=task(d):n=task(e):o=task(f):p=task(g):q=task(h):r=task(i):s=task(j):t=task(k):u=task(l)
 
 110 taskw(m,n,o,p,q,r,s,t,u)
@@ -10,39 +10,39 @@
 210 end
 
 1000 a=0:b=20:c=1010
-1010 inca:ifa<bgotoc
+1010 inca:inc Z!Z:ifa<bgotoc
 1050 taske
 
 2000 b=0:s=15:c=2010
-2010 incb:ifb<sgotoc
+2010 incb:inc Z!Z:ifb<sgotoc
 2050 taske
 
 3000 c=0:a=20:b=3010
-3010 incc:ifc<agotob
+3010 incc:inc Z!Z:ifc<agotob
 3050 taske
 
 4000 d=0:e=20:f=4010
-4010 incd:ifd<egotof
+4010 incd:inc Z!Z:ifd<egotof
 4050 taske
 
 5000 e=0:f=25:g=5010
-5010 ince:ife<fgotog
+5010 ince:inc z!z:ife<fgotog
 5050 taske
 
 6000 f=0:a=1:b=10000:c=20:d=6010
-6010 incf:gosubb:iff<cgotod
+6010 incf:inc Z!z:gosubb:iff<cgotod
 6050 taske
 
 7000 g=0:b=10000:c=7010:d=21
-7010 incg:gosubb:ifg<dgotoc
+7010 incg:inc Z!Z:gosubb:ifg<dgotoc
 7050 taske
 
 8000 h=0:b=8010:c=20:d=10000
-8010 inch:gosubd:ifh<cgotob
+8010 inch:inc Z!Z:gosubd:ifh<cgotob
 8050 taske
 
 9000 i=0:k=9010:a=20:b = 10000
-9010 inci:gosubb:ifi<agotok
+9010 inci:incZ:Z:gosubb:ifi<agotok
 9050 taske
 
 10000 a=0:incq

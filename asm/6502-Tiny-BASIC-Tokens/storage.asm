@@ -263,11 +263,16 @@ SetOutDisk      lda     #DOUT&$ff
 ;
 ;=====================================================
 
-DOUT            sta     buffer
+DOUT            stx    DiskFileName
+                sty    DiskFileName+1
+                sta     buffer
                 lda     #1
                 ldy     #buffer&$ff
                 ldx     #buffer>>8
                 jsr     DiskWrite
+                ldx     DiskFileName
+                ldy     DiskFileName+1
+                
 ;
 ; need error checking here
 ;

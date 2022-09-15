@@ -2,63 +2,67 @@
 ; on goto table
 ; format :   first byte is value Base, subtracted from value found
 ;            second byte is the number of entries in the table max is 128... always a limit somewhere... lol
-BasicInstVect:
-                db    0,38                ; base value is 0 and Count  value is 38
-                dw    UNKNOWN             ; if we get zero its an error
-                dw    ekLet               ; equ     1
-                dw    ekInc               ; equ     2
-                dw    ekDec               ; equ     3
-                dw    ekIreturn           ; equ     4
-                dw    ekIf                ; equ     5
-                dw    ekThen              ; equ     6
-                dw    ekGoto              ; equ     7
-                dw    ekGosub             ; equ     8
-                dw    ekReturn            ; equ     9
-                dw    ekRem               ; equ    10
-                dw    ekPrint             ; equ    11                   ; should be entry for print
-                dw    ekTaske             ; equ    12
-                dw    ekTaskn             ; equ    13
-                dw    ekTaskw             ; equ    14
-                dw    ekPoke              ; equ    15
-                dw    ekPutch             ; equ    16
-                dw    ekCls               ; equ    17
-                dw    ekInput             ; equ    18
-                dw    ekEnd               ; equ    19
-                dw    ekIrq               ; equ    20
-                dw    ekKill              ; equ    21
-                dw    ekList              ; equ    22
-                dw    ekRun               ; equ    23
-                dw    ekNew               ; equ    24
-                dw    ekSlice             ; equ    25
-                dw    ekTrace             ; equ    26
-                dw    ekExit              ; equ    27
-                dw    ekSave              ; equ    28
-                dw    ekLoad              ; equ    29
-                dw    ekErase             ; equ    30
-                dw    ekNot               ; equ    31
-                dw    ekOr                ; equ    32
-                dw    ekXor               ; equ    33
-                dw    ekAnd               ; equ    34
-                dw    ekTrue              ; equ    35
-                dw    ekFalse             ; equ    36
-                dw    ekDir               ; equ    37
+BasicStmts:
+                db    kBeginKey,kKeyCount+1                ; Base address of table, length of table
+                dw    ekLet
+                dw    ekInc
+                dw    ekDec
+                dw    ekIreturn
+                dw    ekIf
+                dw    ekThen
+                dw    ekGoto
+                dw    ekGosub
+                dw    ekReturn
+                dw    ekRem
+                dw    ekPrint                               ; should be entry for print
+                dw    ekTaske
+                dw    ekTaskn
+                dw    ekTaskw
+                dw    ekPoke
+                dw    ekPutch
+                dw    ekCls
+                dw    ekInput
+                dw    ekEnd
+                dw    ekIrq
+                dw    ekKill
+                dw    ekList
+                dw    ekRun
+                dw    ekNew
+                dw    ekSlice
+                dw    ekTrace
+                dw    ekExit
+                dw    ekSave
+                dw    ekLoad
+                dw    ekErase
+                dw    ekDir
+;
+; Logical operators
+BasicLogical    db    kNot,4
+                dw    ekNot
+
+                dw    ekOr
+                dw    ekXor
+                dw    ekAnd
+
 ;functions returning values
-                dw    ekFree              ; equ    38
-                dw    ekGetch             ; equ    39
-                dw    ekPeek              ; equ    40
-                dw    ekTask              ; equ    41
-                dw    ekIpcc              ; equ    42
-                dw    ekIpcs              ; equ    43
-                dw    ekIpcr              ; equ    44
-                dw    ekRnd               ; equ    45
-                dw    ekStat              ; equ    46
-                dw    ekAbs               ; equ    47
-                dw    ekCall              ; equ    48
-                dw    ekGofn              ; equ    49
-                dw    ekIret              ; equ    50
-                dw    ekPid               ; equ    51
-                dw    0
-BasicInstVectLen   equ   BasicInstVect - *
+
+BasicFuncs:     db    kBeginFunc,kFuncCount
+                dw    ekTrue
+                dw    ekFalse
+                dw    ekFree
+                dw    ekGetch
+                dw    ekPeek
+                dw    ekTask
+                dw    ekIpcc
+                dw    ekIpcs
+                dw    ekIpcr
+                dw    ekRnd
+                dw    ekStat
+                dw    ekAbs
+                dw    ekCall
+                dw    ekGofn
+                dw    ekPid
+
 
 ;=====================================================
 ; This is the IL of the BASIC (or whatever) language.
@@ -102,7 +106,7 @@ ekLet:
         TSTV       ERRVEC2                        ; YES, PLACE VAR ADDRESS ON AESTK
         TSTB       LETSQBRACKET,oEqual            ; (This line originally omitted)
         IJMP       LETBE
-        
+
 LETSQBRACKET:                                     ; is this an array access ?
 
         TSTB       ERRVEC2,oLeftSQBracket          ; [
@@ -111,7 +115,7 @@ LETSQBRACKET:                                     ; is this an array access ?
         SUBSCRIPT
         TSTB       ERRVEC2,oEqual                  ; (This line originally omitted)
 LETBE:
-       
+
         CALL       EXPR                           ; PLACE EXPR VALUE ON MathSTK
         DONE                                      ; REPORT ERROR IF NOT NEXT
         STORE                                     ; STORE RESULT
@@ -122,7 +126,7 @@ ERRVEC2:
 ;=============================================================
 ;Branch on a valid statement start
 DoVector:
-        OnGoto     BasicInstVect,S1               ; use the table provided if not in table branch to S1
+        OnGoto     BasicStmts,UNKNOWN             ; use the table provided if not in table branch to unknown
         ;This will never return here!
 ;=============================================================
 ; Inc or dec a variable
@@ -146,13 +150,9 @@ ekDec:
 ; iret or ireturn, Return from interupt process
 ;
 S1Iret:
-        TSTB       S1Iret2,kIreturn               ; test return from interupt
-        IJMP       S1Sa
-S1Iret2:
-        TSTB       S1S1,kIret                     ; Allow the short form as well
+        TSTB       S1S1,kIreturn               ; test return from interupt
 S1Sa:
 ekIreturn:
-ekIret:
         DONE                                      ; Must be only thing on the line
         IRET                                      ; RESTORE LINE NUMBER OF CALL
         IJMP       STMT
@@ -552,6 +552,9 @@ ekErase:
 ;
 UNKNOWN:
         ENDIO
+        
+NotKnownStatement:
+
         ERRMSG     ERR_SYNTAX      ;SYNTAX ERROR
 
 ;=======================================================
@@ -590,28 +593,29 @@ iLOG3:
 
 EXPRCMP:
         Call       EXPR2           ; get the first expression
-        TSTB       iR0,oEqual
-        LIT        2               ;=
-        IJMP       iRFound
-iR0:
-        TSTB        iR1,oLessEqual
-        LIT         3               ;<=
-        IJMP       iRFound
-iR1:
-        TSTB       iR3,oNotEqual
-        LIT        5                ;<>
-	      IJMP       iRFound
-iR3:
-        TSTB       iR4,oLess
-        LIT        1               ;<
-	      IJMP       iRFound
-iR4:
-        TST        iR5,oGreaterEqual
-        LIT        6               ;>=
-	      IJMP       iRFound
-iR5:
-        TSTB       iRDone,oGreater
-        LIT        4               ;>
+        TSTRELOP   iRDone          ; Exit level if no rel ops found
+;        TSTB       iR0,oEqual
+;        LIT        2               ;=
+;        IJMP       iRFound
+;iR0:
+;        TSTB        iR1,oLessEqual
+;        LIT         3               ;<=
+;        IJMP       iRFound
+;iR1:
+;        TSTB       iR3,oNotEqual
+;        LIT        5                ;<>
+;	      IJMP       iRFound
+;iR3:
+;        TSTB       iR4,oLess
+;        LIT        1               ;<
+;	      IJMP       iRFound
+;iR4:
+;        TST        iR5,oGreaterEqual
+;        LIT        6               ;>=
+;	      IJMP       iRFound
+;iR5:
+;        TSTB       iRDone,oGreater
+;        LIT        4               ;>
 iRFound:
         Call       EXPR               ; get the right side of the expression
         CMPR                          ; Push the value of the true false onto the stack
@@ -672,6 +676,9 @@ UNKNOWNVEC:
 ; first or else they'll be confused for variables.
 ;
 FACT:
+        OnGoto     BasicFuncs,FactVariable
+
+FACTCONTINUE:
         TSTB       F1AA,kTrue
 ekTrue:
         LIT       -1
@@ -860,6 +867,8 @@ GOFNRet
 ;  Allow a subscript for any variable
 ;
 F2C:
+
+FactVariable:
         TSTV        F0
         TSTB        F2CLocalTask,oBang
         IND                                       ; we just got a pid
