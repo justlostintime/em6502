@@ -4,7 +4,7 @@
 
 110 taskw(m,n,o,p,q,r,s,t,u)
 
-195 incc:ifc<100gotob
+195 inc c : if c< 100 goto b
 200 ?"Test complete, Total count = ";z
 210 end
 

@@ -53,8 +53,11 @@
 		db  {1}
 		endm
 ;
+;  Passed jump if function called, and true false value returned
 		macro RSTR
 		db	9
+		db	({1}-*)-1            ;(addr-*)-1
+		db  {2}
 		endm
 ;
 		macro CMPR
@@ -504,3 +507,8 @@
     db 105
    endm
 
+; Check for a precompiled branch, will take branch if precompiled value present
+  Macro TSTBRANCH
+    db 106
+    db ({1}-*)-1
+  endm

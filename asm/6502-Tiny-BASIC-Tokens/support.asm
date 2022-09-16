@@ -545,6 +545,7 @@ pushR0          sty     rtemp1
 ; and CUROFF. Also marks entry type as 1 = GOSUB
 
 pushLN
+                STA     rtemp1+1                ; Store type of push being done
                 sty     rtemp1
                 lda     MESSAGEPTR              ; stack and msg Q grow together see if they cross!
                 cmp     GOSUBSTACKPTR
@@ -559,7 +560,7 @@ pushLoop
                 cpx     #3                      ; 4 bytes per entry on the stack
                 bne     pushLoop                ; Jump if not done for next byte
 
-pushDone        lda     #GOSUB_RTN              ; Type of stack entry
+pushDone        lda     rtemp1+1                ; Type of stack entry 
                 sta     (GOSUBSTACK),y          ; Store Type of stack entry
                 iny                             ; Next entry
 
@@ -577,20 +578,24 @@ pusherr:
 ; if not it removes what ever is on the stack
 ; until it finds the next return. Allowing
 ; a return from within a for/next
+; on exit a contains the type of return from, gosub_rtn, gosub_rtn_value....
 popLN           sty     rtemp1
                 ldy     GOSUBSTACKPTR         ; Get the Gosub/for stack pointer
                 ldx     #3                    ; each stack entry is 3 bytes
 
-popContinue
+popContinue:
                 cpy     #4                    ; if less than 4 on stack then error
                 bcc     poperr                ; Process an error
 
                 dey                           ; Position to read entry type
                 lda     (GOSUBSTACK),y        ; get the stack entry type
-                cmp     #1                    ; Type is a gosub entry
+                sta     rtemp1+1              ; Save to be returned
+                cmp     #GOSUB_RTN            ; Type is a gosub entry
+                beq     popLoop               ; Restore the line
+                cmp     #GOSUB_RTN_VALUE      ; Also restore the line
                 bne     popSkipEntry          ; No then just skip this
 
-popLoop
+popLoop:
                 dey
                 dex
                 lda     (GOSUBSTACK),y
@@ -599,15 +604,16 @@ popLoop
                 bne     popLoop               ; Loop until all moved
 
 
-PopDone         sty     GOSUBSTACKPTR
+PopDone:        sty     GOSUBSTACKPTR
                 ldy     rtemp1
+                lda     rtemp1+1               ; get the type of return 
                 clc
                 rts
 
-poperr          sec
+poperr:         sec
                 rts
 
-popSkipEntry    dey
+popSkipEntry:   dey
                 dey
                 dey
                 jmp popContinue
@@ -1054,7 +1060,7 @@ qstrcpy
 ;=========================================================================
 ;Copy string from R0 to R1, terminator in x
 ; On exit    R0 contains the length of the copy
-pstrcpy: 
+pstrcpy:
                 ldy     #0
                 stx     R2
 
@@ -1066,10 +1072,10 @@ strcpyLoop:
                 jsr     IncR0
                 jsr     IncR1
                 bcc     strcpyLoop
-strcpyDone:     
+strcpyDone:
                 lda     #0
                 sta     (R1),y
-               
+
                 rts
 
 ;=========================================================================

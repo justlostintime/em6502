@@ -351,8 +351,6 @@ ParseNextLetter:
 
 ParseKeyFound:
                 lda     R0                     ; get the keyword index
-                cmp     #kRem                  ; remark statement
-                beq     ParseMoveLine          ; Move everything until the end of line to the token buffer
 
 ParseKeyDone:
                 inx                            ; point past the last character
@@ -360,6 +358,16 @@ ParseKeyDone:
                 ldx     R2                     ; Restore the original x pointer
                 sta     TOKENBUFFER,x          ; store the Token into the compiled buffer
                 inx                            ; Point to next position in the output buffer
+                stx     R2                     ; Save next position in buffer
+                cmp     #kRem                  ; remark statement
+                beq     ParseMoveLine          ; Move everything until the end of line to the token buffer
+                cmp     #kGoto
+                beq     ParseHandleBranches    ; Jump allow space for memory address in token buffer
+                cmp     #kGosub
+                beq     ParseHandleBranches    ; Handle the gosub branch address
+                cmp     #kGofn
+                beq     ParseHandleBranches    ; Handle the gosub branch address
+                
                 clc                            ; C flag clear, we found it
                 rts
 
@@ -400,11 +408,8 @@ ParseNoneFound:
 ;===============================================================================
 ; Move everything from current position until the end of line into the token buffer
 ;
-ParseMoveLine: iny                                 ; next byte to parse
+ParseMoveLine: ldy    CUROFF                       ; next byte to parse
                ldx    R2                           ; where to place in the buffer
-               lda    R0
-               sta    TOKENBUFFER,x                ;Put the rem into the buffer
-               inx                                 ;Skip to next byte after the reM
 ParseMoveLoop:
                lda    LINBUF,y                     ; get the next byte
                beq    ParseMoveDone                ; if we load a zero then done
@@ -416,6 +421,19 @@ ParseMoveDone:
                sty     CUROFF
                clc
                rts
+;================================================================================================
+; Add two bytes after the gosub and goto to allow the "compiler" to place mem address, to directly
+; transfer to a memory address
+ParseHandleBranches:
+              ldx     R2
+              lda     #0
+              sta     TOKENBUFFER,x
+              inx
+              sta     TOKENBUFFER,x
+              inx
+              stx     R2
+              clc
+              rts
 
 ;=========================================================================================================
 ;ParseString Parse a quotes string
@@ -776,7 +794,7 @@ PrintProgVars:
                 cmp    #$A0
                 beq    PrintDataType            ; if not just print the character
                 lda    (dpl),y                  ; Get char back again and check for data type
-                dex                             ; Ok we are prcessing it
+                dex                             ; Ok we are processing it
                 iny
                 bne    PrintContinue            ; Print and do the next character
 
@@ -857,8 +875,21 @@ PrintKeyword:
 
                 lda   (dpl),y                ; Get the Keyword token to lookup
                 sta    R0                    ; The value we are looking for
-                iny                          ; Inc i to point to the next char to be printed
-
+                cmp    #kGoto                ; Test if we must skip an extra two bytes for branch type instructions
+                beq    PrintKeyBranch
+                cmp    #kGosub
+                beq    PrintKeyBranch
+                cmp    #kGofn
+                bne    PrintKeySkipped
+PrintKeyBranch:
+                iny                          ; Skip the compiled memory address
+                iny
+                dex                          ; Change number of bytes to print
+                dex                          ; Remove the bytes to print
+                
+PrintKeySkipped:
+                iny                          ; Inc y to point to the next char to be printed
+                dex                          ; Reduce number of bytes to print
                 tya                          ; Save y and x for the return
                 pha
                 txa
@@ -960,17 +991,17 @@ PrintProgVariable:
                 lda    (dpl),y
                 iny
                 dex
-                cmp    tVhat
+                cmp    #tVhat
                 bne    PrintProgChkHash
                 lda    #'^
                 bne    PrintTheVar
 PrintProgChkHash:
-                cmp   tVhash
+                cmp   #tVhash
                 bne   PrintProgChkAt
                 lda   #'#
                 bne   PrintTheVar
 PrintProgChkAt:
-                cmp   tVat
+                cmp   #tVat
                 bne   PrintProgVarLetter
                 lda   #'@
                 bne   PrintTheVar
@@ -1046,16 +1077,45 @@ iTSTRELOPNOT:
               pla
               jmp       tstBranch
 
+;
+;===================================================================================================
+; Test the token and following info for precompiled address information
+; skip it if zero, transfer and skip next integer value if not zero
+; used by both gosub, goto and gofN
+;
+iTSTBRANCH:
+              jsr       getILByte
+              sta       offset
+              ldy       CUROFF
+              lda       (CURPTR),y
+              sta       R0
+              iny
+              ora       (CURPTR),y
+              beq       iTSTBRANCHNOCOMPILE
+              lda       (CURPTR),y
+              sta       R0+1
+              iny
+              lda       (CURPTR),y
+              cmp       #tByte
+              beq       ITSTBRANCHBYTE
+              cmp       #tInteger
+              bne       iTSTBRANCHNOCNOI
+              iny                                 ; skip type indicator for 
+ITSTBRANCHBYTE:
+              iny                                 ; skip first byte of value line number
+              iny                                 ; Skip second byte of line number
 
+iTSTBRANCHVALID:
+              sty       CUROFF
+              jsr       pushR0                    ; place transfer address on top of stack
+              jmp       tstBranch
 
-
-
-
-
-
-
-
-
+iTSTBRANCHNOCOMPILE:
+              iny
+              
+iTSTBRANCHNOCNOI:
+              sty       CUROFF
+              jmp       NextIL
 
 
 

@@ -179,13 +179,18 @@ S1W:
 ; Test for GOTO
 S1Z:
         TSTB       S2,kGoto                       ; YES...TO, OR...SUB
+
 ekGoto:
+        TSTBRANCH  ekGotoCompiled                 ; test the two byte vector following the goto if zero then normal line lookup
+                                                  ; Else we have the address ad just goto that address
         TSTB       ekGotoLine,oPeriod             ; If it is a period, then just go to start of this line
         REPEATLINE                                ; Repeat the same line again
         IJMP       STMT                           ; Go do the statement
-        
+
 ekGotoLine:
         CALL       EXPR                           ; GET LABEL
+
+ekGotoCompiled:
         XFER                                      ; SET UP AND JUMP
 
 ;===============================================================================================================================
@@ -203,20 +208,22 @@ ekGosub:
 ;===============================================================================================================================
 ; Return from a gosub
 S2b:
-        TSTB       S2a,kReturn                    ; Speed up pocessing but more memory
+        TSTB      S2a,kReturn                    ; Speed up pocessing but more memory
 ekReturn:
-        SETR2     0                               ; Default no return value
-        TSTB       S2RetDone,oLeftBracket         ; Check if we will return some value
-        SETR2     1                               ; Indicate a return value provided
+        TSTB      S2NoReturnValue,oLeftBracket         ; Check if we will return some value
         CALL      EXPR
-        TSTB      ERRVEC2,oRightBracket            ; Now a value is on the stack
-
-S2RetDone:
-        DONE                                      ; MUST BE CR or :
-        RSTR                                      ; RESTORE LINE NUMBER OF CALL
-        TSTBYTE    S2RetFunc,R2,1                 ; In This case jumps if equal
+        TSTB      ERRVEC2,oRightBracket           ; Now a value is on the stack
+        DONE
+        RSTR       S2RetFunc,1                    ; decides if call was a func or statement, branch on func, return value
         NXT        CO                             ; SEQUENCE TO NEXT STATEMENT
         IJMP       STMT                           ; Process the new statement
+        
+S2NoReturnValue:
+        DONE    
+        RSTR       S2RetFunc,0                    ; decides if call was a func or statement, branch on func, no return value
+        NXT        CO                             ; SEQUENCE TO NEXT STATEMENT
+        IJMP       STMT                           ; Process the new statement
+        
 S2RetFunc:
         IJMP       GOFNRet                        ; Back into the Function
 ;
@@ -873,9 +880,10 @@ ekGofn:
         Call        GOSUBSTATEMENT
         SAV         GOSUB_RTN_VALUE               ;SAVE RETURN LINE
         XFER
-GOFNRet
+
+GOFNRet:
         RTN
-        
+
 ;=================================================================================
 ;Check for a number !
 ;
@@ -917,7 +925,9 @@ F2C1:
 ;=============================================================
 ; Gosub can be both a Function and a Subroutine
 GOSUBSTATEMENT
-        CALL       EXPR                           ;GET DESTINATION
+        TSTBRANCH  GOSUBCOMPILED                  ; if the two bytes after gosub are not zero then direct transfer
+        CALL       EXPR                           ; GET DESTINATION
+GOSUBCOMPILED:
         TSTB       GOSUBDONE,oLeftBracket         ;Check if any Parameters
         STK2TMP                                   ;Transfer stack top to temp
         PUSHMATHSTACK                             ;Record stack frame for return
@@ -928,7 +938,7 @@ GOSUBLOOP:
         IJMP       GOSUBLOOP
 GOSUBParmDONE
         TSTB        F2,oRightBracket
-        TMP2STK                    ;Restore line to goto
+        TMP2STK                                   ; Restore line to goto
 GOSUBDONE
         RTN
 

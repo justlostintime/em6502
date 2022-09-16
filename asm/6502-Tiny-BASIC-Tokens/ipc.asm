@@ -144,7 +144,7 @@ ipc_enqueue:
               sta     (R0),y                          ; Set the entry type
 
               dey
-              lda     taskPtr                              ; Store the PID into queue
+              lda     taskPtr                         ; Store the PID into queue
               sta     (R0),y
               jsr     popR1                           ; Get the actual message value
               jsr     ipc_pushR1                      ; Store Message value into queue

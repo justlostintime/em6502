@@ -1,0 +1,14 @@
+10 goto 100
+20 gosub 150
+
+30 gosub 1000(80,56,900)
+40 print gofn 2000 ( A , B , C )
+
+50 end
+100 goto 20
+150 print 150 , "called"
+155 return
+1000 print 1000 , " Called " , #[0] , #[1] , #[2]
+1010 return
+2000 print 1000 , " Called " , #[0] , #[1] , #[2]
+2010 return(798)

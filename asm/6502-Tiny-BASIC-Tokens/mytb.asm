@@ -167,6 +167,7 @@ ERR_INDEX_OUT_OF_RANGE  equ     15      ;Subscript out of range
 ERR_INVALID_PID         equ     16      ;Invalid PID provided
 ERR_OUT_OF_MSG_SPACE    equ     17      ;Out of space for new messsages
 ERR_INVALID_STK_FRAME   equ     18      ;The stack frame was expected not found
+ERR_NO_RETURN_VALUE_PROVIDED equ 19     ;No value returned by a gofn call
 ;
 ;=====================================================
 ; Zero page storage.
@@ -197,7 +198,7 @@ GOSUBSTACK              ds      2                ; pointer to gosub stack
 GOSUBPTRPOS             equ     * - CONTEXT+1    ; Pointer to gosub stack pointer
 GOSUBSTACKPTR           ds      1                ; current offset in the stack, moved to task table
 MSGPTRPOS               equ     * - CONTEXT+1    ; Pointer to the message counter
-MESSAGEPTR              ds      1                ; Pointer to active message, from bottom of ilstack
+MESSAGEPTR              ds      1                ; Pointer to active message, from bottom of gosub stack
 ;
 ; CURPTR is a pointer to curent BASIC line being
 ; executed.  Always points to start of line, CUROFF
@@ -683,7 +684,8 @@ iXferok
 ;=====================================================
 ; Save the pointer to the next line to the call stack.
 ;
-iSAV            jsr     pushLN
+iSAV            jsr     getILByte
+                jsr     pushLN
                 bcs     iSAVErr
                 jmp     NextIL
 
@@ -724,26 +726,47 @@ iRET            jsr     popLN
                 jmp     NextIL
 ;
 ;=====================================================
+; On entry il, branch to if function
+;          il+1, value to be returned or not true or false
+;
 ; Return from GOSUB function
 ;
-iRSTR           ldy     GOSUBSTACKPTR
-                beq     iRSTRNoValue
-                lda     R2
-                sta     MQ
-                dey
-                lda     (GOSUBSTACK),y
-                cmp     #GOSUB_RTN_VALUE
-                bne     iRSTRNoValue
-                lda      #1
-                bne      iRSTRExit
-iRSTRNoValue
-                lda      #0
-iRSTRExit
-                sta     R2
-                jsr     popLN
-                bcs     iRSTRErr
-                jsr     PopMathStackNow
+iRSTR           jsr     getILByte             ; get where to go if gosub is a fucntion
+                sta     offset
+                jsr     saveIL                ; for later jump if needed
+                
+                jsr     popLN                 ; get the next item from the stack into curptr and curroff, returns call type func or stmt
+                sta     R1                    ; keep the type of call returning from
+                bcs     iRSTRErr              ; stack underflow error possible
+
+                jsr     getILByte             ; get if a value is being returned
+                pha                           ; save if a value was passed to be returned
+                cmp     #0                    ; yes attemping to return a value
+                beq     iRSTRPOP              ; no value to return
+                jsr     popR0                 ; Get the value from the stack save if needed
+iRSTRPOP:
+                jsr     PopMathStackNow       ; adjust the stack frame from the call
+                lda     R1                    ; called as a statement ?
+                cmp     #GOSUB_RTN            ; Called as a statement
+                beq     iRSTRExit
+                pla                           ; get back if value returned or not
+                cmp     #1                    ; we have a value to return
+                beq     iRSTRVALUE
+
+                ldx     #ERR_NO_RETURN_VALUE_PROVIDED         ; well no value provided and we need one
+                bne     iSAVErr2
+
+iRSTRVALUE:
+                jsr     pushR0                ; return value back to top of stack
+                jsr     restoreIL             ; get the correct il
+                jmp     tstBranch             ; And called as a function
+
+iRSTRExit:
+                pla                           ; throw away the return value if provided
                 jmp     NextIL
+
+iRSTRNORETURNVALUE:
+
 
 iRSTRErr        lda     taskPtr               ; Check if this is task zero
                 beq     taskZeroEnd           ; this is task zero just stop with error
@@ -754,7 +777,7 @@ taskRet:
                 jmp     iETask                ; not task zero then do a task end instead
 taskZeroEnd
                 ldx     #ERR_STACK_UNDER_FLOW
-                bne     iSAVErr2
+                jmp     iSAVErr2
 ;
 ;=====================================================
 ; Compare items on stack.  Okay, so on input there are
@@ -879,6 +902,7 @@ iReadStart
 ;=====================================================
 ; Complete the read and return the curptr, curoff pointing to data
 iReadComplete
+                lda     #GOSUB_RTN
                 jsr     pushLN
                 bcc     iReadOk
 iReadErr        jmp     ErrStkOver     ; Check if there was an error
@@ -892,6 +916,7 @@ iReadOk
 ; number, leave on top of stack.
 ;
 iINNUM
+                lda     #GOSUB_RTN
                 jsr     pushLN
                 bcs     iReadErr       ; Stack over flow error
 ;
@@ -909,6 +934,7 @@ iINNUM
 ; character value , leave on top of stack. up to 2 characters
 ;
 iINSTR
+                lda     #GOSUB_RTN
                 jsr     pushLN
                 bcs     iReadErr     ; Stack overflow error
                 lda     #'?
@@ -2003,6 +2029,7 @@ irqNo           lda     IRQPending
                 bne     tstBranch
                 sei                    ; disable the interupt until ireturn resets it
 irqbrk          inc     IRQPending     ; Set the pending to 2, so this ignores it, iret sets it to 0
+                lda     #GOSUB_RTN     ; Save as gosub
                 jsr     pushLN         ; Push the next line to be executed
                 bcs     ErrStkOver     ; Check if there was an error
                 lda     IRQEntry       ; Get the line number to branch to
@@ -2275,12 +2302,13 @@ iSetIrq         sei                 ; disable the interupts
                 lda     R0
                 ora     R0+1
                 beq     iSetExt     ; if it is zero disable all
+                lda     #GOSUB_RTN  ; default push type
                 jsr     pushLN      ; Save the current line pointer
                 bcc     iSetIrqOk   ; Check if there was an error
                 jmp     ErrStkOver     ; Check if there was an error
 iSetIrqOk
                 jsr     findLine    ; Find the IRQ func Line Pointer
-                bne     iSetIrqErr  ; Error if exact line not ound
+                bne     iSetIrqErr  ; Error if exact line not found
                 lda     CURPTR+1    ; Copy it to the Entry pointer
                 sta     IRQEntry+1
                 lda     CURPTR
@@ -2372,11 +2400,11 @@ taskCounter             ds      1                     ; Count of active tasks
 ; Math stack and IL call and Gosub/For-next return stack definitions
 ;
 STACKSTART      equ     *
-mathStack       ds      MATHSTACKSIZE*2*TASKCOUNT                  ;Stack used for math expressions
-ilStack         ds      ILSTACKSIZE*2*TASKCOUNT                    ;stack used by the IL for calls and returns
-gosubStack      ds      (GOSUBSTACKSIZE)*4*TASKCOUNT               ;stack size for gosub stacks
-variableStack   ds      VARIABLESSIZE*2*TASKCOUNT                  ;Stack of variables, 26 A-Z-task exit code
-TASKEXITCODE    equ     VARIABLESSIZE-1*2                         ; Offset to exit code location
+mathStack       ds      MATHSTACKSIZE*2*TASKCOUNT                  ; Stack used for math expressions
+ilStack         ds      ILSTACKSIZE*2*TASKCOUNT                    ; stack used by the IL for calls and returns
+gosubStack      ds      (GOSUBSTACKSIZE)*4*TASKCOUNT               ; stack size for gosub stacks
+variableStack   ds      VARIABLESSIZE*2*TASKCOUNT                  ; Stack of variables, 26 A-Z-task exit code
+TASKEXITCODE    equ     VARIABLESSIZE-1*2                          ; Offset to exit code location
 STACKEND        equ     *
 STACKLEN        equ     STACKEND-STACKSTART                        ; total space used for stacks
 ;
