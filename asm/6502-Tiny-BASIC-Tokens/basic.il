@@ -180,6 +180,11 @@ S1W:
 S1Z:
         TSTB       S2,kGoto                       ; YES...TO, OR...SUB
 ekGoto:
+        TSTB       ekGotoLine,oPeriod             ; If it is a period, then just go to start of this line
+        REPEATLINE                                ; Repeat the same line again
+        IJMP       STMT                           ; Go do the statement
+        
+ekGotoLine:
         CALL       EXPR                           ; GET LABEL
         XFER                                      ; SET UP AND JUMP
 
@@ -684,7 +689,7 @@ UNKNOWNVEC:
 ; first or else they'll be confused for variables.
 ;
 FACT:
-        OnGoto     BasicFuncs,FactVariable
+        OnGoto     BasicFuncs,FactNumber
 
 FACTCONTINUE:
         TSTB       F1AA,kTrue
@@ -870,31 +875,13 @@ ekGofn:
         XFER
 GOFNRet
         RTN
-;=============================================================================
-; See if this is just a simple variable
-;  Allow a subscript for any variable
-;
-F2C:
-
-FactVariable:
-        TSTV        F0
-        TSTB        F2CLocalTask,oBang
-        IND                                       ; we just got a pid
-        TSTVT       UNKNOWNID                     ; if it is not another variabe then error, Call test var. task
-
-F2CLocalTask
-        TSTB        F2C1,oLeftSQBracket
-        CALL        EXPR
-        TSTB        UNKNOWNID,oRightSQBracket
-        SUBSCRIPT
-F2C1:
-        IND                                     ;YES, GET THE VALUE.
-        RTN
+        
 ;=================================================================================
-;Finally check for a number !
+;Check for a number !
 ;
 F0:
-        TSTN        F1                           ;NUMBER, GET ITS VALUE.
+FactNumber:
+        TSTN        FactVariable                 ;NUMBER, GET ITS VALUE.
         RTN
 F1:
         TSTB        F2RTN,oLeftBracket           ;PARENTHESIZED EXPR.
@@ -906,6 +893,27 @@ F2RTN:
 F2:
         ERRMSG     ERR_SYNTAX                     ;ERROR.
 ;
+;=============================================================================
+; See if this is just a simple variable
+;  Allow a subscript for any variable
+;
+F2C:
+
+FactVariable:
+        TSTV        F1
+        TSTB        F2CLocalTask,oBang
+        IND                                       ; we just got a pid
+        TSTVT       UNKNOWNID                     ; if it is not another variabe then error, Call test var. task
+
+F2CLocalTask
+        TSTB        F2C1,oLeftSQBracket
+        CALL        EXPR
+        TSTB        UNKNOWNID,oRightSQBracket
+        SUBSCRIPT
+F2C1:
+        IND                                      ; YES, GET THE VALUE.
+        RTN
+
 ;=============================================================
 ; Gosub can be both a Function and a Subroutine
 GOSUBSTATEMENT

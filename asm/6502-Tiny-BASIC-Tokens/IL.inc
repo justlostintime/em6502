@@ -499,3 +499,8 @@
     db ({1}-*)-1
   endm
 
+
+  Macro REPEATLINE
+    db 105
+   endm
+

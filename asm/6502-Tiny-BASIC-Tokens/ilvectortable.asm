@@ -121,4 +121,5 @@
       dw  iTSTW         ;102      Test If word equals
       dw  iOnGoto       ;103      Branch to table entry based upon buffer value
       dw  iTSTRELOP     ;104      Test relop, push mask onto stack if true, branch otherwise
+      dw  iRepeatLine   ;105      Repeat the same line again, start execution from beginning of the same line
 

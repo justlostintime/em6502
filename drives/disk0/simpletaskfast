@@ -1,4 +1,3 @@
-
 10 a=100:b=15:c=0:d=1000:e=2000:f=3000:g=4000:h=5000:i=6000:j=7000:k=8000:l=9000
 15 ?"Simple task test, to activate all tasks",c,Z
 20 m=task(d):n=task(e):o=task(f):p=task(g):q=task(h):r=task(i):s=task(j):t=task(k):u=task(l)
@@ -10,7 +9,7 @@
 210 end
 
 1000 a=0:b=20:c=1010
-1010 inca:inc Z!Z:ifa<bgotoc
+1010 inca:inc Z!Z:ifa<bgotoc:rem first z is always zero, or main task 
 1050 taske
 
 2000 b=0:s=15:c=2010

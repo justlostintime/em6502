@@ -41,12 +41,13 @@ Operators: BYTE "<>"
            BYTE "$",0
            BYTE "!",0
            BYTE "?",0
+           BYTE ".",0
            BYTE 0,0
 
 OperValues: BYTE  oNotEqual,oLessEqual,oGreaterEqual,oLess,oEqual,oGreater
             BYTE  oPlus, oMinus, oDivide, oModulo, oMultiply
             BYTE  oLeftBracket, oRightBracket, oComma, oSemiColon, oLeftSQBracket, oRightSQBracket
-            BYTE  oColon, oDollar, oBang, oQuestion
+            BYTE  oColon, oDollar, oBang, oQuestion, oPeriod
 
 oQuestion         equ     kPrint
 
@@ -66,13 +67,15 @@ oRightSQBracket   equ     $E5
 oColon            equ     $E6
 oDollar           equ     $E7
 oBang             equ     $E8
+oPeriod           equ     $E9
 
 
-oPlus             equ     $E9
-oMinus            equ     $EA
-oDivide           equ     $EB
-oModulo           equ     $EC
-oMultiply         equ     $ED
+oPlus             equ     $EA
+oMinus            equ     $EB
+oDivide           equ     $EC
+oModulo           equ     $ED
+oMultiply         equ     $EE
+
 oPercent          equ     oModulo
 
 tOperatorX        equ     $F0 ;+ operator Value  ; stores the value used to do the relational operator compare
@@ -508,19 +511,19 @@ ParseForOperator:
   if DEBUGPARSER
           ;      jsr    DebugPrintOP
   endif
-  
+
 ParseOpLoop:
                 lda     Operators,x                 ; First byte of operator
-                beq     ParseOpNotFound             ; Last entry os 0,0 
-                
+                beq     ParseOpNotFound             ; Last entry os 0,0
+
                 cmp     LINBUF,y                    ; Check the first byte
                 bne     ParseOpNext
-                
+
                 iny
-                
+
                 lda     Operators+1,x
                 beq     ParseOpFoundSingle          ; Single Character op
-                
+
                 cmp     LINBUF,y
                 bne     ParseOpNext
 
@@ -543,7 +546,7 @@ ParseOpFoundSingle:
 ParseOpNext:
                 inx
                 inx
-                
+
   if DEBUGPARSER
         ;       jsr    DebugPrintOP
   endif
@@ -776,7 +779,7 @@ PrintProgVars:
                 dex                             ; Ok we are prcessing it
                 iny
                 bne    PrintContinue            ; Print and do the next character
-                
+
 PrintDataType:
                 lda    (dpl),y                  ; Get char back again and check for data type
                 cmp    #tString
@@ -842,7 +845,7 @@ PrintStringVariable:
 
 PrintProgVariableVec
                 jmp PrintProgVariable
-                
+
 PrintProgOperatorVect
                 jmp  PrintProgOperator
 ;===============================================================================================================
@@ -855,31 +858,31 @@ PrintKeyword:
                 lda   (dpl),y                ; Get the Keyword token to lookup
                 sta    R0                    ; The value we are looking for
                 iny                          ; Inc i to point to the next char to be printed
-                
+
                 tya                          ; Save y and x for the return
                 pha
                 txa
                 pha
-                
+
                 lda    #KeyWordTable&$FF     ; R1 to point to the entry in the keyword table
                 sta    R1
                 lda    #KeyWordTable>>8
                 sta    R1+1
 
-               
+
 PrintKeyLoop
                 ldy    #0                    ; Index into the keyword entry
                 lda   (R1),y                 ; Get token value for this entry
                 iny                          ; Point to first byte of key
                 cmp   R0                     ; Compare to the token we are looking for
                 Beq   PrintKeyFound          ; We have the correct Token, now print it
-               
+
 PrintKeyNext
                 lda   (R1),y                 ; Get key letter
                 iny                          ; Point to next byte always
                 and   #%00100000             ; Check for last character in key work
                 bne   PrintKeyNext           ; If it is not set then get next character
-                
+
                 tya                          ; Trabsfer y to a for the addition
                 clc                          ; Table > 256 bytes
                 adc  R1
@@ -898,12 +901,12 @@ PrintKeyFound:
                 pla                         ; Restore the value
                 and   #%00100000            ; Check if it was last char in keyword
                 bne   PrintKeyFound         ; Yes, then goto all done printing
-                
+
                 pla                         ; Restore the x and y values
                 tax
                 pla
                 tay
-                
+
 PrintChkRem:
                 lda   #kRem
                 cmp   R0
@@ -1022,7 +1025,7 @@ iOnGotoInvalid:
 iTSTRELOP:
               jsr       getILByte
               sta       offset
-              
+
               ldy       CUROFF
               lda       (CURPTR),y
               pha
@@ -1038,11 +1041,11 @@ iTSTRELOP:
               iny
               sty       CUROFF                ; save the y pointer
               jmp       NextIL
-              
+
 iTSTRELOPNOT:
               pla
               jmp       tstBranch
-              
+
 
 
 

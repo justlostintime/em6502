@@ -1,0 +1,41 @@
+10 a=100:b=15:c=0:d=1000:e=2000:f=3000:g=4000:h=5000:i=6000:j=7000:k=8000:l=9000
+15 ?"Simple task test, to activate all tasks",c,Z
+20 m=task(d):n=task(e):o=task(f):p=task(g):q=task(h):r=task(i):s=task(j):t=task(k):u=task(l)
+
+110 taskw(m,n,o,p,q,r,s,t,u)
+
+195 incc:ifc<100gotob
+200 ?"Test complete, Total count = ";z
+210 end
+
+
+1000 inc a :inc Z!Z : if a < bgoto.:rem first z is always zero, or main task so z!z is always task 0 z variable
+1050 taske
+
+2000 incb:inc Z!Z:if b < 15 goto .
+2050 taske
+
+3000 inc c :inc Z!Z:if c < 20 goto .
+3050 taske
+
+4000 incd:inc Z!Z:if d < 20 goto.
+4050 taske
+
+5000 ince:inc z!z:if e < 25 goto.
+5050 taske
+
+6000 inc f : inc Z!z :gosub 10000 :if f < 20 goto.
+6050 taske
+
+7000 inc g : inc Z!Z : gosub 10000 : if g < 21 goto.
+7050 taske
+
+8000 inc h : inc Z!Z : gosub 10000 : if h < 20 goto.
+8050 taske
+
+9000 inc i : inc Z!Z :gosub 10000 :if i< 20 goto .
+9050 taske
+
+10000 a=0: inc q
+10020 return
+

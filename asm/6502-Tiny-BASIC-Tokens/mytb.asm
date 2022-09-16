@@ -636,6 +636,11 @@ iFINv           jmp     iFIN
 ;
 iNxtRun2        jsr     getILWord     ;ignore next word
                 jmp     NextIL
+;=====================================================
+;Repeat the same line against
+iRepeatLine:    ldy     #3
+                sty     CUROFF
+                jmp     NextIL
 ;
 ;=====================================================
 ; XFER takes the number on top of the stack and looks
@@ -1892,28 +1897,31 @@ iTSTLNotLineNo:
 iTSTN           jsr     getILByte
                 sta     offset
 ;
-                ldy     CUROFF
                 lda     #0
                 sta     dpl
+                ldy     CUROFF
+chkType:
                 lda     (CURPTR),y
+                cmp     #tByte
+                beq     chkByte
+                cmp     #tInteger
+                beq     chkInteger
                 cmp     #oMinus
-                bne     chkByte
+                bne     tstBranch
                 inc     dpl
+                iny
+                jmp     chkType
 
 chkByte:
-                cmp     #tByte
-                bne     chkInteger
                 lda     #0
                 sta     R0+1
                 iny
                 lda     (CURPTR),y
                 sta     R0
                 iny
-                jmp     iTSTN_1
+                bne     iTSTN_1
 
 chkInteger:
-                cmp     #tInteger
-                bne     tstBranch
                 iny
                 lda     (CURPTR),y
                 sta     R0
@@ -1947,8 +1955,8 @@ iTSTN_1
                 bne     iTSTN_2
                 inc     R0+1
 iTSTN_2:
-                jsr     pushR0          ;save onto stack
-                jmp     NextIL
+                jsr     pushR0nextIl          ;save onto stack
+
 ;
 ; Common jump point for all TSTx instructions that
 ; fail to meet the requirements.  This takes the
