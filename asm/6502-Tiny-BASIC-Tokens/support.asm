@@ -86,8 +86,8 @@ popILPC       ldy     ILSTACKPTR
 ;=====================================================
 ; This searches for a specific line number that is in
 ; R0.  There are three possible return conditions:
-; Line numbers are now the third byte, the first byte is now **************
-; a pointer to the next line, of course no longer that 53 byte
+; Line numbers are now the third byte, the first byte is now
+; a pointer to the next line, of course no longer than 255 byte
 ; per line.
 ;
 ; Exact match was found:
@@ -560,7 +560,7 @@ pushLoop
                 cpx     #3                      ; 4 bytes per entry on the stack
                 bne     pushLoop                ; Jump if not done for next byte
 
-pushDone        lda     rtemp1+1                ; Type of stack entry 
+pushDone        lda     rtemp1+1                ; Type of stack entry
                 sta     (GOSUBSTACK),y          ; Store Type of stack entry
                 iny                             ; Next entry
 
@@ -606,7 +606,7 @@ popLoop:
 
 PopDone:        sty     GOSUBSTACKPTR
                 ldy     rtemp1
-                lda     rtemp1+1               ; get the type of return 
+                lda     rtemp1+1               ; get the type of return
                 clc
                 rts
 
@@ -792,8 +792,14 @@ idbgBasic       bit     ILTrace
                 tya
                 pha
                 jsr     SetOutDebug
-                jsr     PrtPrgLine
-                jsr     CRLF
+
+                lda     CURPTR
+                sta     dpl
+                lda     CURPTR+1
+                sta     dpl+1
+
+                jsr     PrintProgramLine
+
                 lda     ILTrace
                 and     #$01                ; Check if the Basic debug should be interactive
                 beq     dbgBasicDone
@@ -966,12 +972,9 @@ CopyStackR1
 
 ;====================================================
 ;Swap the out debug call for standard calls
-  if    USEDEBUGPORT
 DebugIOSave     ds     2
 DebugInSave     ds     2
-  endif
 SetOutDebug
-          if    USEDEBUGPORT
                 lda    BOutVec
                 sta    DebugIOSave
                 lda    BOutVec+1
@@ -980,35 +983,28 @@ SetOutDebug
                 sta    BOutVec
                 lda    #OUTDEBUG>>8
                 sta    BOutVec+1
-          endif
                 rts
 SetInDebug
-         if     USEDEBUGPORT
                 lda    BInVec
                 sta    DebugInSave
                 lda    BInVec+1
                 sta    DebugInSave+1
-                lda   #INDEBUG&$ff
-                sta   BInVec
-                lda   #INDEBUG>>8
-                sta   BInVec+1
-         endif
+                lda    #INDEBUG&$ff
+                sta    BInVec
+                lda    #INDEBUG>>8
+                sta    BInVec+1
                 rts
 SetOutDebugEnd
-      if     USEDEBUGPORT
-                lda   DebugIOSave
-                sta   BOutVec
-                lda   DebugIOSave+1
-                sta   BOutVec+1
-         endif
+                lda    DebugIOSave
+                sta    BOutVec
+                lda    DebugIOSave+1
+                sta    BOutVec+1
                 rts
 SetInDebugEnd
-      if     USEDEBUGPORT
-                lda   DebugInSave
-                sta   BInVec
-                lda   DebugIOSave+1
-                sta   BInVec+1
-         endif
+                lda    DebugInSave
+                sta    BInVec
+                lda    DebugIOSave+1
+                sta    BInVec+1
                 rts
 ;
 ;====================================================
@@ -1023,13 +1019,19 @@ DebugWrite
                 rts
 
 OUTDEBUG
-                sta     DEBUGPORT+1             ;Dont check anything just output the byte
+                .byte   $8D                           ; STA 
+DEBUGPORT       .word   $E001                         ;Dont check anything just output the byte
                 RTS
 
-INDEBUG         lda     DEBUGPORT
+INDEBUG        
+                .byte   $AD                           ; LDA
+DEBUGPORTSTATUS .word   $E000
+
                 and     #$01
                 beq     INDEBUG
-                lda     DEBUGPORT+1
+                
+                .byte   $AD                              ; LDA
+DEBUGPORTIN     .word   $E001
                 rts
 
 ;======================================================================

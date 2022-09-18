@@ -123,4 +123,5 @@
       dw  iTSTRELOP     ;104      Test relop, push mask onto stack if true, branch otherwise
       dw  iRepeatLine   ;105      Repeat the same line again, start execution from beginning of the same line
       dw  iTSTBRANCH    ;106      Test for compiled branch, take branch is is, skip two bytes and following integer value(line number) goto, gosub, gofn
+      dw  iFastXfer     ;107      move top of stack to curptr 
 

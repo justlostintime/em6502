@@ -1,5 +1,5 @@
         seg Code
-DEBUGPARSER       equ     TRUE                   ; Print debugging information
+DEBUGPARSER       equ     FALSE                  ; Print debugging information
 
 ; Define the types of tokens found, and identifiers
 KeywordsMax       equ     $7F                    ; Allow to be range  1 to 127  key words, high order bit must be 0 for it to be a key word
@@ -12,7 +12,7 @@ tVhash            equ     $9C                    ; Variable #
 tVat              equ     $9D                    ; Variable @ = 0
 
 
-tString           equ     $A0                    ; String all start with this byte and end with  byte value 0 strings can be accessed with array slicing
+tString           equ     $A0                    ; Strings all start with this byte and end with  byte value 0 strings can be accessed with array slicing
 tInteger          equ     $A1                    ; all tokenized integers start with 251 as first byte
 tByte             equ     $A2                    ; Unsigned byte value
 tArray            equ     $A3                    ; Identifies Array Type, the byte following defines the length of each element
@@ -50,7 +50,12 @@ OperValues: BYTE  oNotEqual,oLessEqual,oGreaterEqual,oLess,oEqual,oGreater
             BYTE  oColon, oDollar, oBang, oQuestion, oPeriod
 
 oQuestion         equ     kPrint
-
+;    2 is =
+;    1 is <
+;    3 is <=
+;    5 is <>
+;    4 is >
+;    6 is >=
 oLess             equ     $F1
 oEqual            equ     $F2
 oLessEqual        equ     $F3
@@ -191,6 +196,7 @@ KeyWordTable:
 ;Short form for statements:
             db      kIreturn,"ireT"
             db      kReturn,"reT"
+            db      kPrint,"pR"                        ; some dialects of tiny basic use this for print
 
 ;Logical and truth operators
              db     kNot,"noT"
@@ -367,7 +373,9 @@ ParseKeyDone:
                 beq     ParseHandleBranches    ; Handle the gosub branch address
                 cmp     #kGofn
                 beq     ParseHandleBranches    ; Handle the gosub branch address
-                
+                cmp     #kTask
+                beq     ParseHandleBranches    ; We may have the ability to also compile task vectors Bracket between the space and the value
+
                 clc                            ; C flag clear, we found it
                 rts
 
@@ -401,7 +409,7 @@ ParseEndOfEntry:
                 jmp   ParseLookupLoop           ; branch back for next key word
 
 ParseNoneFound:
-                ldx   R2                        ; it did not faind one, restore x to position in output buffer
+                ldx   R2                        ; it did not find one, restore x to position in output buffer
                 sec                             ; c clear, not found
                 rts
 
@@ -642,7 +650,7 @@ printHexLoop:
             jsr   VOUTCH
             iny
             dex
-            cpx  #0
+            cpx   #0
             bne   printHexLoop
             jsr   CRLF
 
@@ -742,276 +750,6 @@ DPL2R0:
                 sta     R0+1
                 rts
 
-;==========================================================================================================
-;Debug   Print a Program Line from compile buffer
-;
-DebugPrintProgramLine:
-                pha
-                lda     #TOKENBUFFER&$FF
-                sta     dpl
-                lda     #TOKENBUFFER>>8
-                sta     dpl+1
-                pla
-
-; Decode and print a line of program text
-; on entry      dpl points to line of code to print
-; on exit       no change in reg of dpl
-;
-PrintProgramLine:
-
-                stx     printStorage
-                sty     printStorage+1
-                pha
-
-                ldy     #1                      ; index into the token buffer
-                sty     R2                      ; print unsigned decimal
-                ldy     #0
-                lda     (dpl),y                 ; get number of bytes
-                tax                             ; place pointer into x
-                iny
-                dex                             ; Deduct the length byte
-                jsr     DPL2R0                  ; Print the line number
-                jsr     PrintDecimal
-                lda     #$20
-                jsr     VOUTCH
-
-PrintProgLoop:
-                lda     (dpl),y                 ; Get a character
-                beq     PrintProgramComplete    ; If zero then at end of line
-                and     #%10000000              ; check for Keyword or Variable/operator
-                beq     PrintKeyword            ; It uses the index in a to find a keyword
-
-PrintProgVars:
-                lda    (dpl),y
-                and    #$E0                     ; Check for operators and punctuation
-                cmp    #$E0
-                beq    PrintProgOperatorVect
-
-                lda    (dpl),y                  ; Get char back again and check for var
-                cmp    #$9D+1
-                bcc    PrintProgVariableVec
-                and    #$A0                     ; Check for a valid datatype
-                cmp    #$A0
-                beq    PrintDataType            ; if not just print the character
-                lda    (dpl),y                  ; Get char back again and check for data type
-                dex                             ; Ok we are processing it
-                iny
-                bne    PrintContinue            ; Print and do the next character
-
-PrintDataType:
-                lda    (dpl),y                  ; Get char back again and check for data type
-                cmp    #tString
-                beq    PrintStringVariable
-
-PrintProgNumber:
-                iny                             ; we have a numerical integer value
-                dex
-                pha
-                lda    #0
-                sta    R0+1
-                sta    R2                       ; Set to print signed number
-                lda    (dpl),y
-                sta    R0
-                pla
-                cmp    #tInteger
-                bne    PrintProgNumDone
-                iny
-                dex
-                lda    (dpl),y
-                sta    R0+1
-
-PrintProgNumDone:
-                iny
-                dex
-                jsr    PrintDecimal
-
-PrintProgNext:
-                lda    #$20
-PrintContinue:
-                jsr    VOUTCH
-PrintProgSkipSpace:
-                cpx    #0
-                bne    PrintProgLoop
-PrintProgramComplete:
-                jsr    CRLF
-
-                ldx    printStorage
-                ldy    printStorage+1
-                pla
-
-                rts
-;=================================================================================================================
-; Print a string variable including the quotes
-; On Input      y is offset into buffer
-; On Exit       y is updated to new offset
-
-PrintStringVariable:
-                iny
-                lda  #'"
-                jsr  VOUTCH
-                iny
-                lda  dpl
-                sta  PrtFrom
-                lda  dpl+1
-                sta  PrtFrom+1
-                lda  #'"
-                sta  PrtTerm
-                jsr PrtLoop
-                lda  #'"
-                jsr  VOUTCH
-                jmp PrintProgNext
-
-PrintProgVariableVec
-                jmp PrintProgVariable
-
-PrintProgOperatorVect
-                jmp  PrintProgOperator
-;===============================================================================================================
-; On entry dpl points to the buffer we are printing from
-;          y   current offset into the dpl buffer
-; all registers preserved
-;
-PrintKeyword:
-
-                lda   (dpl),y                ; Get the Keyword token to lookup
-                sta    R0                    ; The value we are looking for
-                cmp    #kGoto                ; Test if we must skip an extra two bytes for branch type instructions
-                beq    PrintKeyBranch
-                cmp    #kGosub
-                beq    PrintKeyBranch
-                cmp    #kGofn
-                bne    PrintKeySkipped
-PrintKeyBranch:
-                iny                          ; Skip the compiled memory address
-                iny
-                dex                          ; Change number of bytes to print
-                dex                          ; Remove the bytes to print
-                
-PrintKeySkipped:
-                iny                          ; Inc y to point to the next char to be printed
-                dex                          ; Reduce number of bytes to print
-                tya                          ; Save y and x for the return
-                pha
-                txa
-                pha
-
-                lda    #KeyWordTable&$FF     ; R1 to point to the entry in the keyword table
-                sta    R1
-                lda    #KeyWordTable>>8
-                sta    R1+1
-
-
-PrintKeyLoop
-                ldy    #0                    ; Index into the keyword entry
-                lda   (R1),y                 ; Get token value for this entry
-                iny                          ; Point to first byte of key
-                cmp   R0                     ; Compare to the token we are looking for
-                Beq   PrintKeyFound          ; We have the correct Token, now print it
-
-PrintKeyNext
-                lda   (R1),y                 ; Get key letter
-                iny                          ; Point to next byte always
-                and   #%00100000             ; Check for last character in key work
-                bne   PrintKeyNext           ; If it is not set then get next character
-
-                tya                          ; Trabsfer y to a for the addition
-                clc                          ; Table > 256 bytes
-                adc  R1
-                sta  R1
-                lda  #0
-                adc  R1+1
-                sta  R1+1
-                jmp  PrintKeyLoop
-
-PrintKeyFound:
-                lda   (R1),y                ; letter from key table
-                pha                         ; Save it for later check
-                ora   #%00100000            ; Force it to lower case
-                jsr   VOUTCH                ; Print it out
-                iny                         ; Point to next character
-                pla                         ; Restore the value
-                and   #%00100000            ; Check if it was last char in keyword
-                bne   PrintKeyFound         ; Yes, then goto all done printing
-
-                pla                         ; Restore the x and y values
-                tax
-                pla
-                tay
-
-PrintChkRem:
-                lda   #kRem
-                cmp   R0
-                bne   PrintKeyDone
-PrintKeyRem:
-                lda  dpl                    ; if it is a rem then we must print the entire line
-                sta  PrtFrom
-                lda  dpl+1
-                sta  PrtFrom+1
-                lda  #0
-                sta  PrtTerm
-                jsr  PrtLoop
-                dey                         ; point back to the terminating null value
-PrintKeyDone:
-                jmp  PrintProgNext
-;==================================================================================================================
-;Print Variable, number or operator
-PrintProgOperator:
-                lda   (dpl),y
-                iny
-                dex
-                stx    printStorage+2
-                ldx    #0
-PrintOprLoop
-                cmp    OperValues,x
-                beq    PrintOprFound
-                inx
-                bne    PrintOprLoop
-PrintOprFound
-                txa
-                asl
-                tax
-                lda     Operators,x
-                jsr     VOUTCH
-                inx
-                lda     Operators,x
-                beq     PrintOprDone
-                jsr     VOUTCH
-PrintOprDone
-                ldx     printStorage+2
-                jmp     PrintProgNext
-
-;=================================================================================================================
-;KeywordsMax       equ     128                    ; Allow to be range  1 to 127  key words, high order bit must be 0 for it to be a key word
-;tVa               equ     128                    ; Variable A = 1, .... Z = 26   ^ = 27
-;tVb               equ     130                    ; Variables 128 - 157  $80-$9D
-;tVhat             equ     155                    ; Variable ^
-;tVhash            equ     156                    ; Variable #
-;tVat              equ     157                    ; Variable @ = 0
-PrintProgVariable:
-                lda    (dpl),y
-                iny
-                dex
-                cmp    #tVhat
-                bne    PrintProgChkHash
-                lda    #'^
-                bne    PrintTheVar
-PrintProgChkHash:
-                cmp   #tVhash
-                bne   PrintProgChkAt
-                lda   #'#
-                bne   PrintTheVar
-PrintProgChkAt:
-                cmp   #tVat
-                bne   PrintProgVarLetter
-                lda   #'@
-                bne   PrintTheVar
-PrintProgVarLetter:
-                and   #%01111111
-                clc
-                adc   #'A
-PrintTheVar:
-                jsr   VOUTCH
-                jmp   PrintProgNext
 
 ;=========================================================================
 ; Read an IL byte lookit up in the table, of words
@@ -1084,37 +822,50 @@ iTSTRELOPNOT:
 ; used by both gosub, goto and gofN
 ;
 iTSTBRANCH:
-              jsr       getILByte
-              sta       offset
-              ldy       CUROFF
+              jsr       getILByte               ; Get jump address if vector is valid
+              sta       offset                  ; Mark offset for later if vector found
+              ldy       CUROFF                  ; get offset of first byte of compiled value
+              dey                               ; point back to the type of branch
+              lda       (CURPTR),y              ; get the actual instructions
+              pha                               ; Save till needed
+              iny                               ; back to memory vectors
+ITSTBRANCHCont
+              lda       (CURPTR),y              ; Get first byte of compiled value
+              sta       R0                      ; R0 will contain mem pointer of present
+              iny                               ; Point to next byte of mem vector
+              lda       (CURPTR),y              ; It was compiled so get the hi byte value
+              sta       R0+1                    ; Move it into R0, R0 now contains vector address
+              iny                               ; Point to the byte past memory vector
+              sty       CUROFF                  ; At least point past the memory vector built in
+
+              ora       R0                      ; Get the second byte of the mem
+              BEQ       iTSTBRANCHNoCompile     ; If both are zero then not compiled
+              pla
+              cmp       #kTask                  ; Task defied with Task() so bypass the first bracket
+              bne       iTSTBRANCHCont
               lda       (CURPTR),y
-              sta       R0
-              iny
-              ora       (CURPTR),y
-              beq       iTSTBRANCHNOCOMPILE
-              lda       (CURPTR),y
-              sta       R0+1
-              iny
-              lda       (CURPTR),y
-              cmp       #tByte
-              beq       ITSTBRANCHBYTE
-              cmp       #tInteger
-              bne       iTSTBRANCHNOCNOI
-              iny                                 ; skip type indicator for 
+              cmp       #oLeftBracket
+              bne       iTSTBRANCHErr           ; Well in that case something is very wrong
+              iny                               ; Increment past the bracket
+iTSTBRANCHCont:
+              lda       (CURPTR),y              ; We should get a datatype, if not memvector is invalid
+              cmp       #tByte                  ; A byte value is valid
+              beq       ITSTBRANCHBYTE          ; Skip the byte
+              cmp       #tInteger               ; An integer value is valid
+              bne       iTSTBRANCHNoCompile     ; If not then we can not use the memory vector
+              iny                               ; skip type indicator for
 ITSTBRANCHBYTE:
-              iny                                 ; skip first byte of value line number
-              iny                                 ; Skip second byte of line number
+              iny                               ; skip first byte of value line number
+              iny                               ; Skip second byte of line number
 
 iTSTBRANCHVALID:
               sty       CUROFF
-              jsr       pushR0                    ; place transfer address on top of stack
+              jsr       pushR0                  ; place transfer address on top of stack
               jmp       tstBranch
 
-iTSTBRANCHNOCOMPILE:
-              iny
-              
-iTSTBRANCHNOCNOI:
-              sty       CUROFF
+iTSTBRANCHNoCompile:
+              pla
+iTSTBRANCHErr:
               jmp       NextIL
 
 

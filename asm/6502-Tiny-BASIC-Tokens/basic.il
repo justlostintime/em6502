@@ -3,7 +3,7 @@
 ; format :   first byte is value Base, subtracted from value found
 ;            second byte is the number of entries in the table max is 128... always a limit somewhere... lol
 BasicStmts:
-                db    kBeginKey,kKeyCount+1                ; Base address of table, length of table
+                db    kBeginKey,(kKeyCount+1)                ; Base address of table, length of table
                 dw    ekLet
                 dw    ekInc
                 dw    ekDec
@@ -189,9 +189,11 @@ ekGoto:
 
 ekGotoLine:
         CALL       EXPR                           ; GET LABEL
-
+        lit        0                              ; Place indicator for line num on stack
+        FASTXFER
 ekGotoCompiled:
-        XFER                                      ; SET UP AND JUMP
+        lit        1                              ; tell it that mempointer on the stack
+        FASTXFER                                  ; put top of stack into curptr
 
 ;===============================================================================================================================
 ; Process gosub / function
@@ -202,7 +204,7 @@ ekGosub:
         CALL       GOSUBSTATEMENT                 ; Do the gosub
         DONE                                      ; ERROR IF CR NOT NEXT
         SAV        GOSUB_RTN                      ; SAVE RETURN LINE
-        XFER                                      ; AND JUMP to sub rtn
+        FASTXFER                                  ; AND JUMP to sub rtn
 ;
 ; End of gosub processing
 ;===============================================================================================================================
@@ -217,13 +219,13 @@ ekReturn:
         RSTR       S2RetFunc,1                    ; decides if call was a func or statement, branch on func, return value
         NXT        CO                             ; SEQUENCE TO NEXT STATEMENT
         IJMP       STMT                           ; Process the new statement
-        
+
 S2NoReturnValue:
-        DONE    
+        DONE
         RSTR       S2RetFunc,0                    ; decides if call was a func or statement, branch on func, no return value
         NXT        CO                             ; SEQUENCE TO NEXT STATEMENT
         IJMP       STMT                           ; Process the new statement
-        
+
 S2RetFunc:
         IJMP       GOFNRet                        ; Back into the Function
 ;
@@ -475,7 +477,7 @@ S15:
         TSTB        S16,kRun       ;RUN COMMAND
 ekRun:
         DONE
-        VINIT                      ;clear variables
+        VINIT                      ;clear variables compile the line numbers
         LIT        1               ;GOTO line 1
         XFER                       ;Bob's addition
 ; EXIT
@@ -746,8 +748,16 @@ ekPeek:
 F2AZ:
         TSTB        F2AZ1,kTask                     ;Check if we are setting a task start
 ekTask:
+        TSTBRANCH   ekTaskCompiled
         TSTB        UNKNOWNVEC,oLeftBracket
         CALL        EXPR                            ;Get the LABEL .. line NUMBER
+        lit         0
+        iJMP        ekTaskLinenum
+        
+ekTaskCompiled:
+        lit         1
+        
+ekTaskLinenum:
         TASKCREATE                                  ;Allocate the task and initialize it, Suspended
         TSTB        F2AZNoParms,oComma              ;Parameters to be passed to task
         SAVEMATHSTACK                               ;Push The mathstack
@@ -756,12 +766,16 @@ F2AZLOOP:
         CALL        EXPR                            ;do the expression leave answer on tasks stack
         TSTB        F2AZEndParm,oComma              ;Parameters to be passed tp task
         IJMP        F2AZLOOP                        ;check for more
+        
 F2AZEndParm
         RESTOREMATHSTACK                            ;Back to normal stack
         TASKPUTMATHPTR                              ;Update the tasks stack pointer with parameter count
+        
 F2AZNoParms:
         TSTB        UNKNOWNVEC,oRightBracket        ;must be )
+        
         TASKENABLE                                  ;Enable the task to execute
+        
         RTN                                         ;Returns the Task number
 ;=========================================================================================
 ; Check for IPC interproccess instructions
@@ -879,7 +893,7 @@ F2FUNC  TSTB        F2C,kGofn
 ekGofn:
         Call        GOSUBSTATEMENT
         SAV         GOSUB_RTN_VALUE               ;SAVE RETURN LINE
-        XFER
+        FASTXFER
 
 GOFNRet:
         RTN
@@ -927,7 +941,16 @@ F2C1:
 GOSUBSTATEMENT
         TSTBRANCH  GOSUBCOMPILED                  ; if the two bytes after gosub are not zero then direct transfer
         CALL       EXPR                           ; GET DESTINATION
+        CALL       GOSUBCONT
+        lit        0                              ; mark as lookup on stack
+        RTN
+
 GOSUBCOMPILED:
+        CALL       GOSUBCONT
+        lit        1                              ;mark as compiled on stack
+        RTN
+
+GOSUBCONT:
         TSTB       GOSUBDONE,oLeftBracket         ;Check if any Parameters
         STK2TMP                                   ;Transfer stack top to temp
         PUSHMATHSTACK                             ;Record stack frame for return

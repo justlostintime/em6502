@@ -77,8 +77,7 @@ TRUE		equ	~FALSE
 KIM             equ     FALSE           ;Basic KIM-1, no extensions
 XKIM            equ     FALSE           ;Corsham Tech xKIM monitor
 CTMON65         equ     TRUE            ;Corsham Tech CTMON65
-USEDEBUGPORT    equ     TRUE            ;Use a second terminal as a debug port
-DEBUGPORT       equ     $E020           ;This second terminal used for debug
+
 ;
 ;   Need to define some macros for the dasm assembler
 ;
@@ -168,6 +167,7 @@ ERR_INVALID_PID         equ     16      ;Invalid PID provided
 ERR_OUT_OF_MSG_SPACE    equ     17      ;Out of space for new messsages
 ERR_INVALID_STK_FRAME   equ     18      ;The stack frame was expected not found
 ERR_NO_RETURN_VALUE_PROVIDED equ 19     ;No value returned by a gofn call
+ERR_LINE_NOT_FOUND      equ     20      ;Gosub/goto/gofn line number not found
 ;
 ;=====================================================
 ; Zero page storage.
@@ -195,9 +195,9 @@ MATHSTACKPTRPOS         equ     * - CONTEXT + 1
 MATHSTACKPTR            ds      1
 GOSUBSTKPOS             equ     * - CONTEXT + 1  ; Get the offset to the gosub/msg stack
 GOSUBSTACK              ds      2                ; pointer to gosub stack
-GOSUBPTRPOS             equ     * - CONTEXT+1    ; Pointer to gosub stack pointer
+GOSUBPTRPOS             equ     * - CONTEXT + 1    ; Pointer to gosub stack pointer
 GOSUBSTACKPTR           ds      1                ; current offset in the stack, moved to task table
-MSGPTRPOS               equ     * - CONTEXT+1    ; Pointer to the message counter
+MSGPTRPOS               equ     * - CONTEXT + 1    ; Pointer to the message counter
 MESSAGEPTR              ds      1                ; Pointer to active message, from bottom of gosub stack
 ;
 ; CURPTR is a pointer to curent BASIC line being
@@ -335,6 +335,7 @@ calcstack       lda     #1
 ;                lda     ProgramStart+1
 ;                sta     ProgramEnd+1
 ;
+
 ;  Init time slices defaults
                 lda     #TASKCYCLESHIGH
                 sta     taskResetValue+1
@@ -649,23 +650,40 @@ iRepeatLine:    ldy     #3
 ; higher.  Ie, if it's 1 but there is no line 1, then
 ; find the next one after that.
 ;
-iXFER           jsr     popR0
+iFastXfer
+                jsr     popR1                ; get type of transfer
+                lda     R1
+                beq     iXFER
+
+                jsr     popR0                ; get where to transfer
+                lda     R0
+                sta     CURPTR
+                lda     R0+1
+                sta     CURPTR+1
+                jmp     iXFER2
+
+iXFER
+                jsr     popR0
                 jsr     findLine
-iXFER2          jsr     AtEnd           ;at end of user program?
+
+iXFER2
+                jsr     AtEnd           ;at end of user program?
                 beq     iFINv
+
                 ldy     #3              ;Change: 2->3 to skip length byte, point to start of text
                 sty     CUROFF
-                lda     #$ff
-                sta     RunMode
+
+;                lda     #$ff
+;                sta     RunMode
 ;
 ; Transfer IL to STMT.  I don't like having this
 ; hard-coded; fix it.
 ;
-                lda     #STMT&$ff
-                sta     ILPC
-                lda     #STMT>>8
-                sta     ILPC+1
-                jmp     NextIL
+;                lda     #STMT&$ff
+;                sta     ILPC
+;                lda     #STMT>>8
+;                sta     ILPC+1
+;                jmp     NextIL
 ;
 ; Run
 ;
@@ -684,8 +702,8 @@ iXferok
 ;=====================================================
 ; Save the pointer to the next line to the call stack.
 ;
-iSAV            jsr     getILByte
-                jsr     pushLN
+iSAV            jsr     getILByte                      ; load type of gosub
+                jsr     pushLN                         ; Type passed in A
                 bcs     iSAVErr
                 jmp     NextIL
 
@@ -734,7 +752,7 @@ iRET            jsr     popLN
 iRSTR           jsr     getILByte             ; get where to go if gosub is a fucntion
                 sta     offset
                 jsr     saveIL                ; for later jump if needed
-                
+
                 jsr     popLN                 ; get the next item from the stack into curptr and curroff, returns call type func or stmt
                 sta     R1                    ; keep the type of call returning from
                 bcs     iRSTRErr              ; stack underflow error possible
@@ -823,7 +841,7 @@ iCMPR           jsr   popR1
 ;
 ; See if they are equal or not
 ;
-iCMPRsub                                ; Called by internal functions
+iCMPRsub                                         ; Called by internal functions
 
                 lda       R0
                 cmp       R1
@@ -842,17 +860,20 @@ iCMPRsub                                ; Called by internal functions
 ;
 iCMPRnoteq
                 lda       R0
-                cmp       R1
+                cmp       R1                ; Sets the carry flag
                 lda       R0+1
                 sbc       R1+1
-                bvc       iCMPR_2
+
+                bvc       iCMPR_2           ; branch if N eor V
                 eor       #$80
+
 iCMPR_2         bmi       iCMPlt
                 lda       #REL_GT
                 bne       iCMPcom
-iCMPlt          lda       #REL_LT   ; R0 < R1
 
-iCMPcom         ora       MQ+1         ; or with original mask
+iCMPlt          lda       #REL_LT      ; R0 < R1
+
+iCMPcom         ;ora       MQ+1         ; or with original mask MQ+1 is always zero
 ;
 ; Now compare the end result with what the caller
 ; was looking for.
@@ -871,7 +892,6 @@ iCMPgt          lda       #REL_GT
 iCMPno:
                 lda       #0
                 sta       R0
-                lda       #0
                 sta       R0+1
 
 iCMPDone:
@@ -972,10 +992,13 @@ iFIN            lda     #0
 ; program execution and return to the initial state.
 ;
 iERR            jsr     getILWord       ;get err code
+                jsr     DisplayError
+                jmp     iErrComplete
 ;
 ; Enter here with the error code in X (LSB) and A (MSB).
 ;
-iErr2           stx     R0
+DisplayError
+                stx     R0
                 sta     R0+1
 ;
                 jsr     puts
@@ -1009,7 +1032,14 @@ iErr2a
                 sta     R0
                 jsr     PrintDecimal
 ;
-iERR3           jsr     CRLF
+iERR3:
+                jsr     CRLF
+                rts
+
+iErr2
+                jsr     DisplayError
+                
+iErrComplete:
                 jsr     taskResetStacks      ; some error may cause the main task to point to wrong math stack
                 lda     #0
                 sta     RunMode     ;fall through...
@@ -1579,14 +1609,15 @@ subVINIT        tya
                 ldy     #0
 Vinit2          sta     (VARIABLES),y
                 iny
-                cpy     #VARIABLESSIZE-1 * 2 ; skip the old exit code
+                cpy     #(VARIABLESSIZE * 2 - 2)                     ; skip the old exit code
                 bcc     Vinit2
 
                 pla
                 tay
                 rts
 
-iVINIT          jsr     subVINIT
+iVINIT          jsr     Compile                 ; compile line numbers to memory pointers
+                jsr     subVINIT
                 jmp     NextIL
 ;
 ;=====================================================
@@ -2335,6 +2366,7 @@ iTRACEPROG      jsr     popR0
                 org       PROGEND
 ;=================================================================
 ;
+                include  "compile.asm"
                 include  "tokenizer.asm"
                 include  "print.asm"
                 include  "mem.asm"
@@ -2387,9 +2419,9 @@ TASKWAITIPC             equ   %00000001               ; Task is waiting for mess
 TASKRUNPENDING          equ   %00000010               ; Task Is initialized but suspended
 
 taskPtr         ds      1                             ; Current offset into task table CONTEXTLEN modulo entry
-taskTable       ds      TASKCOUNT*(CONTEXTLEN+1)      ; Task Table Offset and pointer to Basic code, active flag
+taskTable       ds      (TASKCOUNT * (CONTEXTLEN + 1)); Task Table Offset and pointer to Basic code, active flag
 TASKTABLEEND    equ     *                             ; End of task table
-TASKTABLELEN    equ     TASKTABLEEND-taskTable        ; actual length of the task table
+TASKTABLELEN    equ     (TASKTABLEEND-taskTable)      ; actual length of the task table
 
 ;Task Cycle Counter and reset count
 taskCurrentCycles       ds      2
@@ -2400,11 +2432,11 @@ taskCounter             ds      1                     ; Count of active tasks
 ; Math stack and IL call and Gosub/For-next return stack definitions
 ;
 STACKSTART      equ     *
-mathStack       ds      MATHSTACKSIZE*2*TASKCOUNT                  ; Stack used for math expressions
-ilStack         ds      ILSTACKSIZE*2*TASKCOUNT                    ; stack used by the IL for calls and returns
-gosubStack      ds      (GOSUBSTACKSIZE)*4*TASKCOUNT               ; stack size for gosub stacks
-variableStack   ds      VARIABLESSIZE*2*TASKCOUNT                  ; Stack of variables, 26 A-Z-task exit code
-TASKEXITCODE    equ     VARIABLESSIZE-1*2                          ; Offset to exit code location
+mathStack       ds      (MATHSTACKSIZE * 2 * TASKCOUNT)                ; Stack used for math expressions
+ilStack         ds      (ILSTACKSIZE * 2 * TASKCOUNT)                  ; stack used by the IL for calls and returns
+gosubStack      ds      (GOSUBSTACKSIZE * 4 * TASKCOUNT)               ; stack size for gosub stacks
+variableStack   ds      (VARIABLESSIZE * 2 * TASKCOUNT)                ; Stack of variables, 26 A-Z-task exit code
+TASKEXITCODE    equ     (VARIABLESSIZE * 2  - 2)                   ; Offset to exit code location
 STACKEND        equ     *
 STACKLEN        equ     STACKEND-STACKSTART                        ; total space used for stacks
 ;
@@ -2423,6 +2455,7 @@ random          ds      2
 BOutVec         ds      2         ; This is used by functions to vector to the current output rtn
 BInVec          ds      2         ; This is used by fuction to vector to current input rtn
 tempy           ds      1         ;temp y storage
+
 
 ; Moved from page zero as one clock cycle diff gives more space on page zero
 tempIL                  ds      2       ;Temp IL programcounter storage

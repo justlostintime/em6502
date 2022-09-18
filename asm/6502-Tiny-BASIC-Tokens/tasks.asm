@@ -125,12 +125,12 @@ taskResetComplete
 ;
 iTaskSwitch     tya
                 pha
-                
+
                 lda     taskResetValue            ; Always reset the counter value
                 sta     taskCurrentCycles         ; Update the counter with the new value
                 dec     taskCurrentCycles+1       ; dec high order byte
                 bne     iTaskSwitchDone           ; Exit if not zero
-                
+
                 lda     taskResetValue+1
                 sta     taskCurrentCycles+1
 
@@ -180,19 +180,31 @@ iTaskSwitchDone
 ;
 ;================================================================
 ; Task Set task number to line number to start
+; on entry stack contains, type of line description and  memvector or linenumber 
 ; Task Table structure:
 ;    byte 0    -   Active inactive
 ;    byte 1-2  -   Basic code line pointer
 ;    byte 3    -   Offset on current line
 iTaskSet:       tya                 ;preserve Y
                 pha                                                                          ; push a
-
+                jsr     popR1       ; Get if compiled or line number expression
                 jsr     popR0       ; Get the line number to be saved
+                
+               
 
                 ldy     taskPtr     ; find out where we are
                 jsr     ContextSave ; Save the current context
 
 ;Find the pointer to the line we need to start at
+                lda     R1
+                beq     iTaskLineNum
+                lda     R0
+                sta     CURPTR
+                lda     R0+1
+                sta     CURPTR+1
+                jmp     iTaskCont
+                
+iTaskLineNum:
                 jsr     findLine    ; Get the offset of the line to start task at
                 beq     iTaskCont
 

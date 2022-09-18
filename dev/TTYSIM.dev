@@ -83,7 +83,7 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
       openTTYWindow()
 
       Write #$WrPipe, "Ready at $" & Hex(Start, 6) & "\n\r"
-      
+
       if len <> 16 then DEBUG ("TTY warning length should be 16 bytes Assuming 16 bytes")
       Debug "TTY Defined at : $"; Hex(Start, 6); " For length("; len; ") $"; Hex(len)
 
@@ -187,6 +187,7 @@ Sub openTTYWindow()
   TermOut.ReadOnly = False
   TermOut.Width = TTYForm.width - 2
   TermOut.Height = TTYForm.Height - 2
+  TermOut.Limit=3000
   TermOut.Y = 1
   TermOut.X = 1
   TTYFORM.show()

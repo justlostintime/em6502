@@ -6,7 +6,7 @@
 6 REM Created: 21-Sep-2019
 7 REM
 8 REM --- Variables
-9 REM     A   - first square in line examined
+9 REM      A   - first square in line examined
 10 REM     B   - second square in line examined
 11 REM     C   - third square in line examined
 12 REM     D   - player whose pieces to count
@@ -21,7 +21,7 @@
 22 REM     P   - player currently playing
 23 REM     Q   - square to examine
 24 REM     R-Z - contents of the board
-25 REM --- Main Program
+25 Print "Starting Values ";r,s,t,u,v,w,x,y,z
 26 GOSUB 40
 27 GOSUB 60
 28 GOSUB 80
@@ -72,8 +72,8 @@
 101 INPUT Q
 102 IF Q<1 THEN GOTO 100
 103 IF Q>9 THEN GOTO 100
-104 GOSUB 220
-105 IF N<>0 THEN GOTO 100
+104 print "Gosub 220": GOSUB 220
+105 print "n=";n:IF N<>0 THEN GOTO 100
 106 LET M=Q
 107 GOSUB 240
 108 RETURN
@@ -87,15 +87,15 @@
 124 LET D=H
 125 GOSUB 145
 126 IF M=0 THEN IF V=0 THEN LET M=5
-127 IF M=0 THEN IF R=0 THEN LET M=1    
-128 IF M=0 THEN IF T=0 THEN LET M=3    
-129 IF M=0 THEN IF X=0 THEN LET M=7    
+127 IF M=0 THEN IF R=0 THEN LET M=1
+128 IF M=0 THEN IF T=0 THEN LET M=3
+129 IF M=0 THEN IF X=0 THEN LET M=7
 130 IF M=0 THEN IF Z=0 THEN LET M=9
-131 IF M=0 THEN IF S=0 THEN LET M=2    
-132 IF M=0 THEN IF U=0 THEN LET M=4    
-134 IF M=0 THEN IF Y=0 THEN LET M=8    
-135 IF M=0 THEN IF W=0 THEN LET M=6    
-136 GOSUB 240
+131 IF M=0 THEN IF S=0 THEN LET M=2
+132 IF M=0 THEN IF U=0 THEN LET M=4
+134 IF M=0 THEN IF Y=0 THEN LET M=8
+135 IF M=0 THEN IF W=0 THEN LET M=6
+136 print "test m=";m: GOSUB 240
 137 PRINT "Computer move ",M
 138 RETURN
 139 REM --- Identify moves to win or avoid a loss

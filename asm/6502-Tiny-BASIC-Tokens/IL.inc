@@ -512,3 +512,7 @@
     db 106
     db ({1}-*)-1
   endm
+  
+  Macro FASTXFER
+    db 107
+    endm
