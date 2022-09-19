@@ -20,9 +20,9 @@
 190 @[I] = -100 * M - 10 * J - RND(8) - 1
 200 I = I + 1
 210 GOTO 120
-220 ? "220 LOOP"
+220 rem "220 LOOP"
 230 IF (B < 2) + (K < 4) GOTO 70
-240 ? "240 LOOP"
+240 rem  "240 LOOP"
 250 PRINT "to destroy", K, "Klingons in 30 stardates."
 260 PRINT "There are", B, "Starbases."
 270 GOSUB 1100
@@ -65,7 +65,7 @@
 640 PRINT C, "casualties incurred. (", J, ")"
 650 PRINT "Your score:", I + J
 660 GOTO 770
-670 ? "670 END IF"
+670 rem "670 END IF"
 680 IF D >= 0 GOTO 710
 690 PRINT "It's too late, the federation has been conquered."
 700 GOTO 770
