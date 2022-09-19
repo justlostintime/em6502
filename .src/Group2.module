@@ -252,7 +252,7 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Goto ldx
 
   Grp2Case56:'$BA TSX impl
-    .sp = .X
+    .X = .SP
     Return
 
   Grp2Case57:'$BE LDX abs, Y

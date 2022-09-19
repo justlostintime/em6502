@@ -37,9 +37,7 @@ BasicStmts:
                 dw    ekDir
 ;
 ; Logical operators
-BasicLogical    db    kNot,4
-                dw    ekNot
-
+BasicLogical    db    kOr,3
                 dw    ekOr
                 dw    ekXor
                 dw    ekAnd
@@ -104,6 +102,11 @@ notirq:
         TSTLET      DoVector                      ; Test if Let keyword or a variable
 ekLet:
         TSTV       ERRVEC2                        ; YES, PLACE VAR ADDRESS ON AESTK
+        TSTB       LETSCONT,oBang                 ; allow to assign to another Tasks Variable
+        IND                         
+        TSTVT      ERRVEC2
+        
+LETSCONT:
         TSTB       LETSQBRACKET,oEqual            ; (This line originally omitted)
         IJMP       LETBE
 
@@ -130,8 +133,8 @@ DoVector:
         ;This will never return here!
 ;=============================================================
 ; Inc or dec a variable
-S1:
-        TSTB       S1Dec,kInc                     ; Increment variable
+;S1:
+;        TSTB       S1Dec,kInc                     ; Increment variable
 ekInc:
         TSTV       ERRVEC2                        ; Verify we have a variable
         TSTB       eDoInc,oBang                   ; Allow to inc or dec other tasks variables
@@ -142,8 +145,8 @@ eDoInc:
         DONE                                      ; Test for end of line or end of statement ":"
         NXT        CO                             ; Get the next statement, branch CO if end of program
         IJMP       STMT                           ; Process the next statement
-S1Dec:
-        TSTB       S1Iret,kDec                    ; Dec variable
+;S1Dec:
+;        TSTB       S1Iret,kDec                    ; Dec variable
 ekDec:
         TSTV       ERRVEC2                        ; Must be followed by a variable
         TSTB       eDoDec,oBang                   ; Allow to inc or dec other tasks variables
@@ -157,17 +160,17 @@ eDoDec:
 ;=============================================================================================================================
 ; iret or ireturn, Return from interupt process
 ;
-S1Iret:
-        TSTB       S1S1,kIreturn               ; test return from interupt
-S1Sa:
+;S1Iret:
+;        TSTB       S1S1,kIreturn               ; test return from interupt
+;S1Sa:
 ekIreturn:
         DONE                                      ; Must be only thing on the line
         IRET                                      ; RESTORE LINE NUMBER OF CALL
         IJMP       STMT
 ;==============================================================================================================================
 ;Process if statement, if true then process all statements until end of line reached
-S1S1:
-        TSTB       S1Z,kIf                        ; IF STATEMENT
+;S1S1:
+;        TSTB       S1Z,kIf                        ; IF STATEMENT
 ekIf:
         CALL       EXPR                           ; GET EXPRESSION rel ops now valid expression 0 false, everything else true
         TSTB       S1W,kThen                      ; (This line originally omitted) not required
@@ -177,9 +180,9 @@ S1W:
         IJMP       STMT
 ;===============================================================================================================================
 ; Test for GOTO
-S1Z:
-        TSTB       S2,kGoto                       ; YES...TO, OR...SUB
-
+;S1Z:
+;        TSTB       S2,kGoto                       ; YES...TO, OR...SUB
+;
 ekGoto:
         TSTBRANCH  ekGotoCompiled                 ; test the two byte vector following the goto if zero then normal line lookup
                                                   ; Else we have the address ad just goto that address
@@ -198,8 +201,8 @@ ekGotoCompiled:
 ;===============================================================================================================================
 ; Process gosub / function
 ;
-S2:
-        TSTB       S2b,kGosub                     ; ERROR IF NO MATCH
+;S2:
+;        TSTB       S2b,kGosub                     ; ERROR IF NO MATCH
 ekGosub:
         CALL       GOSUBSTATEMENT                 ; Do the gosub
         DONE                                      ; ERROR IF CR NOT NEXT
@@ -209,8 +212,8 @@ ekGosub:
 ; End of gosub processing
 ;===============================================================================================================================
 ; Return from a gosub
-S2b:
-        TSTB      S2a,kReturn                    ; Speed up pocessing but more memory
+;S2b:
+;        TSTB      S2a,kReturn                    ; Speed up pocessing but more memory
 ekReturn:
         TSTB      S2NoReturnValue,oLeftBracket         ; Check if we will return some value
         CALL      EXPR
@@ -233,16 +236,16 @@ S2RetFunc:
 ;==================================================================================================================================
 ; Process REM statement
 ;
-S2a:
-        TSTB       S3,kRem                        ; REMark.  Skip rest of line
+;S2a:
+;        TSTB       S3,kRem                        ; REMark.  Skip rest of line
 ekRem:
         NXT        CO                             ; The rest of the line is ignored
         IJMP       STMT                           ; Process the next statement
 ;==================================================================================================================================
 ; Print statement
 ;
-S3:
-        TSTB       S8,kPrint                      ; ? or Print symonym for print
+;S3:
+;        TSTB       S8,kPrint                      ; ? or Print symonym for print
 ekPrint:
         STARTIO                                   ; Lock task until io completes
 S4:
@@ -295,7 +298,7 @@ S7AUnsigned
         PRN
         IJMP       S5
 
-S7A
+S7A:
 
         CALL       EXPR
         TSTB        S7B,oDollar                 ; Print the value as a single character
@@ -308,10 +311,10 @@ S7B
         IJMP       S5                           ; IS THERE MORE?
 ;
 ;===========================================================
-; PROCESS ALL THE TAST STATEMENTS
+; PROCESS ALL THE TASK STATEMENTS
 ;
-S8:
-        TSTB        S8G,kTaske                 ; End Task
+;S8:
+;        TSTB        S8G,kTaske                 ; End Task
 ekTaske:
         TSTB        S8NoParm,oLeftBracket
         CALL        EXPR
@@ -327,8 +330,8 @@ S8NoParm
 ;
 ;===========================================================
 ; The task gives up the rest of the cycles
-S8G:
-        TSTB        S8a,kTaskn         ;Next task
+;S8G:
+;        TSTB        S8a,kTaskn         ;Next task
 ekTaskn:
         NTASK
         NXT        CO              ;Next statement to execute
@@ -336,8 +339,8 @@ ekTaskn:
 ;
 ;===========================================================
 ; Waits for a task or list of tasks to complete
-S8a:
-       TSTB        S8a1,kTaskw                ;Wait for tasks
+;S8a:
+;       TSTB        S8a1,kTaskw                ;Wait for tasks
 ekTaskw:
        TSTB        UNKNOWNLnk,oLeftBracket
 S8TSK:
@@ -362,35 +365,35 @@ UNKNOWNLnk
 ; Update a memory location with a value
 ;  Use @[offset] to write a word value to memory
 ;
-S8a1:
-        TSTB        S8b,kPoke                           ; Poke a value into memory
+;S8a1:
+;        TSTB        S8b,kPoke                           ; Poke a value into memory
 ekPoke:
         TSTB        UNKNOWNV,oLeftBracket               ; opening bracket
-        CALL       EXPR                                 ; Get address to write to
+        CALL        EXPR                                 ; Get address to write to
         TSTB        UNKNOWNV,oComma                     ; Must have a coma
-        CALL       EXPR                                 ; Get the value to poke
+        CALL        EXPR                                 ; Get the value to poke
         TSTB        UNKNOWNV,oRightBracket              ; closing bracket
         POKEMEM
         DONE
-        NXT        CO                ;AND SEQUENCE TO NEXT
-        IJMP       STMT
+        NXT         CO                ;AND SEQUENCE TO NEXT
+        IJMP        STMT
 ;================================================================
 ; Write a single byte to the output device
 ;
-S8b:
-        TSTB        S8c,kPutch       ;Put a char to the terminal
+;S8b:
+;        TSTB        S8c,kPutch       ;Put a char to the terminal
 ekPutch:
-        CALL       EXPR
+        CALL        EXPR
         PUTCHAR
         DONE
-        NXT        CO                ;AND SEQUENCE TO NEXT
-        IJMP       STMT
+        NXT         CO                ;AND SEQUENCE TO NEXT
+        IJMP        STMT
 ;================================================================
 ; Clear the screen lines
 ;  Uses the vt100 control seq, so must be connected to vt100 terminal
 ;
-S8c
-        TSTB        S9,kCls          ;Clear the screen
+;S8c
+;        TSTB        S9,kCls          ;Clear the screen
 ekCls:
         CLEARSCREEN
         NXT        CO                ;AND SEQUENCE TO NEXT
@@ -399,15 +402,20 @@ ekCls:
 ; Get input from the terminal
 ;   Reads from the currently active input device
 ;
-S9:
-        TSTB       S13,kInput               ;INPUT STATEMENT
+;S9:
+;        TSTB       S13,kInput               ;INPUT STATEMENT
 ekInput:
 S10:
         TSTB       S10A,tString             ;If there is a string print the prompt
         PRS
         TSTB        S10Z,oSemiColon         ;Must follow the prompt
 S10A:
-        TSTV       UNKNOWN                  ;GET VAR ADDRESS (Originally CALL VAR = nonexist)
+        TSTV       UNKNOWN                  ; GET VAR ADDRESS (Originally CALL VAR = nonexist)
+        TSTB       S10ACONT,oBang           ; Print from another task
+        IND
+        TSTVT      UNKNOWN
+        
+S10ACONT:
         TSTB       S10A1,oDollar
         INSTR                               ;Move character From tty to AESTK
         IJMP       S10A2
@@ -427,8 +435,8 @@ S11:
 ; End of program, return to command line process
 ; Main Task may also use taske or return to stopped
 ;
-S13:
-        TSTB        S14,kEnd
+;S13:
+;        TSTB        S14,kEnd
 ekEnd:
         FIN
 
@@ -439,8 +447,8 @@ UNKNOWNV:
 ;   Specify a line number subroutine to call when an interupt is processed
 ;   These subroutines must use iret to return.
 ;
-S14:
-        TSTB        S14Z,kIrq      ;Check if we are setting IRQ HANDLER
+;S14:
+;        TSTB        S14Z,kIrq      ;Check if we are setting IRQ HANDLER
 ekIrq:
         CALL       EXPR            ;Get the LABEL .. line NUMBER
         DONE                       ;must be CR
@@ -452,8 +460,8 @@ ekIrq:
 ; KILL PID-expression   kill a running task
 ;  ignored of task has already stopped
 ;
-S14Z:
-        TSTB       S14S1,kKill     ; Kill A running Task
+;S14Z:
+;        TSTB       S14S1,kKill     ; Kill A running Task
 ekKill:
         CALL      EXPR
         DONE
@@ -464,8 +472,8 @@ ekKill:
 ;============================================================================
 ; List all program lines
 ;
-S14S1:
-        TSTB        S15,kList      ;LIST COMMAND
+;S14S1:
+;        TSTB        S15,kList      ;LIST COMMAND
 ekList:
         DONE
         LST
@@ -473,8 +481,8 @@ ekList:
 ;=======================================================================
 ;RUN begin to executed the program in memory
 ;
-S15:
-        TSTB        S16,kRun       ;RUN COMMAND
+;S15:
+;        TSTB        S16,kRun       ;RUN COMMAND
 ekRun:
         DONE
         VINIT                      ;clear variables compile the line numbers
@@ -485,8 +493,8 @@ ekRun:
 ;=========================================================================
 ;Clear the program memory, delete all proram lines
 ;
-S16:
-        TSTB        S16A,kNew      ;clear program
+;S16:
+;        TSTB        S16A,kNew      ;clear program
 ekNew:
         DONE
         IJMP       START
@@ -495,8 +503,8 @@ ekNew:
 ; Slice(slice legth expression)
 ;   set the length of time between task switches
 ;
-S16A:
-        TSTB        S16Trace,kSlice
+;S16A:
+;        TSTB        S16Trace,kSlice
 ekSlice:
         CALL       EXPR
         SLICE
@@ -509,8 +517,8 @@ ekSlice:
 ; Trace( Trace flag expression)
 ;      128 trace IL code, 64 trace basic code, 1 turn on interactive debug
 ;      for individual lines of basic code. These can be combined
-S16Trace:
-        TSTB        S17A,kTrace
+;S16Trace:
+;        TSTB        S17A,kTrace
 ekTrace:
         TSTB        UNKNOWN,oLeftBracket     ;Are we going to trace
         CALL       EXPR
@@ -522,27 +530,31 @@ ekTrace:
 ;=====================================================================
 ; Exit basic to machine monitor
 ;
-S17A:
-        TSTB        S17B,kExit      ;allow them to exit BASIC
+;S17A:
+;        TSTB        S17B,kExit      ;allow them to exit BASIC
 ekExit:
         EXIT
 
 ;=======================================================================
 ; Commands related to saving/restoring programs
 ; to/from mass storage.
+;=======================================================================
+; Save a program file
 ;
-S17B:
+;S17B:
       if      (XKIM || CTMON65) && DISK_ACCESS
 
-        TSTB        S17C,kSave
+;        TSTB        S17C,kSave
 ekSave:
         OPENWRITE
         DLIST
         DCLOSE
         IJMP       CO
-
-S17C:
-        TSTB        S18,kLoad
+;=========================================================================
+; Load a program file
+;
+;S17C:
+;        TSTB        S18,kLoad
 ekLoad:
         OPENREAD
 S17CLP:
@@ -553,9 +565,11 @@ S17CLP:
 S17EOL:
         DCLOSE                     ;close disk file
         IJMP       CO              ;back to start
-
-S18:
-        TSTB        S19,kDir
+;=========================================================================
+; Display the directory content
+;
+;S18:
+;        TSTB        S19,kDir
 ekDir:
         DDIR                      ;Display the directory content
         IJMP       CO
@@ -569,7 +583,7 @@ ekErase:
 
       endif
 
-;
+;===========================================================================
 ; Else, unknown command.
 ;
 UNKNOWN:
@@ -594,25 +608,28 @@ ekNot:
 ;Look for logical operators
 EXPRLOGS:
         Call       EXPRCMP
-        TSTB        iLOG1,kAnd
+        OnGoto     BasicLogical,iLOG3
+;        TSTB       iLOG1,kAnd
 ekAnd:
         Call       EXPR
         LOGAND
         RTN
-iLOG1:
-        TSTB       iLOG2,kOr
+;iLOG1:
+;        TSTB       iLOG2,kOr
 ekOr:
         Call      EXPR
         LOGOR
         RTN
-iLOG2:
-        TSTB    iLOG3,kXor
+;iLOG2:
+;        TSTB    iLOG3,kXor
 ekXor:
         Call    EXPR
         LOGXOR
 iLOG3:
         RTN
-
+;========================================================================
+; Process relational operators
+;
 EXPRCMP:
         Call       EXPR2           ; get the first expression
         TSTRELOP   iRDone          ; Exit level if no rel ops found
@@ -700,21 +717,21 @@ UNKNOWNVEC:
 FACT:
         OnGoto     BasicFuncs,FactNumber
 
-FACTCONTINUE:
-        TSTB       F1AA,kTrue
+;FACTCONTINUE:
+;        TSTB       F1AA,kTrue
 ekTrue:
         LIT       -1
         RTN
-F1AA:
-        TSTB       F1AB,kFalse
+;F1AA:
+;        TSTB       F1AB,kFalse
 ekFalse:
         LIT       0
         RTN
 ;==================================================================================
 ; Returns the amount of free SPACE
 ;
-F1AB
-        TSTB       F1A,kFree
+;F1AB
+;        TSTB       F1A,kFree
 ekFree:
         TSTB       UNKNOWNVEC,oLeftBracket
         TSTB       UNKNOWNVEC,oRightBracket
@@ -723,8 +740,8 @@ ekFree:
 ;===================================================================================
 ; getch() read a character from the input device
 ;
-F1A:
-        TSTB       F1A2,kGetch                      ; read char from the terminal
+;F1A:
+;        TSTB       F1A2,kGetch                      ; read char from the terminal
 ekGetch:
         TSTB       UNKNOWNVEC,oLeftBracket
         TSTB       UNKNOWNVEC,oRightBracket
@@ -734,8 +751,8 @@ ekGetch:
 ; peek(mem address) return the value of a byte in memory
 ; @[offset] return a word value from offset -- see tstv
 ;
-F1A2:
-        TSTB        F2AZ,kPeek                      ;Return a value from memory
+;F1A2:
+;        TSTB        F2AZ,kPeek                      ;Return a value from memory
 ekPeek:
         TSTB        UNKNOWNVEC,oLeftBracket
         CALL        EXPR                            ;Get the address to write to
@@ -745,18 +762,18 @@ ekPeek:
 ;=======================================================================================
 ; TASK(line-num expr,[Parm1,....]) start a task with or without Parameters
 ;
-F2AZ:
-        TSTB        F2AZ1,kTask                     ;Check if we are setting a task start
+;F2AZ:
+;        TSTB        F2AZ1,kTask                     ;Check if we are setting a task start
 ekTask:
         TSTBRANCH   ekTaskCompiled
         TSTB        UNKNOWNVEC,oLeftBracket
         CALL        EXPR                            ;Get the LABEL .. line NUMBER
         lit         0
         iJMP        ekTaskLinenum
-        
+
 ekTaskCompiled:
         lit         1
-        
+
 ekTaskLinenum:
         TASKCREATE                                  ;Allocate the task and initialize it, Suspended
         TSTB        F2AZNoParms,oComma              ;Parameters to be passed to task
@@ -766,23 +783,23 @@ F2AZLOOP:
         CALL        EXPR                            ;do the expression leave answer on tasks stack
         TSTB        F2AZEndParm,oComma              ;Parameters to be passed tp task
         IJMP        F2AZLOOP                        ;check for more
-        
+
 F2AZEndParm
         RESTOREMATHSTACK                            ;Back to normal stack
         TASKPUTMATHPTR                              ;Update the tasks stack pointer with parameter count
-        
+
 F2AZNoParms:
         TSTB        UNKNOWNVEC,oRightBracket        ;must be )
-        
+
         TASKENABLE                                  ;Enable the task to execute
-        
+
         RTN                                         ;Returns the Task number
 ;=========================================================================================
 ; Check for IPC interproccess instructions
 ;   IPCS  - Send a message
 ;
-F2AZ1:
-        TSTB        F2AZa,kIpcs                     ;Test if one of the IPC functions
+;F2AZ1:
+;        TSTB        F2AZa,kIpcs                     ;Test if one of the IPC functions
 ekIpcs:
         TSTB        UNKNOWNVEC,oLeftBracket         ;IPCS - send a message
         CALL        EXPR                            ;Get the message value
@@ -794,25 +811,25 @@ ekIpcs:
 ;================================================================================
 ; IPCR() --- recieve a message, IPCR(VARIABLE) -- receive msg and return pid in var
 ;
-F2AZa:
-        TSTB        F2AZb,kIpcr                     ;IPCR recieve a message , wait if none
+;F2AZa:
+;        TSTB        F2AZb,kIpcr                     ;IPCR recieve a message , wait if none
 ekIpcr:
         TSTB        UNKNOWNVEC,oLeftBracket         ;IPCS - send a message
         TSTB        F2AZa1,oRightBracket
-        LIT        0                                ;We dont want the pid returned to us
-        IPCIO                                       ;Set the io bit and suspend the task till message
-        IPCRECEIVE                                  ;Get the message
-        RTN
+        LIT         0                               ;We dont want the pid returned to us
+        IJMP        ekIpcrComplete
 F2AZa1
-        TSTV       UNKNOWNVEC                       ;must be a variable to return pid of message to
-        TSTB       UNKNOWNVEC,oRightBracket
+        TSTV        UNKNOWNVEC                      ;must be a variable to return pid of message to
+        TSTB        UNKNOWNVEC,oRightBracket
+        
+ekIpcrComplete:
         IPCIO                                       ;Set the io bit and exit task till message
         IPCRECEIVE                                  ;Get the message
         RTN
 ;===============================================================================
 ; IPCC ---- check if a message is available
-F2AZb:
-        TST        F2A,kIpcc                        ;Returns number of messages on the message queue
+;F2AZb:
+;        TST        F2A,kIpcc                        ;Returns number of messages on the message queue
 ekIpcc
         TSTB       UNKNOWNVEC,oLeftBracket
         TSTB       UNKNOWNVEC,oRightBracket
@@ -825,8 +842,8 @@ UNKNOWNID:
 ; RND() is supposed to have an argument but if none
 ; was provided, just assume a large value.
 ;
-F2A:
-        TSTB        F2B,kRnd
+;F2A:
+;        TSTB        F2B,kRnd
 ekRnd:
         TSTB        UNKNOWNVEC,oLeftBracket
         TSTB        F2A1,oRightBracket
@@ -835,15 +852,15 @@ ekRnd:
         RTN
 
 F2A1:
-        CALL        FACT                          ;GET RANGE
+        CALL        EXPR                          ;GET RANGE
         TSTB        UNKNOWNVEC,oRightBracket
         RANDOM
         RTN
 ;==========================================================
 ;      Return absolute value of expresion
 ;
-F2B:
-        TSTB        F2B2,kAbs
+;F2B:
+;        TSTB        F2B2,kAbs
 ekAbs:
         TSTB        UNKNOWNVEC,oLeftBracket
         CALL        EXPR                           ;get value
@@ -853,24 +870,27 @@ ekAbs:
 ;============================================================
 ;     Return the the status of a task, provide the PID
 ;
-F2B2:
-        TSTB        F2Z,kStat
+;F2B2:
+;        TSTB        F2Z,kStat
 ekStat:
         TSTB        UNKNOWNVEC,oLeftBracket
         Call        EXPR
         TSTB        UNKNOWNVEC,oRightBracket
         TASKSTAT
         RTN
-F2Z:
-        TSTB        F2ZA,kPid
+;==============================================================
+; Return the current tasks pid
+;
+;F2Z:
+;        TSTB        F2ZA,kPid
 ekPid:
         TASKPID
         RTN
 ;===========================================================================
 ; Call a machine function, provide the address to call and optionally
 ; the value to be passed in reg A
-F2ZA:
-        TSTB         F2FUNC,kCall                    ;call machine function
+;F2ZA:
+;        TSTB         F2FUNC,kCall                    ;call machine function
 ekCall:
         TSTB        UNKNOWNVEC,oLeftBracket
         CALL        EXPR
@@ -889,7 +909,7 @@ F2B2A:
 ; Same as gosub but expects a return value
 ;   GOFN 1000(parm1, ....)  Expects an integer to be returned
 ;
-F2FUNC  TSTB        F2C,kGofn
+;F2FUNC  TSTB        F2C,kGofn
 ekGofn:
         Call        GOSUBSTATEMENT
         SAV         GOSUB_RTN_VALUE               ;SAVE RETURN LINE
@@ -901,7 +921,7 @@ GOFNRet:
 ;=================================================================================
 ;Check for a number !
 ;
-F0:
+;F0:
 FactNumber:
         TSTN        FactVariable                 ;NUMBER, GET ITS VALUE.
         RTN
@@ -919,8 +939,8 @@ F2:
 ; See if this is just a simple variable
 ;  Allow a subscript for any variable
 ;
-F2C:
-
+;F2C:
+;
 FactVariable:
         TSTV        F1
         TSTB        F2CLocalTask,oBang
@@ -933,7 +953,7 @@ F2CLocalTask
         TSTB        UNKNOWNID,oRightSQBracket
         SUBSCRIPT
 F2C1:
-        IND                                      ; YES, GET THE VALUE.
+        IND                                       ; YES, GET THE VALUE.
         RTN
 
 ;=============================================================

@@ -149,8 +149,6 @@ CompFindLine:
                 beq     CompFoundLine
                 inc     R0                      ; number of errors
                 
-               
-              
                 lda     dpl
                 sta     CURPTR
                 lda     dpl+1

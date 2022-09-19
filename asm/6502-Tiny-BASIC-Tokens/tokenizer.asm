@@ -157,7 +157,7 @@ kCall        equ     kAbs+1
 kGofn        equ     kCall+1
 kPid         equ     kGofn+1
 ;
-kFuncCount   equ     kPid - kBeginFunc
+kFuncCount   equ     ((kPid - kBeginFunc) + 1)
 
 ;
 ; Keyword table contains 49 keywords
@@ -852,7 +852,7 @@ iTSTBRANCHCont:
               cmp       #tByte                  ; A byte value is valid
               beq       ITSTBRANCHBYTE          ; Skip the byte
               cmp       #tInteger               ; An integer value is valid
-              bne       iTSTBRANCHNoCompile     ; If not then we can not use the memory vector
+              bne       iTSTBRANCHErr           ; If not then we can not use the memory vector
               iny                               ; skip type indicator for
 ITSTBRANCHBYTE:
               iny                               ; skip first byte of value line number

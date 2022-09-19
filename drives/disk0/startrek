@@ -173,7 +173,7 @@
 1720 I = 1
 1730 REM DO
 1740 IF I > 8 GOTO 1780
-1750 PRINT I, " ",
+1750 PRINT I; " ",
 1760 I = I + 1
 1770 GOTO 1730
 1780 REM LOOP
@@ -529,7 +529,7 @@
 5270 P = 45 * X + 22
 5280 G = 45 * Y + 22
 5290 M = 1
-5300 REM DO 
+5300 REM DO
 5310 IF M > 8 GOTO 5900 : rem check if hit or missed
 5320 P = P + S
 5330 G = G + T

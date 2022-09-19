@@ -171,7 +171,7 @@ ipc_dequeue
               jsr     popMQ                                  ; Variable address to put PID into
 
               ldy     MESSAGEPTR
-              cpy     #GOSUBSTACKSIZE*4                      ; see if anything to pop from stack
+              cpy     #[[GOSUBSTACKSIZE - 2] * 4]            ; see if anything to pop from stack
               bcs     ipc_deq_empty
               lda     (GOSUBSTACK),y                         ; get the message value
               sta     R0
@@ -182,14 +182,14 @@ ipc_dequeue
               lda     (GOSUBSTACK),y                         ; get the pid value
               sta     R1
               iny
-              lda    (GOSUBSTACK),y                         ; Get the type of message
+              lda    (GOSUBSTACK),y                          ; Get the type of message
               iny
-              sty    MESSAGEPTR                             ; Save the message q ptr
+              sty    MESSAGEPTR                              ; Save the message q ptr
 
-              cmp    #GOSUB_MSG                             ; Should be a message
+              cmp    #GOSUB_MSG                              ; Should be a message
               bne    ipc_deq_empty
 
-              jsr    pushR0                                 ; place value on stack
+              jsr    pushR0                                  ; place value on stack
 
               lda    MQ
               ora    MQ+1
@@ -205,8 +205,8 @@ ipc_deq_done
               rts
 
 ipc_deq_empty
-             sec
-             rts
+              sec
+              rts
 
 ;=============================================
 ;  Get the context address into MQ from R1 with

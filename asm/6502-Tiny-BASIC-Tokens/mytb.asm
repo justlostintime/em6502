@@ -168,6 +168,7 @@ ERR_OUT_OF_MSG_SPACE    equ     17      ;Out of space for new messsages
 ERR_INVALID_STK_FRAME   equ     18      ;The stack frame was expected not found
 ERR_NO_RETURN_VALUE_PROVIDED equ 19     ;No value returned by a gofn call
 ERR_LINE_NOT_FOUND      equ     20      ;Gosub/goto/gofn line number not found
+ERR_IL_STACK_OVER_FLOW  equ     21      ;The IL return stack has overflowed
 ;
 ;=====================================================
 ; Zero page storage.
@@ -184,21 +185,32 @@ ILTrace                 ds      1       ;non-zero means tracing
 ; a leading status byte .
 ;
 CONTEXT                 equ     *
-VARIABLEPOS             equ     * - CONTEXT + 1
+
 VARIABLES               ds      2                ; 2 bytes pointer to, 26 A-Z
+VARIABLEPOS             equ     * - CONTEXT
+
 ILPC                    ds      2                ; IL program counter
 ILSTACK                 ds      2                ; IL call stack
 ILSTACKPTR              ds      1
-MATHSTACKPOS            equ     * - CONTEXT + 1
+
+
 MATHSTACK               ds      2                ; MATH Stack pointer
-MATHSTACKPTRPOS         equ     * - CONTEXT + 1
+MATHSTACKPOS            equ     * - CONTEXT
+
+
 MATHSTACKPTR            ds      1
-GOSUBSTKPOS             equ     * - CONTEXT + 1  ; Get the offset to the gosub/msg stack
+MATHSTACKPTRPOS         equ     * - CONTEXT
+
 GOSUBSTACK              ds      2                ; pointer to gosub stack
-GOSUBPTRPOS             equ     * - CONTEXT + 1    ; Pointer to gosub stack pointer
+GOSUBSTKPOS             equ     * - CONTEXT      ; Get the offset to the gosub/msg stack
+
+
 GOSUBSTACKPTR           ds      1                ; current offset in the stack, moved to task table
-MSGPTRPOS               equ     * - CONTEXT + 1    ; Pointer to the message counter
+GOSUBPTRPOS             equ     * - CONTEXT      ; Pointer to gosub stack pointer
+
+
 MESSAGEPTR              ds      1                ; Pointer to active message, from bottom of gosub stack
+MSGPTRPOS               equ     * - CONTEXT      ; Pointer to the message counter
 ;
 ; CURPTR is a pointer to curent BASIC line being
 ; executed.  Always points to start of line, CUROFF
@@ -214,13 +226,9 @@ CUROFF                  ds      1           ; Current offset in Basic Line
 ; general use.
 ;
 REGISTERS               equ     *                         ;IL MATH REGISTERS
-REG0                    equ     R0 - REGISTERS
 R0                      ds      2                         ;arithmetic register 0
-REG1                    equ     R1 - REGISTERS            ;offset of R1
 R1                      ds      2                         ;arithmetic register 1
-REGMQ                   equ     MQ - REGISTERS            ;offset og MQ
 MQ                      ds      2                         ;used for some math
-REG2                    equ     R2 - REGISTERS
 R2                      ds      1                         ;General purpose work register(tasking)
 REGISTERSEND            equ     *
 REGISTERSLEN            equ     REGISTERSEND-REGISTERS
@@ -413,7 +421,12 @@ coldtwo
 ; by ILPC and adjusts ILPC to point to the next
 ; instruction to execute.
 ;
-NextIL          dec     taskCurrentCycles
+NextIL
+                tsx                           ; Get the stack pointer value
+                cpx     #$FF                  ; Should be empty
+                bne     ILbad                 ; Halt and catch fire now!
+
+                dec     taskCurrentCycles
                 bne     NextIlNow
                 jsr     iTaskSwitch           ;check for a task switch
 NextIlNow       lda     ILTrace               ;Do we need to trace this
@@ -443,17 +456,17 @@ NextILStr       jsr     getILByte
 ;    next word in the input buffer.  Ie, the next word
 ;    in the user program.
 ;
-		asl
-		cmp	#ILTBLend-ILTBL+2
-		bcc	ILgood
+                asl
+                cmp     #ILTBLend-ILTBL+2
+                bcc     ILgood
 ;
 ; This handles an illegal IL opcode.  This is serious
 ; and there's no way to recover.
 ;
-ILbad		jsr	puts
-		db	CR,LF
-		db	"Illegal IL "
-		db	0
+ILbad           jsr     puts
+                db      CR,LF
+                db      "Illegal IL "
+                db      0
 ;
 ; Well this is awkward, we need to back up the IL
 ; by one since it no longer points to the current
@@ -504,14 +517,14 @@ ILTBLend	equ	*
 ;=====================================================
 ;
 ;
-iINIT           lda     #0                      ;clear IL stack pointer,gosub stack
+iINIT           lda     #0                           ; clear IL stack pointer,gosub stack
                 sta     ILSTACKPTR
                 sta     MATHSTACKPTR
                 sta     GOSUBSTACKPTR
-                lda     #GOSUBSTACKSIZE*4
-                sta     MESSAGEPTR              ; message ptr is bottom stack space
+                lda     #[[GOSUBSTACKSIZE - 2] * 4]  ; Reserve two entries for gosubs
+                sta     MESSAGEPTR                   ; message ptr is bottom stack space
 ;
-                lda     ProgramStart            ;user prog
+                lda     ProgramStart                 ; user prog
                 sta     CURPTR
                 sta     taskTable+1
                 sta     ProgramEnd
@@ -565,7 +578,7 @@ iDONE           ldy     CUROFF
                 beq     doneadv
                 cmp     #oColon           ; is it a  ':' or eol
                 bne     idoneErr
-                sty     CUROFF
+;                sty     CUROFF
                 jmp     NextIL           ; continue on this line
 
 idoneErr
@@ -1038,7 +1051,7 @@ iERR3:
 
 iErr2
                 jsr     DisplayError
-                
+
 iErrComplete:
                 jsr     taskResetStacks      ; some error may cause the main task to point to wrong math stack
                 lda     #0
@@ -1235,8 +1248,8 @@ iSTORE          tya
                 jmp     NextIL
 ;
 ;=====================================================
-; Replaces the top of stack with the variable whose
-; absolute address it represents.
+; Replaces the top of stack with the Value
+; of the variable  whose absolute address it represents.
 ;
 iIND            tya
                 pha
@@ -1609,7 +1622,7 @@ subVINIT        tya
                 ldy     #0
 Vinit2          sta     (VARIABLES),y
                 iny
-                cpy     #(VARIABLESSIZE * 2 - 2)                     ; skip the old exit code
+                cpy     #[[VARIABLESSIZE * 2] - 2]                     ; skip the old exit code
                 bcc     Vinit2
 
                 pla
@@ -1837,16 +1850,16 @@ iTSTVV          jsr     getILByte             ;offset
                 ldy     CUROFF                ; Get the pointer into the program
                 lda     (CURPTR),y            ; Get the next byte to process
                 bne     iTSTVnext             ; if is not null then process it
-                jmp     tstBranchLink         ;if we are at the end of line just get out with error
+                jmp     tstBranchLink         ; if we are at the end of line just get out with error
 ;
 iTSTVnext:
-                cmp     #tVat                 ;allow access to all unused memory as an array or integers
-                beq     iTSTVat               ;Setup to do a pointer to unused memory
+                cmp     #tVat                 ; allow access to all unused memory as an array or integers
+                beq     iTSTVat               ; Setup to do a pointer to unused memory
 
                 cmp     #tVhash               ; parameters passed to this task
                 beq     iTSTVParm
 
-                cmp    #tVhat               ; task exit code
+                cmp    #tVhat                 ; task exit code
                 bne    iTSTV_A2Z
                 lda    #TASKEXITCODE
                 bne    iTSTVContinue
@@ -1863,15 +1876,15 @@ iTSTV_A2Z:
 ; The condition is true, so convert to an index, push
 ; it onto the stack and continue running.
 ;
-                and     #%01111111            ;Mask off the high bit
-                asl                           ;multiply by two
+                and     #%01111111            ; Mask off the high bit
+                asl                           ; multiply by two
 
 iTSTVContinue:
                 iny
-                sty     CUROFF                ;it is a valid variable
-                pha
+                sty     CUROFF                ; it is a valid variable
+                pha                           ; save the last variable pointer value
                 lda     R2
-                bne     iTSTVLocalValue       ;Value local to this task
+                bne     iTSTVLocalValue       ; Value local to this task
 
                 jsr     ipc_getcontext        ; Get the other tasks variables
                 ldy     #VARIABLEPOS
@@ -2012,7 +2025,7 @@ iTSTN_1
                 bne     iTSTN_2
                 inc     R0+1
 iTSTN_2:
-                jsr     pushR0nextIl          ;save onto stack
+                jmp     pushR0nextIl          ;save onto stack
 
 ;
 ; Common jump point for all TSTx instructions that
@@ -2071,7 +2084,7 @@ irqbrk          inc     IRQPending     ; Set the pending to 2, so this ignores i
                 sta     CUROFF
                 jmp     NextIL         ; Execute the next instruction should jmp statement
 
-ErrStkOver      ldx     #ERR_STACK_OVER_FLOW            ; Flag any error in line number
+ErrStkOver      ldx     #ERR_STACK_OVER_FLOW          ; Flag any error in line number
                 lda     #0             ; stop the execution
                 jmp     iErr2
 ;
@@ -2419,9 +2432,9 @@ TASKWAITIPC             equ   %00000001               ; Task is waiting for mess
 TASKRUNPENDING          equ   %00000010               ; Task Is initialized but suspended
 
 taskPtr         ds      1                             ; Current offset into task table CONTEXTLEN modulo entry
-taskTable       ds      (TASKCOUNT * (CONTEXTLEN + 1)); Task Table Offset and pointer to Basic code, active flag
+taskTable       ds      [TASKCOUNT * [CONTEXTLEN + 1]]; Task Table Offset and pointer to Basic code, active flag
 TASKTABLEEND    equ     *                             ; End of task table
-TASKTABLELEN    equ     (TASKTABLEEND-taskTable)      ; actual length of the task table
+TASKTABLELEN    equ     [TASKTABLEEND-taskTable]      ; actual length of the task table
 
 ;Task Cycle Counter and reset count
 taskCurrentCycles       ds      2
@@ -2432,11 +2445,11 @@ taskCounter             ds      1                     ; Count of active tasks
 ; Math stack and IL call and Gosub/For-next return stack definitions
 ;
 STACKSTART      equ     *
-mathStack       ds      (MATHSTACKSIZE * 2 * TASKCOUNT)                ; Stack used for math expressions
-ilStack         ds      (ILSTACKSIZE * 2 * TASKCOUNT)                  ; stack used by the IL for calls and returns
-gosubStack      ds      (GOSUBSTACKSIZE * 4 * TASKCOUNT)               ; stack size for gosub stacks
-variableStack   ds      (VARIABLESSIZE * 2 * TASKCOUNT)                ; Stack of variables, 26 A-Z-task exit code
-TASKEXITCODE    equ     (VARIABLESSIZE * 2  - 2)                   ; Offset to exit code location
+mathStack       ds      [MATHSTACKSIZE * 2 * TASKCOUNT]                ; Stack used for math expressions
+ilStack         ds      [ILSTACKSIZE * 2 * TASKCOUNT]                  ; stack used by the IL for calls and returns
+gosubStack      ds      [GOSUBSTACKSIZE * 4 * TASKCOUNT]               ; stack size for gosub stacks
+variableStack   ds      [VARIABLESSIZE * 2 * TASKCOUNT]                ; Stack of variables, 26 A-Z-task exit code
+TASKEXITCODE    equ     [[VARIABLESSIZE * 2]  - 2]                     ; Offset to exit code location
 STACKEND        equ     *
 STACKLEN        equ     STACKEND-STACKSTART                        ; total space used for stacks
 ;
