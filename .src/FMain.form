@@ -290,8 +290,9 @@
     MoveScaled(84,1,111,100)
     { LoadPanel Panel
       MoveScaled(1,1,74,70)
-      { EnableBreakPoints CheckBox
+      { !EnableBreakPoints CheckBox
         MoveScaled(2,1,25,5)
+        #Public = True
         ToolTip = ("Must be selected/deselected  to enable/disable  breakpoints")
         Text = ("Enable Break Points")
       }

@@ -1,119 +1,97 @@
 10 rem dim L(16,16), N(16,16)
-11 d=3
-12 L=24575
-17 n=28671 
+11 d=8
+12 L=0
+17 n=500
 20 M=d
-40 cls
+40 rem cls
 50 ?"Press any letter to start"
 60 W = RND()
 70 if getch()=13 then goto 60
 80 cls
-90 rem i=1
-100  j=1
-105 rem z=rnd(100)
-110 rem if z >= 50 poke(N+J+I*d,1)
-120 rem if z < 50 poke(N+J+I*d,0)
-125  poke(N+J+I*d+j,0)
-130  j=j+1
-140  if j < m+1 goto 105
-150 i=i+1
-200 if i < m+1 goto 100
-210 poke(N+1+2*d,1)
-220 poke(N+2+2*d,1)
-230 poke(N+3+2*d,1)
+
+90  i=1
+100   j=1
+105 rem    z=rnd(100)
+110 rem    if z >= 50 @[N+J+I*d] = 1
+120 rem     if z < 50  @[N+J+I*d] = 0
+125 @[N+J+I*d] = 0 : inc  j :  if j < m+1 goto .
+155 rem 125   inc  j :  if j < m+1 goto 110
+150 inc i :  if i < m+1 goto 100
+
+
+200 Rem Place the little character into the world bliker
+210 @[N + 3 + 3 * d] = 1
+220 @[N + 4 + 3 * d] = 1
+230 @[N + 5 + 3 * d] = 1
+
+231 rem glider
+232 @[N + 4 + 5 * d] = 1
+233 @[N + 2 + 6 * d] = 1
+234 @[N + 4 + 6 * d] = 1
+235 @[N + 3 + 7 * d] = 1
+236 @[N + 4 + 7 * d] = 1
+
+
 240 rem
-250 rem print the display fram
+250 rem print the display frame
 260 rem
 300 i=0
-310 x=i
-320 y=0
-330 gosub 7000
-340 pr"+";
-350 x=i
-360 y=M+1
-370 gosub 7000
-380 pr"+";
-390 x=0
-400 y=i
-410 gosub 7000
-420 pr"+";
-430 x=m+1
-440 y=i
-450 gosub 7000
-460 pr"+";
-470 i = i+1
-480 if i < m+2 goto 310
+310    x=i : y=0   : gosub 7000   : pr"+";
+350    x=i : y=M+1 : gosub 7000   : pr"+";
+390    x=0 : y=i   : gosub 7000   : pr"+";
+430    x=m+1 : y=i : gosub 7000   : pr"+";
+470 inc i : if i < m+2 goto 310
+
 490 rem
 500 rem print the generation
 505 rem
 510 g=0
-520 x=1
-530 y=m+3
-540 gosub 7000
-550 pr "GEN=";g;
+520 x=1 : y=m+5 : gosub 7000:  pr "GEN=";g;
+
 600 rem Generate the picture of life
 610 i=1
 620  j=1
-630    w=peek(N+J+I*d)
-640    poke(L+J+I*d,w)
-650    x=i
-660    y=j
-670    gosub 7000
+630    w = @[N+J+I*d]
+640    @[J+I*d] = w
+650    x=i: y=j : gosub 7000
 680    if w=0 pr" ";
 690    if w=1 pr"*";
-700    j=j+1
-710  if j < m+1 goto 630
-720  i=i+1
-730 if i < m+1 goto 620
+700  inc j : if j < m+1 goto 630
+720 inc i : if i < m+1 goto 620
 740 Rem end of print life
+
 800 Rem Begin the generation of life
 810 i=1
-815 rem  pr"i=";i
 820   j=1
-825 rem  pr"j=";j
 830     C=0
 840     K=i-1
-845 rem    print "k=";k
-850       if k=0 goto 930
-860       if k>m goto 930
+850       if k=0 or k > m goto 930
 870       w=j-1
-875 rem       print "w=";w
-880        if w=0 goto 910
-890        if w>m goto 910
-893        if k<>i goto 900 
-897        if w=j goto 910
-900        c=c+peek(L+W+K*D)
-910       w=w+1
-920       if w < j+2 goto 875
-930     k=K+1
-940     if k < i+2 goto 845
-950     if c=2 poke(N+J+I*d,peek(L+J+I*d))
-960     if c=2 goto 1000
-970     if c=3 poke(N+J+I*d,1)
-980     if c=3 goto 1000
-990     poke(N+J+I*D,0)
-1000  j=j+1
-1010  if j < m+1 then goto 825
-1020 i=i+1
-1025 rem pr "iloop"
-1030 if i < M+1 then goto 815
-1032 rem gosub 8000
+880        if w = 0 or w > m goto 910
+893        if k <> i goto 900
+895        if w = j goto 910
+900        c = c + @[W+K*D]
+910       inc w : if w < j+2 goto 880
+930     inc k : if k < i+2 goto 850
+950     if c=2 @[N+J+I*d] = @[J+I*d] : goto 1000
+970     if c=3 @[N+J+I*d] = 1 : goto 1000
+990     @[N+J+I*D] = 0
+1000  inc j : if j < m+1 then goto 830
+1020 inc i : if i < M+1 then goto 820
+
+1032 rem gosub 8010
+
 1035 rem print "next gen"
-1040 g=g+1
+1040 inc g
 1050 goto 520
-7000 rem position cursor x,y
-7010 putch(27)
-7020 print "[";x+1;";";y+1;"f";
-7030 putch(27)
-7040 pr"[8m"
-7030 return
+
+6999 Rem Position cursor for print x,y
+7000 print 27$;"[";x+1;";";y+1;"f"; : return
+7010 Print 27$;"[8m": return
+
 8000 rem dump array for debug
-8010 u=1
+8010  u=1
 8020  t=1
-8030   pr peek(N+t+u*D);
-8040   t=t+1
-8050  if t < d+1 goto 8030
-8060  pr
-8070  u=u+1
-8080 if u < D+1 goto 8020
+8030  pr @[N+t+u*D];: inc t: if t < d+1 goto .
+8060  pr : inc u : if u < D+1 goto 8020
 8090 return

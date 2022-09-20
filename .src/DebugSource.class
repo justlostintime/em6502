@@ -162,8 +162,8 @@ Public Sub SourceCodeTracking_DblClick()
     SourceBreakPoints.Remove(SourceBreakPoints.Find(lineno))
     SourceCodeTracking.Breakpoints = SourceBreakPoints
     Dim idx As Integer = breaklist.Find(AddressPerLine[lineno] & " " & AddressPerLine[lineno])
-    FMain.BreakPointList.Remove(idx)
-    FMain.SetNextBreak()
+    Try FMain.BreakPointList.Remove(idx)
+    Try FMain.SetNextBreak()
 
   Else
 
@@ -177,8 +177,10 @@ Public Sub SourceCodeTracking_DblClick()
       Message("You may not add a breakpoint to a value definition ")
       Return
     Endif
+
     SourceBreakPoints.Add(lineno)
     SourceCodeTracking.Breakpoints = SourceBreakPoints
+    FMain.EnableBreakPoints.value = True
 
     If Not breaklist.Exist(AddressPerLine[lineno] & " " & AddressPerLine[lineno]) Then
       FMain.BreakPointList.Add(AddressPerLine[lineno] & " " & AddressPerLine[lineno])
