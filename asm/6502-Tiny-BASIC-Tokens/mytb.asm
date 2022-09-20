@@ -113,7 +113,7 @@ MATHSTACKSIZE     equ     20      ;number of entries in math stack
 ILSTACKSIZE       equ     20      ;number of entries in ilstack
 GOSUBSTACKSIZE    equ     16      ;Depth of gosub/For-Next nesting max is 64 times TASKTABLE LENGTH must < 256
 VARIABLESSIZE     equ     27      ;26 variables + 1 for exit code
-TASKCOUNT         equ     10      ;Task Table count, up to 64 tasks
+TASKCOUNT         equ     10      ;Task Table count, up to 10 tasks
 TASKCYCLESDEFAULT equ     255     ;Default Task Switch 0-255 uses a single byte
 TASKCYCLESHIGH    equ     2       ;hi order count
 MESSAGESMAX       equ     GOSUBSTACKSIZE      ;Not used msg q and gosub grow towards each other and over flow when they meet
@@ -185,39 +185,40 @@ ILTrace                 ds      1       ;non-zero means tracing
 ; a leading status byte .
 ;
 CONTEXT                 equ     *
+;StatusCode             db      1  this is here to remind why everything is plus 1 this and is only in the Task table
 
-VARIABLES               ds      2                ; 2 bytes pointer to, 26 A-Z
-VARIABLEPOS             equ     * - CONTEXT
+VARIABLES               ds      2                         ; 2 bytes pointer to, 26 A-Z
+VARIABLEPOS             equ     VARIABLES - CONTEXT + 1
 
-ILPC                    ds      2                ; IL program counter
-ILSTACK                 ds      2                ; IL call stack
+ILPC                    ds      2                         ; IL program counter
+ILSTACK                 ds      2                         ; IL call stack
 ILSTACKPTR              ds      1
 
 
-MATHSTACK               ds      2                ; MATH Stack pointer
-MATHSTACKPOS            equ     * - CONTEXT
+MATHSTACK               ds      2                         ; MATH Stack pointer
+MATHSTACKPOS            equ     MATHSTACK - CONTEXT + 1
 
 
 MATHSTACKPTR            ds      1
-MATHSTACKPTRPOS         equ     * - CONTEXT
+MATHSTACKPTRPOS         equ     MATHSTACKPTR - CONTEXT + 1
 
-GOSUBSTACK              ds      2                ; pointer to gosub stack
-GOSUBSTKPOS             equ     * - CONTEXT      ; Get the offset to the gosub/msg stack
-
-
-GOSUBSTACKPTR           ds      1                ; current offset in the stack, moved to task table
-GOSUBPTRPOS             equ     * - CONTEXT      ; Pointer to gosub stack pointer
+GOSUBSTACK              ds      2                         ; pointer to gosub stack
+GOSUBSTKPOS             equ     GOSUBSTACK - CONTEXT +1   ; Get the offset to the gosub/msg stack
 
 
-MESSAGEPTR              ds      1                ; Pointer to active message, from bottom of gosub stack
-MSGPTRPOS               equ     * - CONTEXT      ; Pointer to the message counter
+GOSUBSTACKPTR           ds      1                         ; current offset in the stack, moved to task table
+GOSUBPTRPOS             equ     GOSUBSTACKPTR - CONTEXT+1 ; Pointer to gosub stack pointer
+
+
+MESSAGEPTR              ds      1                         ; Pointer to active message, from bottom of gosub stack
+MSGPTRPOS               equ     MESSAGEPTR - CONTEXT+1    ; Pointer to the message counter
 ;
 ; CURPTR is a pointer to curent BASIC line being
 ; executed.  Always points to start of line, CUROFF
 ; is the offset to the current character.
 ; The order of these fields is important
-CURPTR                  ds      2           ; Pointer to current Basic line
-CUROFF                  ds      1           ; Current offset in Basic Line
+CURPTR                  ds      2                         ; Pointer to current Basic line
+CUROFF                  ds      1                         ; Current offset in Basic Line
 ;
 ;The order of these fields in important
 
@@ -233,8 +234,8 @@ R2                      ds      1                         ;General purpose work 
 REGISTERSEND            equ     *
 REGISTERSLEN            equ     REGISTERSEND-REGISTERS
 
-CONTEXTEND              equ     *                      ; End of swap context
-CONTEXTLEN              equ     CONTEXTEND - CONTEXT   ; length of the context
+CONTEXTEND              equ     *                         ; End of swap context
+CONTEXTLEN              equ     CONTEXTEND - CONTEXT + 1  ; length of the context plus the status byte
 
 dpl                     ds      2       ;Used as a pointer to call il instructions
 ;
@@ -1055,7 +1056,7 @@ iErr2
 iErrComplete:
                 jsr     taskResetStacks      ; some error may cause the main task to point to wrong math stack
                 lda     #0
-                sta     RunMode     ;fall through...
+                sta     RunMode              ; fall through...
 ;
 ;=====================================================
 ; Reset the IL to be back at the idle loop.  Does not
@@ -1886,6 +1887,15 @@ iTSTVContinue:
                 lda     R2
                 bne     iTSTVLocalValue       ; Value local to this task
 
+                jsr     ipc_ValidateContext   ; Lets make sure R1 has a valid context value
+                bcc     iTSTVGOODPID          ; Invalid PID provided
+
+                pla                           ; We have an invalid pid for getting variable value
+                ldx     #ERR_INVALID_PID
+                lda     #0
+                jmp     iErr2
+
+iTSTVGOODPID:
                 jsr     ipc_getcontext        ; Get the other tasks variables
                 ldy     #VARIABLEPOS
                 lda     (MQ),y
@@ -2432,7 +2442,7 @@ TASKWAITIPC             equ   %00000001               ; Task is waiting for mess
 TASKRUNPENDING          equ   %00000010               ; Task Is initialized but suspended
 
 taskPtr         ds      1                             ; Current offset into task table CONTEXTLEN modulo entry
-taskTable       ds      [TASKCOUNT * [CONTEXTLEN + 1]]; Task Table Offset and pointer to Basic code, active flag
+taskTable       ds      [TASKCOUNT * CONTEXTLEN]      ; Task Table Offset and pointer to Basic code, active flag
 TASKTABLEEND    equ     *                             ; End of task table
 TASKTABLELEN    equ     [TASKTABLEEND-taskTable]      ; actual length of the task table
 

@@ -1,40 +1,46 @@
-10 d=1000:e=2000:f=3000:g=4000:h=5000:i=6000:j=7000:k=8000:l=9000
-15 ?"Simple task test, to activate all tasks",c,Z
-20 m=task(1000):n=task(2000):o=task(3000):p=task(4000):q=task(5000):r=task(6000):s=task(7000):t=task(8000):u=task(9000)
+10 Rem Start 9 tasks and wait for them to complete
+20 Rem Each task will loop and also increment a global
+30 Rem Task 0 variable Z.
+40 ?"Simple task test, to activate all tasks",c,Z
+50 m=task(1000):n=task(2000):o=task(3000):p=task(4000)
+60 q=task(5000):r=task(6000):s=task(7000):t=task(8000)
+70 u=task(9000)
 
-110 taskw(m,n,o,p,q,r,s,t,u)
+100 taskw(m,n,o,p,q,r,s,t,u)
+110 Print "Task Exit codes :";m!^,n!^,o!^,p!^,q!^
+115 Print "                 ";r!^,s!^,t!^,u!^
 
-195 inc c : if c< 100 goto 15
+195 inc c : if c< 100 goto 40
 200 ?"Test complete, Total count = ";z
 210 end
 
 
-1000 inc a : inc Z!Z : if a < 20 goto . :rem first z is always zero, or main task so z!z is always task 0 z variable
-1050 taske
+1000 inc a : inc Z!Z : if a < 20 goto . 
+1050 return(1001)
 
 2000 inc b : inc Z!Z: if b < 15 goto .
-2050 taske
+2050 return(2001)
 
 3000 inc c : inc Z!Z:if c < 20 goto .
-3050 taske
+3050 return(3001)
 
 4000 inc d : inc Z!Z:if d < 20 goto .
-4050 taske
+4050 return(4001)
 
 5000 inc e : inc z!z:if e < 25 goto .
-5050 taske
+5050 return(5001)
 
 6000 inc f : inc Z!z :gosub 10000 :if f < 20 goto .
-6050 taske
+6050 return(6001)
 
 7000 inc g : inc Z!Z : gosub 10000 : if g < 21 goto .
-7050 taske
+7050 return(7001)
 
 8000 inc h : inc Z!Z : gosub 10000 : if h < 20 goto .
-8050 taske
+8050 return(8001)
 
 9000 inc i : inc Z!Z :gosub 10000 :if i< 20 goto .
-9050 taske
+9050 return(9001)
 
 10000 a=0: inc q
 10020 return

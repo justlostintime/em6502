@@ -103,9 +103,9 @@ notirq:
 ekLet:
         TSTV       ERRVEC2                        ; YES, PLACE VAR ADDRESS ON AESTK
         TSTB       LETSCONT,oBang                 ; allow to assign to another Tasks Variable
-        IND                         
+        IND
         TSTVT      ERRVEC2
-        
+
 LETSCONT:
         TSTB       LETSQBRACKET,oEqual            ; (This line originally omitted)
         IJMP       LETBE
@@ -139,7 +139,7 @@ ekInc:
         TSTV       ERRVEC2                        ; Verify we have a variable
         TSTB       eDoInc,oBang                   ; Allow to inc or dec other tasks variables
         IND                                       ; we just got a pid
-        TSTVT      ERRVEC2                      ; if it is not another variabe then error, Call test var. task
+        TSTVT      ERRVEC2                        ; if it is not another variabe then error, Call test var. task
 eDoInc:
         INCVAR                                    ; Do the increment of the variable
         DONE                                      ; Test for end of line or end of statement ":"
@@ -414,7 +414,7 @@ S10A:
         TSTB       S10ACONT,oBang           ; Print from another task
         IND
         TSTVT      UNKNOWN
-        
+
 S10ACONT:
         TSTB       S10A1,oDollar
         INSTR                               ;Move character From tty to AESTK
@@ -821,7 +821,7 @@ ekIpcr:
 F2AZa1
         TSTV        UNKNOWNVEC                      ;must be a variable to return pid of message to
         TSTB        UNKNOWNVEC,oRightBracket
-        
+
 ekIpcrComplete:
         IPCIO                                       ;Set the io bit and exit task till message
         IPCRECEIVE                                  ;Get the message

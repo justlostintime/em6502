@@ -99,14 +99,14 @@ taskReset       tya                        ; Save Y
                 sty     taskPtr
                 jsr     ContextLoad         ; load the System Task context
 taskResetCont
-                ldy     #CONTEXTLEN+1       ; Start at the second task +1 account for task control byte
+                ldy     #CONTEXTLEN         ; Start at the second task +1 account for task control byte
 
 taskResetLoop
                 lda     #TASKINACTIVE
                 sta     taskTable,y         ; Ensure that the task is made inactive
                 clc
                 tya
-                adc     #CONTEXTLEN+1
+                adc     #CONTEXTLEN 
                 tay
                 cpy     #TASKTABLELEN       ; Are we at the end yet
                 bcc     taskResetLoop       ; Go for more
@@ -163,7 +163,7 @@ iTaskNextChk
                 bne     iTaskLoadEntry            ; get next slot if this one empty
 iTaskNext       clc
                 tya
-                adc     #CONTEXTLEN+1             ; Next Table entry
+                adc     #CONTEXTLEN               ; Next Table entry
                 tay
                 jmp     itaskLoop                 ; Check for busy entry
 
@@ -180,7 +180,7 @@ iTaskSwitchDone
 ;
 ;================================================================
 ; Task Set task number to line number to start
-; on entry stack contains, type of line description and  memvector or linenumber 
+; on entry stack contains, type of line description and  memvector or linenumber
 ; Task Table structure:
 ;    byte 0    -   Active inactive
 ;    byte 1-2  -   Basic code line pointer
@@ -189,8 +189,8 @@ iTaskSet:       tya                 ;preserve Y
                 pha                                                                          ; push a
                 jsr     popR1       ; Get if compiled or line number expression
                 jsr     popR0       ; Get the line number to be saved
-                
-               
+
+
 
                 ldy     taskPtr     ; find out where we are
                 jsr     ContextSave ; Save the current context
@@ -203,7 +203,7 @@ iTaskSet:       tya                 ;preserve Y
                 lda     R0+1
                 sta     CURPTR+1
                 jmp     iTaskCont
-                
+
 iTaskLineNum:
                 jsr     findLine    ; Get the offset of the line to start task at
                 beq     iTaskCont
@@ -477,13 +477,13 @@ iSliceSet
 TaskEmpty       lda     taskCounter
                 cmp     #TASKCOUNT
                 bcs     TaskNoSlot
-                ldy     #CONTEXTLEN+1                ;The first slot is always the main line SKIP
+                ldy     #CONTEXTLEN                 ;The first slot is always the main line SKIP
 TaskLoop
                 lda     taskTable,y
                 beq     TaskEmptyFnd
                 tya
                 clc
-                adc     #CONTEXTLEN+1
+                adc     #CONTEXTLEN
                 tay
                 cpy     #TASKTABLELEN
                 bcc     TaskLoop          ; Y is never zero
@@ -522,7 +522,7 @@ ContextSvLoop   lda   CONTEXT,x
                 sta   taskTable,y
                 iny
                 inx
-                cpx   #CONTEXTLEN
+                cpx   #[CONTEXTLEN-1]
                 bcc   ContextSvLoop
                 rts
 ;
@@ -538,7 +538,7 @@ ContextLDLoop   lda   taskTable,y
                 sta   CONTEXT,x
                 iny
                 inx
-                cpx   #CONTEXTLEN
+                cpx   #[CONTEXTLEN-1]
                 bcc   ContextLDLoop
                 pla
                 tay

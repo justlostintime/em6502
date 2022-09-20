@@ -222,6 +222,40 @@ ipc_getcontext
               rts
 ;
 ;==============================================
+; on entry R1 has a context value,
+; on exit c is set if fails
+;
+ipc_CONTEXTVALUES:
+              db     $00,CONTEXTLEN,[CONTEXTLEN*2],(CONTEXTLEN*3)
+              db     (CONTEXTLEN*4),(CONTEXTLEN*5),(CONTEXTLEN*6),(CONTEXTLEN*7)
+              db     (CONTEXTLEN*8),(CONTEXTLEN*9)
+
+ipc_ValidateContext
+              pha
+              txa
+              pha
+              lda      R1+1
+              bne      ipc_Validate_Fail
+              ldx      #0
+              lda      R1
+ipc_ValidateLoop:
+              cmp      ipc_CONTEXTVALUES,x
+              beq      ipc_Valid_Context
+              inx
+              cpx      #TASKCOUNT
+              bcc      ipc_ValidateLoop
+
+ipc_Validate_Fail:
+              pla
+              tax
+              pla
+              rtn
+
+ipc_Valid_Context:
+              clc
+              bcc      ipc_Validate_Fail
+;
+;==============================================
 ;Push R1 onto the stack
 ;on entry y = next entry
 ;R0 points to the stack space
