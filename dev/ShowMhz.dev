@@ -34,12 +34,12 @@ public sub _new(address as long, len as long, parameters as string)
   OpenStatusWindow("CPU UPDATEING EVERY "&parameters&"ms")
   StatusUpdate = new timer as "MyStatusTimer"
   parameters = trim(parameters)
-  if not isnum(parameters) then 
+  if not isnumber(parameters) then
        timetick = "2000"
   else
        timetick = val(parameters)
   endif
-       
+
   StatusUpdate.delay = timetick
   StatusUpdate.enabled = true
 
