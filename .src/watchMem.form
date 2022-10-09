@@ -17,8 +17,9 @@
   }
   { WatchButtons Panel
     MoveScaled(1,95,89,6)
-    { WatchAddress TextBox
+    { !WatchAddValue TextBox
       MoveScaled(1,1,26,4)
+      #Public = True
       ToolTip = ("The Address to be added to the watch list")
     }
     { AddWatch Button

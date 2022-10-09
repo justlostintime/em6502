@@ -29,11 +29,18 @@ StatusUpdate as timer
 ' event halt(Reason as string)
 
 public sub _new(address as long, len as long, parameters as string)
-
+  dim timetick as integer
   $NAME="ShowMhz"
-  OpenStatusWindow(parameters)
+  OpenStatusWindow("CPU UPDATEING EVERY "&parameters&"ms")
   StatusUpdate = new timer as "MyStatusTimer"
-  StatusUpdate.delay = val(trim(parameters))
+  parameters = trim(parameters)
+  if not isnum(parameters) then 
+       timetick = "2000"
+  else
+       timetick = val(parameters)
+  endif
+       
+  StatusUpdate.delay = timetick
   StatusUpdate.enabled = true
 
 end
@@ -102,7 +109,7 @@ Public Sub MyStatusInfo_close()
   Settings["StatusForm/Window/H"] = StatusForm.h
   Settings["StatusForm/Window/w"] = StatusForm.w
   Settings.Save()
-  
+
 End
 
 Public Sub MyStatusTimer_timer()

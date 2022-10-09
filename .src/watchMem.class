@@ -120,3 +120,17 @@ Public Sub EnableDisableWatch_Click()
   Endif
 
 End
+
+Public Sub WatchList_Change()
+
+  Print "changed"
+
+End
+
+Public Sub AddWatch_Click()
+
+  If WatchAddValue.text = "" Then Return
+  NewWatch(WatchAddValue.text, WatchAddValue.text)
+  WatchAddValue.text = ""
+
+End
