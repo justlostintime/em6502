@@ -43,6 +43,7 @@ input            processor 6502
 ;               * Fix quoted text to not have to backtrack
 ;               * Add IRQ handler, Call Gosub and Iret at end
 ;               * Add concurrency features
+;               * Add Compile at runtime for gosub and goto addresses
 ;
 ; www.corshamtech.com
 ; bob@corshamtech.com
@@ -1232,7 +1233,7 @@ divby0		ldx	#ERR_DIVIDE_ZERO
 ;=====================================================
 ; This pops the top two items off the stack.  The top
 ; item is a data value and the other is an ABSOLUTE address.
-;Save the value into that address.
+; Save the value into that address.
 ;
 iSTORE          tya
                 pha
@@ -1266,39 +1267,47 @@ iIND            tya
                 jmp     pushR0nextIl
 ;
 ;=====================================================
+; Get from Byte array not Integer array
+iArrayB
+                jsr     popR0             ; Get the array index
+                jsr     popR1             ; Get the Variable address
+                jmp     iArrayAll         ; It will be a byte value
+                
+;=====================================================
 ; Get the array index from top of stack get Current variable
 ; address from next on stack, add the offset
 ; push the result back onto the stack
 iArray
-                jsr     popR0           ; Get the array index
-                jsr     popR1           ; Get the Variable address
+                jsr     popR0             ; Get the array index
+                jsr     popR1             ; Get the Variable address
 
-                clc                     ; Multiplythe value by 2
-                rol     R0              ; Do the multiply
-                rol     R0+1            ; Indexes can by up to max memory
+                clc                       ; Multiplythe value by 2
+                rol     R0                ; Do the multiply
+                rol     R0+1              ; Indexes can by up to max memory
+iArrayAll:
                 clc
-                lda     R1              ; Add the index onto the variable pointer
+                lda     R1                ; Add the index onto the variable pointer
                 adc     R0
                 sta     R0
                 lda     R1+1
                 adc     R0+1
-                sta     R0+1            ; the new Variable Addressis  stored in R0
-                jsr     pushR0          ; Push R0 assume it is correct
+                sta     R0+1              ; the new Variable Addressis  stored in R0
+                jsr     pushR0            ; Push R0 assume it is correct
 
-                lda     R1              ; Check if we are processing a VARIABLE A-Z
-                cmp     VARIABLES       ; So is this the @ pointer
-                bne     iArrayAtTest    ; if they want to use the memory then good luck
+                lda     R1                ; Check if we are processing a VARIABLE A-Z
+                cmp     VARIABLES         ; So is this the @ pointer
+                bne     iArrayAtTest      ; if they want to use the memory then good luck
                 lda     R1+1
                 cmp     VARIABLES+1
                 bne     iArrayAtTest
                 clc
-                lda     #52             ; add the max offset that is valid
-                adc     R1              ; update to be the largest offset that is valid
+                lda     #52                ; add the max offset that is valid
+                adc     R1                 ; update to be the largest offset that is valid
                 sta     R1
                 lda     #0
                 adc     R1+1
                 sta     R1+1
-iArrayVerify                            ; try to enforce some sanity to using arrays
+iArrayVerify                               ; try to enforce some sanity to using arrays
                 lda     R0+1
                 cmp     R1+1
                 bne     iArrayDecide
@@ -1313,7 +1322,7 @@ iArrayAtTest
                 sta     R1
                 lda     HighMem+1
                 sta     R1+1
-                bne     iArrayVerify    ; The high byte of address is never 0
+                bne     iArrayVerify       ; The high byte of address is never 0
 
 ; Get here if array index is out of range
 iArrayError     jsr     popR0

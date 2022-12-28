@@ -1,0 +1,4 @@
+10 j = 0
+20 inc j : if j < 1000 goto .
+30 inc i : print "."; : if i < 10 goto 10
+40 print "done",i

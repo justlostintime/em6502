@@ -115,7 +115,13 @@ LETSQBRACKET:                                     ; is this an array access ?
         TSTB       ERRVEC2,oLeftSQBracket          ; [
         CALL       EXPR
         TSTB       ERRVEC2,oRightSQBracket         ; ]
-        SUBSCRIPT
+        TSTB       LETINDEX_INTEGER,oDollar
+        SUBSCRIPT  1
+        IJMP       LETINDEX_ALL
+LETINDEX_INTEGER:
+        SUBSCRIPT  0
+        
+LETINDEX_ALL:
         TSTB       ERRVEC2,oEqual                  ; (This line originally omitted)
 LETBE:
 
@@ -293,10 +299,10 @@ S7:
 S7AUnsigned
 
         TSTB        S7A,oPercent                ; Print the value as an unsigned number
-        CALL       EXPR
-        SETR2      1
+        CALL        EXPR
+        SETR2       1
         PRN
-        IJMP       S5
+        IJMP        S5
 
 S7A:
 
@@ -948,10 +954,16 @@ FactVariable:
         TSTVT       UNKNOWNID                     ; if it is not another variabe then error, Call test var. task
 
 F2CLocalTask
+
         TSTB        F2C1,oLeftSQBracket
         CALL        EXPR
         TSTB        UNKNOWNID,oRightSQBracket
-        SUBSCRIPT
+        TSTB        F2INTEGER,oDollar             ; Check if this will be a byte array @$[index] or a..z$[index] use a byte array
+        SUBSCRIPT   1                             ; Byte type array
+        IJMP        F2C1                          ; Get the value to top of stack
+        
+F2INTEGER:
+        SUBSCRIPT   0                             ; Integer type array
 F2C1:
         IND                                       ; YES, GET THE VALUE.
         RTN

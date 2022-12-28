@@ -337,6 +337,7 @@
 ; Subscript
   macro SUBSCRIPT
     db 64
+    db {1}
     endm
 ; KILL Task
   macro TASKKILL
@@ -463,7 +464,7 @@
 
   Macro TSTBYTE
     db  97
-    db ({1}-*)-1           ; (addr-*)-1 goto if match
+    db ({1}-*)-1          ; (addr-*)-1 goto if match
     dw {2}                ; address to check
     db {3}                ; Value to compare
   endm
@@ -502,7 +503,6 @@
     db ({1}-*)-1
   endm
 
-
   Macro REPEATLINE
     db 105
    endm
@@ -512,7 +512,13 @@
     db 106
     db ({1}-*)-1
   endm
-  
+
   Macro FASTXFER
     db 107
+    endm
+; Set all io to to a terminal for input output
+; SETTERMINAL outterm,interm    ; the numbers corrispond to the ct65 slot number each slot id 16 bytes, 
+; so 0 = 0, 1 = io address 16, 2 = io address 32 .... etc
+  Macro SETTERMINAL
+    db 108
     endm

@@ -1008,10 +1008,56 @@ SetInDebugEnd
                 rts
 ;
 ;====================================================
-; Output to the debug console
+; Set the input and output terminal address
+; The math stack stack byte is the output io slot
+; The math stack  is the input io slot
+
+iSetTerminal
+                jsr   popR0                              ; Process the output io addresses
+                jsr   CalcSlot
+                lda   R0
+                ora   #1
+                sta   TerminalOutputPort
+                lda   R0+1
+                sta   TerminalOutputPort+1
+                
+                jsr   popR0                             ; Process the input io address
+                jsr   CalcSlot
+                lda   R0
+                sta   TerminalInputPort
+                ora   #1
+                sta   TerminalStatusPort
+                lda   R0+1
+                sta   TerminalInputPort+1
+                sta   TerminalStatusPort+1
+                rts
+
+;===================================================
+; Calculate the slot address the the slot number
+; R0 contains the slot number 0-255
+
+CalcSlot
+                txa
+                pha
+                ldx     #4
+CalcSlotLoop:
+                asl     R0
+                rol     R0+1
+                dex
+                bne     CalcSlotLoop
+                lda     #$E0 
+                ora     R0+1
+                sta     R0+1
+                pla     
+                tax
+                rts
+;
+;====================================================
+; Output to the Terminal/Debug console
 ;     x = high address byte
 ;     y = low address byte
 ;     a = Terminator for string
+TerminalWrite
 DebugWrite
                 jsr     SetOutDebug
                 jsr     PrtStr
@@ -1019,18 +1065,22 @@ DebugWrite
                 rts
 
 OUTDEBUG
-                .byte   $8D                           ; STA 
-DEBUGPORT       .word   $E001                         ;Dont check anything just output the byte
+                .byte   $8D                           ; STA
+TerminalOutputPort
+DEBUGPORT       .word   $E001                         ; Dont check anything just output the byte
                 RTS
 
-INDEBUG        
+TerminalRead
+INDEBUG
                 .byte   $AD                           ; LDA
+TerminalStatusPort
 DEBUGPORTSTATUS .word   $E000
 
                 and     #$01
                 beq     INDEBUG
-                
+
                 .byte   $AD                              ; LDA
+TerminalInputPort
 DEBUGPORTIN     .word   $E001
                 rts
 

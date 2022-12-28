@@ -110,7 +110,7 @@
       dw  iTaskSuspend  ;91       Suspend a running task
       dw  iTaskPutMathPtr;92      updates the tasks stack pointer
       dw  iTSTVT        ;93       test for another tasks variable
-      dw  iSetR2        ;94
+      dw  iSetR2        ;94       Set the Working register R2 to a value
       dw  iStk2Tmp      ;95       Move top of stack to temp
       dw  iTmp2Stk      ;96       Move Temp to stack
       dw  iTSTBYTE      ;97       Test byte and branch if true
@@ -123,5 +123,6 @@
       dw  iTSTRELOP     ;104      Test relop, push mask onto stack if true, branch otherwise
       dw  iRepeatLine   ;105      Repeat the same line again, start execution from beginning of the same line
       dw  iTSTBRANCH    ;106      Test for compiled branch, take branch is is, skip two bytes and following integer value(line number) goto, gosub, gofn
-      dw  iFastXfer     ;107      move top of stack to curptr 
+      dw  iFastXfer     ;107      move top of stack to curptr
+      dw  iSetTerminal  ;108      Set the Io Treminal to be used by print and input statements
 
