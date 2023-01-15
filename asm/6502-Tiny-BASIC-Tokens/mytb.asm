@@ -325,7 +325,7 @@ cold2           jsr     SetOutConsole
                 jsr     SetInConsole
                 jsr     puts
                 db      CR,LF
-                db      "Concurrent Tiny BASIC v1.0.4  IRQs/Tasks/Tokens"
+                db      "Concurrent Tiny BASIC v1.1.20  IRQs/Tasks/Tokens"
                 db      CR,LF,0
 ;
                 jsr     MemInit                     ;setup the free space available
@@ -1267,17 +1267,25 @@ iIND            tya
                 jmp     pushR0nextIl
 ;
 ;=====================================================
+; Check which type of index to use byte or word and jmp to correct
+; function
+iArray
+                jsr    getILByte
+                cmp    #0
+                beq    iArrayW
+;
+;=====================================================
 ; Get from Byte array not Integer array
 iArrayB
                 jsr     popR0             ; Get the array index
                 jsr     popR1             ; Get the Variable address
                 jmp     iArrayAll         ; It will be a byte value
-                
+
 ;=====================================================
 ; Get the array index from top of stack get Current variable
 ; address from next on stack, add the offset
 ; push the result back onto the stack
-iArray
+iArrayW
                 jsr     popR0             ; Get the array index
                 jsr     popR1             ; Get the Variable address
 
@@ -1850,7 +1858,8 @@ iTSTVT          jsr     popR1                 ; The task top has the context id(
                 lda     #0
                 sta     R2
                 beq     iTSTVV
-
+                
+; Test for simple variable 
 iTSTV           lda     #1                    ; set a process Flag
                 sta     R2
 
@@ -1931,7 +1940,7 @@ iTSTVcontinue
                 jmp     iADDfast              ; Fast add for value/place on stack
 
 ; When we get here then we are using the root address of the Lowest addresses free bytes as
-; an array of integer values
+; an array of integer values or byte.
 iTSTVat
                 iny
                 sty     CUROFF                 ;it is a valid variable

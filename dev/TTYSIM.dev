@@ -101,7 +101,7 @@ Public sub halt()
    try close $tRdPipe
    try close $tWrPipe
 
-   error "TTY Halted"
+   Debug "TTY Halted"
    TTYFORM.persistent = false
    TTYFORM.close()
 

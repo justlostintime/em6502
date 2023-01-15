@@ -16,6 +16,8 @@ Public Sub main()
 
   Dim sDummy As String = Settings["Init", "Done"]
 
+  System.IgnoreOverflow = True
+
   Settings["Init"] = sDummy
   FMain.ReadConfig()
   FMain.WriteConfig()
@@ -65,7 +67,7 @@ Public Sub main()
     PrintMatrix()
   Else If sComputerName <> "" Then
     RunComputer(sComputerName)
-    If FMain.Verbose Then Error ("End of Emulator session")                                                     'halt when we get here
+    If FMain.Verbose Then Error("End of Emulator session")                                                     'halt when we get here
   Else
     FMain.Show()
     While Not FMain.Closed

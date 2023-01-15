@@ -101,26 +101,27 @@ STMT:
 notirq:
         TSTLET      DoVector                      ; Test if Let keyword or a variable
 ekLet:
-        TSTV       ERRVEC2                        ; YES, PLACE VAR ADDRESS ON AESTK
-        TSTB       LETSCONT,oBang                 ; allow to assign to another Tasks Variable
-        IND
-        TSTVT      ERRVEC2
-
-LETSCONT:
-        TSTB       LETSQBRACKET,oEqual            ; (This line originally omitted)
-        IJMP       LETBE
-
-LETSQBRACKET:                                     ; is this an array access ?
-
-        TSTB       ERRVEC2,oLeftSQBracket          ; [
-        CALL       EXPR
-        TSTB       ERRVEC2,oRightSQBracket         ; ]
-        TSTB       LETINDEX_INTEGER,oDollar
-        SUBSCRIPT  1
-        IJMP       LETINDEX_ALL
-LETINDEX_INTEGER:
-        SUBSCRIPT  0
-        
+        CALL        FactVarPTR                     ; get a pointer to the variable
+;        TSTV       ERRVEC2                        ; YES, PLACE VAR ADDRESS ON AESTK
+;        TSTB       LETSCONT,oBang                 ; allow to assign to another Tasks Variable
+;        IND
+;        TSTVT      ERRVEC2;
+;
+;LETSCONT:
+;        TSTB       LETSQBRACKET,oEqual            ; (This line originally omitted)
+;        IJMP       LETBE;
+;
+;LETSQBRACKET:                                     ; is this an array access ?;
+;
+;        TSTB       ERRVEC2,oLeftSQBracket          ; [
+;        CALL       EXPR
+;        TSTB       ERRVEC2,oRightSQBracket         ; ]
+;        TSTB       LETINDEX_INTEGER,oDollar
+;        SUBSCRIPT  1
+;        IJMP       LETINDEX_ALL
+;LETINDEX_INTEGER:
+;        SUBSCRIPT  0
+;
 LETINDEX_ALL:
         TSTB       ERRVEC2,oEqual                  ; (This line originally omitted)
 LETBE:
@@ -948,23 +949,35 @@ F2:
 ;F2C:
 ;
 FactVariable:
+        CALL        FactVarPTR
+        CALL        FactVariableValue
+        RTN
+        
+FactVarPTR:
         TSTV        F1
         TSTB        F2CLocalTask,oBang
         IND                                       ; we just got a pid
         TSTVT       UNKNOWNID                     ; if it is not another variabe then error, Call test var. task
 
-F2CLocalTask
+F2CLocalTask:
 
-        TSTB        F2C1,oLeftSQBracket
+        TSTB        F2INTEGER,oDollar             ; Check if this will be a byte array @$[index] or a..z$[index] use a byte array
+        TSTB        F2PTRLOADED,oLeftSQBracket
         CALL        EXPR
         TSTB        UNKNOWNID,oRightSQBracket
-        TSTB        F2INTEGER,oDollar             ; Check if this will be a byte array @$[index] or a..z$[index] use a byte array
         SUBSCRIPT   1                             ; Byte type array
-        IJMP        F2C1                          ; Get the value to top of stack
-        
+        IJMP        F2PTRLOADED                          ; Get the value to top of stack
+
 F2INTEGER:
+        TSTB        F2PTRLOADED,oLeftSQBracket
+        CALL        EXPR
+        TSTB        UNKNOWNID,oRightSQBracket
         SUBSCRIPT   0                             ; Integer type array
-F2C1:
+        
+F2PTRLOADED:
+        RTN
+        
+FactVariableValue
         IND                                       ; YES, GET THE VALUE.
         RTN
 
