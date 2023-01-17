@@ -1,0 +1,49 @@
+10 Rem test the memory function
+20 Print " Testing the Set Memory Byte values function"
+30 SetMemB(55,100,addr(@[0]))
+40 a = 0
+50 if @$[a] <> 55 goto 1000
+60 inc a : if a < 100 goto 50
+70 Print " Set Byte Memory Passed": print
+
+80 print " Testing the Set Memory Word values function"
+90 a = 0
+100 SetMemW(55,100,addr(@[0]))
+110 if @[a]<>55 goto 2000
+120 inc a : if a < 50 goto 110
+130 print " Set Word Memory Passed": print
+
+140 print " Testing copy memory block"
+150 CopyMem(100,addr(@$[110]),addr(@$[0])) : rem  CopyMem(length,dest,source)
+160 a = 0
+170 if @[a]<>55 goto 3000
+180 inc a : if a < 50 goto 170
+190 print " Copy Memory Passed"
+
+200 end
+
+
+1000 print " Set Byte memory failed at ";a
+1010 Print " SetMemB(55,100,";addr(@[0]);")"
+1020 Gosub 10000(100,0)
+1030 end
+
+2000 print " Set Word Memory Failed at ";a
+2010 Print " SetMemW(55,100,";addr(@[0]);")"
+2020 gosub 10000(100,0)
+2030 end
+
+3000 print " Copy Memory Failed at ";a
+3010 Print " CopyMem(100,";addr(@$[110]);",";addr(@$[0]);")"
+3020 gosub 10000(100,0)
+3030 print " to the following"
+3040 gosub 10000(100,110)
+3050 end
+
+10000 rem dump the test memory Call with 10000(length,address)
+10010 print "Count =";#[0];" Start Address = ";addr(@$[#[1]])
+10020 z = #[1] : w = 1
+10030 print @$[z];" "; : if w % 16 = 0 then print 
+10050 inc z : inc w : if z < #[0]  goto 10030
+10060 print : Print "--------------------"
+10070 return

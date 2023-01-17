@@ -89,12 +89,12 @@ CompileString:
                 iny                           ; point past first "
 CompileStringLoop:
                 lda     (dpl),y
-                beq     CompileStrDone2
+                beq     CompileStrDone2       ; end of line
                 cmp     #'"                   ; end of string
                 beq     CompileStrDone
                 cmp     #'\                   ; escape character
                 bne     CompileStrNext
-                iny
+                iny                           ; skip the escape character
 CompileStrNext:
                 iny                           ; Next character
                 bne     CompileStringLoop     ; test for end
@@ -116,7 +116,7 @@ CompileField:   sta     R0
                 cmp      #kTask                ; for a task it is the next byte after a bracket
                 bne      CompNoBracket
 
-                lda     (dpl),y                ; Lets make sure it is a
+                lda     (dpl),y                ; Lets make sure it is a )
                 cmp     #oLeftBracket
                 bne     CompNoBracket          ; in case of error
                 iny                            ; skip the bracket
@@ -148,19 +148,19 @@ CompFindLine:
                 jsr     findLine
                 beq     CompFoundLine
                 inc     R0                      ; number of errors
-                
+
                 lda     dpl
                 sta     CURPTR
                 lda     dpl+1
                 sta     CURPTR+1
                 sty     CUROFF
-                
+
                 ldx     #ERR_LINE_NOT_FOUND
                 lda     #0
-                
+
                 jsr     DisplayError
                 jsr     PrintProgramLine
-                 
+
                 pla
                 tay
                 iny

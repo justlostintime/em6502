@@ -54,8 +54,8 @@ input            processor 6502
 ; Create TRUE and FALSE values for conditionals.
 ;
 
-FALSE		equ	0
-TRUE		equ	~FALSE
+FALSE           equ     0
+TRUE            equ     ~FALSE
 ;
 ;---------------------------------------------------------
 ; One of these must be set to indicate which environment
@@ -170,6 +170,9 @@ ERR_INVALID_STK_FRAME   equ     18      ;The stack frame was expected not found
 ERR_NO_RETURN_VALUE_PROVIDED equ 19     ;No value returned by a gofn call
 ERR_LINE_NOT_FOUND      equ     20      ;Gosub/goto/gofn line number not found
 ERR_IL_STACK_OVER_FLOW  equ     21      ;The IL return stack has overflowed
+ERR_EXPECTVAR           equ     22      ;Expected a variable name or definition
+ERR_CLOSINGBRACKET      equ     23      ;Expected a closing bracket
+ERR_MISSINGEQUALSIGN     equ     24      ;Expected an equal sign for assignment
 ;
 ;=====================================================
 ; Zero page storage.
@@ -238,7 +241,7 @@ REGISTERSLEN            equ     REGISTERSEND-REGISTERS
 CONTEXTEND              equ     *                         ; End of swap context
 CONTEXTLEN              equ     CONTEXTEND - CONTEXT + 1  ; length of the context plus the status byte
 
-dpl                     ds      2       ;Used as a pointer to call il instructions
+dpl                     ds      2                         ; Used as a pointer to call il instructions
 ;
 ; This is zero if in immediate mode, or non-zero
 ; if currently running a program.  Any input from
@@ -474,29 +477,29 @@ ILbad           jsr     puts
 ; by one since it no longer points to the current
 ; opcode.
 ;
-		jsr	decIL
+                jsr     decIL
 ;
-		ldy	#0
-		lda	(ILPC),y
-		jsr	OUTHEX
-		jsr	puts
-		db	" at ",0
-		lda	ILPC+1
-		jsr	OUTHEX
-		lda	ILPC
-		jsr	OUTHEX
-		jsr	CRLF
-		jmp	MONITOR
+                ldy     #0
+                lda     (ILPC),y
+                jsr     OUTHEX
+                jsr     puts
+                db      " at ",0
+                lda     ILPC+1
+                jsr     OUTHEX
+                lda     ILPC
+                jsr     OUTHEX
+                jsr     CRLF
+                jmp     MONITOR
 ;
 ; Just jump to the address (ILPC),y.  Have to do
 ; some goofy stuff.
 ;
-ILgood		tay		       ;move index into Y
-		lda	ILTBL,y
-		sta	dpl
-		lda	ILTBL+1,y
-		sta	dpl+1
-		jmp	(dpl)	       ;go to handler
+ILgood          tay                    ;move index into Y
+                lda     ILTBL,y
+                sta     dpl
+                lda     ILTBL+1,y
+                sta     dpl+1
+                jmp     (dpl)          ;go to handler
 ;
 ;=====================================================
 ; This is the IL jump table.  The IL opcode is
@@ -1045,7 +1048,7 @@ iErr2a
                 db      ":",0
                 lda     taskPtr
                 sta     R0
-                jsr     PrintDecimal
+                jsr     HexToOut
 ;
 iERR3:
                 jsr     CRLF
@@ -1107,17 +1110,17 @@ iSUB            jsr     popR1
 ;=====================================================
 ; Negate the top of stack.
 ;
-iNEG		jsr	popR0
-		lda	R0
-		eor	#$ff
-		sta	R0
-		lda	R0+1
-		eor	#$ff
-		sta	R0+1
-		inc	R0
-		bne	iNEG2
-		inc	R0+1
-iNEG2		jmp	pushR0nextIl
+iNEG            jsr     popR0
+                lda     R0
+                eor     #$ff
+                sta     R0
+                lda     R0+1
+                eor     #$ff
+                sta     R0+1
+                inc     R0
+                bne     iNEG2
+                inc     R0+1
+iNEG2           jmp     pushR0nextIl
 ;
 ;=====================================================
 ; Multiply top two items on the stack, put the results
@@ -1129,42 +1132,42 @@ iMUL            jsr     iMultiply
                 jmp     NextIL
 
 iMultiply
-    jsr	popR0	;AC
-		jsr	popR1	;OP
+                jsr     popR0               ;AC
+                jsr     popR1               ;OP
 ;
-		lda	R0
-		sta	MQ
-		lda	R0+1
-		sta	MQ+1
-		lda	#0	         ;clear result
-		sta	R0
-		sta	R0+1
+                lda     R0
+                sta     MQ
+                lda     R0+1
+                sta     MQ+1
+                lda     #0                 ;clear result
+                sta     R0
+                sta     R0+1
 ;
-		ldx	#16	        ;number of bits in value
-multloop	asl	R0
-		rol	R0+1
-		asl	MQ
-		rol	MQ+1
-		bcc	multno	     ;skip add if no carry
+                ldx     #16               ;number of bits in value
+multloop        asl     R0
+                rol     R0+1
+                asl     MQ
+                rol     MQ+1
+                bcc     multno           ;skip add if no carry
 ;
 ; Add R1 back into R0
 ;
-		clc
-		lda	R0
-		adc	R1
-		sta	R0
-		lda	R0+1
-		adc	R1+1
-		sta	R0+1
+                clc
+                lda     R0
+                adc     R1
+                sta     R0
+                lda     R0+1
+                adc     R1+1
+                sta     R0+1
 ;
-multno		dex		       ;did all bits yet?
-		bne	multloop
-		jsr	pushR0	     ;OP
-		rts
+multno          dex                      ;did all bits yet?
+                bne     multloop
+                jsr     pushR0           ;OP
+                rts
 ;
 pushR0nextIl
-		jsr	pushR0	     ;OP
-		jmp	NextIL
+                jsr     pushR0           ;OP
+                jmp     NextIL
 ;
 ;=====================================================
 ; Divide the top of stack into the next to top item.
@@ -1174,21 +1177,21 @@ pushR0nextIl
 ; R0 = R0 / R1
 ; Remainder is in MQ
 ;
-iDIV  jsr iDoDiv
-      jsr	RestoreSigns
-		  jmp	pushR0nextIl
+iDIV            jsr     iDoDiv
+                jsr     RestoreSigns
+                jmp     pushR0nextIl
 
-iMOD  jsr iDoDiv
-      jsr RestoreSigns
-      lda MQ
-      sta R0
-      lda MQ+1
-      sta R0+1
-      jmp pushR0nextIl
+iMOD            jsr     iDoDiv
+                jsr     RestoreSigns
+                lda     MQ
+                sta     R0
+                lda     MQ+1
+                sta     R0+1
+                jmp     pushR0nextIl
 
 iDoDiv:
-      jsr popR1
-      jsr popR0
+                jsr     popR1
+                jsr     popR0
 ;
 ; Check for divide by zero
 ;
@@ -1204,31 +1207,31 @@ iDivNoPop
                 sta     MQ+1
                 ldx     #16             ;repeat for each bit: ...
 divloop
-		asl	R0              ;dividend lb & hb*2, msb -> Carry
-		rol	R0+1
-		rol MQ              ;remainder lb & hb * 2 + msb from carry
-		rol	MQ+1
-		lda	MQ
-		sec
-		sbc	R1              ;substract divisor to see if it fits in
-		tay                 ;lb result -> Y, for we may need it later
-		lda	MQ+1
-		sbc	R1+1
-		bcc	skip            ;if carry=0 then divisor didn't fit in yet
+                asl     R0              ;dividend lb & hb*2, msb -> Carry
+                rol     R0+1
+                rol     MQ              ;remainder lb & hb * 2 + msb from carry
+                rol     MQ+1
+                lda     MQ
+                sec
+                sbc     R1              ;substract divisor to see if it fits in
+                tay                     ;lb result -> Y, for we may need it later
+                lda     MQ+1
+                sbc     R1+1
+                bcc     skip            ;if carry=0 then divisor didn't fit in yet
 
-		sta	MQ+1            ;else save substraction result as new remainder,
-		sty	MQ
-		inc	R0              ;and INCrement result cause divisor fit in 1 times
+                sta     MQ+1            ;else save substraction result as new remainder,
+                sty     MQ
+                inc     R0              ;and INCrement result cause divisor fit in 1 times
 
-skip		dex
-		bne	divloop
-		rts
+skip            dex
+                bne     divloop 
+                rts
 ;
 ; Indicate divide-by-zero error
 ;
-divby0		ldx	#ERR_DIVIDE_ZERO
-		lda	#0
-		jmp	iErr2
+divby0          ldx     #ERR_DIVIDE_ZERO
+                lda     #0
+                jmp     iErr2
 ;
 ;=====================================================
 ; This pops the top two items off the stack.  The top
@@ -1239,11 +1242,16 @@ iSTORE          tya
                 pha
                 jsr     popR0       ;data
                 jsr     popR1       ;Storage location
-                ldy     #0
-                lda     R0
-                sta     (R1),y
+                ldy     #1
+                lda     R2
+                cmp     #tByte
+                beq     iStoreB
+iStoreW
                 lda     R0+1
-                iny
+                sta     (R1),y
+iStoreB
+                lda     R0
+                dey
                 sta     (R1),y
                 pla
                 tay
@@ -1253,25 +1261,35 @@ iSTORE          tya
 ; Replaces the top of stack with the Value
 ; of the variable  whose absolute address it represents.
 ;
+
 iIND            tya
                 pha
                 jsr     popR1
-                ldy     #0
+                ldy     #1
+                lda     R2
+                cmp     #tInteger
+                beq     iINDW
+iINDB
+                lda    #0
+                BEQ    iINDC
+iINDW
+                lda     (R1),y
+iINDC
+                sta     R0+1
+                dey
                 lda     (R1),y
                 sta     R0
-                iny
-                lda     (R1),y
-                sta     R0+1
                 pla
                 tay
                 jmp     pushR0nextIl
+
 ;
 ;=====================================================
 ; Check which type of index to use byte or word and jmp to correct
 ; function
 iArray
                 jsr    getILByte
-                cmp    #0
+                cmp    #tInteger
                 beq    iArrayW
 ;
 ;=====================================================
@@ -1756,7 +1774,7 @@ iTSTByteNotEqual
 iTSTB           jsr     getILByte     ; Get the relative offset byte
                 sta     offset        ; Save the jump offset for fails
                 jsr     saveIL        ; save to restore when done if fail
-                jsr     getILByte     ; Get a word into RO
+                jsr     getILByte     ; Get a byte into Acc
                 ldy     CUROFF        ; Get offset in the stream
                 cmp     (CURPTR),y
                 beq     iTSTBMatch    ; Yes it matched move on
@@ -1858,8 +1876,8 @@ iTSTVT          jsr     popR1                 ; The task top has the context id(
                 lda     #0
                 sta     R2
                 beq     iTSTVV
-                
-; Test for simple variable 
+
+; Test for simple variable
 iTSTV           lda     #1                    ; set a process Flag
                 sta     R2
 
@@ -2407,8 +2425,8 @@ iTRACEPROG      jsr     popR0
                 org       PROGEND
 ;=================================================================
 ;
-                include  "compile.asm"
                 include  "tokenizer.asm"
+                include  "compile.asm"
                 include  "print.asm"
                 include  "mem.asm"
                 include  "gosub.asm"
@@ -2416,14 +2434,14 @@ iTRACEPROG      jsr     popR0
                 include  "ipc.asm"
                 include  "support.asm"
 
-	if	DISK_ACCESS
+  if	DISK_ACCESS
             include       "storage.asm"
-	endif
+  endif
             include       "IL.inc"
 ;
-	if FIXED
+  if FIXED
             org	$1000
-	endif
+  endif
             include       "basic.il"
 PROGEND         equ       *
 
@@ -2532,17 +2550,17 @@ FreeMem         ds      2         ; amount of free memory
 ;                0200-11FF = 4K
 ;                0200-13FF = 4.5K
 ;
-	if FIXED
-		org	$2000
-	endif
+  if FIXED
+        org     $2000
+  endif
 
 FreeMemStart      equ *
 /*
-	if	CTMON65 || XKIM
-		SEG Code
-		org	AutoRun
-		dw	TBasicCold
-	endif
+  if    CTMON65 || XKIM
+        SEG Code
+        org     AutoRun
+        dw      TBasicCold
+  endif
 */
-		end
+                end
 

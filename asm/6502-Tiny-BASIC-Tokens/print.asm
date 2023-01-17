@@ -32,7 +32,8 @@ PrintDo
                 sta     R1
 
                 lda     R2
-                bne     PrintPos
+                cmp     #tUint
+                beq     PrintPos
 
                 lda     R0+1              ;MSB has sign
                 bpl     PrintPos          ;it's a positive number;
@@ -208,7 +209,7 @@ PrtNoInc
                 sta     PrtTerm
 
 PrtPrgString                                  ; Print a terminated string from the static program space
-                ldy     CUROFF                
+                ldy     CUROFF
                 lda     CURPTR
                 sta     PrtFrom
                 lda     CURPTR+1

@@ -35,6 +35,10 @@ BasicStmts:
                 dw    ekLoad
                 dw    ekErase
                 dw    ekDir
+                dw    ekSetTerm
+                dw    ekSetMemB
+                dw    ekSetMemW
+                dw    ekCopyMem
 ;
 ; Logical operators
 BasicLogical    db    kOr,3
@@ -60,7 +64,7 @@ BasicFuncs:     db    kBeginFunc,kFuncCount
                 dw    ekCall
                 dw    ekGofn
                 dw    ekPid
-
+                dw    ekAddr
 
 ;=====================================================
 ; This is the IL of the BASIC (or whatever) language.
@@ -101,36 +105,31 @@ STMT:
 notirq:
         TSTLET      DoVector                      ; Test if Let keyword or a variable
 ekLet:
-        CALL        FactVarPTR                     ; get a pointer to the variable
-;        TSTV       ERRVEC2                        ; YES, PLACE VAR ADDRESS ON AESTK
-;        TSTB       LETSCONT,oBang                 ; allow to assign to another Tasks Variable
-;        IND
-;        TSTVT      ERRVEC2;
-;
-;LETSCONT:
-;        TSTB       LETSQBRACKET,oEqual            ; (This line originally omitted)
-;        IJMP       LETBE;
-;
-;LETSQBRACKET:                                     ; is this an array access ?;
-;
-;        TSTB       ERRVEC2,oLeftSQBracket          ; [
-;        CALL       EXPR
-;        TSTB       ERRVEC2,oRightSQBracket         ; ]
-;        TSTB       LETINDEX_INTEGER,oDollar
-;        SUBSCRIPT  1
-;        IJMP       LETINDEX_ALL
-;LETINDEX_INTEGER:
-;        SUBSCRIPT  0
-;
-LETINDEX_ALL:
-        TSTB       ERRVEC2,oEqual                  ; (This line originally omitted)
-LETBE:
+        TSTV        DoVector                      ; Test for variable
+        CALL        FactVarPtrNoTst               ; get a pointer to the variable
 
+LETINDEX_ALL:
+        TSTB       ERRMissingEquals,oEqual        ; (This line originally omitted)
+LETBE:
+        TSTBYTE    LETAssignByte,R2,tByte         ; Check for a byte conversion
         CALL       EXPR                           ; PLACE EXPR VALUE ON MathSTK
         DONE                                      ; REPORT ERROR IF NOT NEXT
-        STORE                                     ; STORE RESULT
+        SETR2      tInteger                       ; Store an integer type
+        STORE                                     ; STORE RESULT at variable address
         NXT        CO                             ; AND SEQUENCE TO NEXT
-        IJMP       STMT
+        IJMP       STMT                           ; Next statement
+
+LETAssignByte
+        CALL       EXPR                           ; PLACE EXPR VALUE ON MathSTK
+        DONE                                      ; REPORT ERROR IF NOT NEXT
+        SETR2      tByte                          ; Set to store a byte value
+        STORE                                     ; STORE RESULT at variable address
+        NXT        CO                             ; AND SEQUENCE TO NEXT
+        IJMP       STMT                           ; Next statement
+
+ERRMissingEquals
+        ERRMSG     ERR_MISSINGEQUALSIGN           ; Missing asignment
+
 ERRVEC2:
         IJMP       UNKNOWN
 ;=============================================================
@@ -143,27 +142,29 @@ DoVector:
 ;S1:
 ;        TSTB       S1Dec,kInc                     ; Increment variable
 ekInc:
-        TSTV       ERRVEC2                        ; Verify we have a variable
-        TSTB       eDoInc,oBang                   ; Allow to inc or dec other tasks variables
-        IND                                       ; we just got a pid
-        TSTVT      ERRVEC2                        ; if it is not another variabe then error, Call test var. task
+         TSTV       ERRVEC2                        ; Verify we have a variable
+         CALL       FactVarPtrNoTst                ; Get a pointer to the memory location to increment
+;        TSTB       eDoInc,oBang                   ; Allow to inc or dec other tasks variables
+;        IND                                       ; we just got a pid
+;        TSTVT      ERRVEC2                        ; if it is not another variabe then error, Call test var. task
 eDoInc:
-        INCVAR                                    ; Do the increment of the variable
-        DONE                                      ; Test for end of line or end of statement ":"
-        NXT        CO                             ; Get the next statement, branch CO if end of program
-        IJMP       STMT                           ; Process the next statement
+         INCVAR                                    ; Do the increment of the variable
+         DONE                                      ; Test for end of line or end of statement ":"
+         NXT        CO                             ; Get the next statement, branch CO if end of program
+         IJMP       STMT                           ; Process the next statement
 ;S1Dec:
 ;        TSTB       S1Iret,kDec                    ; Dec variable
 ekDec:
-        TSTV       ERRVEC2                        ; Must be followed by a variable
-        TSTB       eDoDec,oBang                   ; Allow to inc or dec other tasks variables
-        IND                                       ; we just got a pid
-        TSTVT      ERRVEC2                        ; if it is not another variabe then error, Call test var. task
+         TSTV       ERRVEC2                        ; Must be followed by a variable
+         CALL       FactVarPtrNoTst                ; Get a pointer to the variable to update
+;        TSTB       eDoDec,oBang                   ; Allow to inc or dec other tasks variables
+;        IND                                       ; we just got a pid
+;        TSTVT      ERRVEC2                        ; if it is not another variabe then error, Call test var. task
 eDoDec:
-        DECVAR                                    ; Decrement the actual variable
-        DONE                                      ; Test if end of line or : statement
-        NXT        CO                             ; If at end of program then got the console
-        IJMP       STMT                           ; Process the next statement of command line
+         DECVAR                                    ; Decrement the actual variable
+         DONE                                      ; Test if end of line or : statement
+         NXT        CO                             ; If at end of program then got the console
+         IJMP       STMT                           ; Process the next statement of command line
 ;=============================================================================================================================
 ; iret or ireturn, Return from interupt process
 ;
@@ -248,6 +249,16 @@ S2RetFunc:
 ekRem:
         NXT        CO                             ; The rest of the line is ignored
         IJMP       STMT                           ; Process the next statement
+;====================================================================================================================================
+; Set the Task input output slot each slot is 16 byte starting at e000
+; so 0,1,...
+ekSetTerm
+        CALL      EXPR
+        TSTB      ERRVEC,oComma
+        CALL      EXPR
+        SETTERMINAL
+        NXT        CO              ;Next statement to execute
+        IJMP       STMT
 ;==================================================================================================================================
 ; Print statement
 ;
@@ -301,7 +312,7 @@ S7AUnsigned
 
         TSTB        S7A,oPercent                ; Print the value as an unsigned number
         CALL        EXPR
-        SETR2       1
+        SETR2       tUint
         PRN
         IJMP        S5
 
@@ -313,7 +324,7 @@ S7A:
         IJMP       S5
 
 S7B
-        SETR2      0                            ; Print the value as a signed number
+        SETR2      tInteger                     ; Print the value as a signed number
         PRN                                     ; PRINT IT
         IJMP       S5                           ; IS THERE MORE?
 ;
@@ -375,14 +386,57 @@ UNKNOWNLnk
 ;S8a1:
 ;        TSTB        S8b,kPoke                           ; Poke a value into memory
 ekPoke:
-        TSTB        UNKNOWNV,oLeftBracket               ; opening bracket
+        TSTB        UNKNOWNV,oLeftBracket                ; opening bracket
         CALL        EXPR                                 ; Get address to write to
-        TSTB        UNKNOWNV,oComma                     ; Must have a coma
+        TSTB        UNKNOWNV,oComma                      ; Must have a coma
         CALL        EXPR                                 ; Get the value to poke
-        TSTB        UNKNOWNV,oRightBracket              ; closing bracket
+        TSTB        UNKNOWNV,oRightBracket               ; closing bracket
         POKEMEM
         DONE
         NXT         CO                ;AND SEQUENCE TO NEXT
+        IJMP        STMT
+;
+;================================================================
+; Set a block of memory to a value word or byte
+; SetMem(Value, Length, Destination)
+ekSetMemB 
+        CALL       ekSetMem
+        SETBLOCK   tByte                                ; set value as byte
+        DONE
+        NXT         CO
+        IJMP        STMT
+        
+ekSetMemW
+        CALL        ekSetMem
+        SETBLOCK    tInteger                                ; set value as byte
+        DONE
+        NXT         CO
+        IJMP        STMT
+
+ekSetMem:
+        TSTB        UNKNOWNV,oLeftBracket                ; opening bracket
+        CALL        EXPR                                 ; Value to set
+        TSTB        UNKNOWNV,oComma                      ; Must have a comma
+        CALL        EXPR                                 ; Get The Length
+        TSTB        UNKNOWNV,oComma                      ; Must have a comma
+        CALL        EXPR                                 ; GET the address to start at
+        TSTB        UNKNOWNV,oRightBracket               ; closing bracket
+        RTN
+;
+;================================================================
+; Copy a block of memory
+; CopyMem(Length, Destination, Source)
+ekCopyMem:
+        TSTB        UNKNOWNV,oLeftBracket                ; opening bracket
+        CALL        EXPR                                 ; Length
+        TSTB        UNKNOWNV,oComma                      ; Must have a comma
+        CALL        EXPR                                 ; Destination
+        TSTB        UNKNOWNV,oComma                      ; Must have a comma
+        CALL        EXPR                                 ; Source
+        TSTB        UNKNOWNV,oRightBracket               ; closing bracket
+        COPYBLOCK                                        ; Copy the memory
+        DONE
+        NXT         CO
         IJMP        STMT
 ;================================================================
 ; Write a single byte to the output device
@@ -418,16 +472,19 @@ S10:
         TSTB        S10Z,oSemiColon         ;Must follow the prompt
 S10A:
         TSTV       UNKNOWN                  ; GET VAR ADDRESS (Originally CALL VAR = nonexist)
-        TSTB       S10ACONT,oBang           ; Print from another task
-        IND
-        TSTVT      UNKNOWN
+        CALL       FactVarPtrNoTst
+;        TSTB       S10ACONT,oBang           ; Print from another task
+;        IND
+;        TSTVT      UNKNOWN
 
 S10ACONT:
         TSTB       S10A1,oDollar
         INSTR                               ;Move character From tty to AESTK
+        SETR2      tByte
         IJMP       S10A2
 S10A1:
         INNUM                               ;MOVE NUMBER FROM TTY TO AESTK
+        SETR2      tInteger
 S10A2:
         STORE                               ;STORE IT
         TSTB        S11,oComma              ;IS THERE MORE?
@@ -604,7 +661,16 @@ NotKnownStatement:
 ; Process Expresions, precidence is represented by the
 ; various call levels
 ;
-EXPR:
+EXPR:   TSTB        EXPRNEXT,oLeftBracket
+        Call        EXPR
+        TSTB        ExpectBrace,oRightBracket
+        RTN
+
+ExpectBrace:
+        ENDIO
+        ERRMSG      ERR_CLOSINGBRACKET
+
+EXPRNEXT
         TSTB        EXPRLOGS,kNot
 ekNot:
         Call       EXPR
@@ -754,6 +820,20 @@ ekGetch:
         TSTB       UNKNOWNVEC,oRightBracket
         GETCHAR
         RTN
+;
+;====================================================================================
+; addr(variable definition)
+; Returns the address of a variable on top of the stack
+ekAddr
+        TSTB        UNKNOWNVEC,oLeftBracket
+        TSTV        ExpectedVariable
+        CALL        FactVarPtrNoTst
+        TSTB        UNKNOWNVEC,oRightBracket
+        RTN
+
+ExpectedVariable
+       ERRMSG     ERR_SYNTAX      ;Expected Variable
+
 ;====================================================================================
 ; peek(mem address) return the value of a byte in memory
 ; @[offset] return a word value from offset -- see tstv
@@ -952,33 +1032,38 @@ FactVariable:
         CALL        FactVarPTR
         CALL        FactVariableValue
         RTN
-        
+
 FactVarPTR:
+        SETR2       tInteger
         TSTV        F1
+
+FactVarPtrNoTst
         TSTB        F2CLocalTask,oBang
         IND                                       ; we just got a pid
         TSTVT       UNKNOWNID                     ; if it is not another variabe then error, Call test var. task
 
 F2CLocalTask:
-
+        SETR2       tInteger                      ; Sets the default type to integer
         TSTB        F2INTEGER,oDollar             ; Check if this will be a byte array @$[index] or a..z$[index] use a byte array
+        SETR2       tByte
         TSTB        F2PTRLOADED,oLeftSQBracket
         CALL        EXPR
         TSTB        UNKNOWNID,oRightSQBracket
-        SUBSCRIPT   1                             ; Byte type array
-        IJMP        F2PTRLOADED                          ; Get the value to top of stack
+        SUBSCRIPT   tByte                         ; Byte type array
+        SETR2       tByte                         ; Set byte data type
+        RTN
 
 F2INTEGER:
         TSTB        F2PTRLOADED,oLeftSQBracket
         CALL        EXPR
         TSTB        UNKNOWNID,oRightSQBracket
-        SUBSCRIPT   0                             ; Integer type array
-        
+        SUBSCRIPT   tInteger                      ; Integer type array
+        SETR2       tInteger                      ; Set word datatype
 F2PTRLOADED:
         RTN
-        
+
 FactVariableValue
-        IND                                       ; YES, GET THE VALUE.
+        IND                                       ; YES, GET THE VALUE as word
         RTN
 
 ;=============================================================

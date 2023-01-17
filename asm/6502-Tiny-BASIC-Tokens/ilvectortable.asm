@@ -122,7 +122,10 @@
       dw  iOnGoto       ;103      Branch to table entry based upon buffer value
       dw  iTSTRELOP     ;104      Test relop, push mask onto stack if true, branch otherwise
       dw  iRepeatLine   ;105      Repeat the same line again, start execution from beginning of the same line
-      dw  iTSTBRANCH    ;106      Test for compiled branch, take branch is is, skip two bytes and following integer value(line number) goto, gosub, gofn
+      dw  iTSTBRANCH    ;106      Test for compiled branch, take branch if is, skip two bytes and following integer value(line number) goto, gosub, gofn
       dw  iFastXfer     ;107      move top of stack to curptr
-      dw  iSetTerminal  ;108      Set the Io Treminal to be used by print and input statements
+      dw  iSetTerminal  ;108      Set the Io Terminal to be used by print and input statements
+      dw  iINDB         ;109      fetch a single byte from memory indirect
+      dw  iSetBlock     ;110      Set a block or words or byte to a value 16 bit length
+      dw  iCopyBlock    ;111      Copy a block or memory from one location to another 16 bit length
 

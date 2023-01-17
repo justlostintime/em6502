@@ -11,6 +11,7 @@
 19 Print "       Which are open, which are closed?"
 50 a = task(100)  : Rem Run the optimized solution
 60 b = task(1000) : print "TASK id =";b : Rem The long way
+65 b!a = 1        : rem turn on the spinner
 70 taskw(a,b)
 80 gosub 1200
 90 end
@@ -27,23 +28,39 @@
 1000 Rem Full test of doors long solution
 1002 m = 45056  : Rem the memory location for array
 1010 i=1 : rem initialize memory
-1015 poke(m+i,0) : inc i : if i <= 100 then goto .
+1015 rem poke(m+i,0) : inc i : if i <= 100 then goto .
+1016 @$[i] = 0 : inc i : if i <= 100 then goto .
 
 1020 Rem use logical operators 0=1 false, 0=0 true to flip value true of false
+1025 b = 0
 1028 i = 1
 
 1030 j = i
-1050 poke(M+J,not peek(m+j))
-1060 j=j+i : if j <= 100 goto 1050
+1050 rem poke(M+J,not peek(m+j))
+1055 @$[j] = not @$[j]
+1060 j=j+i : if j <= 100 goto 1055
 
-1080 inc i : if i <= 100 goto 1030
+1080 gosub 2000: inc i : if i <= 100 goto 1030
 1090 return
 
 1200 Rem Print out the result
 1202 m = 45056  : Rem the memory location for array
-1205 ? : ? "100 Doors the full Scan"
+1203 i=1
+1204 ?  "(i=";i;" Val=";$@$[i];") " : inc i : if i <= 100 goto .
+1205 ? 13$;"100 Doors the full Scan"
 1210 i = 1
-1230 if peek(m+i) ? i,
-1240 inc i : if i <= 100 goto 1230
+1230 rem if peek(m+i) ? i,
+1235 if @$[i]   ? i,
+1240 inc i : if i <= 100 goto 1235
 1250 ? "Done"
 1260 return
+
+2000 rem diplay a spinner on the screen
+2010 if a = 0 then return
+2020 inc b : ? 13$;
+2030 if b  = 0 then ? " | " ;: return
+2040 if b  = 1 then ? " / " ;: return
+2050 if b  = 2 then ? "---"; : return
+2060 if b  = 3 then ? " \ "; : b = 0 : return
+2070 return
+

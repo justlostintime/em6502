@@ -830,7 +830,7 @@ dbgBasicStop
                 jsr     SetOutDebugEnd
                 pla
                 tay
-               jmp     iFIN
+                jmp     iFIN
 ;
 ;=====================================================
 ; This is some debug logic which displays the current
@@ -1020,7 +1020,7 @@ iSetTerminal
                 sta   TerminalOutputPort
                 lda   R0+1
                 sta   TerminalOutputPort+1
-                
+
                 jsr   popR0                             ; Process the input io address
                 jsr   CalcSlot
                 lda   R0
@@ -1045,10 +1045,10 @@ CalcSlotLoop:
                 rol     R0+1
                 dex
                 bne     CalcSlotLoop
-                lda     #$E0 
+                lda     #$E0
                 ora     R0+1
                 sta     R0+1
-                pla     
+                pla
                 tax
                 rts
 ;
@@ -1067,21 +1067,21 @@ DebugWrite
 OUTDEBUG
                 .byte   $8D                           ; STA
 TerminalOutputPort
-DEBUGPORT       .word   $E001                         ; Dont check anything just output the byte
+DEBUGPORT       .word   $E021                         ; Dont check anything just output the byte
                 RTS
 
 TerminalRead
 INDEBUG
                 .byte   $AD                           ; LDA
 TerminalStatusPort
-DEBUGPORTSTATUS .word   $E000
+DEBUGPORTSTATUS .word   $E020
 
                 and     #$01
                 beq     INDEBUG
 
                 .byte   $AD                              ; LDA
 TerminalInputPort
-DEBUGPORTIN     .word   $E001
+DEBUGPORTIN     .word   $E021
                 rts
 
 ;======================================================================

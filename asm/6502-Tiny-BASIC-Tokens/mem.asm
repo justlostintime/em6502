@@ -25,14 +25,14 @@
 ;MemR0                  ds       2                 ; source for copy/move/Init
 ;MemR1                  ds       2                 ; Destination for copy/move
 ;=====================================================
-MemInit:        
+MemInit:
                 lda     #FreeMemStart&$FF
                 sta     ProgramStart
                 sta     ProgramEnd
                 lda     #FreeMemStart>>8
                 sta     ProgramStart+1
                 sta     ProgramEnd+1
-                
+
                 jsr     GetSizes
                 jsr     MemFree
                 jsr     MemUsed
@@ -96,3 +96,90 @@ MemUsed:
 ;
                 rts
 ;
+;=====================================================
+; Set a block of memory to a value
+iSetBlock       txa
+                pha
+                jsr     popR0                 ; the address to write to
+                lda     R0
+                sta     dpl
+                lda     R0+1
+                sta     dpl+1
+                jsr     popR1                 ; Number of bytes to write
+                jsr     popR0                 ; Get the value to store into memory
+                jsr     getILByte
+                sta     R2                    ; store the data type into R2
+                cmp     #tInteger
+                beq     memset                ; skip this if we have an integer
+                lda     R0                    ; Revers the order so they can be copied in correct order
+                ldx     R0+1
+                stx     R0
+                sta     R0+1      
+                
+memset
+                ldy     #0                    ; Set for length of block to copy
+                ldx     #0                    ; set for number of block of 256 to copy
+                
+iSetBlockLoop:  lda     R2                    ; Get Datatype
+                cmp     #tByte
+                beq     iSetBlockB
+                
+iSetBlockW:     lda     R0
+                sta     (dpl),y
+                jsr     iSetBlockEnd
+                beq     iSetBlockComplete
+                
+iSetBlockB:     lda     R0+1
+                sta     (dpl),y
+                jsr     iSetBlockEnd
+                bne     iSetBlockLoop
+                
+iSetBlockComplete:
+                pla
+                tax
+                jmp     NextIL
+; 
+; Check if we have reached the end of the initialization/Copy
+;
+iSetBlockEnd    iny
+                bne     iSetBlockEndChk
+                inx
+                inc     dpl+1
+iSetBlockEndChk: 
+                cpy     R1
+                bne     iSetBlockEndExit
+                cpx     R1+1
+iSetBlockEndExit:
+                rts
+;
+;================================================================
+; Copy a block of memory from one location to another
+;
+iCopyBlock      txa
+                pha
+                jsr     popR0           ; get the source address
+                jsr     popR1           ; Destination address
+                lda     R1
+                sta     dpl
+                lda     R1+1
+                sta     dpl+1
+                jsr     popR1           ; Number of bytes to copy
+memcpy
+                ldx     #0
+                ldy     #0
+iCopyBlockLoop:
+                lda     (R0),y          ;  Get the byte to copy
+                sta     (dpl),y         ;  Store the byte 
+                iny
+                bne     iCopyChkEnd
+                inx
+                inc     R0+1
+                inc     dpl+1
+iCopyChkEnd:    cpy     R1
+                bne     iCopyBlockLoop
+                cpx     R1+1
+                bne     iCopyBlockLoop
+iCopyBlockDone:
+                pla
+                tax
+                jmp     NextIL

@@ -453,6 +453,7 @@
     db 94
     db {1}               ; R2 is only one byte
     endm
+
 ;Move stack top to temp
   Macro STK2TMP
    db  95
@@ -516,9 +517,28 @@
   Macro FASTXFER
     db 107
     endm
+
 ; Set all io to to a terminal for input output
-; SETTERMINAL outterm,interm    ; the numbers corrispond to the ct65 slot number each slot id 16 bytes, 
+; SETTERMINAL outterm,interm    ; the numbers corrispond to the ct65 slot number each slot id 16 bytes,
 ; so 0 = 0, 1 = io address 16, 2 = io address 32 .... etc
   Macro SETTERMINAL
     db 108
     endm
+
+;Fetch a single byte from memory
+  Macro INDB
+    db 109
+    endm
+
+; Set a block of memory to a fixed value, byte or word
+; Stack must contain destiniation address, length to set in bytes, value {byte of word} to initialize to
+  Macro SETBLOCK
+    db 110
+    db {1}              ; the data type to initialize  tByte or tInteger
+  endm
+
+; Copy a block of memory
+; Stack must contain source address, destination address, length in bytes
+  Macro COPYBLOCK
+    db 111
+  endm

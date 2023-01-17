@@ -19,6 +19,7 @@ tArray            equ     $A3                    ; Identifies Array Type, the by
                                                  ; Arrays of string are arrays of pointers 2 bytes
 tPointer          equ     $A4                    ; Pointer to another variable
 tIndirect         equ     $A6                    ; Points to an address that points to the data
+tUint             equ     $A7                    ; unsigned integer type
 
 Operators: BYTE "<>"
            BYTE "<="
@@ -122,14 +123,18 @@ kSave        equ     kExit+1
 kLoad        equ     kSave+1
 kErase       equ     kLoad+1
 kDir         equ     kErase+1
+kSetTerm     equ     kDir+1
+kSetMemB     equ     kSetTerm+1
+kSetMemW     equ     kSetMemB+1
+kCopyMem     equ     kSetMemW+1
 ;
 ; End of actual key words
 ;
-kKeyCount    equ     kDir-kBeginKey
+kKeyCount    equ     kCopyMem-kBeginKey
 ;
 ; Logical operators
 ;
-kNot         equ     kDir+1
+kNot         equ     kCopyMem+1
 kOr          equ     kNot+1
 kXor         equ     kOr+1
 kAnd         equ     kXor+1
@@ -156,11 +161,12 @@ kAbs         equ     kStat+1
 kCall        equ     kAbs+1
 kGofn        equ     kCall+1
 kPid         equ     kGofn+1
+kAddr        equ     kPid+1
 ;
-kFuncCount   equ     ((kPid - kBeginFunc) + 1)
+kFuncCount   equ     ((kAddr - kBeginFunc) + 1)
 
 ;
-; Keyword table contains 49 keywords
+; Keyword table contains 54 keywords
 KeyWordTable:
              db     kLet,"leT"                        ; 1, we only have 0 at end of program or line
              db     kInc,"inC"
@@ -197,6 +203,10 @@ KeyWordTable:
             db      kIreturn,"ireT"
             db      kReturn,"reT"
             db      kPrint,"pR"                        ; some dialects of tiny basic use this for print
+            db      kSetTerm, "setterM"
+            db      kSetMemB, "setmemB"
+            db      kSetMemW, "setmemW"
+            db      kCopyMem, "copymeM"
 
 ;Logical and truth operators
              db     kNot,"noT"
@@ -222,6 +232,7 @@ KeyWordTable:
              db     kCall,"calL"
              db     kGofn,"gofN"
              db     kPid,"piD"
+             db     kAddr,"addR"
              db     0,0
 
 KeyWordTableEnd      equ      *

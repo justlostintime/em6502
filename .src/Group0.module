@@ -379,7 +379,7 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
   Grp0Case71:'$E4 CPX zpg
     .ZeroPage()
     .ReadByte()
-    .Compare()
+    .Compare(.X)               'Bug fix , missing parameter 01-17-2023
     Return
 
   Grp0Case72:'$E8 INX impl

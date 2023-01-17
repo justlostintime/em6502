@@ -1,0 +1,54 @@
+10 rem Sieve of Eratosthenes, Calculate primes from 2 to n
+20 input " Enter highest number ";n
+30  rem using the following method to calculate the Sieve
+40  rem (a) List all integers from 2 to n
+50  rem (b) The first integer on the list is 2
+60  rem     and it is prime. Mark out all multiples of 2
+70  rem     that are bigger than 3 because they are composite.
+80  rem     We do not have to compute anything, as we can simply mark
+90  rem     out every second number starting at 2
+100 rem (c) The next integer on the list that is not marked out is 3, and it is prime.
+101 rem     Mark out all multiples of 3 that are bigger than 3 because they are composite.
+102 rem     (Note that some of these, such as 6, will already be marked out).
+102 rem     We do not have to compute anything, as we can simply mark out every third number starting at 3
+103 rem (d) The next integer on the list that is not marked out is 5, and it is prime.
+104 rem     Mark out all multiples of 5 that are bigger than 5 because they are composite.
+105 rem     We do not have to compute anything, as we can simply mark out every fifth number starting at 5
+106 rem (e) Continue in this way until there is no next integer on the list that is not marked out.
+107 rem     The integers that are not marked out are all of the primes up to (and possibly including) n.
+
+200 rem initialize storage
+210 b = 2
+220 @$[b] = 1 
+230 inc b : if b > n goto 300
+240 if b % 2 = 0 then @$[b] = 0 : goto 230
+250 goto 220
+
+
+300 print "Begin scan loop through from 2 to ";n;" and mark numbers, cleared ";b
+320 a = 3 : b = 6
+
+330 @$[b] = 0 : b = b + a : if b <= n goto .
+350 inc a : if (a > n or a+a > n )  goto 390
+360 if @$[a] = 0 goto 350
+370 b = a + a : goto 330
+
+390 print "Completed scan"
+
+400 Rem now print out the results
+405 gosub 1000
+410 a = 2
+420 if @$[a] = 1 print a, : inc c
+430 inc a : if a <= n goto 420
+440 print : print "Found ";c;" Primes"
+450 end
+
+500 print "b <= a! ";b;"<=";a
+510 rem gosub 1000
+520 end
+
+1000 rem dump the table
+1010 g = 2
+1020 print @$[g];" ";:inc g : if g <= n goto .
+1030 print
+1040 return
