@@ -5,7 +5,8 @@
 ; a,x returns or provides the low hi bytes of the managed addresses
 ; This uses the programend, to memory end as the area to manage
 ;===================================================================
-              Seg Code
+          Seg.u  TBData
+;
 ;=====================================================
 ;Pointers for memory Management
 ;Allocated block are not chained but can be followed for all memory by the associated length
@@ -18,12 +19,12 @@
 ; Memory is recombined as it is released
 ; The memory manager is not interupted durring allocation
 ; or freeing of memory
-; Memory is allocated from the highest memory address towards
-; the lowest memory address. meeting the Basic program end.
 ;====================================================
-;MemFreeList            ds       2                 ; list of free blocks of memory, points to first block
-;MemR0                  ds       2                 ; source for copy/move/Init
-;MemR1                  ds       2                 ; Destination for copy/move
+MemFreeList            ds       2                 ; list of free blocks of memory
+MemR0                  ds       2                 ; source for copy/move/Init
+MemR1                  ds       2                 ; Destination for copy/move
+;=====================================================
+              Seg Code
 ;=====================================================
 MemInit:
                 lda     #FreeMemStart&$FF
@@ -100,6 +101,8 @@ MemUsed:
 ; Set a block of memory to a value
 iSetBlock       txa
                 pha
+                tya
+                pha
                 jsr     popR0                 ; the address to write to
                 lda     R0
                 sta     dpl
@@ -114,38 +117,40 @@ iSetBlock       txa
                 lda     R0                    ; Revers the order so they can be copied in correct order
                 ldx     R0+1
                 stx     R0
-                sta     R0+1      
-                
+                sta     R0+1
+
 memset
                 ldy     #0                    ; Set for length of block to copy
                 ldx     #0                    ; set for number of block of 256 to copy
-                
+
 iSetBlockLoop:  lda     R2                    ; Get Datatype
                 cmp     #tByte
                 beq     iSetBlockB
-                
+
 iSetBlockW:     lda     R0
                 sta     (dpl),y
                 jsr     iSetBlockEnd
                 beq     iSetBlockComplete
-                
+
 iSetBlockB:     lda     R0+1
                 sta     (dpl),y
                 jsr     iSetBlockEnd
                 bne     iSetBlockLoop
-                
+
 iSetBlockComplete:
+                pla
+                tay
                 pla
                 tax
                 jmp     NextIL
-; 
+;
 ; Check if we have reached the end of the initialization/Copy
 ;
 iSetBlockEnd    iny
                 bne     iSetBlockEndChk
                 inx
                 inc     dpl+1
-iSetBlockEndChk: 
+iSetBlockEndChk:
                 cpy     R1
                 bne     iSetBlockEndExit
                 cpx     R1+1
@@ -156,6 +161,8 @@ iSetBlockEndExit:
 ; Copy a block of memory from one location to another
 ;
 iCopyBlock      txa
+                pha
+                tya
                 pha
                 jsr     popR0           ; get the source address
                 jsr     popR1           ; Destination address
@@ -169,7 +176,7 @@ memcpy
                 ldy     #0
 iCopyBlockLoop:
                 lda     (R0),y          ;  Get the byte to copy
-                sta     (dpl),y         ;  Store the byte 
+                sta     (dpl),y         ;  Store the byte
                 iny
                 bne     iCopyChkEnd
                 inx
@@ -181,5 +188,64 @@ iCopyChkEnd:    cpy     R1
                 bne     iCopyBlockLoop
 iCopyBlockDone:
                 pla
+                tay
+                pla
                 tax
                 jmp     NextIL
+;
+;=============================================================================
+; Compare memory block location
+; returns on the stack
+; 0 - equals
+; -1 - s1  <  s2
+; 1   s1  >  s2
+iCmpBlock       txa
+                pha
+                tya
+                pha
+                jsr     popR1              ; Get the Source 2 pointer
+                lda     R1
+                sta     dpl                ; store the secon source in dpl
+                lda     R1+1
+                sta     dpl+1
+                jsr     popR0              ; Get the Source 1 pointer
+                jsr     popR1              ; Get the length of the compare to do
+                ldy     #0
+                ldx     #0
+                jmp     iCmpCheckEnd
+
+iCmpLoop:       lda     (dpl),y
+                cmp     (R0),y
+                bne     iCmpDone
+                iny
+                bne     iCmpCheckEnd
+                inx
+iCmpCheckEnd:
+                cpy     R1
+                bne     iCmpLoop
+                cpx     R1+1
+                bne     iCmpLoop
+                lda     0
+                sta     R0+1
+                sta     R0
+iCmpReturn:
+                pla
+                tay
+                pla
+                tax
+                jmp     pushR0nextIl
+
+iCmpDone:
+                bcc     iCmpGreater
+iCmpLess:
+                lda     #0
+                sta     R0+1
+                lda     #1
+                sta     R0
+                bne     iCmpReturn
+iCmpGreater:
+                lda     #-1
+                sta     R0
+                sta     R0+1
+                bne     iCmpReturn
+

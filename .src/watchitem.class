@@ -9,6 +9,7 @@
 Fast Unsafe
 
 Public Address As String = "0000"
+Public Ending As String = "0000"
 Public Symbol As String = "Symbol"
 Public DisplayData As String = ""
 Public DisplayRow As Integer = 0
@@ -18,12 +19,13 @@ Event updaterow(RowNumber As Integer, DisplayInfo As String)
 
 Public Sub _new(SymbolName As String, StartAddress As String, RowNumber As Integer, Optional length As Integer = 2)
 
+  Address = Right("0000" & StartAddress, 4)                                   ' Fix the format as 4 digits
+  Ending = Hex(Eval("&H0" & StartAddress) + length - 1, 8)
   Dim EndAddress As Long = Eval("&H0" & StartAddress) + length - 1
-
-  Address = StartAddress
   DisplayRow = RowNumber
   MemLength = length
   Symbol = SymbolName
+
 
   Fmain.MyComputer.MonitorList.Add([Eval("&H0" & StartAddress), EndAddress], StartAddress)
   Fmain.MemoryMonitors.Add(Me, StartAddress)

@@ -216,7 +216,7 @@ PrtPrgString                                  ; Print a terminated string from t
                 sta     PrtFrom+1
                 jmp     PrtLoop
 
-; Print a string pointed to by x= h, y=l terminated by a
+; Print a string pointed to by x= h, y=l terminated by value in  accumulator
 ; Return y as the length
 
 PrtStr          stx      PrtFrom+1
@@ -234,7 +234,7 @@ PrtLoop         lda     (PrtFrom),y
                 jsr     VOUTCH
                 iny
                 jmp     PrtLoop
-PrtEnd          iny                           ;return byte after the copy
+PrtEnd          iny                           ;return byte after the write
                 rts
 
 ;

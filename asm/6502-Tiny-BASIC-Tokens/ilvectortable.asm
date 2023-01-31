@@ -128,4 +128,6 @@
       dw  iINDB         ;109      fetch a single byte from memory indirect
       dw  iSetBlock     ;110      Set a block or words or byte to a value 16 bit length
       dw  iCopyBlock    ;111      Copy a block or memory from one location to another 16 bit length
+      dw  iCmpBlock     ;112      Compare to parts of memory
+      dw  iShift        ;113      Shift left 0 or right 1
 

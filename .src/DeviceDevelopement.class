@@ -55,19 +55,19 @@ Public Sub Form_Close()
   Endif
 
   Settings["devEditor/lastfile"] = CurrentFile
-  Settings["deveditor/Top"] = DeviceDevelopement.Top
-  Settings["deveditor/left"] = DeviceDevelopement.Left
-  Settings["deveditor/width"] = DeviceDevelopement.Width
-  Settings["deveditor/height"] = DeviceDevelopement.Height
+  Settings["devEditor/top"] = DeviceDevelopement.Top
+  Settings["devEditor/left"] = DeviceDevelopement.Left
+  Settings["devEditor/width"] = DeviceDevelopement.Width
+  Settings["devEditor/height"] = DeviceDevelopement.Height
 
 End
 
 Public Sub Form_Open()
 
-  DeviceDevelopement.Top = Settings["deveditor/Top", DeviceDevelopement.Top]
-  DeviceDevelopement.Left = Settings["deveditor/left", DeviceDevelopement.Left]
-  DeviceDevelopement.Width = Settings["deveditor/width", DeviceDevelopement.Width]
-  DeviceDevelopement.Height = Settings["deveditor/height", DeviceDevelopement.Height]
+  DeviceDevelopement.Top = Settings["devEditor/top", DeviceDevelopement.Top]
+  DeviceDevelopement.Left = Settings["devEditor/left", DeviceDevelopement.Left]
+  DeviceDevelopement.Width = Settings["devEditor/width", DeviceDevelopement.Width]
+  DeviceDevelopement.Height = Settings["devEditor/height", DeviceDevelopement.Height]
   CurrentFile = Settings["devEditor/lastfile"]
   Me.title = "6502 Device Editor - " & CurrentFile
   If currentfile <> "" Then

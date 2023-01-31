@@ -30,7 +30,7 @@ Public Sub _init()
 
   $Version = "1.0.1"
   source = Split(File.Load("6502.inst"), "\n", "", True, True)
-
+  SymbolsByName.default = "10000"
   AddressModes.default = False
   While CurrentIndex < source.Count
     If source[CurrentIndex][0] = "#" Then   ' check for comment

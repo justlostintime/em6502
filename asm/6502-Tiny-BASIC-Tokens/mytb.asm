@@ -78,7 +78,7 @@ TRUE            equ     ~FALSE
 KIM             equ     FALSE           ;Basic KIM-1, no extensions
 XKIM            equ     FALSE           ;Corsham Tech xKIM monitor
 CTMON65         equ     TRUE            ;Corsham Tech CTMON65
-
+IL_DEBUG_TEXT   equ     TRUE            ;Print out as text IL instructions
 ;
 ;   Need to define some macros for the dasm assembler
 ;
@@ -106,18 +106,28 @@ ILTRACE           equ      %00000000  ;%0100000 = Basic STMT Trace, %10000000 = 
 ; meant only for debugging.
 ;
 FIXED             equ     FALSE
+
+terminalIOblockLen equ   [TerminalIOblockEnd - TerminalIOblock]
+
 ;
 ; Sets the arithmetic stack depth.  This is *TINY*
 ; BASIC, so keep this small!
 ;
 MATHSTACKSIZE     equ     20      ;number of entries in math stack
-ILSTACKSIZE       equ     20      ;number of entries in ilstack
+ILSTACKSIZE       equ     50      ;number of entries in ilstack
 GOSUBSTACKSIZE    equ     16      ;Depth of gosub/For-Next nesting max is 64 times TASKTABLE LENGTH must < 256
-VARIABLESSIZE     equ     27      ;26 variables + 1 for exit code
+VARIABLESSIZE     equ     37      ;26 variables + 1 for exit code + 10 entries (20bytes) for ioblock
 TASKCOUNT         equ     10      ;Task Table count, up to 10 tasks
 TASKCYCLESDEFAULT equ     255     ;Default Task Switch 0-255 uses a single byte
 TASKCYCLESHIGH    equ     2       ;hi order count
 MESSAGESMAX       equ     GOSUBSTACKSIZE      ;Not used msg q and gosub grow towards each other and over flow when they meet
+
+taskSTDIN           equ     [[VARIABLESSIZE - 10]*2]       ;io vector
+taskSTDOUT          equ     [[[VARIABLESSIZE - 10]*2]+2]   ;io vector
+
+taskIOinPort        equ     [[[VARIABLESSIZE - 10]*2]+4+5]   ;Offset into the ioblock
+taskIOoutPort       equ     [[[VARIABLESSIZE - 10]*2]+4+1]   ;Offset into the ioblock
+taskIOstatusPort    equ     [[[VARIABLESSIZE - 10]*2]+4+12]   ;Offset into the ioblock
 ;
 ; Gosub entry types
 
@@ -150,8 +160,8 @@ DOLLAR          equ     '$
 ;
 ERR_NONE                equ     0       ;No Errror
 ERR_EXPR                equ     1       ;expression error
-ERR_UNDER               equ     2       ;stack underflow
-ERR_OVER                equ     3       ;stack overflow
+ERR_UNDER               equ     2       ;The Math stack underflow
+ERR_OVER                equ     3       ;The Math stack overflow
 ERR_EXTRA_STUFF         equ     4       ;Stuff at end of line
 ERR_SYNTAX              equ     5       ;various syntax errors
 ERR_DIVIDE_ZERO         equ     6       ;divide by zero
@@ -160,7 +170,7 @@ ERR_WRITE_FAIL          equ     8       ;error saving file
 ERR_NO_FILENAME         equ     9       ;Forgot to include the file name
 ERR_FILE_NOT_FOUND      equ     10      ;The file name provided not found
 ERR_STACK_UNDER_FLOW    equ     11      ;the gosub stack underflow
-ERR_STACK_OVER_FLOW     equ     12      ;Stack overflow
+ERR_STACK_OVER_FLOW     equ     12      ;the gosub Stack overflow
 ERR_BAD_LINE_NUMBER     equ     13      ;Bad line number specified Not found
 ERR_NO_EMPTY_TASK_SLOT  equ     14      ;Unable to create a new task no/slots
 ERR_INDEX_OUT_OF_RANGE  equ     15      ;Subscript out of range
@@ -172,7 +182,9 @@ ERR_LINE_NOT_FOUND      equ     20      ;Gosub/goto/gofn line number not found
 ERR_IL_STACK_OVER_FLOW  equ     21      ;The IL return stack has overflowed
 ERR_EXPECTVAR           equ     22      ;Expected a variable name or definition
 ERR_CLOSINGBRACKET      equ     23      ;Expected a closing bracket
-ERR_MISSINGEQUALSIGN     equ     24      ;Expected an equal sign for assignment
+ERR_MISSINGEQUALSIGN     equ     24     ;Expected an equal sign for assignment
+ERR_FUNCTION_EXPECTED_PARAMETERS equ 25 ;Function expected parameters
+ERR_EXPECTED_OPENING_BRACKET  equ 26   ;Expected opening bracket [ or (
 ;
 ;=====================================================
 ; Zero page storage.
@@ -207,7 +219,7 @@ MATHSTACKPTR            ds      1
 MATHSTACKPTRPOS         equ     MATHSTACKPTR - CONTEXT + 1
 
 GOSUBSTACK              ds      2                         ; pointer to gosub stack
-GOSUBSTKPOS             equ     GOSUBSTACK - CONTEXT +1   ; Get the offset to the gosub/msg stack
+GOSUBSTKPOS             equ     GOSUBSTACK - CONTEXT + 1  ; Get the offset to the gosub/msg stack
 
 
 GOSUBSTACKPTR           ds      1                         ; current offset in the stack, moved to task table
@@ -258,23 +270,7 @@ FROM                    ds      2       ;Used for basic prog insert/remove
 ; TO PRINT A GENERIC STRING X,Y ADDRESS, Ac = TERMINATOR
 ;
 PrtFrom                 ds      2      ; FROM
-;
-;=====================================================
-;Pointers for memory Management
-;Allocated block are not chained but can be followed for all memory by the associated length
-; Mem block format is
-;       0-1   pointer to next block for free blocks
-;       0-1   for allocated blocks
-;         0   type of block, blob | array bytes, ints ,string | single type byte or integer
-;         1   refrence counter ... lol only up to 256 but it is something
-;       2-3   length constant for exevy type of memory block
-; Memory is recombined as it is released
-; The memory manager is not interupted durring allocation
-; or freeing of memory
-;====================================================
-MemFreeList            ds       2                 ; list of free blocks of memory
-MemR0                  ds       2                 ; source for copy/move/Init
-MemR1                  ds       2                 ; Destination for copy/move
+
 ;
 ;=====================================================
 ;
@@ -337,7 +333,7 @@ calcstack       lda     #1
                 sta     taskCounter                 ; Initialize number of tasks to 1
                 lda     #TASKACTIVE                 ; bit 7 is set
                 sta     taskTable                   ; mark the main task as active
-                jsr     taskSetStacks               ; setup all the task stacks/Variables
+                jsr     taskSetStacks               ; setup all the task stacks/Variables, Init task io block
                 lda     #IL&$ff
                 sta     ILPC
                 lda     #IL>>8
@@ -371,17 +367,6 @@ calcstack       lda     #1
                 sta     IRQvec+1
                 jmp     coldtwo
 
-;
-; This is the Basic IRQ handler
-ServiceIrq      pha
-                lda     IRQStatus
-                BEQ     RetIrq
-                lda     IRQPending
-                bne     RetIrq
-                lda     #1
-                sta     IRQPending
-RetIrq          pla
-                rti
 ;
 ;
 ; This is the warm start entry point
@@ -512,6 +497,7 @@ ILgood          tay                    ;move index into Y
 ILTBL
          include "ilvectortable.asm"
 ILTBLend	equ	*
+
 ;
 ;=====================================================
 ;=====================================================
@@ -552,8 +538,9 @@ iINIT           lda     #0                           ; clear IL stack pointer,go
 ; This initializes for the start of the next line of
 ; BASIC text.
 ;
-iXINIT          sei                          ;ensure interupts are off
-                jsr       taskReset          ;Clear the task table
+iXINIT          sei                          ; ensure interupts are off
+                jsr       taskReset          ; Clear the task table
+                lda       #0                 ; Clear the irq flags
                 sta       IRQPending         ; reset the irq pending
                 sta       IRQStatus          ; Make sure irqs are off
 
@@ -750,7 +737,7 @@ iTmp2Stk        ldy     #TASKEXITCODE
                 jmp     NextIL
 ;
 ;=====================================================
-; Pop the next line from the call stack.
+; Pop the next line from the call stack. IRQ return
 ;
 iRET            jsr     popLN
                 bcs     iSAVErr
@@ -760,60 +747,6 @@ iRET            jsr     popLN
                 sta     IRQPending
                 cli
                 jmp     NextIL
-;
-;=====================================================
-; On entry il, branch to if function
-;          il+1, value to be returned or not true or false
-;
-; Return from GOSUB function
-;
-iRSTR           jsr     getILByte             ; get where to go if gosub is a fucntion
-                sta     offset
-                jsr     saveIL                ; for later jump if needed
-
-                jsr     popLN                 ; get the next item from the stack into curptr and curroff, returns call type func or stmt
-                sta     R1                    ; keep the type of call returning from
-                bcs     iRSTRErr              ; stack underflow error possible
-
-                jsr     getILByte             ; get if a value is being returned
-                pha                           ; save if a value was passed to be returned
-                cmp     #0                    ; yes attemping to return a value
-                beq     iRSTRPOP              ; no value to return
-                jsr     popR0                 ; Get the value from the stack save if needed
-iRSTRPOP:
-                jsr     PopMathStackNow       ; adjust the stack frame from the call
-                lda     R1                    ; called as a statement ?
-                cmp     #GOSUB_RTN            ; Called as a statement
-                beq     iRSTRExit
-                pla                           ; get back if value returned or not
-                cmp     #1                    ; we have a value to return
-                beq     iRSTRVALUE
-
-                ldx     #ERR_NO_RETURN_VALUE_PROVIDED         ; well no value provided and we need one
-                bne     iSAVErr2
-
-iRSTRVALUE:
-                jsr     pushR0                ; return value back to top of stack
-                jsr     restoreIL             ; get the correct il
-                jmp     tstBranch             ; And called as a function
-
-iRSTRExit:
-                pla                           ; throw away the return value if provided
-                jmp     NextIL
-
-iRSTRNORETURNVALUE:
-
-
-iRSTRErr        lda     taskPtr               ; Check if this is task zero
-                beq     taskZeroEnd           ; this is task zero just stop with error
-                lda     MQ
-                bne     taskRet
-                jsr     pushFalse             ; the result code by default is 0
-taskRet:
-                jmp     iETask                ; not task zero then do a task end instead
-taskZeroEnd
-                ldx     #ERR_STACK_UNDER_FLOW
-                jmp     iSAVErr2
 ;
 ;=====================================================
 ; Compare items on stack.  Okay, so on input there are
@@ -1009,7 +942,11 @@ iFIN            lda     #0
 ; if we're in run mode, print the line number.  Stop
 ; program execution and return to the initial state.
 ;
-iERR            jsr     getILWord       ;get err code
+iERR            lda   taskIOPending
+                beq   iErrNext
+                dec   taskIOPending
+
+iErrNext:       jsr     getILWord       ;get err code
                 jsr     DisplayError
                 jmp     iErrComplete
 ;
@@ -1224,7 +1161,7 @@ divloop
                 inc     R0              ;and INCrement result cause divisor fit in 1 times
 
 skip            dex
-                bne     divloop 
+                bne     divloop
                 rts
 ;
 ; Indicate divide-by-zero error
@@ -1287,74 +1224,96 @@ iINDC
 ;=====================================================
 ; Check which type of index to use byte or word and jmp to correct
 ; function
-iArray
-                jsr    getILByte
-                cmp    #tInteger
-                beq    iArrayW
-;
-;=====================================================
-; Get from Byte array not Integer array
-iArrayB
+iArray          tya
+                pha
+
                 jsr     popR0             ; Get the array index
                 jsr     popR1             ; Get the Variable address
-                jmp     iArrayAll         ; It will be a byte value
 
+                jsr    getILByte          ; Get type of number to process
+                cmp    #GOSUB_RTN_VALUE   ; Are we testing a valid parameter
+                beq    iArrayFNparm       ; process a fn pramater index
+
+                and    #$FE               ; Turn off the unsigned bit
+                cmp    #tByte             ; Test for a byte index
+                beq    iArrayB            ; yes so branch to process a byte
+;=====================================================
+; Process 32 bit index into memory
+iArrayL         cmp     #tLong            ; Are we working with 32 bit integers
+                bne     iArrayW           ; Process with sigle shift
+                asl     R0                ; Do the multiply by 2
+                rol     R0+1              ; Indexes can by up to max memory
+                bcs     iArrayError       ; if the carry is set we have an error
 ;=====================================================
 ; Get the array index from top of stack get Current variable
 ; address from next on stack, add the offset
 ; push the result back onto the stack
-iArrayW
-                jsr     popR0             ; Get the array index
-                jsr     popR1             ; Get the Variable address
-
-                clc                       ; Multiplythe value by 2
-                rol     R0                ; Do the multiply
+iArrayW                                   ; pointers, arrays etc all use 16 bit unsigned integers
+                asl     R0                ; Do the multiply by 2
                 rol     R0+1              ; Indexes can by up to max memory
-iArrayAll:
+                bcs     iArrayError       ; if the carry is set we have an error
+
+;=====================================================
+; Get from Byte array not Integer array
+iArrayB:
                 clc
-                lda     R1                ; Add the index onto the variable pointer
+                lda     R1                    ; Add the index onto the variable pointer
                 adc     R0
                 sta     R0
                 lda     R1+1
                 adc     R0+1
-                sta     R0+1              ; the new Variable Addressis  stored in R0
+                sta     R0+1                  ; The new Variable Address is stored in R0
+                lda     R1+1
+                cmp     ProgramEnd+1          ; lets check if we are processing an @ buffer pointer to free memory
+                bne     iArrayCheckVar
+iArrayExit:
                 jsr     pushR0            ; Push R0 assume it is correct
 
-                lda     R1                ; Check if we are processing a VARIABLE A-Z
-                cmp     VARIABLES         ; So is this the @ pointer
-                bne     iArrayAtTest      ; if they want to use the memory then good luck
-                lda     R1+1
-                cmp     VARIABLES+1
-                bne     iArrayAtTest
-                clc
-                lda     #52                ; add the max offset that is valid
-                adc     R1                 ; update to be the largest offset that is valid
-                sta     R1
-                lda     #0
-                adc     R1+1
-                sta     R1+1
-iArrayVerify                               ; try to enforce some sanity to using arrays
-                lda     R0+1
-                cmp     R1+1
-                bne     iArrayDecide
-                lda     R0
-                cmp     R1
-iArrayDecide
-                bcs     iArrayError        ; is the new value greater than the end
+                pla
+                tay
                 jmp     NextIL
-
-iArrayAtTest
-                lda     HighMem
-                sta     R1
-                lda     HighMem+1
-                sta     R1+1
-                bne     iArrayVerify       ; The high byte of address is never 0
+; Check for valis variable and valid index to use
+iArrayCheckVar: lda     VARIABLES
+                clc
+                adc     #[25*2]+1          ; the number of actual variable valid bytes
+                sta     MQ                 ; mq contains the last valid byte we can use
+                lda     #0
+                adc     VARIABLES+1        ; Memory past last word R0+1 > A then invalid
+                cmp     R0+1
+                bcc     iArrayError
+                lda     R0                 ; a > m invalid past last byte of variable area
+                cmp     MQ
+                beq     iArrayExit         ; If it is equal then it is valid
+                bcc     iArrayExit         ; if it is less it is valid
 
 ; Get here if array index is out of range
-iArrayError     jsr     popR0
+iArrayError     pla
+                tya
                 lda     #0
                 ldx     #ERR_INDEX_OUT_OF_RANGE
                 jmp     iErr2
+;=====================================================
+; Verify function paramater index is valid
+iArrayFNparm:   jsr    GosubFindParms       ; Get a pointer to the current functions parameter list info
+                bcc    iArrayError          ; There are no paramters for this call, should never be true
+                dey
+                dey                         ; Points to parameter count
+                lda     R0                  ; get parm to be accessed
+                cmp     (GOSUBSTACK),y      ; compare to max number allowed
+                bcs     iArrayError         ; the parameter index should be less than the count
+                cmp     #0
+                beq     iArrayExit          ; Skip the rest if index is zero
+                asl     R0                  ; Do the multiply by 2
+                rol     R0+1
+
+                clc
+                lda     R1                  ; Add the index onto the variable pointer
+                adc     R0
+                sta     R0
+                lda     R1+1
+                adc     R0+1
+                sta     R0+1                ; The new Variable Address is stored in R0
+                jmp     iArrayExit          ; Get ot we are done
 ;
 ;=====================================================
 ; List the current BASIC program in memory.  Uses R0,
@@ -1620,7 +1579,11 @@ iNLINE          jsr     CRLF                ;user supplied sub
 ;
 iCALL         jsr   pushILPC                    ;save ILPC
               bcc   iJMP
-              jmp   ErrStkOver                  ; Check if there was an error
+
+;If the push failed not enough stack space
+ErrILStkOver    ldx     #ERR_IL_STACK_OVER_FLOW          ; Flag any error in line number
+                lda     #0                               ; stop the execution
+                jmp     iErr2
 ;
 ; Jmp to a specific location in the IL code.  The new
 ; address immediately follows the opcode.
@@ -1650,6 +1613,7 @@ iLIT            jsr     getILWord
 ;
 ;=====================================================
 ; Initialize all variables for a single task.  Ie, set to zero.
+; And internal stack pointers
 ;
 subVINIT        tya
                 pha
@@ -1660,13 +1624,18 @@ Vinit2          sta     (VARIABLES),y
                 iny
                 cpy     #[[VARIABLESSIZE * 2] - 2]                     ; skip the old exit code
                 bcc     Vinit2
+                sta     MATHSTACKPTR                                   ; Clear the math stack
+                sta     GOSUBSTACKPTR                                  ; Clear the gosub stack
+                lda     #[[GOSUBSTACKSIZE - 2] * 4]                    ; Reset the message queue
+                STA     MESSAGEPTR
 
                 pla
                 tay
                 rts
 
-iVINIT          jsr     Compile                 ; compile line numbers to memory pointers
+iVINIT
                 jsr     subVINIT
+                jsr     Compile                                        ; compile line numbers to memory pointers
                 jmp     NextIL
 ;
 ;=====================================================
@@ -1970,14 +1939,39 @@ iTSTVat
 
 ; When we get parameters passed we can access them using the # variable with[]
 ; example #[0] #[1] etc, we dont check yet if there is too many
-iTSTVParm
-                iny
-                sty     CUROFF                 ;it is a valid variable
+iTSTVParm       iny
+                sty    CUROFF                 ;it is a valid variable
+
+; upon return the y register  point to the gosub Parms entry value entry
+                jsr    GosubFindParms
+                bcc    iTSTMissingParms
+
+                dey
+                dey
+                dey                            ;Point to the actual index of first parameter in math stack
+
                 lda     MATHSTACK
                 sta     R0
                 lda     MATHSTACK+1
                 sta     R0+1
+                lda     (GOSUBSTACK),y          ; Get the correct Offset to start of parameters
+                beq     iTSTVindex0             ; no math if no offset
+                clc
+                adc     R0                      ; Point to the actual address that the variables start, not just top of stack
+                sta     R0
+                lda     #0
+                adc     R0+1
+                sta     R0+1
+iTSTVindex0:
+                lda     #GOSUB_RTN_VALUE
+                sta     R2                      ; Set the data type as a parameter to a function
                 jmp     pushR0nextIl
+
+
+iTSTMissingParms
+                lda     #0
+                ldx     #ERR_FUNCTION_EXPECTED_PARAMETERS
+                jmp     iErr2
 
 ;
 ;=====================================================
@@ -2110,15 +2104,13 @@ tstBothDone
 ;
 iTstIrq         jsr     getILByte      ; get the offset to next instruction when not in irq
                 sta     offset         ; Store the not true jump address offset
-                jsr     BreakSet       ; Check if the escape key was pressed
-                bne     irqNo          ; z not set of no break found
-                jmp     iFIN           ; Exit out of run mode
-irqNo           lda     IRQPending
-                beq     tstBranch
+irqNo           lda     IRQPending     ; Check if the pending value is set
+                beq     tstBreak       ; if no irq then check for an escape key pressed
                 cmp     #1             ; only do this if set to first time
-                bne     tstBranch
+                bne     tstBreak       ; We are in a irq service already
+iTSTProcessIRQ:
                 sei                    ; disable the interupt until ireturn resets it
-irqbrk          inc     IRQPending     ; Set the pending to 2, so this ignores it, iret sets it to 0
+                inc     IRQPending     ; Set the pending to 2, so this ignores it, iret sets it to 0
                 lda     #GOSUB_RTN     ; Save as gosub
                 jsr     pushLN         ; Push the next line to be executed
                 bcs     ErrStkOver     ; Check if there was an error
@@ -2130,8 +2122,16 @@ irqbrk          inc     IRQPending     ; Set the pending to 2, so this ignores i
                 sta     CUROFF
                 jmp     NextIL         ; Execute the next instruction should jmp statement
 
+tstBreak
+                jsr     BreakSet       ; Check if the escape key was pressed
+                bne     tstBranch      ; z not set of no break found
+                lda     taskIOPending
+                beq     tstBrkComplete
+                dec     taskIOPending
+tstBrkComplete  jmp     iFIN           ; Exit out of run mode
+
 ErrStkOver      ldx     #ERR_STACK_OVER_FLOW          ; Flag any error in line number
-                lda     #0             ; stop the execution
+                lda     #0                            ; stop the execution
                 jmp     iErr2
 ;
 
@@ -2140,8 +2140,7 @@ ErrStkOver      ldx     #ERR_STACK_OVER_FLOW          ; Flag any error in line n
 ; stack.
 ;
 iFREE           jsr     MemFree
-                jsr     pushR0
-                jmp     NextIL
+                jmp     pushR0nextIl
 ;
 ;=====================================================
 ; Generate a random number from 0-FFFF and then MOD
@@ -2381,6 +2380,39 @@ iFalse
                 sta     R0
                 sta     R0+1
                 jmp     pushR0nextIl
+;===============================================================
+;Shift instruction right 1, left 0
+;
+iShift          txa
+                pha
+                jsr     popR0          ; number of places to shift 0 to 16 really
+                jsr     popR1          ; value to shift
+                ldx     R0             ; get number of times to shift
+                jsr     getILByte      ; get direction to shift
+                cmp     #1             ; Should we be doing left
+                beq     iShiftRight
+;
+; Shift r1 left n bits
+iShiftLeft:
+iShiftLloop:    clc
+                rol     R1
+                rol     R1+1
+                dex
+                bne     iShiftLloop
+                beq     iShiftExit
+;
+; Shift R1 right n bits
+;
+iShiftRight:
+iShiftRloop:    lsr     R1+1
+                lsr     R1
+                dex
+                bne     iShiftRloop
+iShiftExit:
+                pla
+                tax
+                jsr     pushR1
+                jmp     NextIL
 
 ;================================================================
 ;Set the IRQ service rtn line number
@@ -2425,6 +2457,10 @@ iTRACEPROG      jsr     popR0
                 org       PROGEND
 ;=================================================================
 ;
+  if IL_DEBUG_TEXT
+                include "ILKeyText.inc"
+  endif
+                include  "io.asm"
                 include  "tokenizer.asm"
                 include  "compile.asm"
                 include  "print.asm"
@@ -2452,14 +2488,6 @@ PROGEND         equ       *
 
 ;=====================================================
 ; These are storage items not in page zero.
-;
-; IRQ BASIC Code Service RTN Support
-SaveIrqReg      db      0         ; Store current setting
-IRQStatus       db      0         ; 1 = enabled, 0 = dissabled
-IRQPending      db      0         ; Irq recieved, Called at next Basic Line
-IRQEntry        db      0,0       ; Basic code offset of IRQ Handler
-
-;
 ;==================================================================================================
 ; Task Management information
 ; Tasks may be created by the Task <expr>,<expr>,[<expr>]   Slot number, Cycles per switch command
@@ -2494,7 +2522,7 @@ STACKSTART      equ     *
 mathStack       ds      [MATHSTACKSIZE * 2 * TASKCOUNT]                ; Stack used for math expressions
 ilStack         ds      [ILSTACKSIZE * 2 * TASKCOUNT]                  ; stack used by the IL for calls and returns
 gosubStack      ds      [GOSUBSTACKSIZE * 4 * TASKCOUNT]               ; stack size for gosub stacks
-variableStack   ds      [VARIABLESSIZE * 2 * TASKCOUNT]                ; Stack of variables, 26 A-Z-task exit code
+variableStack   ds      [VARIABLESSIZE * 2 * TASKCOUNT]                ; Stack of variables, 26 A-Z-task exit code,taskio block stdin,stdout,stdstat,iostatus
 TASKEXITCODE    equ     [[VARIABLESSIZE * 2]  - 2]                     ; Offset to exit code location
 STACKEND        equ     *
 STACKLEN        equ     STACKEND-STACKSTART                        ; total space used for stacks
@@ -2511,8 +2539,6 @@ errGoto         ds      2         ;where to set ILPC on err
 sign            ds      1         ;0 = positive, else negative
 rtemp1          ds      2         ;Temp for x and y
 random          ds      2
-BOutVec         ds      2         ; This is used by functions to vector to the current output rtn
-BInVec          ds      2         ; This is used by fuction to vector to current input rtn
 tempy           ds      1         ;temp y storage
 
 
@@ -2535,7 +2561,7 @@ buffer          ds      BUFFER_SIZE
 ; placed.
 ;
 ProgramStart    ds      2         ; Start Of usable memory
-ProgramEnd      ds      2         ; End of users basic program
+ProgramEnd      ds      2         ; End of users basic program, Next free byte after end
 HighMem         ds      2         ; highest location
 UsedMem         ds      2         ; size of user program
 FreeMem         ds      2         ; amount of free memory

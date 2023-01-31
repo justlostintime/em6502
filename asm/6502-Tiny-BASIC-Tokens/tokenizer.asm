@@ -11,15 +11,20 @@ tVhat             equ     $9B                    ; Variable ^
 tVhash            equ     $9C                    ; Variable #
 tVat              equ     $9D                    ; Variable @ = 0
 
-
+; Base variable type supported by This basic
+; Unsigned types always have the 0 bit set to 1
 tString           equ     $A0                    ; Strings all start with this byte and end with  byte value 0 strings can be accessed with array slicing
-tInteger          equ     $A1                    ; all tokenized integers start with 251 as first byte
-tByte             equ     $A2                    ; Unsigned byte value
-tArray            equ     $A3                    ; Identifies Array Type, the byte following defines the length of each element
-                                                 ; Arrays of string are arrays of pointers 2 bytes
-tPointer          equ     $A4                    ; Pointer to another variable
-tIndirect         equ     $A6                    ; Points to an address that points to the data
-tUint             equ     $A7                    ; unsigned integer type
+tByte             equ     $A2                    ; Signed Byte value
+tInteger          equ     $A4                    ; all tokenized integers start with 251 as first byte 16 bit signed number
+tLong             equ     $A6                    ; Signed 32 bit integer
+
+tArray            equ     $A1                    ; Identifies Array Type, the byte following defines the length of each element
+                                                 ; Arrays of string are arrays of pointers 2 bytes each
+tPointer          equ     $A3                    ; Pointer  unsigned 16 bit 
+tIndirect         equ     $A5                     ; Points to an address that points to the data 16 bits
+tuByte            equ     $A7                    ; Unsigned byte value 8 bit unsigned value
+tUint             equ     $A9                    ; unsigned integer type 16 bit
+tUlong            equ     $AB                    ; Unsigned 32 bit integer
 
 Operators: BYTE "<>"
            BYTE "<="
@@ -84,9 +89,9 @@ oMultiply         equ     $EE
 
 oPercent          equ     oModulo
 
-tOperatorX        equ     $F0 ;+ operator Value  ; stores the value used to do the relational operator compare
+tOperatorX        equ     $F0   ;+ operator Value  ; stores the value used to do the relational operator compare
 
-tError            equ      $FF                   ; Error should never happen
+tError            equ      $FF                     ; Error should never happen
 ;============================================================================================
 ; Keyword and seperator values
 '
@@ -138,6 +143,11 @@ kNot         equ     kCopyMem+1
 kOr          equ     kNot+1
 kXor         equ     kOr+1
 kAnd         equ     kXor+1
+;
+; Shift operators
+;
+kShr         equ     kAnd+1
+kShl         equ     kShr+1
 
 ; numeric functions
 ;
@@ -145,7 +155,7 @@ kBeginFunc   equ     kTrue
 ;
 ; Truth operators
 ;
-kTrue        equ     kAnd+1
+kTrue        equ     kShl+1
 kFalse       equ     kTrue+1
 ; Functions
 kFree        equ     kFalse+1
@@ -162,8 +172,9 @@ kCall        equ     kAbs+1
 kGofn        equ     kCall+1
 kPid         equ     kGofn+1
 kAddr        equ     kPid+1
+kCmpMem      equ     kAddr+1
 ;
-kFuncCount   equ     ((kAddr - kBeginFunc) + 1)
+kFuncCount   equ     ((kCmpMem - kBeginFunc) + 1)
 
 ;
 ; Keyword table contains 54 keywords
@@ -208,14 +219,21 @@ KeyWordTable:
             db      kSetMemW, "setmemW"
             db      kCopyMem, "copymeM"
 
+; Shift operators
+             db     kShr,"shR"
+             db     kShl,"shL"
+
 ;Logical and truth operators
              db     kNot,"noT"
              db     kOr,"oR"
              db     kXor,"xoR"
              db     kAnd,"anD"
+
 ; Truth values
              db     kTrue,"truE"
              db     kFalse,"falsE"
+
+
 
 ;functions returning values
 
@@ -230,9 +248,10 @@ KeyWordTable:
              db     kStat,"staT"
              db     kAbs,"abS"
              db     kCall,"calL"
-             db     kGofn,"gofN"
+             db     kGofn,"fN"
              db     kPid,"piD"
              db     kAddr,"addR"
+             db     kCmpMem, "cmpmeM"
              db     0,0
 
 KeyWordTableEnd      equ      *
@@ -249,7 +268,7 @@ printStorage ds    3
 ;  First test for numbers    for numbers insert type byte plus value 1 or 2 byte, byte, integer, string(pointers)
 ;  if fails then test for keywords
 ;  if fails then test for variables and arrays
-;  if fails check for operators/seperators  + - < > = % / * () [] , ; :
+;  if fails check for operators/seperators  + - < > = % / * () [] , ; : >> <<
 
 ParseInputLine:
  if DEBUGPARSER

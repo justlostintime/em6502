@@ -449,7 +449,7 @@ Sub DiskCmdProcess()
 
     Case PC_GET_CLOCK
        Dim DateTime as Date = DateAdd(RealTime,gb.second,cint(timer))
-       'print "PIA Get real time clock date and time BSD format",cstr(DateTime)
+       'print "PIA Get real time clock date and time BCD format",cstr(DateTime)
        OutputBuffer.add(PR_CLOCK_DATA,0)
        dim bcdvalue as byte = bcd(month(DateTime))
        OutputBuffer.add(bcdvalue,0)
@@ -470,7 +470,7 @@ Sub DiskCmdProcess()
 
 
     Case PC_SET_CLOCK
-       'print "PIA Set Real time clock date and time BSD format";;
+       'print "PIA Set Real time clock date and time BCD format";;
        'inputbuffer.pop()             ' read the message number
        dim imonth as integer =  frombcd(inputbuffer.pop())
        dim iday as integer =  frombcd(inputbuffer.pop())

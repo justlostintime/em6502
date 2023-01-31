@@ -56,6 +56,7 @@ Public Sub Form_Open()
   DeviceList.Columns[3].text = "Device Specific Parameters"
 
   FMain.Text = Application.Title & " " & Application.Version & " Computer Name : " & CurrentComputerDefinition
+
   FMain.Show()
 
   MyComputer.Configure(Comp)
@@ -75,6 +76,8 @@ Public Sub Form_Close()
   WriteConfig()
 
   ShutdownMemMonitors()
+
+  WatchMem.Close()
 
   If StartStop.text = "Stop" Then StartStop_Click()
   updatetimer.enabled = False
@@ -512,6 +515,10 @@ Public Sub OpenListing_Click()
 
   Dim A As New ListingViewer
 
+  If LastListingGenerated = "" Then
+    Message("No Assembly completed")
+    Return
+  Endif
   a.title = "Asm Listing " & LastListingGenerated
   a.Show()
   a.Display(File.Load(LastListingGenerated))
@@ -520,18 +527,24 @@ End
 
 Public Sub LoadToRome_Click()
 
+  If LastBinaryGenerated = "" Then Return
+
   SingleStepSet.value = True
   SingleStepSet_Click()
   Wait 0.001
+
   MyComputer.LoadMemory(LastBinaryGenerated)
 
 End
 
 Public Sub LoadToRam_Click()
 
+  If LastBinaryGenerated = "" Then Return
+
   SingleStepSet.value = True
   SingleStepSet_Click()
   Wait 0.001
+
   MyComputer.LoadMemory(LastBinaryGenerated)
 
 End
@@ -828,24 +841,61 @@ Public Sub SetAsDefault_Click()
 
 End
 
-Public Sub MakeActive_Click()
+Sub ChangeComputerdef(NewDef As String)
 
-  If Computers.Selection.count = 0 Then Return
-  CurrentComputerDefinition = IIf(Computers.Selection.count = 0, ComputerName.text, Computers.Selection[0])
   FMain.Hide()
-  Form_Close()
-  Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
+
+  SaveEditDefaults()
+  SaveDebugList()
+
+  Settings["FMain/Window/X"] = FMain.X
+  Settings["FMain/Window/Y"] = FMain.Y
+  Settings["FMain/Window/W"] = FMain.W
+  Settings["FMain/Window/H"] = FMain.H
+
+  WriteConfig()
+
+  ShutdownMemMonitors()
   LoadedList.Clear()
   SymLoadedList.Clear()
   SymbolTable.Clear()
   ClearSymbols_Click()
   BreakPointList.Clear()
-  ShutdownMemMonitors()
-  FMain.Show()
+  WatchMem.Close()
 
-  'CliInterface.RunComputer(CurrentComputerDefinition)
+  If StartStop.text = "Stop" Then StartStop_Click()
+  updatetimer.enabled = False
+  Wait 0
+  MyComputer.shutdown()
+  Wait 0
+  SaveComputersConfig()
+
+  CurrentComputerDefinition = newDef
+  ActiveComputer.text = CurrentComputerDefinition
+  DefaultComputer.text = DefaultComputerDefinition
+
   MyComputer = New Computer As "the_computer"
+  Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
+
+  updatetimer.delay = 3000
+  updatetimer.enabled = True
+
+  LoadComputersConfig()
+  FMain.Text = Application.Title & " " & Application.Version & " Computer Name : " & CurrentComputerDefinition
+
+  FMain.Show()
   MyComputer.Configure(Comp)
+
+End
+
+
+Public Sub MakeActive_Click()
+
+  Dim NewDef As String
+
+  If Computers.Selection.count = 0 Then Return
+  NewDef = IIf(Computers.Selection.count = 0, ComputerName.text, Computers.Selection[0])
+  ChangeComputerDef(NewDef)
 
 End
 
@@ -970,6 +1020,8 @@ End
 
 Public Sub Form_Resize()
 
+  Dim b As Integer
+
   AllControls.x = FMain.W - AllControls.Width - 4
   InfoSection.w = AllControls.x - 4
   InfoSection.h = FMain.h - 50
@@ -977,9 +1029,6 @@ Public Sub Form_Resize()
   EditProg.h = InfoSection.h - EditorButtons.h - 40
   EditorButtons.y = EditProg.h + EditProg.y + 2
   EditorButtons.w = EditProg.w
-  AsmOutput.w = EditProg.W
-  AsmOutput.h = EditProg.h
-  AsmOutputButtons.y = EditorButtons.y
   Disassembly.w = EditProg.W
   Disassembly.h = InfoSection.h - Disassembly.y - 30
   SearchPaths.w = EditorButtons.w - SearchPaths.x - 10
@@ -987,12 +1036,26 @@ Public Sub Form_Resize()
   CompDefs.h = InfoSection.h
   DeviceList.w = CompDefs.w - 10
   DeviceList.h = CompDefs.h - DeviceList.y - 30
+  DevInfoLabel1.x = devicelist.x
+  DevInfoLabel1.Width = DeviceList.Width
+  DevInfoLabel2.Width = DeviceList.Width - DevInfoLabel2.x
+
+  AsmOutput.X = 1
+  AsmOutput.w = InfoSection.W - 10
+
+  AsmOutput.h = InfoSection.h - (AsmOutputButtons.H * 2) - 10
+
+  AsmOutputButtons.y = AsmOutput.y + AsmOutput.h + 2
 
 End
 
 Public Sub RestoreBreakpoints_Click()
 
+  RestoreBreakpoints.Enabled = False
+
   RestoreDebugList()
+  watchMem.RestoreWatched()
+  MemoryMonitor.ReOpenAllMonitors()
 
 End
 

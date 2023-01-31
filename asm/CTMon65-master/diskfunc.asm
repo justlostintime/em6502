@@ -106,7 +106,7 @@ DDNErr          jsr	xParSetWrite
 ;
 ; Assumes write mode has been set.  Returns with it set.
 ;
-DiskOpenRead	lda	#PC_READ_FILE
+DiskOpenRead	  lda	#PC_READ_FILE
 DiskOpen        sty	INL                   ;save ptr to filename
                 stx	INH
                 pha
@@ -186,7 +186,7 @@ DiskReadLoop	jsr	xParReadByte
                 bne	DiskReadLoop
                 jsr	xParSetWrite
                 pla		;retrieve byte count
-DiskOk		    clc	
+DiskOk		    clc
                 rts
 DiskReadEof	    jsr	xParSetWrite
                 pla
@@ -227,10 +227,10 @@ DiskWriteLoop   lda (INL),y             ;get next byte
                 cmp	#PR_ACK
                 beq	DiskOk1             ;all good
                 jsr	xParReadByte        ;read error code
-                jsr	xParSetWrite 
-                sec	
+                jsr	xParSetWrite
+                sec
                 rts
-;       
+;
 DiskOk1         jsr	xParSetWrite
                 clc
                 rts

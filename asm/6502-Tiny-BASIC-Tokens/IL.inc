@@ -542,3 +542,16 @@
   Macro COPYBLOCK
     db 111
   endm
+
+; Compare one block of memory to another
+; Stack contains Length, Source1 Source 2
+; Place on stack 0 equal, 1 s1>s2, -1 s1 < s2
+  Macro CMPMEM
+    db 112
+  endm
+
+; Shift Left and Right
+  Macro SHIFT
+    db 113
+    db {1}      ; direction  0 = left 1 = right
+  endm

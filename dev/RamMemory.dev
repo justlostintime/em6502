@@ -78,39 +78,56 @@ End
 
 Public Sub Load(sBinSources As string ) as long ' For ram we can load a number Of files into Memory
   dim binsources as string[] = split(sBinSources,",","\"\"",true,false)
-  Debug "Ram Load Request ";sBinSources
+  Dim BinInfo As File
+  Dim al as byte = 0
+  Dim ah As Byte = 0
+  Dim address As Long = 0
+  Dim ReadtoAddress as long = 0
+  Dim Length As Integer = 0
+  
+  error "New Ram Load Request ";sBinSources
 
   For Each BinSource As String In BinSources
-
-    Dim BinInfo As File
-    Dim al as byte
-    Dim ah As Byte
-
+    
+   
+    
     Try BinInfo = Open BinSource For Read
-
-    Read #BinInfo, al
-    Read #BinInfo, ah
-
-    Dim address As Long = 0
-    Dim ReadtoAddress as long = 0
-
-    Address = Address or ah
-    Address = (Address shl 8) or al
-    Dim Length As Integer = Lof(BinInfo) - 2
-    Debug "Loading Image to address "; hex(address,4); " Length=";hex(length,4)
-    ReadToAddress = Address - MemoryStart
-    If (Address < MemoryStart) Or If (Address + length - 1) > MemoryEnd Then
-      Error.Raise(Subst("Invalid Memory Address Scope for &1, Starts at $&2 for length of $&3", BinSOurce, Hex(address, 6), Hex(Length, 4)))
-    Endif
-    If Error Then Error.Raise("Missing Ram Source file")
-    Try mem.Read(BinInfo, ReadToAddress, Length)
-    If Error Then Error.Raise(subst("Error reading Ram Source at address &1 for length &2 :&3",hex(address,4),length,  Error.text))
-    Debug "Binary Ram Image "; BinSource; " at Address:"; Hex(address, 6)
+    if not error Then
+      if file.ext(BinSource) == "raw" then               ' Special case for cc65 binary raw files
+        error "Raw file being loaded"
+        Address = &H200
+        Length = Lof(BinInfo)
+      else
+        error "File with leading load address being loaded"
+        Read #BinInfo, al                     ' By default the first two byte are the load address
+        Read #BinInfo, ah
+        Address = Address or ah
+        Address = (Address shl 8) or al
+        Length = Lof(BinInfo) - 2
+      endif
+      error "Loading Image to address "; hex(address,4); " Length=";hex(length,4)
+      
+      ReadToAddress = Address - MemoryStart
+      If (Address < MemoryStart) Or If (Address + length - 1) > MemoryEnd Then
+        Error(Subst("Invalid Memory Address Scope for &1, Starts at $&2 for length of $&3", BinSOurce, Hex(address, 6), Hex(Length, 4)))
+      Endif
+      If Error Then Error("Missing Ram Source file")
+      Try mem.Read(BinInfo, ReadToAddress, Length)
+      If Error Then Error(subst("Error reading Ram Source at address &1 for length &2 :&3",hex(address,4),length,  Error.text))
+      error "Binary Ram Image "; BinSource; " at Address:"; Hex(address, 6)
+    else
+      error "RAM: Unable to find file:";BinSource; "  Loading is ignored"
+    endif
   Next
 
  dim bindef as string = BinSource &":"&hex(address,4)
  $BinLoaded &= iif($binLoaded = "",BinDef,","&BinDef)
  return address
+ 
+ catch
+    error "Ram device internal error :";error.text,error.number
+    return address
+ 
 End
 
 

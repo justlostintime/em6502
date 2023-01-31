@@ -7,12 +7,43 @@
 '  See project license file.
 
 Fast Unsafe
+
 ItemsWatchedList As New Watchitem[]
+
+' Restore any watched symobls use during the last debug session
+Static Public Sub RestoreWatched()
+
+  If Not Me.visible Then Me.Show()
+
+  Dim addr As String
+  Dim Symbol As String
+
+  For Each sKey As String In Settings.Keys
+    If sKey Like "WatchVar/*" Then
+      Symbol = Split(skey, "/")[1]
+      Try addr = Disassembler.SymbolsByName[Symbol]                                 ' look it up the address may have changed
+      If Error Or addr = "10000" Then
+        Try addr = Eval("&H" & symbol)
+        If Error Then
+          addr = "0000"
+        Else
+          addr = Hex$(addr, 4)
+        Endif
+      Endif                                                       ' if not found then ust ignore it
+      WatchMem.NewWatch(Symbol, addr, Settings[sKey &/ "Length"])                              ' The Legth was saved with the symbol name
+    Endif
+  Next
+
+End
 
 
 Public Sub NewWatch(Symbol As String, StartAddress As String, Optional length As Integer = 2)
 
-  Dim a As New Watchitem(Symbol, StartAddress, ItemsWatchedList.count, length) As "memupdater"
+  Dim start As String = Right$("0000" & StartAddress, 4)
+
+  Dim a As New Watchitem(Symbol, Start, ItemsWatchedList.count, length) As "memupdater"
+
+  Settings["WatchVar/" & Symbol &/ "Length"] = length
 
   ItemsWatchedList.Add(a)
 
@@ -21,6 +52,7 @@ Public Sub NewWatch(Symbol As String, StartAddress As String, Optional length As
   WatchMem.Refresh()
 
 End
+
 
 Public Sub memupdater_updaterow(rownumber As Integer, info As String)
 
@@ -32,14 +64,16 @@ End
 Public Sub Form_Open()
 
   WatchList.Columns.count = 3
+  WatchList.Columns[0].Width = Settings["WatchWindow/Col0", 40]
+  WatchList.Columns[1].Width = Settings["WatchWindow/Col1", 20]
   WatchList.Columns[0].title = "Symbols"
   WatchList.Columns[1].title = "Address"
   WatchList.Columns[2].title = "Data"
 
-  Me.w = Settings["WatchWindow/w", Me.w]
-  Me.h = Settings["WatchWindow/h", Me.h]
-  Me.x = Settings["WatchWindow/x", Me.x]
-  Me.y = Settings["WatchWindow/y", Me.y]
+  WatchMem.w = Settings["WatchWindow/w", 400]
+  WatchMem.h = Settings["WatchWindow/h", 100]
+  WatchMem.x = Settings["WatchWindow/x", 100]
+  WatchMem.y = Settings["WatchWindow/y", 100]
 
   If FMain.MyComputer.MemoryUpdates <> True Then
     EnableDisableWatch.text = "Enable"
@@ -51,10 +85,12 @@ End
 
 Public Sub Form_Close()
 
-  Settings["WatchWindow/w"] = Me.w
-  Settings["WatchWindow/h"] = Me.h
-  Settings["WatchWindow/x"] = Me.x
-  Settings["WatchWindow/y"] = Me.y
+  Settings["WatchWindow/w"] = WatchMem.w
+  Settings["WatchWindow/h"] = WatchMem.h
+  Settings["WatchWindow/x"] = WatchMem.x
+  Settings["WatchWindow/y"] = WatchMem.y
+  Settings["WatchWindow/Col0"] = WatchList.Columns[0].Width
+  Settings["WatchWindow/Col1"] = WatchList.Columns[1].Width
 
 End
 
@@ -85,6 +121,7 @@ Public Sub RemoveWatch_Click()
   Dim theselection As Integer[] = WatchList.Rows.Selection
 
   For i As Integer = theselection.max DownTo 0
+    Settings.Clear("WatchVar" &/ ItemsWatchedList[theselection[i]].Symbol, True)
     ItemsWatchedList[theselection[i]].ShutDown()
     WatchList.Rows.Remove(theselection[i])
     ItemsWatchedList.Remove(theselection[i])
@@ -105,6 +142,7 @@ Public Sub ClearAll_Click()
   For Each a As Watchitem In ItemsWatchedList
     a.ShutDown()
   Next
+
   ItemsWatchedList.Clear()
 
 End
@@ -114,12 +152,30 @@ Public Sub EnableDisableWatch_Click()
   If FMain.MyComputer.MemoryUpdates = True Then
     FMain.MyComputer.MemoryUpdates = False
     EnableDisableWatch.text = "Enable"
+    WatchMem.title = "Watch Memory location - Disabled"
   Else
     FMain.MyComputer.MemoryUpdates = True
     EnableDisableWatch.text = "Disable"
+    WatchMem.title = "Watch Memory location - Enabled"
   Endif
 
 End
+
+Public Sub UpdateEnableStateDisplay()
+
+  If FMain.MyComputer.MemoryUpdates <> True Then
+    EnableDisableWatch.text = "Enable"
+    WatchMem.title = "Watch Memory location - Disabled"
+  Else
+    EnableDisableWatch.text = "Disable"
+    WatchMem.title = "Watch Memory location - Enabled"
+  Endif
+
+  WatchMem.Refresh()
+
+End
+
+
 
 Public Sub WatchList_Change()
 

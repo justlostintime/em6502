@@ -42,7 +42,7 @@ Ropenok         lda     #0
                 sta     diskBufLength
                 jmp     NextIL
           endif
-          
+
 ;===============================================================
 ; Set file name
 setFileName:
@@ -67,7 +67,7 @@ setFileName:
                 clc
                 adc     CUROFF                           ; add the current offset
                 sta     CUROFF                           ; Update the buffer pointer after complete
-                
+
                 ldy     #DiskFileName&$ff
                 ldx     #DiskFileName>>8
                 clc
@@ -262,21 +262,39 @@ SetOutDisk      lda     #DOUT&$ff
                 rts
 ;
 ;=====================================================
-
-DOUT            stx    DiskFileName
-                sty    DiskFileName+1
-                sta     buffer
-                lda     #1
-                ldy     #buffer&$ff
-                ldx     #buffer>>8
-                jsr     DiskWrite
+; input a contains charater to write to open file
+; output:
+;          C flag clear if no error
+;
+DOUT            stx    DiskFileName             ; Save the x value, fulename not used
+                sty    DiskFileName+1           ; Save the y value  filename not actually used
+                sta     buffer                  ; Store the byte to send into the buffer 
+                lda     #1                      ; set number of bytes to send to 1
+                ldy     #buffer&$ff             ; Load the low order address of buffer to y
+                ldx     #buffer>>8              ; Load the high order address of buffer to x
+                jsr     DiskWrite               ; Place the character to disk if a file is open
+                ldx     DiskFileName            ; Restore the x value that was saved
+                ldy     DiskFileName+1          ; Restore the y value saved
+                rts
+;=======================================================
+; output:
+;        c flag is clear if no error, a contains bytes read
+;        c flag set Reached eof, a undefined
+;
+DIN             stx    DiskFileName             ; Save the x value, filename not used just storage
+                sty    DiskFileName+1           ; Save the y value  filename not actually used
+                lda     #1                      ; set number of bytes to read to 1
+                ldy     #buffer&$ff             ; Load the low order address of buffer to y
+                ldx     #buffer>>8              ; Load the high order address of buffer to x
+                jsr     DiskRead
+                lda     buffer                  ; Get the byte just read
                 ldx     DiskFileName
                 ldy     DiskFileName+1
-                
-;
-; need error checking here
-;
                 rts
+
+;========================================================
+; Dstat / open/close/stat files
+DSTAT
+          rts
+;========================================================
           endif
-
-

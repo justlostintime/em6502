@@ -1,14 +1,14 @@
-10 Print "Testing task creation"
+10 cls : Print 27$;"[14;20H1)Testing task creation"
 20 z = task(100): z=task(200)
-30 Print "Main Loop Index ";y
+30 Print 27$;"[1;20HMain Loop Index ";y
 40 y = y +1
 60 goto 30
-100 Print "Start New Task PID ";task(0)
-110 Print "Task PID ";PID; " Index ";d
+100 Print 27$;"[15;20H2)Start New Task PID "; PID
+110 Print 27$;"[2;20HTask PID ";PID; " Index ";d
 120 d = d+1
 140 goto 110
 150 end
-200 print "Start new task2 PID ";task(0)
-210 ? "PID ";PID; " Counter ";e
+200 print 27$;"[16;20H3)Start new task2 PID ";PID
+210 ? 27$;"[3;20HPID ";PID; " Counter ";e
 220 e = e+1
 230 goto 210

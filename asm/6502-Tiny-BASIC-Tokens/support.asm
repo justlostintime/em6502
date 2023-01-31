@@ -696,70 +696,70 @@ popMQ         sty     rtemp1
 ; positive.  If the signs were different then 'signs'
 ; will be non-zero.
 ;
-SaveSigns	lda	#0
-		sta	sign	;assume positive
-		lda	R0+1	;MSB
-		bpl	SaveSigns1
-		inc	sign	;it's negative
-		eor	#$ff	;flip bits
-		sta	R0+1
-		lda	R0
-		eor	#$ff
-		sta	R0
-		inc	R0
-		bne	SaveSigns1
-		inc	R0+1
-SaveSigns1	lda	R1+1
-		bpl	SaveSigns2
-		pha
-		lda	sign
-		eor	#1
-		sta	sign
-		pla
-		eor	#$ff	;flip bits
-		sta	R1+1
-		lda	R1
-		eor	#$ff
-		sta	R1
-		inc	R1
-		bne	SaveSigns2
-		inc	R1+1
-SaveSigns2	rts
+SaveSigns     lda     #0
+              sta     sign      ;assume positive
+              lda     R0+1      ;MSB
+              bpl     SaveSigns1
+              inc     sign      ;it's negative
+              eor     #$ff      ;flip bits
+              sta     R0+1
+              lda     R0
+              eor     #$ff
+              sta     R0
+              inc     R0
+              bne     SaveSigns1
+              inc     R0+1
+SaveSigns1    lda     R1+1
+              bpl     SaveSigns2
+              pha
+              lda     sign
+              eor     #1
+              sta     sign
+              pla
+              eor     #$ff      ;flip bits
+              sta     R1+1
+              lda     R1
+              eor     #$ff
+              sta     R1
+              inc     R1
+              bne     SaveSigns2
+              inc     R1+1
+SaveSigns2    rts
 ;
 ;=====================================================
 ; This looks at the value of 'signs' and will convert
 ; both R0 and R1 to negative if set.
 ;
 RestoreSigns
-		lda	sign
-		beq	restoresigns2
+              lda     sign
+              beq     restoresigns2
 ;
-		lda	R0
-		bne	restoresigns3
-		dec	R0+1
+              lda     R0
+              bne     restoresigns3
+              dec     R0+1
 restoresigns3
-		dec	R0
-		lda	R0
-		eor	#$ff
-		sta	R0
-		lda	R0+1
-		eor	#$ff
-		sta	R0+1
+              dec     R0
+              lda     R0
+              eor     #$ff
+              sta     R0
+              lda     R0+1
+              eor     #$ff
+              sta     R0+1
 ;
-		lda	R1
-		bne	restoresigns4
-		dec	R1+1
+              lda     R1
+              bne     restoresigns4
+              dec     R1+1
 restoresigns4
-		dec	R1
-		lda	R1
-		eor	#$ff
-		sta	R1
-		lda	R1+1
-		eor	#$ff
-		sta	R1+1
+              dec     R1
+              lda     R1
+              eor     #$ff
+              sta     R1
+              lda     R1+1
+              eor     #$ff
+              sta     R1+1
 ;
 restoresigns2
-		rts
+              rts
 ;
 ;=====================================================
 ; Skip over spaces.  Returns Y with the offset to
@@ -842,17 +842,28 @@ dbgLine         bit     ILTrace
 dbgPrt
                 jsr     SetOutDebug
                 jsr     puts
-                db      "ILPC: ",0
+                db      "ILPC:",0
                 lda     ILPC+1
                 jsr     OUTHEX
                 lda     ILPC
                 jsr     OUTHEX
                 lda     #SPACE
                 jsr     VOUTCH
+
                 ldy     #0
-                lda     (ILPC),y
+                lda     (ILPC),y               ;Get the il pcode value
+  if IL_DEBUG_TEXT
+                jsr     PrintILText
+  else
                 jsr     OUTHEX
-;
+  endif
+                jsr     puts
+                db      " ILSP:",0
+                lda     ILSTACKPTR
+                jsr     OUTHEX
+                lda     #SPACE
+                jsr     VOUTCH
+
 ; Display the CURPTR value and offset
 ;
                 jsr     puts
@@ -927,11 +938,6 @@ SetInConsole
                 pla
                 rts
 
-;=====================================================
-; Jump to the output/input function in BOutVec/BInVec
-;
-VOUTCH          jmp     (BOutVec)
-VGETCH          jmp     (BInVec)
 
 
 ;====================================================
@@ -1003,7 +1009,7 @@ SetOutDebugEnd
 SetInDebugEnd
                 lda    DebugInSave
                 sta    BInVec
-                lda    DebugIOSave+1
+                lda    DebugInSave+1
                 sta    BInVec+1
                 rts
 ;
@@ -1024,13 +1030,13 @@ iSetTerminal
                 jsr   popR0                             ; Process the input io address
                 jsr   CalcSlot
                 lda   R0
-                sta   TerminalInputPort
-                ora   #1
                 sta   TerminalStatusPort
+                ora   #1
+                sta   TerminalInputPort
                 lda   R0+1
                 sta   TerminalInputPort+1
                 sta   TerminalStatusPort+1
-                rts
+                jmp    NextIL
 
 ;===================================================
 ; Calculate the slot address the the slot number
@@ -1039,16 +1045,20 @@ iSetTerminal
 CalcSlot
                 txa
                 pha
+
                 ldx     #4
 CalcSlotLoop:
-                asl     R0
+                clc
+                rol     R0
                 rol     R0+1
                 dex
                 bne     CalcSlotLoop
+
                 lda     #$E0
                 ora     R0+1
                 sta     R0+1
                 pla
+
                 tax
                 rts
 ;
@@ -1064,6 +1074,7 @@ DebugWrite
                 jsr     SetOutDebugEnd
                 rts
 
+TerminalIOblock
 OUTDEBUG
                 .byte   $8D                           ; STA
 TerminalOutputPort
@@ -1083,7 +1094,7 @@ DEBUGPORTSTATUS .word   $E020
 TerminalInputPort
 DEBUGPORTIN     .word   $E021
                 rts
-
+TerminalIOblockEnd
 ;======================================================================
 ;Copy Quoted string to buffer, terminate with 0 byte
 ; R0  Source tring points to tString type

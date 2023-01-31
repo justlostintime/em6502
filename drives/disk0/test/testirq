@@ -3,6 +3,7 @@
 3 ? "In IRQ"
 4 c = c + 1
 5 ireturn
+
 10 rem Test the irq service functions
 30 gosub 900
 35 IRQ 3
@@ -29,7 +30,7 @@
 980 return
 1000 rem this program sets up an IRQ handler, this can be anywhere as
 1010 rem Internally a direct pointer is used to go to the service
-1020 rem function. When the IRQ handler is called all IRQ requests are 
+1020 rem function. When the IRQ handler is called all IRQ requests are
 1030 rem disabled untill the service rtn completes with an ireturn
 1040 rem The uses the Corsham PIA clock functions to generate the
 1050 rem IRQ requests. lines 910 sends the request, 920 sets the length

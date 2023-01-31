@@ -1,0 +1,113 @@
+1 i=3 : goto 10 : rem skip the irq handler, set irq line number
+
+2 Rem this is the irq timer handler
+3 inc c
+5 ireturn
+6 ? "Fell thru the irq handler !!!" : end
+
+10 c=0 : Print "Test the clock, set counter to 0"
+15 Print " Read initial  clock value"
+20 gosub 200 : print "display the current clock date time"
+
+25 Print "Write the new date 7,7,20,23,0,0,0,1"
+30 gosub 700 : ? " Set the clock to some weird value"
+
+35 print "Read back the updated date time"
+40 gosub 200 : ? " Check if the clock was changed correctly"
+
+50 print "Start the irqs going tick every second"
+
+55 irq i : ?  "set the irq handler to line "; i
+60 gosub 900(9)    : rem  900(tick timeOut length)
+
+70 print " Wait for 9 seconds "
+80 gosub 800(9)     : rem 800(seconds to wait)
+
+90 Print "Read the date time again see if updated"
+100 gosub 200
+
+110 ? "Wait a while to display them 9 more seconds"
+120 gosub 800(9)
+
+130 ? "Stop the irqs"
+140 gosub 950
+
+150 ? "Display date one more time"
+160 gosub 200
+
+170 ? " Done with test "
+199 end
+
+
+200 rem read the clock
+210 gosub 1000(9,0,7)                        : rem Call the get data 1000(len=9, buffer addr=0, command=7)
+240 gosub 500(1)                             : rem Read Month 2 bcd digits 500(Buffer byte to read)
+250 ? "-"; : gosub 500(2)                    : rem Read Day 2 bcd digits
+270 ? "-"; : gosub 500(3)                    : rem Read Year high 2 bcd digits
+290 gosub 500(4)                             : rem Read Year low 2 bcd digits
+300 ? " "; : gosub 500(5)                    : rem Read hours 2 bcd digits
+320 ? ":"; : gosub 500(6)                    : rem Read minutes 2 bcd digits
+340 ? ":"; : gosub 500(7)                    : rem Read Seconds 2 bcd digits
+360 ? " Day of week "; : gosub 600(8)        : rem read day of week 2 bcd digits
+380 ?
+390 return
+
+500 rem print bcd value from pia
+510 a = @$[#[0]]          : rem 500(buffer address to read byte)
+520 b = a shr 4
+530 c = a and 15          : rem    a & $0F
+540 ? "(";b ;" "; c;")" ; $a;
+560 return
+
+600 rem print day of the week 600(buffer address)
+610 a = @$[#[0]]
+620 if a = 0 then print "Sunday";
+630 if a = 1 then print "Monday";
+640 if a = 2 then print "Tuesday";
+650 if a = 3 then print "Wednesday";
+660 if a = 4 then print "Thursday";
+670 if a = 5 then print "Friday";
+680 if a = 6 then print "Saturday";
+690 return
+
+700 Rem Set a new date into the clock
+710 poke(57360,8)             : rem The command to pio set time
+720 poke(57360, 7)            : rem Month         2 bcd digits 07
+730 poke(57360, 7)            : rem day           2 bcd digits 07
+740 poke(57360, 32)           : rem year high     2 bcd digits 20 = dec 32
+750 poke(57360, 35)           : rem year low      2 bcd digits 23 = decimal 35
+760 poke(57360, 0)            : rem hour          2 bcd digits 00
+770 poke(57360, 0)            : rem min           2 bcd digits 00
+780 poke(57360, 0)            : rem Second        2 bcd digits 00
+790 poke(57360, 1)            : rem Day of week   2 bcd digits 01
+
+791 rem get the ack from the driver
+795 a = peek(57360)
+799 return
+
+800 rem delay some amount of time 800(timeout value)
+805 c = 0                 : rem Reset the timer to zero
+810 if c >= #[0] then c = 0 : return
+820 e = e + 2             : rem do random stuff waste time
+830 e = e - 1             : rem do more random stuff
+840 goto 810
+
+900 rem set the timeout  900(timeout length)
+910 poke(57360,30)        : rem cmd turn on/off
+920 poke(57360,#[0])      : rem value 9 = 1 second, 1-5 = value * 10ms 6 = 10ms, 7=250ms, 8=500ms
+925 a = peek(57360)       : rem get the ack or nak
+930 return
+
+950 rem set timeout off
+960 poke(57360,30)        : rem cmd turn on off
+970 poke(57360,0)         : rem value = 0 stop timer
+975 a = peek(57360)       : rem read the ack nak
+980 return
+
+1000 rem request and read the message from PIA 1000(length, buffer address, Command)
+1010 print "Command ";$#[2];" Length ";#[0];" Buffer address = ";$addr(@$[#[1]])
+1010 poke(57360,#[2])                                   : rem send command 
+1020 s = #[0] : p = 0                                   : rem message is #[0] bytes
+1030 if p < s @$[p+#[1]] = peek(57360) : inc p : goto . : rem read bytes from the interface
+1040 return
+

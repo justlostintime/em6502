@@ -32,7 +32,7 @@ taskSetStacks
                 sta     VARIABLES+1
                 ldx     #TASKCOUNT
                 ldy     #0
-                jsr     ContextSave
+                jsr     ContextSave                ; Save the Task 0 context
 
 taskSetLoop     cpy     #TASKTABLELEN
                 bcs     taskSetDone
@@ -68,7 +68,6 @@ taskSetLoop     cpy     #TASKTABLELEN
                 lda     VARIABLES+1
                 adc     #0
                 sta     VARIABLES+1
-
                 jsr     ContextSave
                 jmp     taskSetLoop
 
@@ -76,6 +75,24 @@ taskSetDone
                 ldy     #0                    ; reload the main loop context
                 jsr     ContextLoad
                 rts
+;
+;============================================================
+; Saves the io block to the context
+
+
+SaveIOblock     tya
+                pha
+                txa
+                pha
+                
+                
+                
+                pla
+                tax
+                pla
+                tay
+                rts
+
 ;
 ;=====================================================
 ; In some error cases the math stacks may be left pointing to the wrong stack
@@ -106,7 +123,7 @@ taskResetLoop
                 sta     taskTable,y         ; Ensure that the task is made inactive
                 clc
                 tya
-                adc     #CONTEXTLEN 
+                adc     #CONTEXTLEN
                 tay
                 cpy     #TASKTABLELEN       ; Are we at the end yet
                 bcc     taskResetLoop       ; Go for more
@@ -529,7 +546,7 @@ ContextSvLoop   lda   CONTEXT,x
 ; Load Context transfer context from task table to the Current Context
 ; on entry y contains the task table entry to transfer
 ; on exit y points to the original task table entry
-;         x contains the number of byts copied
+;         x contains the number of bytes copied
 ContextLoad     tya
                 pha
                 ldx   #0

@@ -10,23 +10,52 @@ Fast Unsafe
 
 MonitorWindow As New MemoryDumpOutput As "MyForm"
 Address As String = "0000"
+Ending As String = "0000"
+
+ShuttingDown As Boolean = False
+
+Static Public Sub ReOpenAllMonitors() As MemoryMonitor[]
+
+  Dim mm As New MemoryMonitor[]
+
+  For Each sKey As String In Settings.Keys
+    If Left(sKey, 11) = "MonitorWin/" Then
+      Dim Addrs As String[] = Split(Right(sKey, 9), "-")
+      Dim nwin As New MemoryMonitor(Addrs[0], Addrs[1])
+      mm.Add(nwin)
+    Endif
+  Next
+
+  Return mm
+
+End
+
 
 Public Sub _new(StartAddress As String, EndAddress As String)
 
   FMain.MyComputer.MemoryUpdates = True
   watchMem.Show()
 
-  Address = StartAddress
-  MonitorWindow.w = 600
-  MonitorWindow.h = 400
+  Address = Right("0000" & StartAddress, 4)
+  Ending = Right("0000" & EndAddress, 4)
+
+  MonitorWindow.x = Settings["MonitorWin" &/ Address & "-" & Ending &/ "X", 100]
+  MonitorWindow.y = Settings["MonitorWin" &/ Address & "-" & Ending &/ "Y", 100]
+  MonitorWindow.height = Settings["MonitorWin" &/ Address & "-" & Ending &/ "Height", 400]
+  MonitorWindow.width = Settings["MonitorWin" &/ Address & "-" & Ending &/ "Width", 600]
+  Settings["MonitorWin" &/ Address & "-" & Ending &/ "Start"] = Address
+  Settings["MonitorWin" &/ Address & "-" & Ending &/ "Ending"] = Ending
 
   Fmain.MyComputer.MonitorList.Add([Eval("&H0" & StartAddress), Eval("&H0" & EndAddress)], StartAddress)
   Fmain.MemoryMonitors.Add(Me, StartAddress)
+
   MonitorWindow.title = ("Monitoring Memory Address") & " $" & StartAddress & " " & ("To") & " $" & EndAddress
   MonitorWindow.MemDumpOut.w = MonitorWindow.w - 2
   MonitorWindow.MemDumpOut.h = MonitorWindow.h - 2
   MonitorWindow.MemDumpOut.text = ("Memory Dump Begins after next Step instruction. Or if Trace is active")
   MonitorWindow.Show()
+
+  watchMem.UpdateEnableStateDisplay()
 
 End
 
@@ -40,12 +69,24 @@ End
 
 Public Sub ShutDown()
 
+  ShuttingDown = True
   MonitorWindow.Close()
 
 End
 
 
 Public Sub MyForm_Close()
+
+  If ShuttingDown Then
+    Settings["MonitorWin" &/ Address & "-" & Ending &/ "X"] = MonitorWindow.x
+    Settings["MonitorWin" &/ Address & "-" & Ending &/ "Y"] = MonitorWindow.y
+    Settings["MonitorWin" &/ Address & "-" & Ending &/ "Height"] = MonitorWindow.height
+    Settings["MonitorWin" &/ Address & "-" & Ending &/ "Width"] = MonitorWindow.width
+    Settings["MonitorWin" &/ Address & "-" & Ending &/ "Start"] = Address
+    Settings["MonitorWin" &/ Address & "-" & Ending &/ "Ending"] = Ending
+  Else
+    Settings.Clear("MonitorWin" &/ Address & "-" & Ending, True)
+  Endif
 
   Fmain.MyComputer.MonitorList.Remove(Address)
   FMain.MemoryMonitors.Remove(Address)

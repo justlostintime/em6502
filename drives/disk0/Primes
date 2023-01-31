@@ -18,14 +18,12 @@
 107 rem     The integers that are not marked out are all of the primes up to (and possibly including) n.
 
 200 rem initialize storage
-210 b = 2
-220 @$[b] = 1 
-230 inc b : if b > n goto 300
-240 if b % 2 = 0 then @$[b] = 0 : goto 230
-250 goto 220
+210 SetMemB(1,n,addr(@[0]))
+220 SetMemW(1,n-3,addr(@$[3]))
+230 @$[0] = 0 : @$[1] = 0
 
 
-300 print "Begin scan loop through from 2 to ";n;" and mark numbers, cleared ";b
+300 print "Begin scan loop through from 2 to ";n;" and mark numbers, initialized  ";n;" Entries"
 320 a = 3 : b = 6
 
 330 @$[b] = 0 : b = b + a : if b <= n goto .

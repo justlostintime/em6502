@@ -45,30 +45,31 @@
     }
   }
   { DebugMenu Menu
-    Text = ("Debugging")
+    Text = ("Performance")
     { Profilemenu Menu
       Text = ("Profiling")
     }
   }
   { InfoSection TabPanel
-    MoveScaled(1,2,82,97)
+    MoveScaled(1,2,82,100)
     Expand = True
     AutoResize = True
+    Spacing = True
     Count = 4
     Index = 0
-    Text = ("Single Step/Trace Output")
+    Text = ("Single Step/Trace Output...")
     { !Disassembly TerminalView
       MoveScaled(0,3,82,90)
       #Public = True
-      Font = Font["Ubuntu Mono,+3"]
+      Font = Font["Ubuntu Mono"]
       ToolTip = ("Display the disassembled instruction of the next\ninstruction to be executed.\nKeeps a list of the last 1000 instructions executed.")
       Expand = True
       ShowScrollBar = True
     }
     { Label14 Label
-      MoveScaled(45,0,27,3)
-      Font = Font["Monospace"]
-      Text = ("Flags    AC X  Y  SP")
+      MoveScaled(1,0,80,3)
+      Font = Font["Ubuntu Mono"]
+      Text = ("                                         Flags      AC X  Y  SP")
     }
     Index = 1
     Text = ("Computers")
@@ -80,86 +81,93 @@
       { !Computers ListView
         MoveScaled(1,6,21,18)
         #Public = True
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Double click a computer name here\nto display/edit its configuration")
         Sorted = True
         ScrollBar = Scroll.Vertical
       }
-      { Label13 Label
-        MoveScaled(2,1,13,4)
+      { ActiveConfig Label
+        MoveScaled(2,1,17,4)
+        Font = Font["FreeSerif"]
         Text = ("Active Config")
       }
-      { Panel3 Panel
-        MoveScaled(23,6,54,18)
+      { ComputerDetail Panel
+        MoveScaled(23,6,48,18)
         ToolTip = ("If you select this then the computer\nwill autostart at the provided address.\nif autostart is on and no address is provided\nthen the computer will begin at the reset vector\naddress.")
         Expand = True
         AutoResize = True
         { ComputerName TextBox
-          MoveScaled(17,2,34,4)
-          Text = ("Enter a name here if you are creating a new computer definition.\nThis will also display the name  of  any selected computer to the left.\nIf you want to make a copy of a computer, just click on it then change the name here and then click save.\n ")
+          MoveScaled(15,2,31,4)
         }
         { Label23 Label
-          MoveScaled(1,2,16,4)
+          MoveScaled(0,2,14,4)
+          Font = Font["FreeSerif"]
           Text = ("Computer Name")
         }
         { Label24 Label
-          MoveScaled(1,8,14,3)
+          MoveScaled(0,8,14,3)
           Text = ("Starting Speed")
         }
         { SpeedDef SliderBox
-          MoveScaled(17,8,35,4)
+          MoveScaled(15,8,31,4)
+          Font = Font["FreeSerif"]
           ToolTip = ("Sets the amount of time between instructions, Gambas is not\nable to get a time at a small enough time slot to make this\nmore accurate. Hence the name speed not MHZ.\nThis is use only when auto-start is com figured.\nIt defaults to 500 otherwise. 1000 is the fastest speed")
           MaxValue = 1000
           Value = 500
         }
         { AutoStartActive CheckBox
-          MoveScaled(1,14,14,3)
-          Text = ("Auto Start")
+          MoveScaled(1,13,17,4)
+          Font = Font["FreeSerif"]
+          ToolTip = ("Enter a name here if you are creating a new computer definition.\nThis will also display the name  of  any selected computer to the left.\nIf you want to make a copy of a computer, just click on it then change the name here and then click save.\n ")
+          Text = ("Auto Start @")
         }
         { AutoStartAddress TextBox
-          MoveScaled(17,13,15,4)
+          MoveScaled(19,13,21,4)
+          Font = Font["FreeSerif"]
           ToolTip = ("If an address is entered here, when the computer starts the program counter will be set to this address just before the cpu starts to execute.")
         }
       }
       { !NewComp Button
-        MoveScaled(36,25,8,4)
+        MoveScaled(30,25,8,4)
         #Public = True
         ToolTip = ("Use this to create a new computer\ndefinition. This will clear all fields and\nwait for input")
         Text = ("New")
       }
       { DeleteComp Button
-        MoveScaled(24,25,8,4)
+        MoveScaled(21,25,8,4)
         ToolTip = ("Use this to delete the computer definition")
         Text = ("Delete")
       }
       { SetAsDefault Button
-        MoveScaled(62,25,15,4)
+        MoveScaled(48,25,15,4)
         ToolTip = ("Use this to make This computer\ndefinition the default used at\nstartup.")
         Text = ("Set As Default")
       }
       { !SaveComp Button
-        MoveScaled(49,25,8,4)
+        MoveScaled(39,25,8,4)
         #Public = True
         ToolTip = ("Use this to Save updated configuration\nor to save a new computer definition.\nif you cnagne the name of the displayed\ncomputer. The information will be saved as a new\ncomputer definition with the new name.")
         Text = ("Save")
       }
       { ActiveComputer TextBox
-        MoveScaled(17,1,18,4)
+        MoveScaled(14,1,21,4)
+        Font = Font["FreeSerif"]
         Background = Color.Transparent
-        Text = ("Displays the name of the currently executing computer definition")
+        ToolTip = ("Displays the name of the currently executing computer definition")
         ReadOnly = True
-        Border = False
       }
       { !DefaultComputer TextBox
-        MoveScaled(55,1,17,4)
+        MoveScaled(50,1,18,4)
         #Public = True
+        Font = Font["FreeSerif"]
         Background = Color.Transparent
         ToolTip = ("Displays the name of the current system default computer definition. That is the computer displayed here will be automatically loaded and started when the em6502 is run.")
         Text = ("Default")
         ReadOnly = True
-        Border = False
       }
-      { Label26 Label
-        MoveScaled(37,1,17,4)
+      { Template Label
+        MoveScaled(36,1,15,4)
+        Font = Font["FreeSerif"]
         Text = ("Default Template")
       }
       { MakeActive Button
@@ -173,7 +181,7 @@
         Padding = 8
         Header = GridView.Horizontal
       }
-      { Label25 Label
+      { DevInfoLabel1 Label
         MoveScaled(0,30,80,4)
         Background = Color.LightGray
         Alignment = Align.Center
@@ -184,8 +192,9 @@
         ToolTip = ("To Remove a device click on an item in the row to me removed\nthen click the remove device button. \nChanges are not permenant until the Computer Config is\nsaved.")
         Text = ("Remove")
       }
-      { Label27 Label
-        MoveScaled(13,35,66,6)
+      { DevInfoLabel2 Label
+        MoveScaled(11,35,68,6)
+        Font = Font["Ubuntu Mono,-1"]
         Text = ("To add a device Click in an empty first Column and Select the Device from\n the dropdown. Changes are not permenant until Comp Config is saved.")
       }
     }
@@ -195,7 +204,7 @@
       MoveScaled(1,1,79,74)
       #Public = True
       Expand = True
-      Mode = "C"
+      Mode = "Custom"
       TabIndent = True
       ShowCurrent = True
       ShowLineNumber = True
@@ -209,17 +218,17 @@
       Background = Color.SelectedBackground
       { SaveProg Button
         MoveScaled(13,1,12,3)
-        ToolTip = ("Save an assempler source file")
+        ToolTip = ("Save an assembler source file")
         Text = ("Save")
       }
       { SaveAsProg Button
         MoveScaled(26,1,12,3)
         ToolTip = ("Save the current Source  with a new name and possible location")
-        Text = ("Save")
+        Text = ("SaveAs")
       }
       { NewProg Button
         MoveScaled(40,1,17,3)
-        ToolTip = ("Create a new empty assempler source file")
+        ToolTip = ("Create a new empty assembler source file")
         Text = ("New")
       }
       { AsmbProg Button
@@ -229,7 +238,7 @@
       }
       { OpenProg Button
         MoveScaled(1,1,11,3)
-        ToolTip = ("OPen an assempler source file")
+        ToolTip = ("OPen an assembler source file")
         Text = ("Open")
       }
       { !AsmDasmSelect RadioButton
@@ -260,14 +269,15 @@
     Index = 3
     Text = ("Asm output")
     { !AsmOutput TerminalView
-      MoveScaled(1,1,81,86)
+      MoveScaled(2,1,78,85)
       #Public = True
       ToolTip = ("Displays the ouptput from the last assembly.")
+      AutoResize = False
       ShowScrollBar = True
       ReadOnly = True
     }
     { AsmOutputButtons Panel
-      MoveScaled(1,87,81,5)
+      MoveScaled(1,88,80,5)
       { LoadToRome Button
         MoveScaled(27,1,22,3)
         ToolTip = ("- Set the cpu to single step mode\n- Load the binary to  Rom memory  \n- First two bytes of the file contain the load address\n- reset the cpu")
@@ -289,15 +299,17 @@
   { AllControls Panel
     MoveScaled(84,1,111,100)
     { LoadPanel Panel
-      MoveScaled(1,1,74,70)
+      MoveScaled(0,1,74,70)
       { !EnableBreakPoints CheckBox
-        MoveScaled(2,1,25,5)
+        MoveScaled(2,1,30,5)
         #Public = True
+        Font = Font["Ubuntu Condensed,-1"]
         ToolTip = ("Must be selected/deselected  to enable/disable  breakpoints")
         Text = ("Enable Break Points")
       }
       { LastBreakAddress TextBox
         MoveScaled(49,1,22,5)
+        Font = Font["Ubuntu Mono,-1"]
         Background = Color.Transparent
         ToolTip = ("The address of the next executable instruction. after a break point halts the cpu")
         ReadOnly = True
@@ -305,6 +317,7 @@
       }
       { Label19 Label
         MoveScaled(35,1,14,5)
+        Font = Font["Ubuntu Mono,-1"]
         Text = ("CPU Halted @")
       }
       { Label20 Label
@@ -315,80 +328,87 @@
       }
       { LoadedList ListView
         MoveScaled(1,50,28,19)
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("List of loaded Binary and rom images")
       }
       { DoLoad Button
         MoveScaled(57,50,15,4)
+        Font = Font["-2"]
         ToolTip = ("This will load a binary image into memory\nThe binary image must contain the in the first two byte\nthe address to which the image will be loaded.\nThe included simple assembler DASM does this automatically.\n\nWhen a binary is loaded its symbol table is also loaded when\nfound in ~/6502/asm with .sym extension.\n\nThe start point is automatically set to the start of the binary\n\nHistory\nMatthew Dillon started dasm in 1987-1988.\nOlaf \"Rhialto\" Seibert extended dasm in 1995.\nAndrew \"Dr.Boo\" Davie maintained dasm in 2003-2008.\nPeter Fröhlich maintained dasm in 2008-2015.\nIn 2019, the dasm source code and releases were moved to GitHub.\ndasm is distributed under the GNU General Public License.\nSite updated March 14, 2021\n\nhttps://dasm-assembler.github.io/")
         Text = ("Load Binary")
       }
       { Label21 Label
         MoveScaled(1,42,40,4)
-        Text = ("Enter Breakpoint addresses into this box")
+        Font = Font["Ubuntu Mono,-1"]
+        Text = ("Enter Breakpoint addresses above")
       }
       { !BreakPointList ListEditor
         MoveScaled(1,6,28,37)
         #Public = True
-        Font = Font["Monospace"]
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Enter Breakpoint address into this box")
       }
       { !SymbolTable ListView
         MoveScaled(38,6,35,37)
         #Public = True
-        Font = Font["Monospace,-1"]
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("List of symbols from any *.sym files found for the loaded binaries. This searches ~/6502/asm for these files")
         Sorted = True
         ScrollBar = Scroll.Vertical
       }
       { AddAddress Button
-        MoveScaled(31,20,5,3)
+        MoveScaled(31,17,5,3)
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Adds any selected break address to the break list. Don't forget to enable the breakpoints. These will only have an effect if the enable break points is selected.")
         Text = ("<--")
       }
       { RemoveAddress Button
-        MoveScaled(31,24,5,3)
+        MoveScaled(31,22,5,3)
+        Font = Font["Ubuntu Mono"]
         Text = ("-->")
       }
       { LoadSymbols Button
         MoveScaled(57,55,15,4)
+        Font = Font["-2"]
         ToolTip = ("This will allow you to load a symbol table in the\nformat output from DASM assembler or any similar\nFormat.\n\nFormat:\n\nSymbolName  Address .......All other fields are ignored\n\nThe symbol table for binary images are loaded automatically\nif found in ~/6502/asm with the .sym extension.\n")
         Text = ("Load Symbols")
       }
       { ClearSymbols Button
         MoveScaled(57,60,15,4)
+        Font = Font["-2"]
         ToolTip = ("Clear all symbol table entries")
         Text = ("Clear Symbols")
       }
       { !SymLoadedList ListView
         MoveScaled(30,50,26,19)
         #Public = True
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("List of symbol tables loaded\nDouble Click to open source code \ndebbuger for a selected binary")
       }
       { RemoveAll Button
-        MoveScaled(30,30,7,3)
+        MoveScaled(30,27,7,3)
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Clear All Break Point")
         Text = ("Clear")
       }
-      { RestoreBreakpoints Button
-        MoveScaled(29,34,9,3)
-        ToolTip = ("Restore the breakpoints from the last debug session. Keeps track of any address changes of symbols since last used. Any symbol that has disappeared from the new executable is dropped from the list. Except if addresses have been entered manually.")
-        Text = ("Restore")
-      }
       { WatchSymbol Button
         MoveScaled(30,12,7,3)
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Adds a location to watch to the watch window.")
         Text = ("Watch")
       }
       { OpenSourceDebug Button
         MoveScaled(57,65,15,4)
+        Font = Font["-2"]
         ToolTip = ("Open a source code debugger\nYou must select the listing file which matches the loaded binary.\nIf you have a symbol table loaded then\nyou can just select the sym entry and double click to open the source")
         Text = ("Src Debug")
       }
     }
     { ControlPanel Panel
-      MoveScaled(0,72,74,26)
+      MoveScaled(0,72,74,27)
       { RunModeSet RadioButton
-        MoveScaled(2,9,14,3)
+        MoveScaled(1,10,17,4)
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Indicates that the CPU is in run mode\nwhen set")
         Text = ("Run")
       }
@@ -400,6 +420,7 @@
       }
       { SetTrace ToggleButton
         MoveScaled(62,1,11,4)
+        Font = Font["FreeSans"]
         ToolTip = ("This is on when dark,\nClick to turn Tracing on and off\nTurning this off will improve speed!")
         Text = ("Trace")
         Value = True
@@ -409,26 +430,28 @@
         ToolTip = ("Enter the Address you want to begin execution at.\nif blank then it will start at the reset vector address.")
       }
       { Label11 Label
-        MoveScaled(46,0,15,4)
+        MoveScaled(46,2,15,4)
+        Font = Font["FreeSans"]
         Text = ("Start Address")
       }
       { StartStop Button
-        MoveScaled(0,0,14,4)
+        MoveScaled(2,0,14,4)
         ToolTip = ("Enable/Disables the computer for execution")
         Text = ("Start")
       }
       { resetCpu Button
-        MoveScaled(27,5,6,4)
+        MoveScaled(27,5,8,4)
         ToolTip = ("Resets the CPU and all devices")
         Text = ("Reset")
       }
       { NmiCpu Button
-        MoveScaled(27,0,6,4)
+        MoveScaled(27,0,8,4)
         ToolTip = ("Send an NMI to the Computer/CPU")
         Text = ("NMI")
       }
       { TextBox1 TextBox
         MoveScaled(1,14,16,5)
+        Font = Font["Ubuntu Mono,-1"]
         Background = Color.Transparent
         ToolTip = ("Control the execution speed of the cpu\n0 is slowest, Higher numbers are faster")
         Text = ("Speed Control")
@@ -443,32 +466,42 @@
       }
       { SetStatus ToggleButton
         MoveScaled(62,6,11,4)
+        Font = Font["FreeSans"]
         ToolTip = ("On when dark\nClicking this will turn on and off the status information\nTurning it off will speed up things quite a lot!")
         Text = ("Status")
         Value = True
       }
       { MemAccessReports CheckBox
-        MoveScaled(24,10,35,3)
+        MoveScaled(34,21,38,4)
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("When enabled The Cpu will report  invalid\nread and write memory access")
-        Text = ("Enable Memory Checking")
+        Text = ("Report Access to Invalid Memory")
         Value = CheckBox.True
       }
       { IrqCpu Button
-        MoveScaled(34,0,6,4)
+        MoveScaled(37,0,6,4)
         ToolTip = ("Send an IRQ to the Computer/CPU")
         Text = ("IRQ")
       }
       { SpeedScaler SliderBox
         MoveScaled(19,14,48,5)
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Control the execution speed of the cpu\n0 is slowest, Higher numbers are faster")
         MaxValue = 1000
         Value = 500
       }
       { SingleStepSet RadioButton
-        MoveScaled(2,5,14,3)
+        MoveScaled(1,6,17,4)
+        Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Indicates the cpu is in sigle step mode\nwhen set")
         Text = ("Single Step")
         Value = True
+      }
+      { RestoreBreakpoints Button
+        MoveScaled(2,21,29,5)
+        Font = Font["Ubuntu Mono,-1"]
+        ToolTip = ("Restore the breakpoints from the last debug session. Keeps track of any address changes of symbols since last used. Any symbol that has disappeared from the new executable is dropped from the list. Except if addresses have been entered manually.")
+        Text = ("ReOpen last debug session")
       }
     }
     { DumpPanel Panel
@@ -514,6 +547,7 @@
       Border = Border.Sunken
       { Label15 Label
         MoveScaled(3,33,16,4)
+        Font = Font["Ubuntu Mono,-1"]
         Text = ("Total Cycles")
       }
       { pc_info TextBox
@@ -554,43 +588,52 @@
       }
       { Label7 Label
         MoveScaled(4,39,24,4)
+        Font = Font["Ubuntu Mono,-1"]
         Text = ("SR or P Flags")
       }
       { flag_n CheckBox
         MoveScaled(1,46,13,3)
+        Font = Font["FreeSans,-1"]
         Text = ("Negative")
       }
       { Flag_O CheckBox
         MoveScaled(1,49,13,3)
+        Font = Font["FreeSans,-1"]
         Text = ("OverFlow")
       }
       { Flag_i CheckBox
         MoveScaled(1,52,24,4)
+        Font = Font["FreeSans,-1"]
         ToolTip = ("Flag Not used ignored by cpu")
         Text = ("ignored")
       }
       { Flag_B CheckBox
         MoveScaled(1,55,24,4)
+        Font = Font["FreeSans,-1"]
         ToolTip = ("Brk instruction being processed")
         Text = ("Break")
       }
       { Flag_IRQ CheckBox
         MoveScaled(1,61,24,4)
+        Font = Font["FreeSans"]
         ToolTip = ("Interupts are disabled. Except for NMI")
         Text = ("IRQ Disabled")
       }
       { Flag_Z CheckBox
         MoveScaled(1,64,24,4)
+        Font = Font["FreeSans,-1"]
         ToolTip = ("Flag Zer is set")
         Text = ("Zero")
       }
       { Flag_C CheckBox
         MoveScaled(1,67,24,4)
+        Font = Font["FreeSans,-1"]
         ToolTip = ("Flag carry is set")
         Text = ("Carry")
       }
       { Flag_D CheckBox
-        MoveScaled(1,58,24,4)
+        MoveScaled(1,58,30,4)
+        Font = Font["FreeSans,-1"]
         ToolTip = ("The cpu is in bcd arithmatic mode")
         Text = ("Decimal(BCD Arithmatic)")
       }
@@ -599,7 +642,7 @@
         Text = ("PC")
       }
       { SR_info TextBox
-        MoveScaled(2,42,17,4)
+        MoveScaled(2,42,13,4)
         ToolTip = ("Displays the CPU flag register as a value")
         ReadOnly = True
       }
@@ -609,25 +652,26 @@
         ReadOnly = True
       }
       { AddrBus_Info TextBox
-        MoveScaled(11,71.2,23,4)
-        Text = ("Current contents of the address bus set by the cpu")
+        MoveScaled(14,71,20,4)
+        ToolTip = ("Current contents of the address bus set by the cpu")
         ReadOnly = True
       }
       { DataBus_INFO TextBox
-        MoveScaled(11,75,10,4)
+        MoveScaled(14,75,10,4)
         ToolTip = ("Current content of the data bus written by the CPU or provided by one of the RAM/ROM or peripheral devices")
         ReadOnly = True
       }
       { Label8 Label
-        MoveScaled(1,71.2,9,5)
-        Text = ("Adr Bus")
+        MoveScaled(1,71.1429,11,5)
+        Text = ("Addr Bus")
       }
       { Label9 Label
-        MoveScaled(1,75.2,9,4)
+        MoveScaled(1,75.1429,12,4)
         Text = ("Data Bus")
       }
       { Label10 Label
-        MoveScaled(3,27,15,4)
+        MoveScaled(2,27,17,4)
+        Font = Font["Ubuntu Mono,-1"]
         Text = ("Total Instructions")
       }
       { Label12 Label
@@ -644,11 +688,13 @@
       }
       { Label16 Label
         MoveScaled(20,33,13,4)
-        Text = ("Cycles per Sec")
+        Font = Font["Ubuntu Mono,-1"]
+        Text = ("Cycles/Sec")
       }
       { Label17 Label
         MoveScaled(20,27,15,4)
-        Text = ("Instructions/Sec")
+        Font = Font["Ubuntu Mono,-1"]
+        Text = ("Inst/Sec")
       }
       { TotalCycles TextBox
         MoveScaled(2,36,17,4)
@@ -661,18 +707,18 @@
         ReadOnly = True
       }
       { MHZ TextBox
-        MoveScaled(20,42,10,4)
+        MoveScaled(16,42,13,4)
         ToolTip = ("Displays the the emulated speed of the cpu\nthis is calculated from the number of cpu cycles per\nsecond the emulateris able to execute.\nIt seems to be able to run at a maximum speed\nof about 4.1MHZ on a 2GHZ computer.\nYour milage may vary!")
         Alignment = Align.Right
         ReadOnly = True
       }
       { Label18 Label
-        MoveScaled(30,42,4,4)
+        MoveScaled(29,42,5,4)
         Font = Font["Open Sans"]
         Text = ("Mhz")
       }
       { GoStop ToolButton
-        MoveScaled(30,1,4,4)
+        MoveScaled(31,1,4,4)
         Background = Color.Transparent
         ToolTip = ("DIsplays the Status of the cpu ececution core\nGreen   the cpu is running\nRed       the cpu is stopped")
         Picture = Picture["OffLed.png"]

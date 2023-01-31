@@ -1,0 +1,16 @@
+10 A = 1000 
+20 H = 0 
+30 B = fn A ( 1 , 2 , 3 ) 
+35 if b <> 3+1+2+3 print "Call error expected : ";3+1+2+3;" And Got ";B
+40 if H % 25 = 0 print "fnA(1,2,3) returned(" ; B ; ")" 
+50 inc H : if H < 1000 goto 30
+60 goto 20
+
+1000 if H % 100 <> 0 return ( 3+#[0]+#[1]+#[2] ) 
+1010 d = #[0]+#[1]+#[2]
+1020 print "Params:" ; # [ 0 ] , # [ 1 ] , # [ 2 ] , "Count=" ; H 
+1030 rem C = fn 2000 ( 3 , d  ) 
+1040 C = fn 2000 ( 3 , #[0]+#[1]+#[2],5  )
+1050 return (C)
+
+2000 return ( # [ 0 ] + # [ 1 ] ) 

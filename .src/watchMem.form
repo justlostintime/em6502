@@ -1,12 +1,13 @@
 # Gambas Form File 3.0
 
 { Form Form
-  MoveScaled(0,0,94,104)
+  MoveScaled(0,0,53,71)
   ToolTip = ("This watches memory locations selected from the symbol table.\nThis is updated after each single step or whne trace is enabled.\nThis deos not show anything until the first single step or trace \nafter being selected.")
-  Text = ("Watch Memory location")
+  Text = ("Watch Memory location - Disabled")
   { !WatchList GridView
-    MoveScaled(1,2,89,92)
+    MoveScaled(1,2,50,60)
     #Public = True
+    Font = Font["FreeMono,7"]
     Background = Color.TextBackground
     Foreground = Color.TextForeground
     ToolTip = ("This is a list of Watched items")
@@ -16,29 +17,34 @@
     Sorted = True
   }
   { WatchButtons Panel
-    MoveScaled(1,95,89,6)
+    MoveScaled(2,63,49,6)
     { !WatchAddValue TextBox
-      MoveScaled(1,1,26,4)
+      MoveScaled(1,1,15,4)
       #Public = True
+      Font = Font["8"]
       ToolTip = ("The Address to be added to the watch list")
     }
     { AddWatch Button
-      MoveScaled(29,1,11,4)
+      MoveScaled(17,1,6,4)
+      Font = Font["8"]
       ToolTip = ("Add the address to watch")
       Text = ("Add")
     }
     { RemoveWatch Button
-      MoveScaled(42,1,10,4)
+      MoveScaled(24,1,7,4)
+      Font = Font["8"]
       ToolTip = ("Remove the selected watch items")
       Text = ("Remove")
     }
     { ClearAll Button
-      MoveScaled(55,1,13,4)
+      MoveScaled(32,1,8,4)
+      Font = Font["8"]
       ToolTip = ("Clear all Watched memory")
       Text = ("Clear All")
     }
     { EnableDisableWatch Button
-      MoveScaled(70,1,17,4)
+      MoveScaled(41,1,7,4)
+      Font = Font["8"]
       ToolTip = ("Enable or disable Memory monitoring")
       Text = ("Disable")
     }

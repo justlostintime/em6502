@@ -1,0 +1,77 @@
+10 Rem test the memory function
+15 m = 1000  : rem max free memory for a test 
+20 Print " Testing the Set Memory Byte values function"
+30 SetMemB(55,m,addr(@[0]))
+40 a = 0
+50 if @$[a] <> 55 goto 1000
+60 inc a : if a < m goto 50
+70 Print " Set Byte Memory Passed": print
+
+80 print " Testing the Set Memory Word values function"
+90 a = 0
+100 SetMemW(55,m,addr(@[0]))
+110 if @[a] <> 55 goto 2000
+120 inc a : if a < m/2 goto 110
+130 print " Set Word Memory Passed": print
+
+140 print " Testing copy memory block"
+150 CopyMem(m,addr(@$[m+1]),addr(@$[0])) : rem  CopyMem(length,dest,source)
+160 a = 0
+170 if @$[a] <> @$[m+1+a] goto 3000
+180 inc a : if a < m goto 170
+190 print " Copy Memory Passed": print
+
+200 print " Testing  Memory compare with equal blocks"
+210 z = CmpMem(m,addr(@$[m+1]),addr(@$[0]))
+215 if z <> 0 goto 4000 : Rem they should be equal
+217 Print " Compare equal Passed":print
+
+220 Print " Testing Memory compare with s1 < s2 " : poke(addr(@[100]),0)
+230 z = CmpMem(m,addr(@$[m+1]),addr(@$[0]))
+235 if z <> -1 goto 4100 : Rem s1 < s2 return -1
+237 Print " Compare s1 < s2  Passed":print
+
+240 Print " Testing Memory compare with s1 > s2 " : poke(addr(@[100]),-1)
+250 z = CmpMem(m,addr(@$[m+1]),addr(@$[0]))
+255 if z <> 1 goto 4200 : Rem s1 > s2 return 1
+257 Print " Compare  S1 > s2 Passed":print
+
+260 print " Compare memory Complete": print
+
+999 end
+
+
+1000 print " Set Byte memory failed at ";a
+1010 Print " SetMemB(55,100,";addr(@[0]);")"
+1020 Gosub 10000(100,0)
+1030 end
+
+2000 print " Set Word Memory Failed at ";a
+2010 Print " SetMemW(55,100,";addr(@[0]);")"
+2020 gosub 10000(100,0)
+2030 end
+
+3000 print " Copy Memory Failed at ";a
+3010 Print " CopyMem(100,";addr(@$[110]);",";addr(@$[0]);")"
+3020 gosub 10000(100,0)
+3030 print " to the following"
+3040 gosub 10000(100,110)
+3050 end
+
+4000 Print " Compare for equal failed wanted 0  Got ";z
+4010 goto 220
+
+4100 Print " Compare for s1 < s2 Failed Wanted -1 Got ";z
+4110 goto 240
+
+4200 Print " Compare for s1 > s2 Failed Wanted 1 Got ";z
+4210 end
+
+
+10000 rem dump the test memory Call with 10000(length,address)
+10010 print "Count =";#[0];" Start Address = ";addr(@$[#[1]])
+10020 z = #[1] : w = 1
+10030 print @$[z];" "; : if w % 16 = 0 then print 
+10050 inc z : inc w : if z < #[0]  goto 10030
+10060 print : Print "--------------------"
+10070 return
