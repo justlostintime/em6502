@@ -22,7 +22,6 @@
 220 SetMemW(1,n-3,addr(@$[3]))
 230 @$[0] = 0 : @$[1] = 0
 
-
 300 print "Begin scan loop through from 2 to ";n;" and mark numbers, initialized  ";n;" Entries"
 320 a = 3 : b = 6
 

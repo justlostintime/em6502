@@ -67,7 +67,7 @@ setFileName:
                 clc
                 adc     CUROFF                           ; add the current offset
                 sta     CUROFF                           ; Update the buffer pointer after complete
-
+ResetFileName:
                 ldy     #DiskFileName&$ff
                 ldx     #DiskFileName>>8
                 clc
@@ -100,6 +100,13 @@ wrmOk
 iOPENWRITE
       if        XKIM || CTMON65
                 jsr     setFileName
+                jsr     getILByte           ;get the append or create byte
+                cmp     #1                  ;create/truncate
+                bne     iopencont
+                jsr     DiskRmFile          ;by default files opened for write are append
+                jsr     ResetFileName       ;point back to the file name
+iopencont:
+
                 jsr     DiskOpenWrite       ;attempt to open file
                 bcc     Wopenok             ;branch if opened ok
 ;
@@ -268,7 +275,7 @@ SetOutDisk      lda     #DOUT&$ff
 ;
 DOUT            stx    DiskFileName             ; Save the x value, fulename not used
                 sty    DiskFileName+1           ; Save the y value  filename not actually used
-                sta     buffer                  ; Store the byte to send into the buffer 
+                sta     buffer                  ; Store the byte to send into the buffer
                 lda     #1                      ; set number of bytes to send to 1
                 ldy     #buffer&$ff             ; Load the low order address of buffer to y
                 ldx     #buffer>>8              ; Load the high order address of buffer to x

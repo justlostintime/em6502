@@ -1,6 +1,6 @@
 Modules list:
 -------------
-helloworld.o:
+hello.o:
     CODE              Offs=000000  Size=0006DE  Align=00001  Fill=0000
     RODATA            Offs=000000  Size=000643  Align=00001  Fill=0000
 /usr/share/cc65/lib/kim1.lib(_directerrno.o):
@@ -306,14 +306,14 @@ __RAM_START__ ([linker generated]):
 __STACKSIZE__ ([linker generated]):
     _heap.o                   common/_heap.s:8
 __STARTUP__ (crt0.o):
-    helloworld.o              helloworld.s:13
+    hello.o                   hello.s:13
 ___directerrno (_directerrno.o):
     write.o                   /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
     open.o                    /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
     close.o                   /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
 ___errno (errno.o):
     _seterrno.o               /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:7
-    helloworld.o              helloworld.s:26
+    hello.o                   hello.s:26
 ___heapend (_heap.o):
     malloc.o                  /home/brian/Projects/6502cc65/cc/cc65/asminc/_heap.inc:33
 ___heapfirst (_heap.o):
@@ -355,50 +355,50 @@ __printf (_printf.o):
     vfprintf.o                common/vfprintf.s:10
 _close (close.o):
     fclose.o                  common/fclose.s:10
-    helloworld.o              helloworld.s:25
+    hello.o                   hello.s:25
 _diskupdateptr (write.o):
     read.o                    kim1/read.s:4
 _diskwritedebug (write.o):
     read.o                    kim1/read.s:4
 _fclose (fclose.o):
-    helloworld.o              helloworld.s:14
+    hello.o                   hello.s:14
 _fgetc (fgetc.o):
     fgets.o                   ../libwrk/kim1/fgets.s:13
 _fgets (fgets.o):
-    helloworld.o              helloworld.s:15
+    hello.o                   hello.s:15
 _fopen (fopen.o):
-    helloworld.o              helloworld.s:16
+    hello.o                   hello.s:16
 _fputc (fputc.o):
     putchar.o                 common/putchar.s:10
 _fread (fread.o):
-    helloworld.o              helloworld.s:17
+    hello.o                   hello.s:17
 _free (free.o):
-    helloworld.o              helloworld.s:22
+    hello.o                   hello.s:22
 _fwrite (fwrite.o):
     vfprintf.o                common/vfprintf.s:10
-    helloworld.o              helloworld.s:18
+    hello.o                   hello.s:18
 _ltoa (ltoa.o):
     _printf.o                 common/_printf.s:12
-_main (helloworld.o):
+_main (hello.o):
     crt0.o                    kim1/crt0.s:8
 _malloc (malloc.o):
-    helloworld.o              helloworld.s:21
+    hello.o                   hello.s:21
 _open (open.o):
     _fopen.o                  common/_fopen.s:10
-    helloworld.o              helloworld.s:24
+    hello.o                   hello.s:24
 _printf (printf.o):
-    helloworld.o              helloworld.s:19
+    hello.o                   hello.s:19
 _putchar (putchar.o):
-    helloworld.o              helloworld.s:20
+    hello.o                   hello.s:20
 _read (read.o):
     fgetc.o                   ../libwrk/kim1/fgetc.s:14
     fread.o                   common/fread.s:10
-    helloworld.o              helloworld.s:27
+    hello.o                   hello.s:27
 _stdout (_file.o):
     putchar.o                 common/putchar.s:9
     printf.o                  common/printf.s:8
 _strcpy (strcpy.o):
-    helloworld.o              helloworld.s:23
+    hello.o                   hello.s:23
 _strlen (strlen.o):
     _printf.o                 common/_printf.s:13
 _strlower (strlower.o):
@@ -412,7 +412,7 @@ _write (write.o):
     fwrite.o                  common/fwrite.s:10
 addeqysp (addeqsp.o):
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 addysp (addysp.o):
     incsp3.o                  runtime/incsp3.s:8
     printf.o                  common/printf.s:8
@@ -421,8 +421,8 @@ addysp (addysp.o):
     incsp4.o                  runtime/incsp4.s:8
     fwrite.o                  common/fwrite.s:11
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    helloworld.o              helloworld.s:1351
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
+    hello.o                   hello.s:1351
 axlong (axlong.o):
     _printf.o                 common/_printf.s:11
 axulong (axlong.o):
@@ -434,7 +434,7 @@ ctypemaskdirect (ctypemask.o):
 decsp1 (decsp1.o):
     fgetc.o                   ../libwrk/kim1/fgetc.s:95
 decsp2 (decsp2.o):
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 decsp4 (decsp4.o):
     lpush.o                   runtime/lpush.s:12
     fgets.o                   ../libwrk/kim1/fgets.s:115
@@ -456,15 +456,15 @@ initlib (condes.o):
     crt0.o                    kim1/crt0.s:9
 ldax0sp (ldaxsp.o):
     fread.o                   common/fread.s:13
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 ldaxysp (ldaxsp.o):
     fwrite.o                  common/fwrite.s:11
     fread.o                   common/fread.s:13
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    helloworld.o              helloworld.s:1351
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
+    hello.o                   hello.s:1351
 ldeaxysp (ldeaxysp.o):
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 leaa0sp (leaaxsp.o):
     fputc.o                   ../libwrk/kim1/fputc.s:75
     fgetc.o                   ../libwrk/kim1/fgetc.s:95
@@ -509,7 +509,7 @@ ptr1 (zeropage.o):
     free.o                    common/free.s:62
     fread.o                   common/fread.s:17
     fclose.o                  common/fclose.s:11
-    helloworld.o              helloworld.s:11
+    hello.o                   hello.s:11
 ptr2 (zeropage.o):
     strlower.o                common/strlower.s:13
     strlen.o                  common/strlen.s:12
@@ -533,9 +533,9 @@ ptr4 (zeropage.o):
     mul.o                     runtime/mul.s:10
     free.o                    common/free.s:62
 push0 (pushax.o):
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 push0ax (lpush.o):
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 push1 (push1.o):
     _printf.o                 common/_printf.s:11
     vfprintf.o                common/vfprintf.s:9
@@ -544,8 +544,8 @@ pusha0 (pushax.o):
     fputc.o                   ../libwrk/kim1/fputc.s:75
     fgetc.o                   ../libwrk/kim1/fgetc.s:95
     fread.o                   common/fread.s:11
-    helloworld.o              helloworld.s:1351
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
+    hello.o                   hello.s:1351
 pushax (pushax.o):
     fputc.o                   ../libwrk/kim1/fputc.s:75
     fgetc.o                   ../libwrk/kim1/fgetc.s:95
@@ -556,18 +556,18 @@ pushax (pushax.o):
     fread.o                   common/fread.s:11
     fopen.o                   common/fopen.s:11
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    helloworld.o              helloworld.s:1351
-    helloworld.o              helloworld.s:1351
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
+    hello.o                   hello.s:1351
+    hello.o                   hello.s:1351
 pusheax (lpush.o):
     _printf.o                 common/_printf.s:11
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 pushwysp (pushwsp.o):
     vfprintf.o                common/vfprintf.s:9
     fwrite.o                  common/fwrite.s:11
     fread.o                   common/fread.s:14
-    helloworld.o              helloworld.s:1351
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
+    hello.o                   hello.s:1351
 regbank (zeropage.o):
     fputc.o                   ../libwrk/kim1/fputc.s:10
     fgetc.o                   ../libwrk/kim1/fgetc.s:10
@@ -612,7 +612,7 @@ sp (zeropage.o):
     crt0.o                    /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:11
     addysp.o                  runtime/addysp.s:8
     addeqsp.o                 runtime/addeqsp.s:8
-    helloworld.o              helloworld.s:10
+    hello.o                   hello.s:10
 sreg (zeropage.o):
     lneg.o                    runtime/lneg.s:11
     ltoa.o                    common/ltoa.s:11
@@ -622,20 +622,20 @@ sreg (zeropage.o):
     steaxsp.o                 runtime/steaxsp.s:8
     lpush.o                   runtime/lpush.s:13
     ldeaxysp.o                runtime/ldeaxysp.s:12
-    helloworld.o              helloworld.s:10
+    hello.o                   hello.s:10
 stax0sp (staxsp.o):
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 staxysp (staxsp.o):
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    helloworld.o              helloworld.s:1351
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
+    hello.o                   hello.s:1351
 steax0sp (steaxsp.o):
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 subeqysp (subeqsp.o):
     fgets.o                   ../libwrk/kim1/fgets.s:115
 subysp (subysp.o):
-    helloworld.o              helloworld.s:1351
+    hello.o                   hello.s:1351
 tmp1 (zeropage.o):
     ltoa.o                    common/ltoa.s:11
     copydata.o                common/copydata.s:9
@@ -644,7 +644,7 @@ tmp1 (zeropage.o):
     read.o                    kim1/read.s:5
     mul.o                     runtime/mul.s:10
     fgets.o                   ../libwrk/kim1/fgets.s:11
-    helloworld.o              helloworld.s:11
+    hello.o                   hello.s:11
 tosudivax (udiv.o):
     fwrite.o                  common/fwrite.s:12
     fread.o                   common/fread.s:15

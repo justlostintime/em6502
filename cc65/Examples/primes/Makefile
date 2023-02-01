@@ -1,5 +1,5 @@
-SOURCES = helloworld.c
-PROGRAM = ../../bin/helloworld.raw
+SOURCES = primes.c
+PROGRAM = ../../../bin/primes.raw
 CC65_TARGET=kim1
 CC      = cl65
 CFLAGS  = -T -l $(PROGRAM).lst -t $(CC65_TARGET) --create-dep $(<:.c=.d) -O
@@ -16,7 +16,7 @@ ifneq ($(MAKECMDGOALS),clean)
 -include $(SOURCES:.c=.d)
 endif
 
-%.o: %.c
+%.o:%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(PROGRAM): $(SOURCES:.c=.o)

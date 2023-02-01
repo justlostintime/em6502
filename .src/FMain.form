@@ -340,13 +340,14 @@
       { Label21 Label
         MoveScaled(1,42,40,4)
         Font = Font["Ubuntu Mono,-1"]
-        Text = ("Enter Breakpoint addresses above")
+        Text = ("Enter Breakpoint address/Symbol above")
       }
       { !BreakPointList ListEditor
-        MoveScaled(1,6,28,37)
+        MoveScaled(1,6,28,32)
         #Public = True
         Font = Font["Ubuntu Mono,-1"]
         ToolTip = ("Enter Breakpoint address into this box")
+        ReadOnly = True
       }
       { !SymbolTable ListView
         MoveScaled(38,6,35,37)
@@ -402,6 +403,9 @@
         Font = Font["-2"]
         ToolTip = ("Open a source code debugger\nYou must select the listing file which matches the loaded binary.\nIf you have a symbol table loaded then\nyou can just select the sym entry and double click to open the source")
         Text = ("Src Debug")
+      }
+      { addbreak TextBox
+        MoveScaled(1,38,28,3)
       }
     }
     { ControlPanel Panel

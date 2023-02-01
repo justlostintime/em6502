@@ -1112,3 +1112,37 @@ Public Sub OpenSourceDebug_Click()
   SourceDebugger.Show()
 
 End
+
+Public Sub BreakPointList_Add()
+
+  Dim newitem As String = Trim(addbreak.Text)
+  Dim addr As String = ""
+
+  If newitem = "" Then Return
+  addbreak.text = ""
+
+  If Disassembler.SymbolsByName.Exist(newitem) Then
+    addr = Disassembler.SymbolsByName.Exist[newitem]
+    BreakPointList.Add(Right("0000" & addr, 4) & " " & newitem)
+  Else If IsHexa(newitem) Then
+    addr = Right("0000" & newitem, 4)
+    newitem = addr & " " & newitem
+    BreakPointList.Add(newitem)
+  Else
+    Message("Symbol not found : " & BreakPointList.text)
+    Return
+  Endif
+
+  If EnableBreakPoints.value Then
+    SetNextBreak()
+  Endif
+
+End
+
+Public Sub addbreak_KeyRelease()
+
+  If Key.code = Key.Return Then
+    BreakPointList_Add()
+  Endif
+
+End

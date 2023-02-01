@@ -22,13 +22,11 @@ Static Public Sub RestoreWatched()
     If sKey Like "WatchVar/*" Then
       Symbol = Split(skey, "/")[1]
       Try addr = Disassembler.SymbolsByName[Symbol]                                 ' look it up the address may have changed
-      If Error Or addr = "10000" Then
-        Try addr = Eval("&H" & symbol)
-        If Error Then
-          addr = "0000"
-        Else
-          addr = Hex$(addr, 4)
-        Endif
+      If Error Then Continue
+      If addr = "" And IsHexa(Symbol) Then
+        addr = Symbol
+      Else
+        addr = "0000"
       Endif                                                       ' if not found then ust ignore it
       WatchMem.NewWatch(Symbol, addr, Settings[sKey &/ "Length"])                              ' The Legth was saved with the symbol name
     Endif
@@ -175,8 +173,6 @@ Public Sub UpdateEnableStateDisplay()
 
 End
 
-
-
 Public Sub WatchList_Change()
 
   Print "changed"
@@ -185,8 +181,22 @@ End
 
 Public Sub AddWatch_Click()
 
-  If WatchAddValue.text = "" Then Return
-  NewWatch(WatchAddValue.text, WatchAddValue.text)
+  Dim newitem As String = Trim(WatchAddValue.text)
+  Dim addr As String = ""
+
+  If newitem = "" Then Return
+
+  If Disassembler.SymbolsByName.Exist(newitem) Then
+    addr = Disassembler.SymbolsByName[newitem]
+  Else If IsHexa(newitem) Then
+    addr = Right("0000" & newitem, 4)
+    newitem = addr
+  Else
+    Message("Unable to find Symbol " & WatchAddValue.text)
+    Return
+  Endif
+
+  NewWatch(newitem, addr)
   WatchAddValue.text = ""
 
 End

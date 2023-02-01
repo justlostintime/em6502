@@ -220,6 +220,7 @@
 ;
         macro OPENWRITE
 		db	40
+		db  {1}             ; 0= append 1 = create/truncate
 		endm
 ;
 ; DCLOSE closes any open disk file.

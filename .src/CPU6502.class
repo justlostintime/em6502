@@ -6,6 +6,8 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
+Fast Unsafe
+
 Public PC As Long = &H0000                ' Program counter
 Public SP As Byte = &HFF                  ' Stack Pointer 0x100-0x1ff 256 bytes fifo
 
@@ -169,7 +171,7 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
 
   Address = Address Or ah
   Address = ((Address Shl 8) Or al)
-  If FMain.Verbose Then Error ("Loading Image to address "); Hex(address, 4)
+  If FMain.Verbose Then Error "@ "; ("Loading Image to address "); Hex(address, 4)
 
   Dim Length As Integer = Lof(BinInfo) - 2
   buffer = New Byte[length]
@@ -567,7 +569,7 @@ Fast Unsafe Public Sub Reset()
   PC = (PC Or (DataBus Shl 8))
 
   If SingleStep Then
-    If FMain.Verbose Then Error ("PC Reset");; Hex(pc)
+    If FMain.Verbose Then Error "@ "; ("PC Reset");; Hex(pc)
     StepInfo()
   Endif
 

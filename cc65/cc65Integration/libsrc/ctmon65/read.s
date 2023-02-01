@@ -16,13 +16,13 @@
 
         sta     ptr3
         stx     ptr3+1           ; Count in ptr3
-        
+
         sta     ptr2
         stx     ptr2+1           ; Increment and store in ptr2
-        
+
         inc     ptr2
         inc     ptr2+1
-        
+
 getNoInc:
         jsr     popptr1          ; Buffer address in ptr1
         jsr     popax            ; File Descriptor
@@ -35,7 +35,7 @@ begin:  dec     ptr2
         beq     done             ; If buffer full, return
 
 getch:  jsr     INTCHR           ; Get character using Monitor ROM call
-        ;jsr     OUTCHR           ; Echo it
+        jsr     OUTCHR           ; Echo it
         and     #$7F             ; Clear top bit
         cmp     #$07             ; Check for '\a'
         bne     chkcr            ; ...if BEL character

@@ -108,8 +108,8 @@ void main() {
       printf("fclose created %s file returned %d, Error number %d\n",dest,k,errno);
 
     }
-    k = remove("acopy.txt");
-    printf("Remove returned %d, Error number %d\n",k,errno);
+    //k = remove("acopy.txt");
+    //printf("Remove returned %d, Error number %d\n",k,errno);
   }
   printf("All tests complete");
 

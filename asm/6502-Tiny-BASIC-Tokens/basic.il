@@ -70,6 +70,10 @@ BasicFuncs:     db    kBeginFunc,kFuncCount
                 dw    ekPid
                 dw    ekAddr
                 dw    ekCmpMem
+;====================================================
+; file constants
+OPEN_APPEND     equ    0             ; append to file
+OPEN_CREATE     equ    1             ; truncate/create file
 
 ;=====================================================
 ; This is the IL of the BASIC (or whatever) language.
@@ -553,7 +557,7 @@ ekExit:
       if      (XKIM || CTMON65) && DISK_ACCESS
 
 ekSave:
-        OPENWRITE
+        OPENWRITE  OPEN_CREATE
         DLIST
         DCLOSE
         IJMP       CO
@@ -946,7 +950,7 @@ F2B2A:
 FactNumber:
         TSTN        FactVariable                 ;NUMBER, GET ITS VALUE.
         RTN
-        
+
 FactWithBracket:
         TSTB        F2RTN,oLeftBracket           ;PARENTHESIZED EXPR.
         CALL        EXPR
@@ -969,7 +973,7 @@ FactVariable:
         CALL        FactVarPTR
         CALL        FactVariableValue
         RTN
-        
+
 FactFNParm:
         TSTB         FactExpectedOpeningBracket,oLeftSQBracket
         CALL         EXPR
@@ -1008,7 +1012,7 @@ F2PTRLOADED:
 FactVariableValue
         IND                                       ; YES, GET THE VALUE as word
         RTN
-        
+
 FactMissingRightBracket:
         IJMP       ReturnExpectBracket
 FactExpectedOpeningBracket:
