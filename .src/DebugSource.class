@@ -6,7 +6,7 @@ Property MYCPU As CPU6502 Use $MYCPU
 Property MYCOMPUTER As Computer Use $MYCOMPUTER
 Property DebugFile As String Use $DebugFile
 ListingFileText As String = ""
-DisplayFileText As String = ""
+'DisplayFileText As String = ""
 AddressPerLine As New String[]                                    ' contains an entry for every line of the diplayed text
 SourceArray As String[]
 StepOver As String = ""

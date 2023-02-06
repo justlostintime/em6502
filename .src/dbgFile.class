@@ -1,0 +1,23 @@
+' Gambas class file
+
+' Author Westwood JustLostintime
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+CFileType As Boolean = False
+
+FileName As String
+
+csyms As Collection               ' syms if other module/ offset if local to scope  and scope
+scopes As Collection              '
+lines As Collection
+segments As Collection
+Modules As Collection             ' mod has a file number it relates to
+
+Public Sub _new(fileNum As String, debugInfo As Collection)
+
+
+
+End

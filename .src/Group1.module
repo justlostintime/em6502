@@ -180,7 +180,7 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     .IndirectX
     Goto StoreAC
 
-  Grp1Case41: ' sta zeropage
+  Grp1Case41: ' sta zeropage 65c02
     .ZeroPage
     Goto StoreAC
 

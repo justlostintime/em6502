@@ -1,9 +1,9 @@
 SOURCES = primes.c
-PROGRAM = ../../../bin/primes.raw
+PROGRAM = primes
 CC65_TARGET=kim1
 CC      = cl65
-CFLAGS  = -T -l $(PROGRAM).lst -t $(CC65_TARGET) --create-dep $(<:.c=.d) -O
-LDFLAGS = -t $(CC65_TARGET) -m $(PROGRAM).map
+CFLAGS  = -g -T -Oi -l ../../../lst/$(PROGRAM).lst --cpu 65c02 -Ln ../../../sym/$(PROGRAM).sym -t $(CC65_TARGET) --create-dep $(<:.c=.d) -O
+LDFLAGS = -g -Oi -t $(CC65_TARGET) -Ln ../../../sym/$(PROGRAM).sym -m ../../../map/$(PROGRAM).map -Wl --dbgfile,../../../sym/$(PROGRAM).dbg
 
 
 ########################################
@@ -20,7 +20,7 @@ endif
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(PROGRAM): $(SOURCES:.c=.o)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o ../../../bin/$@.raw $^
 
 clean:
-	$(RM) $(SOURCES:.c=.o) $(SOURCES:.c=.d) $(PROGRAM) $(PROGRAM).map
+	$(RM) $(SOURCES:.c=.o) $(SOURCES:.c=.d) ../../../bin/$(PROGRAM).raw ../../../map/$(PROGRAM).map ../../../lst/$(PROGRAM).lst ../../../sym/$(PROGRAM).sym

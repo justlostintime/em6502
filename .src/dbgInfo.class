@@ -1,0 +1,100 @@
+' Gambas class file
+
+' Author Westwood JustLostintime
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+''' This class reads the cc65 program.dbg file output
+''' from the cl65 or ld65 linker when the -g option is used
+'''
+''' version major=2,minor=0
+''' info	csym=32,file=532,lib=1,line=4819,mod=67,scope=4,seg=8,span=1146,sym=119,type=16
+'''
+''' Library as integer, libraryName as string
+'''
+''' FileID As Integer, name As String, Module As Integer, sizeOfFile As Integer
+'''
+''' moduleID As Integer, ObjectFileName As String, library As Integer
+'''
+''' cSymbol as integer, as string ,scope as integer ,type as integer ,sc as enum(ext,auto),optional( symbol as integer | offset as integer(eg -2) )
+'''                            assume 0 offset if symbol and offset not specified
+'''
+''' scope as integer, name as string, module as integer, type as string, size as integer, parentScope as integer, symbol as integer, span as integer
+'''
+''' span as integer, segment as integer, start as pointer, size as integer, optional type as integer
+'''
+''' symbol as integer, Name as string, addressSize as string, size as integer, scope as integer, definedLine as integer[], refrencedLine as integer[],
+'''                    type as enum [SymLabel,SymImplied], optional segment as integer, value as pointer(address in exec)
+'''
+''' segment as integer, name as string, size as integer, addressSize =enum [SegAbsolute], type as enum [SegRw,SegRo], ObjectName as string,
+'''                   ooff as integer
+'''
+''' ProgramLine as integer, fileindex as integer, linenumber as integer, optional type as integer, count as integer
+'''
+'''
+
+Property Read ValidFile As Boolean Use $ValidFile = False
+
+ResourceList As New Collection             'the raw file information
+csymList As New Collection
+fileList As New Collection
+libList As New Collection
+lineList As New Collection
+modList As New Collection
+scopeList As New Collection
+segList As New Collection
+spanList As New Collection
+symList As New Collection
+typeList As New Collection
+
+Public Sub _new(dbgFileName As String)
+
+  Dim skey As String
+
+  If Not Exist(dbgFileName) Then
+    Message.Error("Dbg info: file not found " & dbgFileName & " check file names")
+    Return
+  Endif
+
+  Dim dbgFile As File
+  Try dbgFile = Open dbgFileName For Read
+  If Error Then
+    Message.Error("Dbg info: Error opening file :" & dbgFileName)
+    Return
+  Endif
+
+  While Not Eof(dbgFile)
+    Dim inputLine As String
+    Dim inputType As String[]
+    Dim inputDetail As String[]
+
+    inputLine = ""
+    Try Line Input #dbgFile, inputLine
+    If Error Then
+      Message.Error("Unable to read debug info :" & Error.txt & ":" & Error.where)
+      Return
+    Endif
+
+    inputType = Split(inputline, "\t")
+    inputDetail = Split(inputType[1], ",")
+    Select Case inputType[0]
+      Case "version", "info"
+        ResourceList.add(inputDetail, inputType[0])
+      Default
+        skey = inputType[0] & "=" & Split(inputDetail[0], "=")[1]
+        ResourceList.add(inputDetail.Extract(1, -1), skey)
+    End Select
+  Wend
+
+  Print "done"
+
+End
+
+
+Private Function ValidFile_Read() As Boolean
+
+  Return $ValidFile
+
+End

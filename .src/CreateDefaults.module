@@ -110,8 +110,27 @@ Public Sub _call()
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
+    If Not Exist(.AsmComputerDefinitions &/ "C-Example") Then
+      Comp = New ComputerDef
+      Comp.Name = "C-Example"
+      Comp.Speed = 999
+      Comp.AutoStart = &h0200
+      Comp.AutoStartActive = True
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "hello.raw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
+      Comp["TTYSIM"] = [&h0E000, 16, "cc65 c program hello.c running with CTMON65 monitor"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp["HaltButton"] = [0, 0, "Quit Button"]
+      Comp["ShowMhz"] = [0, 0, "3000"]
+      Comp.Save(.AsmComputerDefinitions)
+    Endif
+
     copyDirectory("dev", .AsmDeviceDirectory)
     copyDirectory("asm", .AsmSourceDirectory)
+    copyDirectory("cc65", .Cc65SourceDirectory)
+    copyDirectory("lst", .AsmLstDirectory)
+    copyDirectory("sym", .AsmSymDirectory)
+    copyDirectory("map", .AsmMapDirectory)
     copyDirectory("bin", .AsmBinaryDirectory)
     copyDirectory("drives", .AsmDrivesDirectory)
     copyDirectory("doc", .ASMDocumentDirectory)
@@ -126,10 +145,10 @@ End
 Sub copyDirectory(path As String, topath As String)
 
   If Not Exist(toPath) Then
-    If FMain.Verbose Then Error ("Create Default :");; toPath;; "From";; path
+    If FMain.Verbose Then Error "" & ("Create Default :");; toPath;; "From";; path
     Try Shell.MkDir(ToPath)
     If Error Then
-      If FMain.Verbose Then Error ("Unable to make directory ");; topath;; Error.text
+      If FMain.Verbose Then Error "" & ("Unable to make directory ");; topath;; Error.text
       Return
     Endif
   Endif
@@ -145,15 +164,15 @@ Sub copyDirectory(path As String, topath As String)
   For Each s As String In Dir(path, "*", gb.file)
     If Right(s, 1) = "~" Then Continue
     If Not IsDir(Path &/ s) And If Exist(ToPath &/ s) Then
-      If FMain.Verbose Then Error ("Compare Files ");; Quote(Path) &/ Quote(s);; "to";; Quote(ToPath &/ s)
+      If FMain.Verbose Then Error "" & ("Compare Files ");; Quote(Path) &/ Quote(s);; "to";; Quote(ToPath &/ s)
       Try SourceFile = File.Load(Path &/ s)
       If Error Then
-        If FMain.Verbose Then Error ("Warning: Unable to read file for copy compare/copy ");; Quote(Path) &/ Quote(s)
+        If FMain.Verbose Then Error "" & ("Warning: Unable to read file for copy compare/copy ");; Quote(Path) &/ Quote(s)
         Continue
       Endif
       Try DestFile = File.Load(ToPath &/ s)
       If Error Then
-        If FMain.Verbose Then Error ("Warning: Unable to read file for copy compare/copy ");; Quote(ToPath &/ s)
+        If FMain.Verbose Then Error "" & ("Warning: Unable to read file for copy compare/copy ");; Quote(ToPath &/ s)
         Continue
       Endif
       If DestFile = SourceFile Then
@@ -167,7 +186,7 @@ Sub copyDirectory(path As String, topath As String)
         Endif
         If CliInterface.UpdateDevNoPrompt Or If Response = 1 Or If Response = 3 Then
           If response = 3 Then CliInterface.UpdateDevNoPrompt = True
-          If FMain.Verbose Then Error ("Updating ");; s;; ("Current Version Dated ");; Stat(ToPath &/ s).time;; "," & (" Available Version Date ");; Stat(Path &/ s).time
+          If FMain.Verbose Then Error "" & ("Updating ");; s;; ("Current Version Dated ");; Stat(ToPath &/ s).time;; "," & (" Available Version Date ");; Stat(Path &/ s).time
           Kill ToPath &/ s
         Else
           Continue
@@ -175,10 +194,10 @@ Sub copyDirectory(path As String, topath As String)
       Endif
     Endif
 
-    If FMain.Verbose Then Error ("Copy :");; s
+    If FMain.Verbose Then Error "" & ("Copy :");; s
     Try Copy path &/ s To ToPath &/ s
     If Error Then
-      If FMain.Verbose Then Error ("Unable to copy file ");; ToPath &/ s;; ("from");; path &/ s;; ":";; Error.text
+      If FMain.Verbose Then Error "" & ("Unable to copy file ");; ToPath &/ s;; ("from");; path &/ s;; ":";; Error.text
     Endif
   Next
 

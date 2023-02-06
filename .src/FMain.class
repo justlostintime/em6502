@@ -4,7 +4,11 @@
 Public MyComputer As Computer
 Public AsmRootDirectory As String
 Public AsmSourceDirectory As String
+Public Cc65SourceDirectory As String
 Public AsmBinaryDirectory As String
+Public AsmLstDirectory As String
+Public AsmMapDirectory As String
+Public AsmSymDirectory As String
 Public AsmDeviceDirectory As String
 Public AsmComputerDefinitions As String
 Public AsmDrivesDirectory As String
@@ -15,6 +19,7 @@ Public DefaultTemplate As String
 Public OriginalSource As String
 Public CurrentComputerDefinition As String
 Public DefaultComputerDefinition As String
+Public DebugTable As New Collection
 
 Public Verbose As Boolean = False
 
@@ -92,7 +97,11 @@ Public Sub ReadConfig()
 
   AsmRootDirectory = Settings["AsmRootDirectory", User.home &/ "6502"]
   AsmSourceDirectory = Settings["AsmSourceDirectory", User.home &/ "6502/asm"]
+  Cc65SourceDirectory = Settings["AsmSourceDirectory", User.home &/ "6502/cc65"]
   AsmBinaryDirectory = Settings["AsmBinaryDirectory", User.home &/ "6502/bin"]
+  AsmLstDirectory = Settings["AsmLstDirectory", User.home &/ "6502/lst"]
+  AsmMapDirectory = Settings["AsmMapDirectory", User.home &/ "6502/map"]
+  AsmSymDirectory = Settings["AsmSymDirectory", User.home &/ "6502/sym"]
   AsmDeviceDirectory = Settings["AsmDeviceDirectory", User.home &/ "6502/dev"]
   AsmComputerDefinitions = Settings["AsmComputerDefinitions", User.home &/ "6502/computer"]
   AsmDrivesDirectory = Settings["AsmDrivesDirectory", User.home &/ "6502/drives"]
@@ -106,7 +115,11 @@ Public Sub WriteConfig()
 
   Settings["AsmRootDirectory"] = AsmRootDirectory
   Settings["AsmSourceDirectory"] = AsmSourceDirectory
+  Settings["Cc65SourceDirectory"] = Cc65SourceDirectory
   Settings["AsmBinaryDirectory"] = AsmBinaryDirectory
+  Settings["AsmLstDirectory"] = AsmLstDirectory
+  Settings["AsmMapDirectory"] = AsmMapDirectory
+  Settings["AsmSymDirectory"] = AsmSymDirectory
   Settings["AsmDeviceDirectory"] = AsmDeviceDirectory
   Settings["AsmComputerDefinitions"] = AsmComputerDefinitions
   Settings["AsmDrivesDirectory"] = AsmDrivesDirectory
@@ -176,7 +189,8 @@ Public Sub The_Computer_BinaryLoaded(address As Long, BinName As String, info As
   Endif
   LoadedList.Add(address, info)
   StartAddr.text = Hex(address, 2)
-  GetSymbols(AsmSourceDirectory &/ BinName & ".sym")
+  GetSymbols(AsmSymDirectory &/ BinName & ".sym")
+  GetDebugInfo(AsmSymDirectory &/ BinName & ".dbg")
 
 End
 
@@ -428,7 +442,7 @@ Public Sub OpenProg_Click()
 
   VerifyProgSaved()
 
-  Dialog.Filter = ["*.asm", "Assembler 6502", "*", "All Files"]
+  Dialog.Filter = ["*.asm", "Assembler 6502", "*.c", "cc65", "*", "All Files"]
   Dialog.path = AsmSourceDirectory & "/"
   If Dialog.OpenFile() Then Return
   EditProg.load(Dialog.path, True)
@@ -446,7 +460,7 @@ End
 
 Public Sub SaveAsProg_Click()
 
-  Dialog.Filter = ["*.asm", "Assembler65", "*", "All Files"]
+  Dialog.Filter = ["*.asm", "Assembler65", "*.c", "cc65", "*", "All Files"]
   Dialog.path = AsmSourceDirectory & "/"
   If Dialog.SaveFile() Then Return
   EditProg.Save(Dialog.path)
@@ -489,21 +503,22 @@ Public Sub AsmbProg_Click()
 
   SaveProg_Click()
 
-  Dim OutputPath As String = AsmBinaryDirectory
-  Dim LstPath As String = AsmSourceDirectory
+  Dim BinPath As String = AsmBinaryDirectory
+  Dim LstPath As String = AsmLstDirectory
+  Dim SymPath As String = AsmSymDirectory
   Dim InputPath As String = File.Dir(CurrentlyOpenFile)
   Dim FileName As String = File.Name(CurrentlyOpenFile)
   Dim FileBase As String = File.BaseName(CurrentlyOpenFile)
-  If Exist(OutPutPath &/ FileBase & ".lst") Then
-    Kill OutPutPath &/ FileBase & ".lst"
+  If Exist(LstPath &/ FileBase & ".lst") Then
+    Kill LstPath &/ FileBase & ".lst"
   Endif
   OpenListing.enabled = False
-  asmOutput.Print(Assembler(InputPath &/ FileName, OutPutPath &/ FileBase & ".bin", LstPath &/ FileBase & ".lst", LstPath &/ FileBase & ".sym", Split(SearchPaths.text)))
+  asmOutput.Print(Assembler(InputPath &/ FileName, BinPath &/ FileBase & ".bin", LstPath &/ FileBase & ".lst", SymPath &/ FileBase & ".sym", Split(SearchPaths.text)))
   InfoSection.Index = 3
   If Exist(LstPath &/ FileBase & ".lst") Then
     OpenListing.enabled = True
     LastListingGenerated = LstPath &/ FileBase & ".lst"
-    LastBinaryGenerated = OutPutPath &/ FileBase & ".bin"
+    LastBinaryGenerated = BinPath &/ FileBase & ".bin"
   Endif
 
 End
@@ -612,9 +627,14 @@ Public Sub DoLoad_Click()
     Return
   Endif
 
-  Dim symname As String = AsmSourceDirectory &/ File.BaseName(Dialog.path) & ".sym"
+  Dim symname As String = AsmSymDirectory &/ File.BaseName(Dialog.path) & ".sym"
   If Exist(symname) Then
     GetSymbols(symname)
+  Endif
+
+  Dim dbgname As String = AsmSymDirectory &/ File.BaseName(Dialog.path) & ".dbg"
+  If Exist(dbgname) Then
+    GetDebugInfo(dbgname)
   Endif
 
 End
@@ -622,29 +642,44 @@ End
 Public Sub LoadSymbols_Click()
 
   Dialog.Title = "Select the Symbol File to load"
-  Dialog.path = AsmSourceDirectory
+  Dialog.path = AsmSymDirectory
   If Dialog.OpenFile() Then
     Return
   Endif
 
   GetSymbols(Dialog.path)
+  Dim filename As String = File.Name(Dialog.Path) & ".dbg"
+  GetDebugInfo(filename)
 
 End
 
 Sub GetSymbols(filename As String)
 
-  If Not Exist(FileName) Then Return
-  Dim SymSource As String[] = Split(File.Load(filename), "\n", "", True)
-  Dim BinName As String = File.BaseName(filename)
+  Dim o65Sym As Boolean = True
+  Dim sLine As String[]
 
+  If Not Exist(FileName) Then Return
+
+  Dim BinName As String = File.BaseName(filename)
   If SymLoadedList.Exist(BinName) Then Return
 
+  Dim SymSource As String[] = Split(File.Load(filename), "\n", "", True)
   For Each s As String In SymSource
-    If Left(s, 3) = "---" Then Continue
-    Dim sLine As String[] = Scan(s, "* * *")
-    If Left(sLine[1], 4) = "ffff" Then Continue
-    Disassembler.SymbolsByAddress[sLine[1]] = sLine[0]
-    Disassembler.SymbolsByName[sLine[0]] = sLine[1]
+
+    If Left(s, 3) = "---" Then
+      o65Sym = False
+      Continue
+    Endif
+
+    sLine = Scan(s, "* * *")
+    If Not o65Sym Then
+      If Left(sLine[1], 4) = "ffff" Then Continue
+      Disassembler.SymbolsByAddress[sLine[1]] = sLine[0]
+      Disassembler.SymbolsByName[sLine[0]] = sLine[1]
+    Else
+      Disassembler.SymbolsByAddress[sLine[1]] = sLine[2]
+      Disassembler.SymbolsByName[sLine[2]] = sLine[1]
+    Endif
   Next
 
   SymbolTable.Clear()
@@ -659,11 +694,27 @@ Sub GetSymbols(filename As String)
 
 End
 
+
+Public Sub GetDebugInfo(filename As String)
+
+  If Not Exist(filename) Then
+    Return
+  Endif
+
+  Dim a As New DbgInfo(filename)
+  If a.ValidFile Then
+    Dim binName As String = File.BaseName(filename)
+    DebugTable.Add(a, binName)
+  Endif
+
+End
+
 Public Sub ClearSymbols_Click()
 
   SymbolTable.Clear()
   Disassembler.SymbolsByAddress.Clear()
   Disassembler.SymbolsByName.Clear()
+  DebugTable.Clear()
 
 End
 
@@ -859,6 +910,7 @@ Sub ChangeComputerdef(NewDef As String)
   LoadedList.Clear()
   SymLoadedList.Clear()
   SymbolTable.Clear()
+  DebugTable.Clear()
   ClearSymbols_Click()
   BreakPointList.Clear()
   WatchMem.Close()
@@ -1020,8 +1072,6 @@ End
 
 Public Sub Form_Resize()
 
-  Dim b As Integer
-
   AllControls.x = FMain.W - AllControls.Width - 4
   InfoSection.w = AllControls.x - 4
   InfoSection.h = FMain.h - 50
@@ -1097,7 +1147,7 @@ Public Sub SymLoadedList_DblClick()
 
   Dim NewFile As String[] = SymLoadedList.Selection
 
-  Dim ListingFileName As String = AsmSourceDirectory &/ NewFile[0] & ".lst"
+  Dim ListingFileName As String = AsmLstDirectory &/ NewFile[0] & ".lst"
 
   Dim SourceDebugger As New DebugSource(MyComputer, ListingFileName)
 
@@ -1122,7 +1172,7 @@ Public Sub BreakPointList_Add()
   addbreak.text = ""
 
   If Disassembler.SymbolsByName.Exist(newitem) Then
-    addr = Disassembler.SymbolsByName.Exist[newitem]
+    addr = Disassembler.SymbolsByName[newitem]
     BreakPointList.Add(Right("0000" & addr, 4) & " " & newitem)
   Else If IsHexa(newitem) Then
     addr = Right("0000" & newitem, 4)

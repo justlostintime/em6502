@@ -301,9 +301,13 @@ Fast Unsafe Public Sub ExecuteInstruction()
   Inc pc
   AddressBus = pc
 
-  addrMode = Disassembler.AddrMode[inst]
-  aaa = disassembler.aaa[inst]
-  cc = disassembler.cc[inst]
+  'addrMode = Disassembler.AddrMode[inst]
+  ' address mode is same as bbb in instruction
+  addrMode = (inst Shr 2) And &h07
+  'aaa = disassembler.aaa[inst]
+  aaa = inst Shr 5
+  'cc = disassembler.cc[inst]
+  cc = inst And &h03
 
   Select Case cc
     Case 0
@@ -312,6 +316,8 @@ Fast Unsafe Public Sub ExecuteInstruction()
       Group1(Me, aaa, AddrMode)
     Case 2
       Group2(Me, aaa, AddrMode)
+    Case 3
+      Group3(Me, aaa, AddrMode)
   End Select
 
   Inc TotalInstructions

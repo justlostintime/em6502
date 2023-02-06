@@ -405,7 +405,7 @@
         Text = ("Src Debug")
       }
       { addbreak TextBox
-        MoveScaled(1,38,28,3)
+        MoveScaled(1,38,28,5)
       }
     }
     { ControlPanel Panel

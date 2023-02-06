@@ -1,0 +1,137 @@
+' Gambas module file
+
+' Group3 instructions mostly WDC extensions
+'
+' Author Westwood JustLostintime
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+
+  With TheCpu
+
+    On aaa Goto Grp3Case0, Grp3Case1, Grp3Case2, Grp3Case3, Grp3Case4, Grp3Case5, Grp3Case6, Grp3Case7
+    Return
+
+  Grp3Case0:
+    On addressmode Goto Grp3Case00, Grp3Case01, Grp3Case02, Grp3Case03, Grp3Case04, Grp3Case05, Grp3Case06, Grp3Case07
+    Return
+
+  Grp3Case00:
+  Grp3Case01:
+  Grp3Case02:
+  Grp3Case03:
+  Grp3Case04:
+  Grp3Case05:
+  Grp3Case06:
+  Grp3Case07:
+    Return
+
+  Grp3Case1:
+    On addressmode Goto Grp3Case10, Grp3Case11, Grp3Case12, Grp3Case13, Grp3Case14, Grp3Case15, Grp3Case16, Grp3Case17
+    Return
+
+  Grp3Case10:
+  Grp3Case11:
+  Grp3Case12:
+  Grp3Case13:
+  Grp3Case14:
+  Grp3Case15:
+  Grp3Case16:
+  Grp3Case17:
+    Return
+
+    '-------------------------------------------------------------------
+  Grp3Case2:
+    On addressmode Goto Grp3Case20, Grp3Case21, Grp3Case22, Grp3Case23, Grp3Case24, Grp3Case25, Grp3Case26, Grp3Case27
+    Return
+
+  Grp3Case20:
+  Grp3Case21:
+  Grp3Case22:
+  Grp3Case23:
+  Grp3Case24:
+  Grp3Case25:
+  Grp3Case26:
+  Grp3Case27:
+    Return
+
+  Grp3Case3:
+    On addressmode Goto Grp3Case30, Grp3Case31, Grp3Case32, Grp3Case33, Grp3Case34, Grp3Case35, Grp3Case36, Grp3Case37
+    Return
+
+  Grp3Case30:
+  Grp3Case31:
+  Grp3Case32:
+  Grp3Case33:
+  Grp3Case34:
+  Grp3Case35:
+  Grp3Case36:
+  Grp3Case37:
+    Return
+
+    '---------------------------------------------------------------------------------------------------------------
+  Grp3Case4:
+    On addressmode Goto Grp3Case40, Grp3Case41, Grp3Case42, Grp3Case43, Grp3Case44, Grp3Case45, Grp3Case46, Grp3Case47
+    Return
+
+  Grp3Case40:
+  Grp3Case41:
+  Grp3Case42:
+  Grp3Case43:
+  Grp3Case44:
+  Grp3Case45:
+  Grp3Case46:
+  Grp3Case47:
+    Return
+
+
+    '------------------------------------------------------------------------------------------
+  Grp3Case5:
+    On addressmode Goto Grp3Case50, Grp3Case51, Grp3Case52, Grp3Case53, Grp3Case54, Grp3Case55, Grp3Case56, Grp3Case57
+    Return
+
+  Grp3Case50:
+  Grp3Case51:
+  Grp3Case52:
+  Grp3Case53:
+  Grp3Case54:
+  Grp3Case55:
+  Grp3Case56:
+  Grp3Case57:
+    Return
+
+    '--------------------------------------------------------------------------------------------------------------
+  Grp3Case6:
+    On addressmode Goto Grp3Case60, Grp3Case61, Grp3Case62, Grp3Case63, Grp3Case64, Grp3Case65, Grp3Case66, Grp3Case67
+    Return
+
+  Grp3Case60:
+  Grp3Case61:
+  Grp3Case62:
+  Grp3Case63:
+  Grp3Case64:
+  Grp3Case65:
+  Grp3Case66:
+  Grp3Case67:
+    Return
+
+    '-----------------------------------------------------------------------------------------------
+  Grp3Case7:
+    On addressmode Goto Grp3Case70, Grp3Case71, Grp3Case72, Grp3Case73, Grp3Case74, Grp3Case75, Grp3Case76, Grp3Case77
+
+  Grp3Case70:
+  Grp3Case71:
+  Grp3Case72:
+  Grp3Case73:
+  Grp3Case74:
+  Grp3Case75:
+  Grp3Case76:
+  Grp3Case77:
+    Return
+
+  End With
+
+End

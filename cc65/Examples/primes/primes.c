@@ -56,16 +56,16 @@ void main() {
 
   printf("Completed scan\nList of the itsy Primes :\n");
   //printflags(flags,count);
-  
+
   a=0;
   for(b = 0; b<count; b++ ) {
-    
+
     if(flags[b] == 1) {
-       if(a%15 == 0) printf("\n:: ");
-       fprintf(stdout," %5d",b);
-       a++;
+      if(a%12 == 0) printf("\n:: ");
+      fprintf(stdout," %6d",b);
+      a++;
     }
-    
+
   }
 
   printf("\nTotal Primes = %d\n",a);
