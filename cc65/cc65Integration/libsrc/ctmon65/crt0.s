@@ -11,7 +11,7 @@
         .import         __STACKSIZE__                   ; Linker generated
 
         .include        "zeropage.inc"
-        .include        "kim1.inc"                     ; this is mapped to ctmon65.h
+        .include        "ctmon65.inc"                     ; this is mapped to ctmon65.h
 
 
 ; Place the startup code in a special segment

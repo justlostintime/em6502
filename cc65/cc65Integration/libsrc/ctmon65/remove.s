@@ -7,7 +7,7 @@
 
          .include        "errno.inc"
          .include        "fcntl.inc"
-         .include        "kim1.inc"        ; actually ctmon65 interface
+         .include        "ctmon65.inc"        ; actually ctmon65 interface
 
 ; On entry to this function a LSB  x MSB
 ; Upon calling bios interface

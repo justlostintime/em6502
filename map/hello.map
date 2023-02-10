@@ -34,118 +34,120 @@ hello.o:
 ../../cc65Integration/lib/kim1.lib(axlong.o):
     CODE              Offs=000C20  Size=00000D  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(close.o):
-    CODE              Offs=000C2D  Size=000015  Align=00001  Fill=0000
+    CODE              Offs=000C2D  Size=000019  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(condes.o):
-    CODE              Offs=000C42  Size=00000C  Align=00001  Fill=0000
+    CODE              Offs=000C46  Size=00000C  Align=00001  Fill=0000
     DATA              Offs=00002B  Size=000025  Align=00001  Fill=0000
     ONCE              Offs=000010  Size=00000C  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(copydata.o):
-    CODE              Offs=000C4E  Size=00002D  Align=00001  Fill=0000
+    CODE              Offs=000C52  Size=00002D  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(crt0.o):
     STARTUP           Offs=000000  Size=000018  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(ctype.o):
     RODATA            Offs=00065F  Size=00008B  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(ctypemask.o):
-    CODE              Offs=000C7B  Size=00001E  Align=00001  Fill=0000
+    CODE              Offs=000C7F  Size=00001E  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(decsp1.o):
-    CODE              Offs=000C99  Size=000009  Align=00001  Fill=0000
+    CODE              Offs=000C9D  Size=000009  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(decsp2.o):
-    CODE              Offs=000CA2  Size=00000D  Align=00001  Fill=0000
+    CODE              Offs=000CA6  Size=00000D  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(decsp4.o):
-    CODE              Offs=000CAF  Size=00000D  Align=00001  Fill=0000
+    CODE              Offs=000CB3  Size=00000D  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(decsp6.o):
-    CODE              Offs=000CBC  Size=00000D  Align=00001  Fill=0000
+    CODE              Offs=000CC0  Size=00000D  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(errno.o):
     BSS               Offs=00002E  Size=000002  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(fclose.o):
-    CODE              Offs=000CC9  Size=000022  Align=00001  Fill=0000
+    CODE              Offs=000CCD  Size=000022  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(fgetc.o):
-    CODE              Offs=000CEB  Size=00008A  Align=00001  Fill=0000
+    CODE              Offs=000CEF  Size=00008A  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(fgets.o):
-    CODE              Offs=000D75  Size=0000B1  Align=00001  Fill=0000
+    CODE              Offs=000D79  Size=0000B1  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(fopen.o):
-    CODE              Offs=000E26  Size=000018  Align=00001  Fill=0000
+    CODE              Offs=000E2A  Size=000018  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(fputc.o):
-    CODE              Offs=000E3E  Size=000057  Align=00001  Fill=0000
+    CODE              Offs=000E42  Size=000057  Align=00001  Fill=0000
     RODATA            Offs=0006EA  Size=000002  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(fread.o):
-    CODE              Offs=000E95  Size=0000D3  Align=00001  Fill=0000
+    CODE              Offs=000E99  Size=0000D3  Align=00001  Fill=0000
     BSS               Offs=000030  Size=000003  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(free.o):
-    CODE              Offs=000F68  Size=0001D3  Align=00001  Fill=0000
+    CODE              Offs=000F6C  Size=0001D3  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(fwrite.o):
-    CODE              Offs=00113B  Size=00007B  Align=00001  Fill=0000
+    CODE              Offs=00113F  Size=00007B  Align=00001  Fill=0000
     BSS               Offs=000033  Size=000002  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(incsp2.o):
-    CODE              Offs=0011B6  Size=000016  Align=00001  Fill=0000
+    CODE              Offs=0011BA  Size=000016  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(incsp3.o):
-    CODE              Offs=0011CC  Size=000005  Align=00001  Fill=0000
+    CODE              Offs=0011D0  Size=000005  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(incsp4.o):
-    CODE              Offs=0011D1  Size=000005  Align=00001  Fill=0000
+    CODE              Offs=0011D5  Size=000005  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(incsp6.o):
-    CODE              Offs=0011D6  Size=000005  Align=00001  Fill=0000
+    CODE              Offs=0011DA  Size=000005  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(ldaxsp.o):
-    CODE              Offs=0011DB  Size=000009  Align=00001  Fill=0000
+    CODE              Offs=0011DF  Size=000009  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(ldeaxysp.o):
-    CODE              Offs=0011E4  Size=000013  Align=00001  Fill=0000
+    CODE              Offs=0011E8  Size=000013  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(leaaxsp.o):
-    CODE              Offs=0011F7  Size=00000C  Align=00001  Fill=0000
+    CODE              Offs=0011FB  Size=00000C  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(lneg.o):
-    CODE              Offs=001203  Size=00001E  Align=00001  Fill=0000
+    CODE              Offs=001207  Size=00001E  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(lpush.o):
-    CODE              Offs=001221  Size=000021  Align=00001  Fill=0000
+    CODE              Offs=001225  Size=000021  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(ltoa.o):
-    CODE              Offs=001242  Size=000095  Align=00001  Fill=0000
+    CODE              Offs=001246  Size=000095  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(malloc.o):
-    CODE              Offs=0012D7  Size=00010E  Align=00001  Fill=0000
+    CODE              Offs=0012DB  Size=00010E  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(mul.o):
-    CODE              Offs=0013E5  Size=000045  Align=00001  Fill=0000
+    CODE              Offs=0013E9  Size=000045  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(mul8.o):
-    CODE              Offs=00142A  Size=00003A  Align=00001  Fill=0000
+    CODE              Offs=00142E  Size=00003A  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(open.o):
-    CODE              Offs=001464  Size=000042  Align=00001  Fill=0000
+    CODE              Offs=001468  Size=000096  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(popptr1.o):
-    CODE              Offs=0014A6  Size=00000E  Align=00001  Fill=0000
+    CODE              Offs=0014FE  Size=00000E  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(printf.o):
-    CODE              Offs=0014B4  Size=000033  Align=00001  Fill=0000
+    CODE              Offs=00150C  Size=000033  Align=00001  Fill=0000
     BSS               Offs=000035  Size=000001  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(push1.o):
-    CODE              Offs=0014E7  Size=000005  Align=00001  Fill=0000
+    CODE              Offs=00153F  Size=000005  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(pushax.o):
-    CODE              Offs=0014EC  Size=00001A  Align=00001  Fill=0000
+    CODE              Offs=001544  Size=00001A  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(pushwsp.o):
-    CODE              Offs=001506  Size=00001C  Align=00001  Fill=0000
+    CODE              Offs=00155E  Size=00001C  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(putchar.o):
-    CODE              Offs=001522  Size=00000C  Align=00001  Fill=0000
+    CODE              Offs=00157A  Size=00000C  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(read.o):
-    CODE              Offs=00152E  Size=00007E  Align=00001  Fill=0000
+    CODE              Offs=001586  Size=000092  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(regswap2.o):
-    CODE              Offs=0015AC  Size=000016  Align=00001  Fill=0000
+    CODE              Offs=001618  Size=000016  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(return0.o):
-    CODE              Offs=0015C2  Size=000004  Align=00001  Fill=0000
+    CODE              Offs=00162E  Size=000004  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(staxsp.o):
-    CODE              Offs=0015C6  Size=00000B  Align=00001  Fill=0000
+    CODE              Offs=001632  Size=00000B  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(strcpy.o):
-    CODE              Offs=0015D1  Size=00001F  Align=00001  Fill=0000
+    CODE              Offs=00163D  Size=00001F  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(strlen.o):
-    CODE              Offs=0015F0  Size=000016  Align=00001  Fill=0000
+    CODE              Offs=00165C  Size=000016  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(strlower.o):
-    CODE              Offs=001606  Size=000027  Align=00001  Fill=0000
+    CODE              Offs=001672  Size=000027  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(subeqsp.o):
-    CODE              Offs=00162D  Size=000015  Align=00001  Fill=0000
+    CODE              Offs=001699  Size=000015  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(subysp.o):
-    CODE              Offs=001642  Size=00000D  Align=00001  Fill=0000
+    CODE              Offs=0016AE  Size=00000D  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(udiv.o):
-    CODE              Offs=00164F  Size=00004F  Align=00001  Fill=0000
+    CODE              Offs=0016BB  Size=00004F  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(vfprintf.o):
-    CODE              Offs=00169E  Size=000061  Align=00001  Fill=0000
+    CODE              Offs=00170A  Size=000061  Align=00001  Fill=0000
     DATA              Offs=000050  Size=000008  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(write.o):
-    CODE              Offs=0016FF  Size=000084  Align=00001  Fill=0000
+    CODE              Offs=00176B  Size=00009E  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(zerobss.o):
-    CODE              Offs=001783  Size=000023  Align=00001  Fill=0000
+    CODE              Offs=001809  Size=000023  Align=00001  Fill=0000
 ../../cc65Integration/lib/kim1.lib(zeropage.o):
     ZEROPAGE          Offs=000000  Size=00001A  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(pioif.o):
+    CODE              Offs=00182C  Size=00004C  Align=00001  Fill=0000
 
 
 Segment list:
@@ -154,67 +156,69 @@ Name                   Start     End    Size  Align
 ----------------------------------------------------
 ZEROPAGE              000040  000059  00001A  00001
 STARTUP               000200  000219  00001A  00001
-CODE                  00021A  0019BF  0017A6  00001
-RODATA                0019C0  0020AB  0006EC  00001
-ONCE                  0020AC  0020C7  00001C  00001
-DATA                  0020C8  00211F  000058  00001
-BSS                   002120  002155  000036  00001
+CODE                  00021A  001A91  001878  00001
+RODATA                001A92  00217D  0006EC  00001
+ONCE                  00217E  002199  00001C  00001
+DATA                  00219A  0021F1  000058  00001
+BSS                   0021F2  002227  000036  00001
 
 
 Exports list by name:
 ---------------------
-__BSS_RUN__               002120 RLA    __BSS_SIZE__              000036 REA    
+__BSS_RUN__               0021F2 RLA    __BSS_SIZE__              000036 REA    
 __CONSTRUCTOR_COUNT__     000001 REA    __CONSTRUCTOR_TABLE__     000218 RLA    
-__DATA_LOAD__             0020C8 RLA    __DATA_RUN__              0020C8 RLA    
+__DATA_LOAD__             00219A RLA    __DATA_RUN__              00219A RLA    
 __DATA_SIZE__             000058 REA    __DESTRUCTOR_COUNT__      000000 REA    
 __DESTRUCTOR_TABLE__      00021A RLA    __RAM_SIZE__              00CD00 REA    
 __RAM_START__             000200 RLA    __STACKSIZE__             001000 REA    
 __STARTUP__               000001 REA    ___directerrno            0009CB RLA    
-___errno                  00214E RLA    ___heapend                0020EA RLA    
-___heapfirst              0020EC RLA    ___heaplast               0020EE RLA    
-___heapptr                0020E8 RLA    ___oserror                002122 RLA    
-___seterrno               000E12 RLA    __ctype                   00201F RLA    
-__ctypeidx                00202A RLA    __fdesc                   0009D5 RLA    
-__filetab                 0020C8 RLA    __fopen                   0009F2 RLA    
-__hextab                  002003 RLA    __longminstr              002013 RLA    
+___errno                  002220 RLA    ___heapend                0021BC RLA    
+___heapfirst              0021BE RLA    ___heaplast               0021C0 RLA    
+___heapptr                0021BA RLA    ___oserror                0021F4 RLA    
+___seterrno               000E12 RLA    __ctype                   0020F1 RLA    
+__ctypeidx                0020FC RLA    __fdesc                   0009D5 RLA    
+__filetab                 00219A RLA    __fopen                   0009F2 RLA    
+__hextab                  0020D5 RLA    __longminstr              0020E5 RLA    
 __printf                  000B60 RLA    _close                    000E47 RLA    
-_diskupdateptr            00197F RLA    _diskwritedebug           00199C RLA    
-_fclose                   000EE3 RLA    _fgetc                    000F05 RLA    
-_fgets                    000F8F RLA    _fopen                    001040 RLA    
-_fputc                    001058 RLA    _fread                    0010AF RLA    
-_free                     001182 RLA    _fwrite                   001355 RLA    
-_ltoa                     001474 RLA    _main                     0004D8 RLA    
-_malloc                   0014F1 RLA    _open                     00167E RLA    
-_printf                   0016CE RLA    _putchar                  00173C RLA    
-_read                     001748 RLA    _stdout                   0020E2 RLA    
-_strcpy                   0017EB RLA    _strlen                   00180A RLA    
-_strlower                 001820 RLA    _ultoa                    0014B5 RLA    
-_vfprintf                 0018F0 RLA    _write                    001919 RLA    
+_diskupdateptr            0019FC RLA    _diskwritedebug           001A22 RLA    
+_fclose                   000EE7 RLA    _fgetc                    000F09 RLA    
+_fgets                    000F93 RLA    _fopen                    001044 RLA    
+_fputc                    00105C RLA    _fread                    0010B3 RLA    
+_free                     001186 RLA    _fwrite                   001359 RLA    
+_ltoa                     001478 RLA    _main                     0004D8 RLA    
+_malloc                   0014F5 RLA    _open                     001682 RLA    
+_pioread                  001A67 RLA    _piowrite                 001A46 RLA    
+_printf                   001726 RLA    _putchar                  001794 RLA    
+_read                     0017A0 RLA    _stdout                   0021B4 RLA    
+_strcpy                   001857 RLA    _strlen                   001876 RLA    
+_strlower                 00188C RLA    _ultoa                    0014B9 RLA    
+_vfprintf                 00195C RLA    _write                    001985 RLA    
 addeqysp                  000E1D RLA    addysp                    000E2D RLA    
 axlong                    000E3A RLA    axulong                   000E40 RLA    
-copydata                  000E68 RLA    ctypemaskdirect           000E99 RLA    
-decsp1                    000EB3 RLA    decsp2                    000EBC RLA    
-decsp4                    000EC9 RLA    decsp6                    000ED6 RLA    
-incsp2                    0013D8 RLA    incsp3                    0013E6 RLA    
-incsp4                    0013EB RLA    incsp6                    0013F0 RLA    
-initheap                  0020AC  LAI   initlib                   0020BC RLA    
-ldax0sp                   0013F5 RLA    ldaxysp                   0013F7 RLA    
-ldeaxysp                  001400 RLA    leaa0sp                   001411 RLA    
-mul8x16                   001646 RLA    mul8x16a                  001650 RLA    
-negeax                    00141D RLA    popax                     0013D0 RLA    
-popptr1                   0016C0 RLA    ptr1                      000048 RLZ    
+copydata                  000E6C RLA    ctypemaskdirect           000E9D RLA    
+decsp1                    000EB7 RLA    decsp2                    000EC0 RLA    
+decsp4                    000ECD RLA    decsp6                    000EDA RLA    
+incsp2                    0013DC RLA    incsp3                    0013EA RLA    
+incsp4                    0013EF RLA    incsp6                    0013F4 RLA    
+initheap                  00217E  LAI   initlib                   00218E RLA    
+ldax0sp                   0013F9 RLA    ldaxysp                   0013FB RLA    
+ldeaxysp                  001404 RLA    leaa0sp                   001415 RLA    
+mul8x16                   00164A RLA    mul8x16a                  001654 RLA    
+negeax                    001421 RLA    popax                     0013D4 RLA    
+popptr1                   001718 RLA    ptr1                      000048 RLZ    
 ptr2                      00004A RLZ    ptr3                      00004C RLZ    
-ptr4                      00004E RLZ    push0                     001706 RLA    
-push0ax                   00143E RLA    push1                     001701 RLA    
-pusha0                    001708 RLA    pushax                    00170A RLA    
-pusheax                   001444 RLA    pushwysp                  001722 RLA    
-regbank                   000054 RLZ    regswap2                  0017C6 RLA    
-return0                   0017DC RLA    sp                        000040 RLZ    
-sreg                      000042 RLZ    stax0sp                   0017E0 RLA    
-staxysp                   0017E2 RLA    subeqysp                  001849 RLA    
-subysp                    00185C RLA    tmp1                      000050 RLZ    
-tosudivax                 00186B RLA    tosumulax                 0015FF RLA    
-zerobss                   00199D RLA    
+ptr4                      00004E RLZ    push0                     00175E RLA    
+push0ax                   001442 RLA    push1                     001759 RLA    
+pusha0                    001760 RLA    pushax                    001762 RLA    
+pusheax                   001448 RLA    pushwysp                  00177A RLA    
+regbank                   000054 RLZ    regswap2                  001832 RLA    
+return0                   001848 RLA    sp                        000040 RLZ    
+sreg                      000042 RLZ    stax0sp                   00184C RLA    
+staxysp                   00184E RLA    subeqysp                  0018B5 RLA    
+subysp                    0018C8 RLA    tmp1                      000050 RLZ    
+tmp3                      000052 RLZ    tosudivax                 0018D7 RLA    
+tosumulax                 001603 RLA    zerobss                   001A23 RLA    
+
 
 
 Exports list by value:
@@ -224,53 +228,55 @@ __STARTUP__               000001 REA    __BSS_SIZE__              000036 REA
 sp                        000040 RLZ    sreg                      000042 RLZ    
 ptr1                      000048 RLZ    ptr2                      00004A RLZ    
 ptr3                      00004C RLZ    ptr4                      00004E RLZ    
-tmp1                      000050 RLZ    regbank                   000054 RLZ    
-__DATA_SIZE__             000058 REA    __RAM_START__             000200 RLA    
-__CONSTRUCTOR_TABLE__     000218 RLA    __DESTRUCTOR_TABLE__      00021A RLA    
-_main                     0004D8 RLA    ___directerrno            0009CB RLA    
-__fdesc                   0009D5 RLA    __fopen                   0009F2 RLA    
-__printf                  000B60 RLA    ___seterrno               000E12 RLA    
-addeqysp                  000E1D RLA    addysp                    000E2D RLA    
-axlong                    000E3A RLA    axulong                   000E40 RLA    
-_close                    000E47 RLA    copydata                  000E68 RLA    
-ctypemaskdirect           000E99 RLA    decsp1                    000EB3 RLA    
-decsp2                    000EBC RLA    decsp4                    000EC9 RLA    
-decsp6                    000ED6 RLA    _fclose                   000EE3 RLA    
-_fgetc                    000F05 RLA    _fgets                    000F8F RLA    
-__STACKSIZE__             001000 REA    _fopen                    001040 RLA    
-_fputc                    001058 RLA    _fread                    0010AF RLA    
-_free                     001182 RLA    _fwrite                   001355 RLA    
-popax                     0013D0 RLA    incsp2                    0013D8 RLA    
-incsp3                    0013E6 RLA    incsp4                    0013EB RLA    
-incsp6                    0013F0 RLA    ldax0sp                   0013F5 RLA    
-ldaxysp                   0013F7 RLA    ldeaxysp                  001400 RLA    
-leaa0sp                   001411 RLA    negeax                    00141D RLA    
-push0ax                   00143E RLA    pusheax                   001444 RLA    
-_ltoa                     001474 RLA    _ultoa                    0014B5 RLA    
-_malloc                   0014F1 RLA    tosumulax                 0015FF RLA    
-mul8x16                   001646 RLA    mul8x16a                  001650 RLA    
-_open                     00167E RLA    popptr1                   0016C0 RLA    
-_printf                   0016CE RLA    push1                     001701 RLA    
-push0                     001706 RLA    pusha0                    001708 RLA    
-pushax                    00170A RLA    pushwysp                  001722 RLA    
-_putchar                  00173C RLA    _read                     001748 RLA    
-regswap2                  0017C6 RLA    return0                   0017DC RLA    
-stax0sp                   0017E0 RLA    staxysp                   0017E2 RLA    
-_strcpy                   0017EB RLA    _strlen                   00180A RLA    
-_strlower                 001820 RLA    subeqysp                  001849 RLA    
-subysp                    00185C RLA    tosudivax                 00186B RLA    
-_vfprintf                 0018F0 RLA    _write                    001919 RLA    
-_diskupdateptr            00197F RLA    _diskwritedebug           00199C RLA    
-zerobss                   00199D RLA    __hextab                  002003 RLA    
-__longminstr              002013 RLA    __ctype                   00201F RLA    
-__ctypeidx                00202A RLA    initheap                  0020AC  LAI   
-initlib                   0020BC RLA    __DATA_LOAD__             0020C8 RLA    
-__DATA_RUN__              0020C8 RLA    __filetab                 0020C8 RLA    
-_stdout                   0020E2 RLA    ___heapptr                0020E8 RLA    
-___heapend                0020EA RLA    ___heapfirst              0020EC RLA    
-___heaplast               0020EE RLA    __BSS_RUN__               002120 RLA    
-___oserror                002122 RLA    ___errno                  00214E RLA    
-__RAM_SIZE__              00CD00 REA    
+tmp1                      000050 RLZ    tmp3                      000052 RLZ    
+regbank                   000054 RLZ    __DATA_SIZE__             000058 REA    
+__RAM_START__             000200 RLA    __CONSTRUCTOR_TABLE__     000218 RLA    
+__DESTRUCTOR_TABLE__      00021A RLA    _main                     0004D8 RLA    
+___directerrno            0009CB RLA    __fdesc                   0009D5 RLA    
+__fopen                   0009F2 RLA    __printf                  000B60 RLA    
+___seterrno               000E12 RLA    addeqysp                  000E1D RLA    
+addysp                    000E2D RLA    axlong                    000E3A RLA    
+axulong                   000E40 RLA    _close                    000E47 RLA    
+copydata                  000E6C RLA    ctypemaskdirect           000E9D RLA    
+decsp1                    000EB7 RLA    decsp2                    000EC0 RLA    
+decsp4                    000ECD RLA    decsp6                    000EDA RLA    
+_fclose                   000EE7 RLA    _fgetc                    000F09 RLA    
+_fgets                    000F93 RLA    __STACKSIZE__             001000 REA    
+_fopen                    001044 RLA    _fputc                    00105C RLA    
+_fread                    0010B3 RLA    _free                     001186 RLA    
+_fwrite                   001359 RLA    popax                     0013D4 RLA    
+incsp2                    0013DC RLA    incsp3                    0013EA RLA    
+incsp4                    0013EF RLA    incsp6                    0013F4 RLA    
+ldax0sp                   0013F9 RLA    ldaxysp                   0013FB RLA    
+ldeaxysp                  001404 RLA    leaa0sp                   001415 RLA    
+negeax                    001421 RLA    push0ax                   001442 RLA    
+pusheax                   001448 RLA    _ltoa                     001478 RLA    
+_ultoa                    0014B9 RLA    _malloc                   0014F5 RLA    
+tosumulax                 001603 RLA    mul8x16                   00164A RLA    
+mul8x16a                  001654 RLA    _open                     001682 RLA    
+popptr1                   001718 RLA    _printf                   001726 RLA    
+push1                     001759 RLA    push0                     00175E RLA    
+pusha0                    001760 RLA    pushax                    001762 RLA    
+pushwysp                  00177A RLA    _putchar                  001794 RLA    
+_read                     0017A0 RLA    regswap2                  001832 RLA    
+return0                   001848 RLA    stax0sp                   00184C RLA    
+staxysp                   00184E RLA    _strcpy                   001857 RLA    
+_strlen                   001876 RLA    _strlower                 00188C RLA    
+subeqysp                  0018B5 RLA    subysp                    0018C8 RLA    
+tosudivax                 0018D7 RLA    _vfprintf                 00195C RLA    
+_write                    001985 RLA    _diskupdateptr            0019FC RLA    
+_diskwritedebug           001A22 RLA    zerobss                   001A23 RLA    
+_piowrite                 001A46 RLA    _pioread                  001A67 RLA    
+__hextab                  0020D5 RLA    __longminstr              0020E5 RLA    
+__ctype                   0020F1 RLA    __ctypeidx                0020FC RLA    
+initheap                  00217E  LAI   initlib                   00218E RLA    
+__DATA_LOAD__             00219A RLA    __DATA_RUN__              00219A RLA    
+__filetab                 00219A RLA    _stdout                   0021B4 RLA    
+___heapptr                0021BA RLA    ___heapend                0021BC RLA    
+___heapfirst              0021BE RLA    ___heaplast               0021C0 RLA    
+__BSS_RUN__               0021F2 RLA    ___oserror                0021F4 RLA    
+___errno                  002220 RLA    __RAM_SIZE__              00CD00 REA    
+
 
 
 Imports list:
@@ -302,14 +308,14 @@ __RAM_START__ ([linker generated]):
 __STACKSIZE__ ([linker generated]):
     _heap.o                   common/_heap.s:8
 __STARTUP__ (crt0.o):
-    hello.o                   hello.s:20
+    hello.o                   hello.s:21
 ___directerrno (_directerrno.o):
     write.o                   /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
     open.o                    /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
     close.o                   /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
 ___errno (errno.o):
     _seterrno.o               /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:7
-    hello.o                   hello.s:47
+    hello.o                   hello.s:48
 ___heapend (_heap.o):
     malloc.o                  /home/brian/Projects/6502cc65/cc/cc65/asminc/_heap.inc:33
 ___heapfirst (_heap.o):
@@ -351,50 +357,55 @@ __printf (_printf.o):
     vfprintf.o                common/vfprintf.s:10
 _close (close.o):
     fclose.o                  common/fclose.s:10
-    hello.o                   hello.s:46
+    hello.o                   hello.s:47
 _diskupdateptr (write.o):
+    pioif.o                   kim1/pioif.s:4
     read.o                    kim1/read.s:4
 _diskwritedebug (write.o):
     read.o                    kim1/read.s:4
 _fclose (fclose.o):
-    hello.o                   hello.s:35
+    hello.o                   hello.s:36
 _fgetc (fgetc.o):
     fgets.o                   ../libwrk/kim1/fgets.s:13
 _fgets (fgets.o):
-    hello.o                   hello.s:36
-_fopen (fopen.o):
     hello.o                   hello.s:37
+_fopen (fopen.o):
+    hello.o                   hello.s:38
 _fputc (fputc.o):
     putchar.o                 common/putchar.s:10
 _fread (fread.o):
-    hello.o                   hello.s:38
+    hello.o                   hello.s:39
 _free (free.o):
-    hello.o                   hello.s:43
+    hello.o                   hello.s:44
 _fwrite (fwrite.o):
     vfprintf.o                common/vfprintf.s:10
-    hello.o                   hello.s:39
+    hello.o                   hello.s:40
 _ltoa (ltoa.o):
     _printf.o                 common/_printf.s:12
 _main (hello.o):
     crt0.o                    kim1/crt0.s:8
 _malloc (malloc.o):
-    hello.o                   hello.s:42
+    hello.o                   hello.s:43
 _open (open.o):
     _fopen.o                  common/_fopen.s:10
-    hello.o                   hello.s:45
+    hello.o                   hello.s:46
+_pioread (pioif.o):
+    read.o                    kim1/read.s:4
+_piowrite (pioif.o):
+    write.o                   kim1/write.s:4
 _printf (printf.o):
-    hello.o                   hello.s:40
-_putchar (putchar.o):
     hello.o                   hello.s:41
+_putchar (putchar.o):
+    hello.o                   hello.s:42
 _read (read.o):
     fgetc.o                   ../libwrk/kim1/fgetc.s:14
     fread.o                   common/fread.s:10
-    hello.o                   hello.s:48
+    hello.o                   hello.s:49
 _stdout (_file.o):
     putchar.o                 common/putchar.s:9
     printf.o                  common/printf.s:8
 _strcpy (strcpy.o):
-    hello.o                   hello.s:44
+    hello.o                   hello.s:45
 _strlen (strlen.o):
     _printf.o                 common/_printf.s:13
 _strlower (strlower.o):
@@ -408,7 +419,7 @@ _write (write.o):
     fwrite.o                  common/fwrite.s:10
 addeqysp (addeqsp.o):
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 addysp (addysp.o):
     incsp3.o                  runtime/incsp3.s:8
     printf.o                  common/printf.s:8
@@ -417,8 +428,8 @@ addysp (addysp.o):
     incsp4.o                  runtime/incsp4.s:8
     fwrite.o                  common/fwrite.s:11
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    hello.o                   hello.s:1680
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
+    hello.o                   hello.s:1681
 axlong (axlong.o):
     _printf.o                 common/_printf.s:11
 axulong (axlong.o):
@@ -430,15 +441,15 @@ ctypemaskdirect (ctypemask.o):
 decsp1 (decsp1.o):
     fgetc.o                   ../libwrk/kim1/fgetc.s:95
 decsp2 (decsp2.o):
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 decsp4 (decsp4.o):
     lpush.o                   runtime/lpush.s:12
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 decsp6 (decsp6.o):
     _printf.o                 common/_printf.s:11
-    hello.o                   hello.s:1680
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
+    hello.o                   hello.s:1681
 incsp2 (incsp2.o):
     popptr1.o                 runtime/popptr1.s:8
 incsp3 (incsp3.o):
@@ -460,7 +471,7 @@ ldaxysp (ldaxsp.o):
     fread.o                   common/fread.s:13
     fgets.o                   ../libwrk/kim1/fgets.s:115
 ldeaxysp (ldeaxysp.o):
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 leaa0sp (leaaxsp.o):
     fputc.o                   ../libwrk/kim1/fputc.s:75
     fgetc.o                   ../libwrk/kim1/fgetc.s:95
@@ -482,6 +493,7 @@ popptr1 (popptr1.o):
     write.o                   kim1/write.s:4
     udiv.o                    runtime/udiv.s:9
     read.o                    kim1/read.s:4
+    open.o                    kim1/open.s:5
     mul8.o                    runtime/mul8.s:9
     mul.o                     runtime/mul.s:9
 ptr1 (zeropage.o):
@@ -490,6 +502,7 @@ ptr1 (zeropage.o):
     copydata.o                common/copydata.s:9
     _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:12
     _fopen.o                  common/_fopen.s:12
+    pioif.o                   kim1/pioif.s:5
     zerobss.o                 common/zerobss.s:9
     write.o                   kim1/write.s:5
     vfprintf.o                common/vfprintf.s:11
@@ -498,6 +511,7 @@ ptr1 (zeropage.o):
     read.o                    kim1/read.s:5
     printf.o                  common/printf.s:9
     popptr1.o                 runtime/popptr1.s:9
+    open.o                    kim1/open.s:6
     mul8.o                    runtime/mul8.s:10
     mul.o                     runtime/mul.s:10
     malloc.o                  common/malloc.s:108
@@ -512,13 +526,16 @@ ptr2 (zeropage.o):
     ltoa.o                    common/ltoa.s:11
     copydata.o                common/copydata.s:9
     _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:12
+    pioif.o                   kim1/pioif.s:5
     write.o                   kim1/write.s:5
     strcpy.o                  common/strcpy.s:9
     read.o                    kim1/read.s:5
+    open.o                    kim1/open.s:6
     malloc.o                  common/malloc.s:108
     free.o                    common/free.s:62
 ptr3 (zeropage.o):
     ltoa.o                    common/ltoa.s:11
+    pioif.o                   kim1/pioif.s:5
     write.o                   kim1/write.s:5
     read.o                    kim1/read.s:5
     malloc.o                  common/malloc.s:108
@@ -529,9 +546,9 @@ ptr4 (zeropage.o):
     mul.o                     runtime/mul.s:10
     free.o                    common/free.s:62
 push0 (pushax.o):
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 push0ax (lpush.o):
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 push1 (push1.o):
     _printf.o                 common/_printf.s:11
     vfprintf.o                common/vfprintf.s:9
@@ -540,29 +557,30 @@ pusha0 (pushax.o):
     fputc.o                   ../libwrk/kim1/fputc.s:75
     fgetc.o                   ../libwrk/kim1/fgetc.s:95
     fread.o                   common/fread.s:11
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 pushax (pushax.o):
     fputc.o                   ../libwrk/kim1/fputc.s:75
     fgetc.o                   ../libwrk/kim1/fgetc.s:95
     _printf.o                 common/_printf.s:11
     putchar.o                 common/putchar.s:8
     printf.o                  common/printf.s:8
+    open.o                    kim1/open.s:5
     fwrite.o                  common/fwrite.s:11
     fread.o                   common/fread.s:11
     fopen.o                   common/fopen.s:11
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    hello.o                   hello.s:1680
-    hello.o                   hello.s:1680
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
+    hello.o                   hello.s:1681
+    hello.o                   hello.s:1681
 pusheax (lpush.o):
     _printf.o                 common/_printf.s:11
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 pushwysp (pushwsp.o):
     vfprintf.o                common/vfprintf.s:9
     fwrite.o                  common/fwrite.s:11
     fread.o                   common/fread.s:14
-    hello.o                   hello.s:1680
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
+    hello.o                   hello.s:1681
 regbank (zeropage.o):
     fputc.o                   ../libwrk/kim1/fputc.s:10
     fgetc.o                   ../libwrk/kim1/fgetc.s:10
@@ -617,24 +635,27 @@ sreg (zeropage.o):
     ldeaxysp.o                runtime/ldeaxysp.s:12
 stax0sp (staxsp.o):
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 staxysp (staxsp.o):
     fgets.o                   ../libwrk/kim1/fgets.s:115
-    hello.o                   hello.s:1680
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
+    hello.o                   hello.s:1681
 subeqysp (subeqsp.o):
     fgets.o                   ../libwrk/kim1/fgets.s:115
 subysp (subysp.o):
-    hello.o                   hello.s:1680
+    hello.o                   hello.s:1681
 tmp1 (zeropage.o):
     ltoa.o                    common/ltoa.s:11
     copydata.o                common/copydata.s:9
     _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:13
+    pioif.o                   kim1/pioif.s:5
     write.o                   kim1/write.s:5
     read.o                    kim1/read.s:5
     mul.o                     runtime/mul.s:10
     fgets.o                   ../libwrk/kim1/fgets.s:11
     hello.o                   hello.s:11
+tmp3 (zeropage.o):
+    open.o                    kim1/open.s:6
 tosudivax (udiv.o):
     fwrite.o                  common/fwrite.s:12
     fread.o                   common/fread.s:15

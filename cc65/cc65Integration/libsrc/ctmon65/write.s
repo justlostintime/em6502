@@ -1,12 +1,12 @@
 ;
 ; int __fastcall__ write (int fd, const void* buf, int count);
 ;
-      .import         popax, popptr1
+      .import         popax, popptr1, _piowrite
       .importzp       ptr1, ptr2, ptr3, ptr4 ,tmp1
 
       .include        "errno.inc"
       .include        "fcntl.inc"
-      .include        "kim1.inc"    ; this is mapped to the ctmon65.h file
+      .include        "ctmon65.inc"    ; this is mapped to the ctmon65.h file
 
 
 .export         _write
@@ -28,6 +28,8 @@ putNoInc:
         jsr     popax           ; get file descriptor
         cmp     #3              ; Check for the one fd number we support for disk
         beq     writetodisk
+        cmp     #4              ; Write to pio
+        beq     writetopio
 
 begin:  dec     ptr2
         bne     outch
@@ -88,9 +90,19 @@ writeerror:
         lda     #EIO
         jmp     ___directerrno
 
+writetopio:
+
+        jsr     _diskwritedebug
+        dec     ptr2              ; need to re-adjust as not console out
+        dec     ptr2+1
+        jsr     _piowrite         ; ptr 2 = the length to write
+        jmp     done
+
 .endproc
 
+
 ; tmp1 = length, ptr1 = address, ptr2 = remaining length
+; sets   carry if count is not zero and clear carry if zero
 .proc   _diskupdateptr
         lda     tmp1
         clc
@@ -107,6 +119,13 @@ writeerror:
         lda     ptr2+1
         sbc     #0
         sta     ptr2+1
+        bne     setcarry
+        lda     ptr2
+        bne     setcarry
+        clc
+        rts
+setcarry:
+        sec
         rts
 .endproc
 

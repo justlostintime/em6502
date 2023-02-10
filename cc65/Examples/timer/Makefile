@@ -1,5 +1,5 @@
-SOURCES = primes.c
-PROGRAM = primes
+SOURCES = timerfun.c
+PROGRAM = timerfun
 DESTROOT = ../../../
 CC65ROOT = ../../cc65Integration/
 CC65_TARGET=kim1

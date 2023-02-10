@@ -103,13 +103,14 @@ Current file: hello.s
 000000r 2                       .endif
 000000r 2               .endmacro
 000000r 2               
-000000r 1               	.dbg		file, "hello.c", 4789, 1675198024
+000000r 1               	.dbg		file, "hello.c", 4811, 1675712611
 000000r 1               	.dbg		file, "/usr/share/cc65/include/stdio.h", 6887, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/stdlib.h", 6885, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/string.h", 5492, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/fcntl.h", 3550, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/errno.h", 5854, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/unistd.h", 4309, 1605895793
+000000r 1               	.dbg		file, "../../cc65Integration/include/ctmon65.h", 4279, 1675797743
 000000r 1               	.forceimport	__STARTUP__
 000000r 1               	.dbg		sym, "fclose", "00", extern, "_fclose"
 000000r 1               	.dbg		sym, "fgets", "00", extern, "_fgets"
@@ -541,12 +542,12 @@ Current file: hello.s
 000000r 1               ;
 000000r 1               ; int copy(char *source, char *dest) {
 000000r 1               ;
-000000r 1               	.dbg	line, "hello.c", 119
+000000r 1               	.dbg	line, "hello.c", 121
 000000r 1  20 rr rr     	jsr     pushax
 000003r 1               ;
 000003r 1               ; int index = 0, i = 1;
 000003r 1               ;
-000003r 1               	.dbg	line, "hello.c", 121
+000003r 1               	.dbg	line, "hello.c", 123
 000003r 1  20 rr rr     	jsr     decsp2
 000006r 1  20 rr rr     	jsr     push0
 000009r 1  A9 01        	lda     #$01
@@ -554,13 +555,13 @@ Current file: hello.s
 00000Er 1               ;
 00000Er 1               ; seperator();
 00000Er 1               ;
-00000Er 1               	.dbg	line, "hello.c", 123
+00000Er 1               	.dbg	line, "hello.c", 125
 00000Er 1  20 rr rr     	jsr     decsp2
 000011r 1  20 rr rr     	jsr     _seperator
 000014r 1               ;
 000014r 1               ; printf("\nCopy file function called\n");
 000014r 1               ;
-000014r 1               	.dbg	line, "hello.c", 124
+000014r 1               	.dbg	line, "hello.c", 126
 000014r 1  A9 rr        	lda     #<(S0020)
 000016r 1  A2 rr        	ldx     #>(S0020)
 000018r 1  20 rr rr     	jsr     pushax
@@ -569,7 +570,7 @@ Current file: hello.s
 000020r 1               ;
 000020r 1               ; buffer = malloc(bufferlen);
 000020r 1               ;
-000020r 1               	.dbg	line, "hello.c", 125
+000020r 1               	.dbg	line, "hello.c", 127
 000020r 1  A2 03        	ldx     #$03
 000022r 1  A9 FC        	lda     #$FC
 000024r 1  20 rr rr     	jsr     _malloc
@@ -578,7 +579,7 @@ Current file: hello.s
 00002Cr 1               ;
 00002Cr 1               ; if (buffer == NULL) {
 00002Cr 1               ;
-00002Cr 1               	.dbg	line, "hello.c", 127
+00002Cr 1               	.dbg	line, "hello.c", 129
 00002Cr 1  E0 00        	cpx     #$00
 00002Er 1  D0 15        	bne     L0002
 000030r 1  C9 00        	cmp     #$00
@@ -586,7 +587,7 @@ Current file: hello.s
 000034r 1               ;
 000034r 1               ; printf("Copy Memory allocation failed\n");
 000034r 1               ;
-000034r 1               	.dbg	line, "hello.c", 128
+000034r 1               	.dbg	line, "hello.c", 130
 000034r 1  A9 rr        	lda     #<(S0021)
 000036r 1  A2 rr        	ldx     #>(S0021)
 000038r 1  20 rr rr     	jsr     pushax
@@ -595,13 +596,13 @@ Current file: hello.s
 000040r 1               ;
 000040r 1               ; return -1;
 000040r 1               ;
-000040r 1               	.dbg	line, "hello.c", 129
+000040r 1               	.dbg	line, "hello.c", 131
 000040r 1  A2 FF        	ldx     #$FF
 000042r 1  4C rr rr     	jmp     L0018
 000045r 1               ;
 000045r 1               ; printf("Copy memory allocation address = %d\n",buffer);
 000045r 1               ;
-000045r 1               	.dbg	line, "hello.c", 131
+000045r 1               	.dbg	line, "hello.c", 133
 000045r 1  A9 rr        L0002:	lda     #<(S0022)
 000047r 1  A2 rr        	ldx     #>(S0022)
 000049r 1  20 rr rr     	jsr     pushax
@@ -612,7 +613,7 @@ Current file: hello.s
 000056r 1               ;
 000056r 1               ; myfile = fopen(source,"r");
 000056r 1               ;
-000056r 1               	.dbg	line, "hello.c", 135
+000056r 1               	.dbg	line, "hello.c", 137
 000056r 1  A0 0D        	ldy     #$0D
 000058r 1  20 rr rr     	jsr     pushwysp
 00005Br 1  A9 rr        	lda     #<(S0023)
@@ -622,7 +623,7 @@ Current file: hello.s
 000065r 1               ;
 000065r 1               ; if (myfile == NULL) {
 000065r 1               ;
-000065r 1               	.dbg	line, "hello.c", 136
+000065r 1               	.dbg	line, "hello.c", 138
 000065r 1  E0 00        	cpx     #$00
 000067r 1  D0 23        	bne     L0005
 000069r 1  C9 00        	cmp     #$00
@@ -630,7 +631,7 @@ Current file: hello.s
 00006Dr 1               ;
 00006Dr 1               ; printf("Copy Unable to open source file %s error number %d\n",source,errno);
 00006Dr 1               ;
-00006Dr 1               	.dbg	line, "hello.c", 137
+00006Dr 1               	.dbg	line, "hello.c", 139
 00006Dr 1  A9 rr        	lda     #<(S0024)
 00006Fr 1  A2 rr        	ldx     #>(S0024)
 000071r 1  20 rr rr     	jsr     pushax
@@ -644,13 +645,13 @@ Current file: hello.s
 000087r 1               ;
 000087r 1               ; return -1;
 000087r 1               ;
-000087r 1               	.dbg	line, "hello.c", 138
+000087r 1               	.dbg	line, "hello.c", 140
 000087r 1  A2 FF        	ldx     #$FF
 000089r 1  4C rr rr     	jmp     L0018
 00008Cr 1               ;
 00008Cr 1               ; printf("Copy fopen source %s returned %d, Error number %d\nUsing fread to read each line\n============\n",source,myfile,errno);
 00008Cr 1               ;
-00008Cr 1               	.dbg	line, "hello.c", 141
+00008Cr 1               	.dbg	line, "hello.c", 143
 00008Cr 1  A9 rr        L0005:	lda     #<(S0025)
 00008Er 1  A2 rr        	ldx     #>(S0025)
 000090r 1  20 rr rr     	jsr     pushax
@@ -666,7 +667,7 @@ Current file: hello.s
 0000ABr 1               ;
 0000ABr 1               ; buffer[0] = 0;
 0000ABr 1               ;
-0000ABr 1               	.dbg	line, "hello.c", 142
+0000ABr 1               	.dbg	line, "hello.c", 144
 0000ABr 1  A0 07        	ldy     #$07
 0000ADr 1  B1 rr        	lda     (sp),y
 0000AFr 1  85 rr        	sta     ptr1+1
@@ -678,12 +679,12 @@ Current file: hello.s
 0000BAr 1               ;
 0000BAr 1               ; while(i > 0 && i < blockcount-1 ) {
 0000BAr 1               ;
-0000BAr 1               	.dbg	line, "hello.c", 144
+0000BAr 1               	.dbg	line, "hello.c", 146
 0000BAr 1  80 71        	bra     L000F
 0000BCr 1               ;
 0000BCr 1               ; i = fread(buffer+index,blocklen,blockcount-1,myfile);
 0000BCr 1               ;
-0000BCr 1               	.dbg	line, "hello.c", 145
+0000BCr 1               	.dbg	line, "hello.c", 147
 0000BCr 1  20 rr rr     L0007:	jsr     decsp6
 0000BFr 1  A0 0C        	ldy     #$0C
 0000C1r 1  B1 rr        	lda     (sp),y
@@ -724,7 +725,7 @@ Current file: hello.s
 0000FFr 1               ;
 0000FFr 1               ; if(i>0) {
 0000FFr 1               ;
-0000FFr 1               	.dbg	line, "hello.c", 146
+0000FFr 1               	.dbg	line, "hello.c", 148
 0000FFr 1  C9 01        	cmp     #$01
 000101r 1  8A           	txa
 000102r 1  E9 00        	sbc     #$00
@@ -734,7 +735,7 @@ Current file: hello.s
 00010Ar 1               ;
 00010Ar 1               ; index = blocklen*i;
 00010Ar 1               ;
-00010Ar 1               	.dbg	line, "hello.c", 147
+00010Ar 1               	.dbg	line, "hello.c", 149
 00010Ar 1  A0 03        	ldy     #$03
 00010Cr 1  B1 rr        	lda     (sp),y
 00010Er 1  AA           	tax
@@ -745,7 +746,7 @@ Current file: hello.s
 000117r 1               ;
 000117r 1               ; printf("Copy fread returned %d elements read, %d bytes\n",i,index);
 000117r 1               ;
-000117r 1               	.dbg	line, "hello.c", 148
+000117r 1               	.dbg	line, "hello.c", 150
 000117r 1  A9 rr        	lda     #<(S0026)
 000119r 1  A2 rr        	ldx     #>(S0026)
 00011Br 1  20 rr rr     	jsr     pushax
@@ -758,7 +759,7 @@ Current file: hello.s
 00012Dr 1               ;
 00012Dr 1               ; while(i > 0 && i < blockcount-1 ) {
 00012Dr 1               ;
-00012Dr 1               	.dbg	line, "hello.c", 144
+00012Dr 1               	.dbg	line, "hello.c", 146
 00012Dr 1  A0 03        L000F:	ldy     #$03
 00012Fr 1  B1 rr        	lda     (sp),y
 000131r 1  AA           	tax
@@ -785,7 +786,7 @@ Current file: hello.s
 000155r 1               ;
 000155r 1               ; buffer[index] = 0;
 000155r 1               ;
-000155r 1               	.dbg	line, "hello.c", 152
+000155r 1               	.dbg	line, "hello.c", 154
 000155r 1  A0 06        L0014:	ldy     #$06
 000157r 1  B1 rr        	lda     (sp),y
 000159r 1  A0 04        	ldy     #$04
@@ -803,12 +804,12 @@ Current file: hello.s
 00016Fr 1               ;
 00016Fr 1               ; seperator();
 00016Fr 1               ;
-00016Fr 1               	.dbg	line, "hello.c", 153
+00016Fr 1               	.dbg	line, "hello.c", 155
 00016Fr 1  20 rr rr     	jsr     _seperator
 000172r 1               ;
 000172r 1               ; printf("Copy Read %d bytes from file %s\n",index,source);
 000172r 1               ;
-000172r 1               	.dbg	line, "hello.c", 154
+000172r 1               	.dbg	line, "hello.c", 156
 000172r 1  A9 rr        	lda     #<(S0027)
 000174r 1  A2 rr        	ldx     #>(S0027)
 000176r 1  20 rr rr     	jsr     pushax
@@ -821,7 +822,7 @@ Current file: hello.s
 000188r 1               ;
 000188r 1               ; i = fclose(myfile);
 000188r 1               ;
-000188r 1               	.dbg	line, "hello.c", 156
+000188r 1               	.dbg	line, "hello.c", 158
 000188r 1  A0 01        	ldy     #$01
 00018Ar 1  B1 rr        	lda     (sp),y
 00018Cr 1  AA           	tax
@@ -832,7 +833,7 @@ Current file: hello.s
 000197r 1               ;
 000197r 1               ; printf("Copy fclose source file %s returned %d, Error number %d\n",source ,i,errno);
 000197r 1               ;
-000197r 1               	.dbg	line, "hello.c", 157
+000197r 1               	.dbg	line, "hello.c", 159
 000197r 1  A9 rr        	lda     #<(S0028)
 000199r 1  A2 rr        	ldx     #>(S0028)
 00019Br 1  20 rr rr     	jsr     pushax
@@ -848,12 +849,12 @@ Current file: hello.s
 0001B6r 1               ;
 0001B6r 1               ; seperator();
 0001B6r 1               ;
-0001B6r 1               	.dbg	line, "hello.c", 158
+0001B6r 1               	.dbg	line, "hello.c", 160
 0001B6r 1  20 rr rr     	jsr     _seperator
 0001B9r 1               ;
 0001B9r 1               ; myfile = fopen(dest,"w");
 0001B9r 1               ;
-0001B9r 1               	.dbg	line, "hello.c", 159
+0001B9r 1               	.dbg	line, "hello.c", 161
 0001B9r 1  A0 0B        	ldy     #$0B
 0001BBr 1  20 rr rr     	jsr     pushwysp
 0001BEr 1  A9 rr        	lda     #<(S0029)
@@ -863,7 +864,7 @@ Current file: hello.s
 0001C8r 1               ;
 0001C8r 1               ; printf("Copy fopen %s returned %d, Error number %d\n",dest,myfile,errno);
 0001C8r 1               ;
-0001C8r 1               	.dbg	line, "hello.c", 161
+0001C8r 1               	.dbg	line, "hello.c", 163
 0001C8r 1  A9 rr        	lda     #<(S002A)
 0001CAr 1  A2 rr        	ldx     #>(S002A)
 0001CCr 1  20 rr rr     	jsr     pushax
@@ -879,7 +880,7 @@ Current file: hello.s
 0001E7r 1               ;
 0001E7r 1               ; if (myfile != NULL) {
 0001E7r 1               ;
-0001E7r 1               	.dbg	line, "hello.c", 163
+0001E7r 1               	.dbg	line, "hello.c", 165
 0001E7r 1  B2 rr        	lda     (sp)
 0001E9r 1  A0 01        	ldy     #$01
 0001EBr 1  11 rr        	ora     (sp),y
@@ -887,7 +888,7 @@ Current file: hello.s
 0001EFr 1               ;
 0001EFr 1               ; printf("Copy writing to %s writing  %d bytes\n",dest,index);
 0001EFr 1               ;
-0001EFr 1               	.dbg	line, "hello.c", 164
+0001EFr 1               	.dbg	line, "hello.c", 166
 0001EFr 1  A9 rr        	lda     #<(S002B)
 0001F1r 1  A2 rr        	ldx     #>(S002B)
 0001F3r 1  20 rr rr     	jsr     pushax
@@ -900,7 +901,7 @@ Current file: hello.s
 000205r 1               ;
 000205r 1               ; i = fwrite(buffer, 1 ,index , myfile);
 000205r 1               ;
-000205r 1               	.dbg	line, "hello.c", 165
+000205r 1               	.dbg	line, "hello.c", 167
 000205r 1  20 rr rr     	jsr     decsp6
 000208r 1  A0 0D        	ldy     #$0D
 00020Ar 1  B1 rr        	lda     (sp),y
@@ -938,7 +939,7 @@ Current file: hello.s
 000241r 1               ;
 000241r 1               ; printf("Copy wrote %d bytes to destination %s\n",i,dest);
 000241r 1               ;
-000241r 1               	.dbg	line, "hello.c", 166
+000241r 1               	.dbg	line, "hello.c", 168
 000241r 1  A9 rr        	lda     #<(S002C)
 000243r 1  A2 rr        	ldx     #>(S002C)
 000245r 1  20 rr rr     	jsr     pushax
@@ -951,7 +952,7 @@ Current file: hello.s
 000257r 1               ;
 000257r 1               ; fclose(myfile);
 000257r 1               ;
-000257r 1               	.dbg	line, "hello.c", 167
+000257r 1               	.dbg	line, "hello.c", 169
 000257r 1  A0 01        	ldy     #$01
 000259r 1  B1 rr        	lda     (sp),y
 00025Br 1  AA           	tax
@@ -960,17 +961,17 @@ Current file: hello.s
 000261r 1               ;
 000261r 1               ; } else {
 000261r 1               ;
-000261r 1               	.dbg	line, "hello.c", 168
+000261r 1               	.dbg	line, "hello.c", 170
 000261r 1  80 23        	bra     L0013
 000263r 1               ;
 000263r 1               ; seperator();
 000263r 1               ;
-000263r 1               	.dbg	line, "hello.c", 169
+000263r 1               	.dbg	line, "hello.c", 171
 000263r 1  20 rr rr     L0011:	jsr     _seperator
 000266r 1               ;
 000266r 1               ; printf("Copy failed to %s\n",dest);
 000266r 1               ;
-000266r 1               	.dbg	line, "hello.c", 170
+000266r 1               	.dbg	line, "hello.c", 172
 000266r 1  A9 rr        	lda     #<(S002D)
 000268r 1  A2 rr        	ldx     #>(S002D)
 00026Ar 1  20 rr rr     	jsr     pushax
@@ -981,7 +982,7 @@ Current file: hello.s
 000277r 1               ;
 000277r 1               ; free(buffer);
 000277r 1               ;
-000277r 1               	.dbg	line, "hello.c", 171
+000277r 1               	.dbg	line, "hello.c", 173
 000277r 1  A0 07        	ldy     #$07
 000279r 1  B1 rr        	lda     (sp),y
 00027Br 1  AA           	tax
@@ -991,13 +992,13 @@ Current file: hello.s
 000282r 1               ;
 000282r 1               ; return -1;
 000282r 1               ;
-000282r 1               	.dbg	line, "hello.c", 172
+000282r 1               	.dbg	line, "hello.c", 174
 000282r 1  A2 FF        	ldx     #$FF
 000284r 1  80 26        	bra     L0018
 000286r 1               ;
 000286r 1               ; printf("Copy completed from %s to %s\n",source,dest);
 000286r 1               ;
-000286r 1               	.dbg	line, "hello.c", 175
+000286r 1               	.dbg	line, "hello.c", 177
 000286r 1  A9 rr        L0013:	lda     #<(S002E)
 000288r 1  A2 rr        	ldx     #>(S002E)
 00028Ar 1  20 rr rr     	jsr     pushax
@@ -1010,12 +1011,12 @@ Current file: hello.s
 00029Cr 1               ;
 00029Cr 1               ; seperator();
 00029Cr 1               ;
-00029Cr 1               	.dbg	line, "hello.c", 176
+00029Cr 1               	.dbg	line, "hello.c", 178
 00029Cr 1  20 rr rr     	jsr     _seperator
 00029Fr 1               ;
 00029Fr 1               ; free(buffer);
 00029Fr 1               ;
-00029Fr 1               	.dbg	line, "hello.c", 177
+00029Fr 1               	.dbg	line, "hello.c", 179
 00029Fr 1  A0 07        	ldy     #$07
 0002A1r 1  B1 rr        	lda     (sp),y
 0002A3r 1  AA           	tax
@@ -1025,13 +1026,13 @@ Current file: hello.s
 0002AAr 1               ;
 0002AAr 1               ; return 0;
 0002AAr 1               ;
-0002AAr 1               	.dbg	line, "hello.c", 178
+0002AAr 1               	.dbg	line, "hello.c", 180
 0002AAr 1  A2 00        	ldx     #$00
 0002ACr 1  8A           L0018:	txa
 0002ADr 1               ;
 0002ADr 1               ; }
 0002ADr 1               ;
-0002ADr 1               	.dbg	line, "hello.c", 179
+0002ADr 1               	.dbg	line, "hello.c", 181
 0002ADr 1  A0 0C        	ldy     #$0C
 0002AFr 1  4C rr rr     	jmp     addysp
 0002B2r 1               
@@ -1053,7 +1054,7 @@ Current file: hello.s
 0002B2r 1               ;
 0002B2r 1               ; printf("\n==============================================================\n");
 0002B2r 1               ;
-0002B2r 1               	.dbg	line, "hello.c", 182
+0002B2r 1               	.dbg	line, "hello.c", 184
 0002B2r 1  A9 rr        	lda     #<(S002F)
 0002B4r 1  A2 rr        	ldx     #>(S002F)
 0002B6r 1  20 rr rr     	jsr     pushax
@@ -1087,21 +1088,21 @@ Current file: hello.s
 0002BEr 1               ;
 0002BEr 1               ; char *source = "source.txt";
 0002BEr 1               ;
-0002BEr 1               	.dbg	line, "hello.c", 16
+0002BEr 1               	.dbg	line, "hello.c", 18
 0002BEr 1  A9 rr        	lda     #<(S0001)
 0002C0r 1  A2 rr        	ldx     #>(S0001)
 0002C2r 1  20 rr rr     	jsr     pushax
 0002C5r 1               ;
 0002C5r 1               ; char *dest   = "acopy.txt";
 0002C5r 1               ;
-0002C5r 1               	.dbg	line, "hello.c", 17
+0002C5r 1               	.dbg	line, "hello.c", 19
 0002C5r 1  A9 rr        	lda     #<(S0002)
 0002C7r 1  A2 rr        	ldx     #>(S0002)
 0002C9r 1  20 rr rr     	jsr     pushax
 0002CCr 1               ;
 0002CCr 1               ; long fnum = 26 ;
 0002CCr 1               ;
-0002CCr 1               	.dbg	line, "hello.c", 21
+0002CCr 1               	.dbg	line, "hello.c", 23
 0002CCr 1  A0 0C        	ldy     #$0C
 0002CEr 1  20 rr rr     	jsr     subysp
 0002D1r 1  A2 00        	ldx     #$00
@@ -1110,7 +1111,7 @@ Current file: hello.s
 0002D8r 1               ;
 0002D8r 1               ; for(i=0; i < 10; i++) {
 0002D8r 1               ;
-0002D8r 1               	.dbg	line, "hello.c", 23
+0002D8r 1               	.dbg	line, "hello.c", 25
 0002D8r 1  A0 0E        	ldy     #$0E
 0002DAr 1  8A           	txa
 0002DBr 1  91 rr        	sta     (sp),y
@@ -1130,7 +1131,7 @@ Current file: hello.s
 0002F3r 1               ;
 0002F3r 1               ; ptr = malloc(bufferlen);
 0002F3r 1               ;
-0002F3r 1               	.dbg	line, "hello.c", 24
+0002F3r 1               	.dbg	line, "hello.c", 26
 0002F3r 1  A2 03        	ldx     #$03
 0002F5r 1  A9 FC        	lda     #$FC
 0002F7r 1  20 rr rr     	jsr     _malloc
@@ -1139,7 +1140,7 @@ Current file: hello.s
 0002FFr 1               ;
 0002FFr 1               ; strcpy(ptr, "this is a string");
 0002FFr 1               ;
-0002FFr 1               	.dbg	line, "hello.c", 25
+0002FFr 1               	.dbg	line, "hello.c", 27
 0002FFr 1  20 rr rr     	jsr     pushax
 000302r 1  A9 rr        	lda     #<(S0003)
 000304r 1  A2 rr        	ldx     #>(S0003)
@@ -1147,7 +1148,7 @@ Current file: hello.s
 000309r 1               ;
 000309r 1               ; printf("\n Dynamic hello world %s - %d\n",ptr,i);
 000309r 1               ;
-000309r 1               	.dbg	line, "hello.c", 26
+000309r 1               	.dbg	line, "hello.c", 28
 000309r 1  A9 rr        	lda     #<(S0004)
 00030Br 1  A2 rr        	ldx     #>(S0004)
 00030Dr 1  20 rr rr     	jsr     pushax
@@ -1160,7 +1161,7 @@ Current file: hello.s
 00031Fr 1               ;
 00031Fr 1               ; printf("\n Static Hello World\n");
 00031Fr 1               ;
-00031Fr 1               	.dbg	line, "hello.c", 27
+00031Fr 1               	.dbg	line, "hello.c", 29
 00031Fr 1  A9 rr        	lda     #<(S0005)
 000321r 1  A2 rr        	ldx     #>(S0005)
 000323r 1  20 rr rr     	jsr     pushax
@@ -1169,7 +1170,7 @@ Current file: hello.s
 00032Br 1               ;
 00032Br 1               ; free(ptr);
 00032Br 1               ;
-00032Br 1               	.dbg	line, "hello.c", 28
+00032Br 1               	.dbg	line, "hello.c", 30
 00032Br 1  A0 09        	ldy     #$09
 00032Dr 1  B1 rr        	lda     (sp),y
 00032Fr 1  AA           	tax
@@ -1179,7 +1180,7 @@ Current file: hello.s
 000336r 1               ;
 000336r 1               ; for(i=0; i < 10; i++) {
 000336r 1               ;
-000336r 1               	.dbg	line, "hello.c", 23
+000336r 1               	.dbg	line, "hello.c", 25
 000336r 1  A0 0E        	ldy     #$0E
 000338r 1  A2 00        	ldx     #$00
 00033Ar 1  A9 01        	lda     #$01
@@ -1188,7 +1189,7 @@ Current file: hello.s
 000341r 1               ;
 000341r 1               ; k = 0;
 000341r 1               ;
-000341r 1               	.dbg	line, "hello.c", 31
+000341r 1               	.dbg	line, "hello.c", 33
 000341r 1  A0 0A        L0025:	ldy     #$0A
 000343r 1  A9 00        	lda     #$00
 000345r 1  91 rr        	sta     (sp),y
@@ -1197,7 +1198,7 @@ Current file: hello.s
 00034Ar 1               ;
 00034Ar 1               ; printf("Begin Loop test 500,000");
 00034Ar 1               ;
-00034Ar 1               	.dbg	line, "hello.c", 32
+00034Ar 1               	.dbg	line, "hello.c", 34
 00034Ar 1  A9 rr        	lda     #<(S0006)
 00034Cr 1  A2 rr        	ldx     #>(S0006)
 00034Er 1  20 rr rr     	jsr     pushax
@@ -1206,7 +1207,7 @@ Current file: hello.s
 000356r 1               ;
 000356r 1               ; for(i=0; i<100; i++) {
 000356r 1               ;
-000356r 1               	.dbg	line, "hello.c", 33
+000356r 1               	.dbg	line, "hello.c", 35
 000356r 1  A0 0E        	ldy     #$0E
 000358r 1  A9 00        	lda     #$00
 00035Ar 1  91 rr        	sta     (sp),y
@@ -1226,7 +1227,7 @@ Current file: hello.s
 000372r 1               ;
 000372r 1               ; for(j=0; j<50; j++) {
 000372r 1               ;
-000372r 1               	.dbg	line, "hello.c", 34
+000372r 1               	.dbg	line, "hello.c", 36
 000372r 1  A0 0C        	ldy     #$0C
 000374r 1  A9 00        	lda     #$00
 000376r 1  91 rr        	sta     (sp),y
@@ -1246,7 +1247,7 @@ Current file: hello.s
 00038Er 1               ;
 00038Er 1               ; k++;
 00038Er 1               ;
-00038Er 1               	.dbg	line, "hello.c", 35
+00038Er 1               	.dbg	line, "hello.c", 37
 00038Er 1  A0 0A        	ldy     #$0A
 000390r 1  A2 00        	ldx     #$00
 000392r 1  A9 01        	lda     #$01
@@ -1254,7 +1255,7 @@ Current file: hello.s
 000397r 1               ;
 000397r 1               ; for(j=0; j<50; j++) {
 000397r 1               ;
-000397r 1               	.dbg	line, "hello.c", 34
+000397r 1               	.dbg	line, "hello.c", 36
 000397r 1  A0 0C        	ldy     #$0C
 000399r 1  A2 00        	ldx     #$00
 00039Br 1  A9 01        	lda     #$01
@@ -1263,7 +1264,7 @@ Current file: hello.s
 0003A2r 1               ;
 0003A2r 1               ; for(i=0; i<100; i++) {
 0003A2r 1               ;
-0003A2r 1               	.dbg	line, "hello.c", 33
+0003A2r 1               	.dbg	line, "hello.c", 35
 0003A2r 1  A0 0E        L0009:	ldy     #$0E
 0003A4r 1  A2 00        	ldx     #$00
 0003A6r 1  A9 01        	lda     #$01
@@ -1272,7 +1273,7 @@ Current file: hello.s
 0003ADr 1               ;
 0003ADr 1               ; printf("End loop test\n");
 0003ADr 1               ;
-0003ADr 1               	.dbg	line, "hello.c", 39
+0003ADr 1               	.dbg	line, "hello.c", 41
 0003ADr 1  A9 rr        L0008:	lda     #<(S0007)
 0003AFr 1  A2 rr        	ldx     #>(S0007)
 0003B1r 1  20 rr rr     	jsr     pushax
@@ -1281,12 +1282,12 @@ Current file: hello.s
 0003B9r 1               ;
 0003B9r 1               ; seperator();
 0003B9r 1               ;
-0003B9r 1               	.dbg	line, "hello.c", 40
+0003B9r 1               	.dbg	line, "hello.c", 42
 0003B9r 1  20 rr rr     	jsr     _seperator
 0003BCr 1               ;
 0003BCr 1               ; printf("Try to putchar('a')\n");
 0003BCr 1               ;
-0003BCr 1               	.dbg	line, "hello.c", 41
+0003BCr 1               	.dbg	line, "hello.c", 43
 0003BCr 1  A9 rr        	lda     #<(S0008)
 0003BEr 1  A2 rr        	ldx     #>(S0008)
 0003C0r 1  20 rr rr     	jsr     pushax
@@ -1295,7 +1296,7 @@ Current file: hello.s
 0003C8r 1               ;
 0003C8r 1               ; for(i=0; i < 10; i++) putchar('a');
 0003C8r 1               ;
-0003C8r 1               	.dbg	line, "hello.c", 43
+0003C8r 1               	.dbg	line, "hello.c", 45
 0003C8r 1  A0 0E        	ldy     #$0E
 0003CAr 1  A9 00        	lda     #$00
 0003CCr 1  91 rr        	sta     (sp),y
@@ -1326,12 +1327,12 @@ Current file: hello.s
 0003F9r 1               ;
 0003F9r 1               ; seperator();
 0003F9r 1               ;
-0003F9r 1               	.dbg	line, "hello.c", 44
+0003F9r 1               	.dbg	line, "hello.c", 46
 0003F9r 1  20 rr rr     L0012:	jsr     _seperator
 0003FCr 1               ;
 0003FCr 1               ; printf("Completed putch test\n");
 0003FCr 1               ;
-0003FCr 1               	.dbg	line, "hello.c", 45
+0003FCr 1               	.dbg	line, "hello.c", 47
 0003FCr 1  A9 rr        	lda     #<(S0009)
 0003FEr 1  A2 rr        	ldx     #>(S0009)
 000400r 1  20 rr rr     	jsr     pushax
@@ -1340,7 +1341,7 @@ Current file: hello.s
 000408r 1               ;
 000408r 1               ; fnum = 0x20000;
 000408r 1               ;
-000408r 1               	.dbg	line, "hello.c", 46
+000408r 1               	.dbg	line, "hello.c", 48
 000408r 1  A9 00        	lda     #$00
 00040Ar 1  92 rr        	sta     (sp)
 00040Cr 1  A0 01        	ldy     #$01
@@ -1353,7 +1354,7 @@ Current file: hello.s
 000419r 1               ;
 000419r 1               ; printf("The long integer number is %ld\n",fnum);
 000419r 1               ;
-000419r 1               	.dbg	line, "hello.c", 47
+000419r 1               	.dbg	line, "hello.c", 49
 000419r 1  A9 rr        	lda     #<(S000A)
 00041Br 1  A2 rr        	ldx     #>(S000A)
 00041Dr 1  20 rr rr     	jsr     pushax
@@ -1365,12 +1366,12 @@ Current file: hello.s
 00042Dr 1               ;
 00042Dr 1               ; seperator();
 00042Dr 1               ;
-00042Dr 1               	.dbg	line, "hello.c", 49
+00042Dr 1               	.dbg	line, "hello.c", 51
 00042Dr 1  20 rr rr     	jsr     _seperator
 000430r 1               ;
 000430r 1               ; printf("Begin open close read write tests\n");
 000430r 1               ;
-000430r 1               	.dbg	line, "hello.c", 50
+000430r 1               	.dbg	line, "hello.c", 52
 000430r 1  A9 rr        	lda     #<(S000B)
 000432r 1  A2 rr        	ldx     #>(S000B)
 000434r 1  20 rr rr     	jsr     pushax
@@ -1379,7 +1380,7 @@ Current file: hello.s
 00043Cr 1               ;
 00043Cr 1               ; i = open(source,O_RDONLY);
 00043Cr 1               ;
-00043Cr 1               	.dbg	line, "hello.c", 51
+00043Cr 1               	.dbg	line, "hello.c", 53
 00043Cr 1  20 rr rr     	jsr     decsp4
 00043Fr 1  A0 17        	ldy     #$17
 000441r 1  B1 rr        	lda     (sp),y
@@ -1403,12 +1404,12 @@ Current file: hello.s
 000461r 1               ;
 000461r 1               ; seperator();
 000461r 1               ;
-000461r 1               	.dbg	line, "hello.c", 52
+000461r 1               	.dbg	line, "hello.c", 54
 000461r 1  20 rr rr     	jsr     _seperator
 000464r 1               ;
 000464r 1               ; printf("Test reading a file \n Open %s returned %d, Error number %d\n",source,i,errno);
 000464r 1               ;
-000464r 1               	.dbg	line, "hello.c", 53
+000464r 1               	.dbg	line, "hello.c", 55
 000464r 1  A9 rr        	lda     #<(S000C)
 000466r 1  A2 rr        	ldx     #>(S000C)
 000468r 1  20 rr rr     	jsr     pushax
@@ -1424,7 +1425,7 @@ Current file: hello.s
 000483r 1               ;
 000483r 1               ; ptr = malloc(bufferlen);
 000483r 1               ;
-000483r 1               	.dbg	line, "hello.c", 54
+000483r 1               	.dbg	line, "hello.c", 56
 000483r 1  A2 03        	ldx     #$03
 000485r 1  A9 FC        	lda     #$FC
 000487r 1  20 rr rr     	jsr     _malloc
@@ -1433,7 +1434,7 @@ Current file: hello.s
 00048Fr 1               ;
 00048Fr 1               ; k=1;
 00048Fr 1               ;
-00048Fr 1               	.dbg	line, "hello.c", 55
+00048Fr 1               	.dbg	line, "hello.c", 57
 00048Fr 1  A2 00        	ldx     #$00
 000491r 1  A9 01        	lda     #$01
 000493r 1  A0 0A        	ldy     #$0A
@@ -1441,12 +1442,12 @@ Current file: hello.s
 000498r 1               ;
 000498r 1               ; seperator();
 000498r 1               ;
-000498r 1               	.dbg	line, "hello.c", 56
+000498r 1               	.dbg	line, "hello.c", 58
 000498r 1  20 rr rr     	jsr     _seperator
 00049Br 1               ;
 00049Br 1               ; printf("Begin Reading test from %s Data: \n",source);
 00049Br 1               ;
-00049Br 1               	.dbg	line, "hello.c", 57
+00049Br 1               	.dbg	line, "hello.c", 59
 00049Br 1  A9 rr        	lda     #<(S000D)
 00049Dr 1  A2 rr        	ldx     #>(S000D)
 00049Fr 1  20 rr rr     	jsr     pushax
@@ -1454,12 +1455,12 @@ Current file: hello.s
 0004A4r 1               ;
 0004A4r 1               ; while (k != 0) {
 0004A4r 1               ;
-0004A4r 1               	.dbg	line, "hello.c", 59
+0004A4r 1               	.dbg	line, "hello.c", 61
 0004A4r 1  80 6E        	bra     L0028
 0004A6r 1               ;
 0004A6r 1               ; k = read(3,ptr,bufferlen-1);
 0004A6r 1               ;
-0004A6r 1               	.dbg	line, "hello.c", 60
+0004A6r 1               	.dbg	line, "hello.c", 62
 0004A6r 1  20 rr rr     L0016:	jsr     decsp4
 0004A9r 1  A9 03        	lda     #$03
 0004ABr 1  A0 02        	ldy     #$02
@@ -1484,7 +1485,7 @@ Current file: hello.s
 0004CFr 1               ;
 0004CFr 1               ; if (k > 0) {
 0004CFr 1               ;
-0004CFr 1               	.dbg	line, "hello.c", 61
+0004CFr 1               	.dbg	line, "hello.c", 63
 0004CFr 1  C9 01        	cmp     #$01
 0004D1r 1  8A           	txa
 0004D2r 1  E9 00        	sbc     #$00
@@ -1496,7 +1497,7 @@ Current file: hello.s
 0004DDr 1               ;
 0004DDr 1               ; printf("\nRead %d bytes from %s Data:\n---------------------------------\n",k,source);
 0004DDr 1               ;
-0004DDr 1               	.dbg	line, "hello.c", 62
+0004DDr 1               	.dbg	line, "hello.c", 64
 0004DDr 1  A9 rr        	lda     #<(S000E)
 0004DFr 1  A2 rr        	ldx     #>(S000E)
 0004E1r 1  20 rr rr     	jsr     pushax
@@ -1509,7 +1510,7 @@ Current file: hello.s
 0004F3r 1               ;
 0004F3r 1               ; ptr[k] = 0;
 0004F3r 1               ;
-0004F3r 1               	.dbg	line, "hello.c", 63
+0004F3r 1               	.dbg	line, "hello.c", 65
 0004F3r 1  A0 08        	ldy     #$08
 0004F5r 1  B1 rr        	lda     (sp),y
 0004F7r 1  A0 0A        	ldy     #$0A
@@ -1526,7 +1527,7 @@ Current file: hello.s
 00050Br 1               ;
 00050Br 1               ; printf("%s\n",ptr);
 00050Br 1               ;
-00050Br 1               	.dbg	line, "hello.c", 64
+00050Br 1               	.dbg	line, "hello.c", 66
 00050Br 1  A9 rr        	lda     #<(S000F)
 00050Dr 1  A2 rr        	ldx     #>(S000F)
 00050Fr 1  20 rr rr     	jsr     pushax
@@ -1541,7 +1542,7 @@ Current file: hello.s
 000522r 1               ;
 000522r 1               ; while (k != 0) {
 000522r 1               ;
-000522r 1               	.dbg	line, "hello.c", 59
+000522r 1               	.dbg	line, "hello.c", 61
 000522r 1  A0 0A        L001A:	ldy     #$0A
 000524r 1  B1 rr        	lda     (sp),y
 000526r 1  C8           	iny
@@ -1551,12 +1552,12 @@ Current file: hello.s
 00052Er 1               ;
 00052Er 1               ; seperator();
 00052Er 1               ;
-00052Er 1               	.dbg	line, "hello.c", 67
+00052Er 1               	.dbg	line, "hello.c", 69
 00052Er 1  20 rr rr     	jsr     _seperator
 000531r 1               ;
 000531r 1               ; printf("Read Test Complete for %s\n",source);
 000531r 1               ;
-000531r 1               	.dbg	line, "hello.c", 68
+000531r 1               	.dbg	line, "hello.c", 70
 000531r 1  A9 rr        	lda     #<(S0010)
 000533r 1  A2 rr        	ldx     #>(S0010)
 000535r 1  20 rr rr     	jsr     pushax
@@ -1567,7 +1568,7 @@ Current file: hello.s
 000542r 1               ;
 000542r 1               ; j = close(i);
 000542r 1               ;
-000542r 1               	.dbg	line, "hello.c", 70
+000542r 1               	.dbg	line, "hello.c", 72
 000542r 1  A0 0F        	ldy     #$0F
 000544r 1  B1 rr        	lda     (sp),y
 000546r 1  AA           	tax
@@ -1579,7 +1580,7 @@ Current file: hello.s
 000552r 1               ;
 000552r 1               ; printf("Closing %s returned %d, Error number %d\n",source,j,errno);
 000552r 1               ;
-000552r 1               	.dbg	line, "hello.c", 71
+000552r 1               	.dbg	line, "hello.c", 73
 000552r 1  A9 rr        	lda     #<(S0011)
 000554r 1  A2 rr        	ldx     #>(S0011)
 000556r 1  20 rr rr     	jsr     pushax
@@ -1595,12 +1596,12 @@ Current file: hello.s
 000571r 1               ;
 000571r 1               ; seperator();
 000571r 1               ;
-000571r 1               	.dbg	line, "hello.c", 72
+000571r 1               	.dbg	line, "hello.c", 74
 000571r 1  20 rr rr     	jsr     _seperator
 000574r 1               ;
 000574r 1               ; myfile = fopen(source,"r");
 000574r 1               ;
-000574r 1               	.dbg	line, "hello.c", 74
+000574r 1               	.dbg	line, "hello.c", 76
 000574r 1  A0 15        	ldy     #$15
 000576r 1  20 rr rr     	jsr     pushwysp
 000579r 1  A9 rr        	lda     #<(S0012)
@@ -1611,7 +1612,7 @@ Current file: hello.s
 000585r 1               ;
 000585r 1               ; printf("Begining test of fread/fclose/fopen of %s returned %d, Error number %d\n",source,myfile,errno);
 000585r 1               ;
-000585r 1               	.dbg	line, "hello.c", 75
+000585r 1               	.dbg	line, "hello.c", 77
 000585r 1  A9 rr        	lda     #<(S0013)
 000587r 1  A2 rr        	ldx     #>(S0013)
 000589r 1  20 rr rr     	jsr     pushax
@@ -1627,7 +1628,7 @@ Current file: hello.s
 0005A4r 1               ;
 0005A4r 1               ; k = fread(ptr,1,blockcount,myfile);
 0005A4r 1               ;
-0005A4r 1               	.dbg	line, "hello.c", 77
+0005A4r 1               	.dbg	line, "hello.c", 79
 0005A4r 1  20 rr rr     	jsr     decsp6
 0005A7r 1  A0 0F        	ldy     #$0F
 0005A9r 1  B1 rr        	lda     (sp),y
@@ -1661,7 +1662,7 @@ Current file: hello.s
 0005DBr 1               ;
 0005DBr 1               ; ptr[k*blocklen] = 0;
 0005DBr 1               ;
-0005DBr 1               	.dbg	line, "hello.c", 78
+0005DBr 1               	.dbg	line, "hello.c", 80
 0005DBr 1  A0 08        	ldy     #$08
 0005DDr 1  B1 rr        	lda     (sp),y
 0005DFr 1  A0 0A        	ldy     #$0A
@@ -1678,7 +1679,7 @@ Current file: hello.s
 0005F3r 1               ;
 0005F3r 1               ; printf("fread %s Count returned %d bytes and %d elements, Error number %d\nData fread:\n",source,k*blocklen,k,errno);
 0005F3r 1               ;
-0005F3r 1               	.dbg	line, "hello.c", 79
+0005F3r 1               	.dbg	line, "hello.c", 81
 0005F3r 1  A9 rr        	lda     #<(S0014)
 0005F5r 1  A2 rr        	ldx     #>(S0014)
 0005F7r 1  20 rr rr     	jsr     pushax
@@ -1696,7 +1697,7 @@ Current file: hello.s
 000617r 1               ;
 000617r 1               ; printf("%s\n",ptr);
 000617r 1               ;
-000617r 1               	.dbg	line, "hello.c", 80
+000617r 1               	.dbg	line, "hello.c", 82
 000617r 1  A9 rr        	lda     #<(S0015)
 000619r 1  A2 rr        	ldx     #>(S0015)
 00061Br 1  20 rr rr     	jsr     pushax
@@ -1707,12 +1708,12 @@ Current file: hello.s
 000628r 1               ;
 000628r 1               ; seperator();
 000628r 1               ;
-000628r 1               	.dbg	line, "hello.c", 81
+000628r 1               	.dbg	line, "hello.c", 83
 000628r 1  20 rr rr     	jsr     _seperator
 00062Br 1               ;
 00062Br 1               ; i = fclose(myfile);
 00062Br 1               ;
-00062Br 1               	.dbg	line, "hello.c", 82
+00062Br 1               	.dbg	line, "hello.c", 84
 00062Br 1  A0 05        	ldy     #$05
 00062Dr 1  B1 rr        	lda     (sp),y
 00062Fr 1  AA           	tax
@@ -1724,7 +1725,7 @@ Current file: hello.s
 00063Br 1               ;
 00063Br 1               ; printf("\nfclose %s returned %d, Error number %d\n",source,i,errno);
 00063Br 1               ;
-00063Br 1               	.dbg	line, "hello.c", 83
+00063Br 1               	.dbg	line, "hello.c", 85
 00063Br 1  A9 rr        	lda     #<(S0016)
 00063Dr 1  A2 rr        	ldx     #>(S0016)
 00063Fr 1  20 rr rr     	jsr     pushax
@@ -1740,12 +1741,12 @@ Current file: hello.s
 00065Ar 1               ;
 00065Ar 1               ; seperator();
 00065Ar 1               ;
-00065Ar 1               	.dbg	line, "hello.c", 84
+00065Ar 1               	.dbg	line, "hello.c", 86
 00065Ar 1  20 rr rr     	jsr     _seperator
 00065Dr 1               ;
 00065Dr 1               ; printf("Begin Copy test\n");
 00065Dr 1               ;
-00065Dr 1               	.dbg	line, "hello.c", 85
+00065Dr 1               	.dbg	line, "hello.c", 87
 00065Dr 1  A9 rr        	lda     #<(S0017)
 00065Fr 1  A2 rr        	ldx     #>(S0017)
 000661r 1  20 rr rr     	jsr     pushax
@@ -1754,7 +1755,7 @@ Current file: hello.s
 000669r 1               ;
 000669r 1               ; ptr[0] = 0;  // clear the buffer
 000669r 1               ;
-000669r 1               	.dbg	line, "hello.c", 87
+000669r 1               	.dbg	line, "hello.c", 89
 000669r 1  A0 09        	ldy     #$09
 00066Br 1  B1 rr        	lda     (sp),y
 00066Dr 1  85 rr        	sta     ptr1+1
@@ -1766,7 +1767,7 @@ Current file: hello.s
 000678r 1               ;
 000678r 1               ; free(ptr);
 000678r 1               ;
-000678r 1               	.dbg	line, "hello.c", 88
+000678r 1               	.dbg	line, "hello.c", 90
 000678r 1  C8           	iny
 000679r 1  B1 rr        	lda     (sp),y
 00067Br 1  AA           	tax
@@ -1776,7 +1777,7 @@ Current file: hello.s
 000682r 1               ;
 000682r 1               ; if (!copy(source,dest)) {
 000682r 1               ;
-000682r 1               	.dbg	line, "hello.c", 90
+000682r 1               	.dbg	line, "hello.c", 92
 000682r 1  A0 15        	ldy     #$15
 000684r 1  20 rr rr     	jsr     pushwysp
 000687r 1  A0 13        	ldy     #$13
@@ -1792,7 +1793,7 @@ Current file: hello.s
 00069Br 1               ;
 00069Br 1               ; printf("Copy completed correctly, reading %s to comfirm\n",dest);
 00069Br 1               ;
-00069Br 1               	.dbg	line, "hello.c", 91
+00069Br 1               	.dbg	line, "hello.c", 93
 00069Br 1  A9 rr        	lda     #<(S0018)
 00069Dr 1  A2 rr        	ldx     #>(S0018)
 00069Fr 1  20 rr rr     	jsr     pushax
@@ -1803,7 +1804,7 @@ Current file: hello.s
 0006ACr 1               ;
 0006ACr 1               ; myfile = fopen(dest,"r");
 0006ACr 1               ;
-0006ACr 1               	.dbg	line, "hello.c", 92
+0006ACr 1               	.dbg	line, "hello.c", 94
 0006ACr 1  A0 13        	ldy     #$13
 0006AEr 1  20 rr rr     	jsr     pushwysp
 0006B1r 1  A9 rr        	lda     #<(S0019)
@@ -1814,7 +1815,7 @@ Current file: hello.s
 0006BDr 1               ;
 0006BDr 1               ; printf("After Copy fopen %s returned %d, Error number %d\nDoing fscanf\n",dest,myfile,errno);
 0006BDr 1               ;
-0006BDr 1               	.dbg	line, "hello.c", 93
+0006BDr 1               	.dbg	line, "hello.c", 95
 0006BDr 1  A9 rr        	lda     #<(S001A)
 0006BFr 1  A2 rr        	ldx     #>(S001A)
 0006C1r 1  20 rr rr     	jsr     pushax
@@ -1830,7 +1831,7 @@ Current file: hello.s
 0006DCr 1               ;
 0006DCr 1               ; if (myfile != 0) {
 0006DCr 1               ;
-0006DCr 1               	.dbg	line, "hello.c", 95
+0006DCr 1               	.dbg	line, "hello.c", 97
 0006DCr 1  A0 04        	ldy     #$04
 0006DEr 1  B1 rr        	lda     (sp),y
 0006E0r 1  C8           	iny
@@ -1840,7 +1841,7 @@ Current file: hello.s
 0006E8r 1               ;
 0006E8r 1               ; ptr = malloc(bufferlen);
 0006E8r 1               ;
-0006E8r 1               	.dbg	line, "hello.c", 96
+0006E8r 1               	.dbg	line, "hello.c", 98
 0006E8r 1  A2 03        	ldx     #$03
 0006EAr 1  A9 FC        	lda     #$FC
 0006ECr 1  20 rr rr     	jsr     _malloc
@@ -1849,7 +1850,7 @@ Current file: hello.s
 0006F4r 1               ;
 0006F4r 1               ; result = fgets(ptr,bufferlen-1,myfile);
 0006F4r 1               ;
-0006F4r 1               	.dbg	line, "hello.c", 97
+0006F4r 1               	.dbg	line, "hello.c", 99
 0006F4r 1  20 rr rr     	jsr     decsp4
 0006F7r 1  A0 0D        	ldy     #$0D
 0006F9r 1  B1 rr        	lda     (sp),y
@@ -1877,7 +1878,7 @@ Current file: hello.s
 000721r 1               ;
 000721r 1               ; printf("fgets() of created file %s Read returned pointer  %d :\n",dest,result);
 000721r 1               ;
-000721r 1               	.dbg	line, "hello.c", 98
+000721r 1               	.dbg	line, "hello.c", 100
 000721r 1  A9 rr        	lda     #<(S001B)
 000723r 1  A2 rr        	ldx     #>(S001B)
 000725r 1  20 rr rr     	jsr     pushax
@@ -1890,7 +1891,7 @@ Current file: hello.s
 000737r 1               ;
 000737r 1               ; if(result != NULL) {
 000737r 1               ;
-000737r 1               	.dbg	line, "hello.c", 100
+000737r 1               	.dbg	line, "hello.c", 102
 000737r 1  A0 06        	ldy     #$06
 000739r 1  B1 rr        	lda     (sp),y
 00073Br 1  C8           	iny
@@ -1899,7 +1900,7 @@ Current file: hello.s
 000740r 1               ;
 000740r 1               ; printf("Data Read from %s:\n%s\nEnd of print\n",dest,ptr);
 000740r 1               ;
-000740r 1               	.dbg	line, "hello.c", 101
+000740r 1               	.dbg	line, "hello.c", 103
 000740r 1  A9 rr        	lda     #<(S001C)
 000742r 1  A2 rr        	ldx     #>(S001C)
 000744r 1  20 rr rr     	jsr     pushax
@@ -1911,12 +1912,12 @@ Current file: hello.s
 000753r 1               ;
 000753r 1               ; } else {
 000753r 1               ;
-000753r 1               	.dbg	line, "hello.c", 102
+000753r 1               	.dbg	line, "hello.c", 104
 000753r 1  80 0E        	bra     L0023
 000755r 1               ;
 000755r 1               ; printf("File %s Read after copy failed\n",dest);
 000755r 1               ;
-000755r 1               	.dbg	line, "hello.c", 103
+000755r 1               	.dbg	line, "hello.c", 105
 000755r 1  A9 rr        L001F:	lda     #<(S001D)
 000757r 1  A2 rr        	ldx     #>(S001D)
 000759r 1  20 rr rr     	jsr     pushax
@@ -1927,7 +1928,7 @@ Current file: hello.s
 000766r 1               ;
 000766r 1               ; free(ptr);
 000766r 1               ;
-000766r 1               	.dbg	line, "hello.c", 106
+000766r 1               	.dbg	line, "hello.c", 108
 000766r 1  A0 09        	ldy     #$09
 000768r 1  B1 rr        	lda     (sp),y
 00076Ar 1  AA           	tax
@@ -1937,7 +1938,7 @@ Current file: hello.s
 000771r 1               ;
 000771r 1               ; k = fclose(myfile);
 000771r 1               ;
-000771r 1               	.dbg	line, "hello.c", 107
+000771r 1               	.dbg	line, "hello.c", 109
 000771r 1  A0 05        	ldy     #$05
 000773r 1  B1 rr        	lda     (sp),y
 000775r 1  AA           	tax
@@ -1949,7 +1950,7 @@ Current file: hello.s
 000781r 1               ;
 000781r 1               ; printf("fclose created %s file returned %d, Error number %d\n",dest,k,errno);
 000781r 1               ;
-000781r 1               	.dbg	line, "hello.c", 108
+000781r 1               	.dbg	line, "hello.c", 110
 000781r 1  A9 rr        	lda     #<(S001E)
 000783r 1  A2 rr        	ldx     #>(S001E)
 000785r 1  20 rr rr     	jsr     pushax
@@ -1965,7 +1966,7 @@ Current file: hello.s
 0007A0r 1               ;
 0007A0r 1               ; printf("All tests complete");
 0007A0r 1               ;
-0007A0r 1               	.dbg	line, "hello.c", 114
+0007A0r 1               	.dbg	line, "hello.c", 116
 0007A0r 1  A9 rr        L001D:	lda     #<(S001F)
 0007A2r 1  A2 rr        	ldx     #>(S001F)
 0007A4r 1  20 rr rr     	jsr     pushax
@@ -1974,7 +1975,7 @@ Current file: hello.s
 0007ACr 1               ;
 0007ACr 1               ; }
 0007ACr 1               ;
-0007ACr 1               	.dbg	line, "hello.c", 117
+0007ACr 1               	.dbg	line, "hello.c", 119
 0007ACr 1  A0 14        	ldy     #$14
 0007AEr 1  4C rr rr     	jmp     addysp
 0007B1r 1               

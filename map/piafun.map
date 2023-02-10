@@ -1,0 +1,500 @@
+Modules list:
+-------------
+piafun.o:
+    CODE              Offs=000000  Size=0002D7  Align=00001  Fill=0000
+    RODATA            Offs=000000  Size=000182  Align=00001  Fill=0000
+    DATA              Offs=000000  Size=000001  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(_directerrno.o):
+    CODE              Offs=0002D7  Size=00000A  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(_file.o):
+    DATA              Offs=000001  Size=00001E  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(_hextab.o):
+    RODATA            Offs=000182  Size=000010  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(_longminstr.o):
+    RODATA            Offs=000192  Size=00000C  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(_oserror.o):
+    BSS               Offs=000000  Size=000001  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(_printf.o):
+    CODE              Offs=0002E1  Size=0003A5  Align=00001  Fill=0000
+    BSS               Offs=000001  Size=00002B  Align=00001  Fill=0000
+    DATA              Offs=00001F  Size=000003  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(_seterrno.o):
+    CODE              Offs=000686  Size=000009  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(addeqsp.o):
+    CODE              Offs=00068F  Size=000011  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(addysp.o):
+    CODE              Offs=0006A0  Size=00000E  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(axlong.o):
+    CODE              Offs=0006AE  Size=00000D  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(close.o):
+    CODE              Offs=0006BB  Size=000019  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(condes.o):
+    CODE              Offs=0006D4  Size=00000C  Align=00001  Fill=0000
+    DATA              Offs=000022  Size=000025  Align=00001  Fill=0000
+    ONCE              Offs=000000  Size=00000C  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(copydata.o):
+    CODE              Offs=0006E0  Size=00002D  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(crt0.o):
+    STARTUP           Offs=000000  Size=000018  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(ctype.o):
+    RODATA            Offs=00019E  Size=00008B  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(ctypemask.o):
+    CODE              Offs=00070D  Size=00001E  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(decsp2.o):
+    CODE              Offs=00072B  Size=00000D  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(decsp4.o):
+    CODE              Offs=000738  Size=00000D  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(decsp6.o):
+    CODE              Offs=000745  Size=00000D  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(errno.o):
+    BSS               Offs=00002C  Size=000002  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(fwrite.o):
+    CODE              Offs=000752  Size=00007B  Align=00001  Fill=0000
+    BSS               Offs=00002E  Size=000002  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(incsp2.o):
+    CODE              Offs=0007CD  Size=000016  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(incsp6.o):
+    CODE              Offs=0007E3  Size=000005  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(incsp8.o):
+    CODE              Offs=0007E8  Size=000005  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(ldaxsp.o):
+    CODE              Offs=0007ED  Size=000009  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(lneg.o):
+    CODE              Offs=0007F6  Size=00001E  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(lpush.o):
+    CODE              Offs=000814  Size=000021  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(ltoa.o):
+    CODE              Offs=000835  Size=000095  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(mul.o):
+    CODE              Offs=0008CA  Size=000045  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(mul8.o):
+    CODE              Offs=00090F  Size=00003A  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(open.o):
+    CODE              Offs=000949  Size=000099  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(popptr1.o):
+    CODE              Offs=0009E2  Size=00000E  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(printf.o):
+    CODE              Offs=0009F0  Size=000033  Align=00001  Fill=0000
+    BSS               Offs=000030  Size=000001  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(push1.o):
+    CODE              Offs=000A23  Size=000005  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(pushax.o):
+    CODE              Offs=000A28  Size=00001A  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(pushwsp.o):
+    CODE              Offs=000A42  Size=00001C  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(read.o):
+    CODE              Offs=000A5E  Size=000092  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(staxsp.o):
+    CODE              Offs=000AF0  Size=00000B  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(strlen.o):
+    CODE              Offs=000AFB  Size=000016  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(strlower.o):
+    CODE              Offs=000B11  Size=000027  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(subysp.o):
+    CODE              Offs=000B38  Size=00000D  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(udiv.o):
+    CODE              Offs=000B45  Size=00004F  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(vfprintf.o):
+    CODE              Offs=000B94  Size=000061  Align=00001  Fill=0000
+    DATA              Offs=000047  Size=000008  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(write.o):
+    CODE              Offs=000BF5  Size=00009E  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(zerobss.o):
+    CODE              Offs=000C93  Size=000023  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(zeropage.o):
+    ZEROPAGE          Offs=000000  Size=00001A  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(pioif.o):
+    CODE              Offs=000CB6  Size=00004A  Align=00001  Fill=0000
+../../cc65Integration/lib/kim1.lib(clock.o):
+    CODE              Offs=000D00  Size=000168  Align=00001  Fill=0000
+    RODATA            Offs=000229  Size=000009  Align=00001  Fill=0000
+
+
+Segment list:
+-------------
+Name                   Start     End    Size  Align
+----------------------------------------------------
+ZEROPAGE              000040  000059  00001A  00001
+STARTUP               000200  000217  000018  00001
+CODE                  000218  00107F  000E68  00001
+RODATA                001080  0012B1  000232  00001
+ONCE                  0012B2  0012BD  00000C  00001
+DATA                  0012BE  00130C  00004F  00001
+BSS                   00130D  00133D  000031  00001
+
+
+Exports list by name:
+---------------------
+_GetClock                 000F18 RLA    _SetClock                 000FCE RLA    
+__BSS_RUN__               00130D RLA    __BSS_SIZE__              000031 REA    
+__CONSTRUCTOR_COUNT__     000000 REA    __CONSTRUCTOR_TABLE__     000218 RLA    
+__DATA_LOAD__             0012BE RLA    __DATA_RUN__              0012BE RLA    
+__DATA_SIZE__             00004F REA    __DESTRUCTOR_COUNT__      000000 REA    
+__DESTRUCTOR_TABLE__      000218 RLA    __RAM_SIZE__              00CD00 REA    
+__RAM_START__             000200 RLA    __STARTUP__               000001 REA    
+___directerrno            0004EF RLA    ___errno                  001339 RLA    
+___oserror                00130D RLA    ___seterrno               00089E RLA    
+__ctype                   00121E RLA    __ctypeidx                001229 RLA    
+__hextab                  001202 RLA    __longminstr              001212 RLA    
+__printf                  0005EC RLA    _close                    0008D3 RLA    
+_diskupdateptr            000E84 RLA    _diskwritedebug           000EAA RLA    
+_fwrite                   00096A RLA    _ltoa                     000A65 RLA    
+_main                     0002B9 RLA    _open                     000B61 RLA    
+_pioread                  000EEF RLA    _piowrite                 000ECE RLA    
+_printf                   000C08 RLA    _read                     000C76 RLA    
+_stdout                   0012D9 RLA    _strlen                   000D13 RLA    
+_strlower                 000D29 RLA    _ultoa                    000AA6 RLA    
+_vfprintf                 000DE4 RLA    _write                    000E0D RLA    
+addeqysp                  0008A9 RLA    addysp                    0008B9 RLA    
+axlong                    0008C6 RLA    axulong                   0008CC RLA    
+copydata                  0008F8 RLA    ctypemaskdirect           000929 RLA    
+decsp2                    000943 RLA    decsp4                    000950 RLA    
+decsp6                    00095D RLA    incsp2                    0009ED RLA    
+incsp6                    0009FB RLA    incsp8                    000A00 RLA    
+initlib                   0012B2 RLA    ldax0sp                   000A05 RLA    
+ldaxysp                   000A07 RLA    mul8x16                   000B29 RLA    
+mul8x16a                  000B33 RLA    negeax                    000A0E RLA    
+popax                     0009E5 RLA    popptr1                   000BFA RLA    
+ptr1                      000048 RLZ    ptr2                      00004A RLZ    
+ptr3                      00004C RLZ    ptr4                      00004E RLZ    
+push0                     000C40 RLA    push1                     000C3B RLA    
+pusha0                    000C42 RLA    pushax                    000C44 RLA    
+pusheax                   000A35 RLA    pushw0sp                  000C5A RLA    
+pushwysp                  000C5C RLA    regbank                   000054 RLZ    
+sp                        000040 RLZ    sreg                      000042 RLZ    
+stax0sp                   000D08 RLA    staxysp                   000D0A RLA    
+subysp                    000D50 RLA    tmp1                      000050 RLZ    
+tmp3                      000052 RLZ    tosudivax                 000D5F RLA    
+tosumulax                 000AE2 RLA    zerobss                   000EAB RLA    
+
+
+
+Exports list by value:
+----------------------
+__CONSTRUCTOR_COUNT__     000000 REA    __DESTRUCTOR_COUNT__      000000 REA    
+__STARTUP__               000001 REA    __BSS_SIZE__              000031 REA    
+sp                        000040 RLZ    sreg                      000042 RLZ    
+ptr1                      000048 RLZ    ptr2                      00004A RLZ    
+ptr3                      00004C RLZ    ptr4                      00004E RLZ    
+__DATA_SIZE__             00004F REA    tmp1                      000050 RLZ    
+tmp3                      000052 RLZ    regbank                   000054 RLZ    
+__RAM_START__             000200 RLA    __CONSTRUCTOR_TABLE__     000218 RLA    
+__DESTRUCTOR_TABLE__      000218 RLA    _main                     0002B9 RLA    
+___directerrno            0004EF RLA    __printf                  0005EC RLA    
+___seterrno               00089E RLA    addeqysp                  0008A9 RLA    
+addysp                    0008B9 RLA    axlong                    0008C6 RLA    
+axulong                   0008CC RLA    _close                    0008D3 RLA    
+copydata                  0008F8 RLA    ctypemaskdirect           000929 RLA    
+decsp2                    000943 RLA    decsp4                    000950 RLA    
+decsp6                    00095D RLA    _fwrite                   00096A RLA    
+popax                     0009E5 RLA    incsp2                    0009ED RLA    
+incsp6                    0009FB RLA    incsp8                    000A00 RLA    
+ldax0sp                   000A05 RLA    ldaxysp                   000A07 RLA    
+negeax                    000A0E RLA    pusheax                   000A35 RLA    
+_ltoa                     000A65 RLA    _ultoa                    000AA6 RLA    
+tosumulax                 000AE2 RLA    mul8x16                   000B29 RLA    
+mul8x16a                  000B33 RLA    _open                     000B61 RLA    
+popptr1                   000BFA RLA    _printf                   000C08 RLA    
+push1                     000C3B RLA    push0                     000C40 RLA    
+pusha0                    000C42 RLA    pushax                    000C44 RLA    
+pushw0sp                  000C5A RLA    pushwysp                  000C5C RLA    
+_read                     000C76 RLA    stax0sp                   000D08 RLA    
+staxysp                   000D0A RLA    _strlen                   000D13 RLA    
+_strlower                 000D29 RLA    subysp                    000D50 RLA    
+tosudivax                 000D5F RLA    _vfprintf                 000DE4 RLA    
+_write                    000E0D RLA    _diskupdateptr            000E84 RLA    
+_diskwritedebug           000EAA RLA    zerobss                   000EAB RLA    
+_piowrite                 000ECE RLA    _pioread                  000EEF RLA    
+_GetClock                 000F18 RLA    _SetClock                 000FCE RLA    
+__hextab                  001202 RLA    __longminstr              001212 RLA    
+__ctype                   00121E RLA    __ctypeidx                001229 RLA    
+initlib                   0012B2 RLA    __DATA_LOAD__             0012BE RLA    
+__DATA_RUN__              0012BE RLA    _stdout                   0012D9 RLA    
+__BSS_RUN__               00130D RLA    ___oserror                00130D RLA    
+___errno                  001339 RLA    __RAM_SIZE__              00CD00 REA    
+
+
+
+Imports list:
+-------------
+_GetClock (clock.o):
+    piafun.o                  piafun.s:34
+_SetClock (clock.o):
+    piafun.o                  piafun.s:35
+__BSS_RUN__ ([linker generated]):
+    zerobss.o                 common/zerobss.s:8
+__BSS_SIZE__ ([linker generated]):
+    zerobss.o                 common/zerobss.s:8
+__CONSTRUCTOR_COUNT__ ([linker generated]):
+    condes.o                  runtime/condes.s:18
+__CONSTRUCTOR_TABLE__ ([linker generated]):
+    condes.o                  runtime/condes.s:18
+__DATA_LOAD__ ([linker generated]):
+    copydata.o                common/copydata.s:8
+__DATA_RUN__ ([linker generated]):
+    copydata.o                common/copydata.s:8
+__DATA_SIZE__ ([linker generated]):
+    copydata.o                common/copydata.s:8
+__DESTRUCTOR_COUNT__ ([linker generated]):
+    condes.o                  runtime/condes.s:19
+__DESTRUCTOR_TABLE__ ([linker generated]):
+    condes.o                  runtime/condes.s:19
+__RAM_SIZE__ ([linker generated]):
+    crt0.o                    kim1/crt0.s:10
+__RAM_START__ ([linker generated]):
+    crt0.o                    kim1/crt0.s:10
+__STARTUP__ (crt0.o):
+    piafun.o                  piafun.s:21
+___directerrno (_directerrno.o):
+    close.o                   /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
+    write.o                   /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
+    open.o                    /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:10
+___errno (errno.o):
+    _seterrno.o               /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:7
+    piafun.o                  piafun.s:31
+___oserror (_oserror.o):
+    close.o                   /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:7
+    _directerrno.o            /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:7
+    open.o                    /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:7
+___seterrno (_seterrno.o):
+    fwrite.o                  /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:9
+    _directerrno.o            /home/brian/Projects/6502cc65/cc/cc65/asminc/errno.inc:9
+__ctype (ctype.o):
+    ctypemask.o               common/ctypemask.s:23
+__ctypeidx (ctype.o):
+    ctypemask.o               common/ctypemask.s:24
+__hextab (_hextab.o):
+    ltoa.o                    common/ltoa.s:10
+__longminstr (_longminstr.o):
+    ltoa.o                    common/ltoa.s:10
+__printf (_printf.o):
+    vfprintf.o                common/vfprintf.s:10
+_close (close.o):
+    clock.o                   ../libwrk/kim1/clock.s:14
+_diskupdateptr (write.o):
+    pioif.o                   kim1/pioif.s:4
+    read.o                    kim1/read.s:4
+_diskwritedebug (write.o):
+    read.o                    kim1/read.s:4
+_fwrite (fwrite.o):
+    vfprintf.o                common/vfprintf.s:10
+_ltoa (ltoa.o):
+    _printf.o                 common/_printf.s:12
+_main (piafun.o):
+    crt0.o                    kim1/crt0.s:8
+_open (open.o):
+    clock.o                   ../libwrk/kim1/clock.s:13
+    piafun.o                  piafun.s:30
+_pioread (pioif.o):
+    read.o                    kim1/read.s:4
+_piowrite (pioif.o):
+    write.o                   kim1/write.s:4
+_printf (printf.o):
+    piafun.o                  piafun.s:29
+_read (read.o):
+    clock.o                   ../libwrk/kim1/clock.s:16
+    piafun.o                  piafun.s:33
+_stdout (_file.o):
+    printf.o                  common/printf.s:8
+_strlen (strlen.o):
+    _printf.o                 common/_printf.s:13
+_strlower (strlower.o):
+    _printf.o                 common/_printf.s:13
+_ultoa (ltoa.o):
+    _printf.o                 common/_printf.s:12
+_vfprintf (vfprintf.o):
+    printf.o                  common/printf.s:8
+_write (write.o):
+    fwrite.o                  common/fwrite.s:10
+    clock.o                   ../libwrk/kim1/clock.s:15
+    piafun.o                  piafun.s:32
+addeqysp (addeqsp.o):
+    piafun.o                  piafun.s:643
+addysp (addysp.o):
+    incsp8.o                  runtime/incsp8.s:8
+    incsp6.o                  runtime/incsp6.s:8
+    fwrite.o                  common/fwrite.s:11
+    printf.o                  common/printf.s:8
+    open.o                    kim1/open.s:5
+    piafun.o                  piafun.s:643
+axlong (axlong.o):
+    _printf.o                 common/_printf.s:11
+axulong (axlong.o):
+    _printf.o                 common/_printf.s:11
+copydata (copydata.o):
+    crt0.o                    kim1/crt0.s:9
+ctypemaskdirect (ctypemask.o):
+    strlower.o                common/strlower.s:14
+decsp2 (decsp2.o):
+    clock.o                   ../libwrk/kim1/clock.s:205
+decsp4 (decsp4.o):
+    lpush.o                   runtime/lpush.s:12
+    clock.o                   ../libwrk/kim1/clock.s:205
+    piafun.o                  piafun.s:643
+decsp6 (decsp6.o):
+    _printf.o                 common/_printf.s:11
+    piafun.o                  piafun.s:643
+incsp2 (incsp2.o):
+    popptr1.o                 runtime/popptr1.s:8
+    piafun.o                  piafun.s:643
+incsp6 (incsp6.o):
+    fwrite.o                  common/fwrite.s:11
+    clock.o                   ../libwrk/kim1/clock.s:205
+    vfprintf.o                common/vfprintf.s:9
+incsp8 (incsp8.o):
+    clock.o                   ../libwrk/kim1/clock.s:205
+initlib (condes.o):
+    crt0.o                    kim1/crt0.s:9
+ldax0sp (ldaxsp.o):
+    clock.o                   ../libwrk/kim1/clock.s:205
+    clock.o                   ../libwrk/kim1/clock.s:205
+ldaxysp (ldaxsp.o):
+    fwrite.o                  common/fwrite.s:11
+    clock.o                   ../libwrk/kim1/clock.s:205
+    clock.o                   ../libwrk/kim1/clock.s:205
+mul8x16 (mul8.o):
+    mul.o                     runtime/mul.s:8
+mul8x16a (mul8.o):
+    mul.o                     runtime/mul.s:8
+negeax (lneg.o):
+    ltoa.o                    common/ltoa.s:9
+popax (incsp2.o):
+    ltoa.o                    common/ltoa.s:9
+    _printf.o                 common/_printf.s:11
+    write.o                   kim1/write.s:4
+    read.o                    kim1/read.s:4
+    open.o                    kim1/open.s:5
+popptr1 (popptr1.o):
+    udiv.o                    runtime/udiv.s:9
+    mul8.o                    runtime/mul8.s:9
+    mul.o                     runtime/mul.s:9
+    ltoa.o                    common/ltoa.s:9
+    write.o                   kim1/write.s:4
+    read.o                    kim1/read.s:4
+    open.o                    kim1/open.s:5
+ptr1 (zeropage.o):
+    udiv.o                    runtime/udiv.s:10
+    strlower.o                common/strlower.s:13
+    mul8.o                    runtime/mul8.s:10
+    mul.o                     runtime/mul.s:10
+    ltoa.o                    common/ltoa.s:11
+    fwrite.o                  common/fwrite.s:14
+    copydata.o                common/copydata.s:9
+    _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:12
+    clock.o                   ../libwrk/kim1/clock.s:11
+    pioif.o                   kim1/pioif.s:5
+    zerobss.o                 common/zerobss.s:9
+    write.o                   kim1/write.s:5
+    vfprintf.o                common/vfprintf.s:11
+    read.o                    kim1/read.s:5
+    printf.o                  common/printf.s:9
+    popptr1.o                 runtime/popptr1.s:9
+    open.o                    kim1/open.s:6
+    piafun.o                  piafun.s:11
+ptr2 (zeropage.o):
+    strlower.o                common/strlower.s:13
+    strlen.o                  common/strlen.s:12
+    ltoa.o                    common/ltoa.s:11
+    copydata.o                common/copydata.s:9
+    _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:12
+    pioif.o                   kim1/pioif.s:5
+    write.o                   kim1/write.s:5
+    read.o                    kim1/read.s:5
+    open.o                    kim1/open.s:6
+ptr3 (zeropage.o):
+    ltoa.o                    common/ltoa.s:11
+    pioif.o                   kim1/pioif.s:5
+    write.o                   kim1/write.s:5
+    read.o                    kim1/read.s:5
+ptr4 (zeropage.o):
+    udiv.o                    runtime/udiv.s:10
+    mul8.o                    runtime/mul8.s:10
+    mul.o                     runtime/mul.s:10
+push0 (pushax.o):
+    clock.o                   ../libwrk/kim1/clock.s:205
+    clock.o                   ../libwrk/kim1/clock.s:205
+    piafun.o                  piafun.s:643
+push1 (push1.o):
+    _printf.o                 common/_printf.s:11
+    vfprintf.o                common/vfprintf.s:9
+pusha0 (pushax.o):
+    push1.o                   runtime/push1.s:8
+    clock.o                   ../libwrk/kim1/clock.s:205
+    clock.o                   ../libwrk/kim1/clock.s:205
+    piafun.o                  piafun.s:643
+    piafun.o                  piafun.s:643
+pushax (pushax.o):
+    fwrite.o                  common/fwrite.s:11
+    _printf.o                 common/_printf.s:11
+    clock.o                   ../libwrk/kim1/clock.s:205
+    clock.o                   ../libwrk/kim1/clock.s:205
+    printf.o                  common/printf.s:8
+    open.o                    kim1/open.s:5
+    piafun.o                  piafun.s:643
+    piafun.o                  piafun.s:643
+pusheax (lpush.o):
+    _printf.o                 common/_printf.s:11
+pushw0sp (pushwsp.o):
+    clock.o                   ../libwrk/kim1/clock.s:205
+pushwysp (pushwsp.o):
+    fwrite.o                  common/fwrite.s:11
+    clock.o                   ../libwrk/kim1/clock.s:205
+    clock.o                   ../libwrk/kim1/clock.s:205
+    vfprintf.o                common/vfprintf.s:9
+    piafun.o                  piafun.s:643
+regbank (zeropage.o):
+    _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:14
+sp (zeropage.o):
+    lpush.o                   runtime/lpush.s:13
+    ldaxsp.o                  runtime/ldaxsp.s:8
+    decsp2.o                  runtime/decsp2.s:8
+    _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:11
+    clock.o                   ../libwrk/kim1/clock.s:10
+    vfprintf.o                common/vfprintf.s:11
+    subysp.o                  runtime/subysp.s:9
+    staxsp.o                  runtime/staxsp.s:8
+    pushwsp.o                 runtime/pushwsp.s:8
+    pushax.o                  runtime/pushax.s:8
+    printf.o                  common/printf.s:9
+    popptr1.o                 runtime/popptr1.s:9
+    incsp2.o                  runtime/incsp2.s:8
+    decsp6.o                  runtime/decsp6.s:8
+    decsp4.o                  runtime/decsp4.s:8
+    crt0.o                    /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:11
+    addysp.o                  runtime/addysp.s:8
+    addeqsp.o                 runtime/addeqsp.s:8
+    piafun.o                  piafun.s:10
+sreg (zeropage.o):
+    lneg.o                    runtime/lneg.s:11
+    udiv.o                    runtime/udiv.s:10
+    ltoa.o                    common/ltoa.s:11
+    lpush.o                   runtime/lpush.s:13
+    axlong.o                  runtime/axlong.s:9
+    _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:11
+stax0sp (staxsp.o):
+    clock.o                   ../libwrk/kim1/clock.s:205
+    clock.o                   ../libwrk/kim1/clock.s:205
+    piafun.o                  piafun.s:643
+staxysp (staxsp.o):
+    clock.o                   ../libwrk/kim1/clock.s:205
+    clock.o                   ../libwrk/kim1/clock.s:205
+    piafun.o                  piafun.s:643
+subysp (subysp.o):
+    piafun.o                  piafun.s:643
+tmp1 (zeropage.o):
+    mul.o                     runtime/mul.s:10
+    ltoa.o                    common/ltoa.s:11
+    copydata.o                common/copydata.s:9
+    _printf.o                 /home/brian/Projects/6502cc65/cc/cc65/asminc/zeropage.inc:13
+    pioif.o                   kim1/pioif.s:5
+    write.o                   kim1/write.s:5
+    read.o                    kim1/read.s:5
+tmp3 (zeropage.o):
+    open.o                    kim1/open.s:6
+tosudivax (udiv.o):
+    fwrite.o                  common/fwrite.s:12
+tosumulax (mul.o):
+    fwrite.o                  common/fwrite.s:12
+zerobss (zerobss.o):
+    crt0.o                    kim1/crt0.s:9
+

@@ -167,7 +167,7 @@ End
 
 '-------------------------------------------------------------------------------------------------------
 Sub CompleteMsg() As Boolean
-  'print "PIA Complete Message, checking for complete message ";DiskCmdText[InputBuffer.last]
+  'print "PIA Complete Message, checking for complete message ";DiskCmdText[InputBuffer.last];"-";hex(InputBuffer.first)
   Select Case InputBuffer.last
     Case PC_PING, PC_GET_DIR, PC_DONE, PC_GET_CLOCK
       Return True
@@ -194,7 +194,7 @@ Sub CompleteMsg() As Boolean
 
     Case PC_SET_CLOCK
       If InputBuffer.count >= 9 Then
-        'print "Pia Set Clock Called"
+        'print "Pia Set Clock Called = 9 bytes"
         return true
       endif
 
@@ -503,21 +503,20 @@ Sub DiskCmdProcess()
 
     Case PC_SET_CLOCK
        'print "PIA Set Real time clock date and time BCD format";;
-       'inputbuffer.pop()             ' read the message number
        dim imonth as integer =  frombcd(inputbuffer.pop())
        dim iday as integer =  frombcd(inputbuffer.pop())
        dim theyear as integer = (frombcd(inputbuffer.pop()) * 100 )+ frombcd(inputbuffer.pop())
        dim ihour as integer = frombcd(inputbuffer.pop())
        dim iminute as integer =  frombcd(inputbuffer.pop())
        dim iSecond as integer = frombcd(inputbuffer.pop())
-       dim iDayOfWeek as integer = frombcd(inputbuffer.pop())
+       dim iDayOfWeek as integer = frombcd(inputbuffer.pop())  ' this is actually set auto magically by date
 
        'print "Date Requested : ";theyear,imonth,iday,ihour,iminute,isecond
 
        dim NewDate as date = date(theyear,imonth,iday,ihour,iminute,isecond)
-       ' Print cstr(NewDate)
+       'Print cstr(NewDate)
        RealTime = NewDate
-       InputBuffer.remove(InputBuffer.max - 9,-1)            ' remove the info from the buffer
+       'InputBuffer.remove(InputBuffer.max - 9,-1)            ' remove the info from the buffer
        outputbuffer.add(PR_ACK,0)
 
     Case PC_SET_TIMER
@@ -558,7 +557,8 @@ Sub DiskCmdProcess()
 
 Catch
   error "PIA DISK Disk Command Process Error:";error.text,error.where
-
+  outputbuffer.add(PR_NAK,0)
+  
 End
 
 public sub piainterupts_timer()

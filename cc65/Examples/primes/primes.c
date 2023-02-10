@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <ctmon65.h>
 
 #define  MaxPrime 20000
 

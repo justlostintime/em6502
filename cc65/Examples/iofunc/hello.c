@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <ctmon65.h>
+
 
 int copy(char *source, char *dest);
 void seperator();

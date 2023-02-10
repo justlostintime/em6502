@@ -1,14 +1,12 @@
 ;
 ; int __fastcall__ read (int fd, void* buf, unsigned count);
 ;
-      .import         popax, popptr1, _diskupdateptr,_diskwritedebug
+      .import         popax, popptr1, _diskupdateptr,_diskwritedebug, _pioread
       .importzp       ptr1, ptr2, ptr3, tmp1
 
       .include        "errno.inc"
       .include        "fcntl.inc"
-      .include        "kim1.inc"    ; this is mapped to the ctmon65.h file
-
-
+      .include        "ctmon65.inc"    ; this is mapped to the ctmon65.h file
 
 .export         _read
 
@@ -28,6 +26,8 @@ getNoInc:
         jsr     popax            ; File Descriptor
         cmp     #3               ; file descriptor three is read disk
         beq     ReadFromDisk
+        cmp     #4
+        beq     readfrompio
 
 begin:  dec     ptr2
         bne     getch
@@ -65,7 +65,7 @@ done:   lda     ptr3
 ; C will be clear and A contains the number of bytes
 ; actually read into the buffer.
 ReadFromDisk:
-;        jsr    _diskreaddebug
+        jsr    _diskreaddebug
         lda     #0
         sta     ptr3
         sta     ptr3+1            ; we actually have to count the bytes we read
@@ -98,6 +98,26 @@ readdone:
         lda     ptr3              ; return the number of bytes read, 0 = eof
         ldx     ptr3+1
         rts
+;
+;===================================================================================
+;
+readfrompio:
+
+        jsr     _diskwritedebug
+;        jsr     PUTSIL                                  ; debug
+;        .byte   $0a,$0d,"Reading from pio",$0a,$0d,"Buffer Address :",$00  ; debug
+;       
+;        lda     ptr1+1
+;        jsr     HEXA
+;        lda     ptr1
+;        jsr     HEXA
+;        jsr     PUTSIL
+;        .byte   $0a,$0d,$00
+        
+        dec     ptr2              ; need to readjust as not console out
+        dec     ptr2+1
+        jsr     _pioread
+        jmp     readdone
 
 .endproc
 
