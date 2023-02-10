@@ -1,6 +1,7 @@
 ;
 ; int __fastcall__ __sysremove(char *filename);
 ;
+         .setcpu         "65C02"
          .export         _remove
          .import         addysp, popax
          .importzp       sp, tmp2, tmp3
@@ -21,7 +22,7 @@
          bcc       removeNoError
          lda       #ENOENT
          jmp     ___directerrno  ; Set _errno, clear __oserror, return -1
-         
+
 removeNoError:
          ldx       #0
          tax

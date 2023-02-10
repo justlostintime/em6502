@@ -1,6 +1,7 @@
 ;
 ; _open a file, ctmon can only have a single file open at a time
 ;
+         .setcpu         "65C02"
          .export         _open
          .import         addysp, popax, popptr1, pushax
          .importzp       sp, tmp2, tmp3, ptr1, ptr2

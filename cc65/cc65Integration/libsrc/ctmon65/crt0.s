@@ -1,7 +1,7 @@
 ;
 ; Startup code for cc65 (ctmon65 version)
 ;
-
+        .setcpu         "65C02"
         .export         _init, _exit
         .export         __STARTUP__ : absolute = 1      ; Mark as startup
 
@@ -20,7 +20,7 @@
 
 
 ; A little light housekeeping
-_init:   
+_init:
 	 cld                          	; Clear decimal mode
 
 ; Set cc65 argument stack pointer

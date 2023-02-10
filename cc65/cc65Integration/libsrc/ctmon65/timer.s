@@ -1,6 +1,7 @@
 ;
 ; this provides the timer function used by all other calls for
 ; wait, sleep, etc
+      .setcpu         "65C02"
       .import        _piowrite, _pioread,pusheax,ldeax0sp,incsp4
       .importzp       ptr1, ptr2, ptr3, sreg
       .include        "errno.inc"
@@ -20,7 +21,7 @@ timerlengthtable: .word 0,10,20,30,40,50,100,250,500,1000
 
 .CODE
 ; int __fastcall__ get_timer_tick_length()
-; return the value of the tick as an integer 
+; return the value of the tick as an integer
 ; tick is in the format of the start timer request see ctmon65.h
 .proc _get_timer_tick_length
     lda   ticklength
@@ -54,7 +55,7 @@ timerlengthtable: .word 0,10,20,30,40,50,100,250,500,1000
     sta     sreg+1
     lda     timervalue
     ldy     #0
-    rts 
+    rts
 .endproc
 
 ; int __fastcall__ init_timer(int clocktick)
@@ -70,7 +71,7 @@ timerlengthtable: .word 0,10,20,30,40,50,100,250,500,1000
       sta   IRQVEC
       lda   #>(_IRQCALL)
       sta   IRQVEC+1
-      
+
       lda   #<(settimerreq)
       sta   ptr1
       lda   #>(settimerreq)

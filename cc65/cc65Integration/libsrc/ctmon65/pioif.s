@@ -1,6 +1,8 @@
 ;
+
 ; int __fastcall__ read (int fd, void* buf, unsigned count);
 ;
+      .setcpu         "65C02"
       .import         popax, popptr1, _diskupdateptr,_diskwritedebug
       .importzp       ptr1, ptr2, ptr3, tmp1
 
@@ -62,7 +64,7 @@ piowriteloop:
 ;         jsr    HEXA
 ;         lda    #$20
 ;         jsr    OUTCHR
-         
+
          jsr    XPARSETREADvec
          lda    #1
          sta    tmp1

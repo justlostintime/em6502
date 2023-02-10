@@ -1,6 +1,7 @@
 ;
 ; int __fastcall__ read (int fd, void* buf, unsigned count);
 ;
+      .setcpu         "65C02"
       .import         popax, popptr1, _diskupdateptr,_diskwritedebug, _pioread
       .importzp       ptr1, ptr2, ptr3, tmp1
 
@@ -106,14 +107,14 @@ readfrompio:
         jsr     _diskwritedebug
 ;        jsr     PUTSIL                                  ; debug
 ;        .byte   $0a,$0d,"Reading from pio",$0a,$0d,"Buffer Address :",$00  ; debug
-;       
+;
 ;        lda     ptr1+1
 ;        jsr     HEXA
 ;        lda     ptr1
 ;        jsr     HEXA
 ;        jsr     PUTSIL
 ;        .byte   $0a,$0d,$00
-        
+
         dec     ptr2              ; need to readjust as not console out
         dec     ptr2+1
         jsr     _pioread

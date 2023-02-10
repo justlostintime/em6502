@@ -1,12 +1,13 @@
 ;
 ; int __fastcall__ write (int fd, const void* buf, int count);
 ;
+      .setcpu         "65C02"
       .import         popax, popptr1, _piowrite
       .importzp       ptr1, ptr2, ptr3, ptr4 ,tmp1
 
       .include        "errno.inc"
       .include        "fcntl.inc"
-      .include        "ctmon65.inc"    ; this is mapped to the ctmon65.h file
+      .include        "ctmon65.inc"
 
 
 .export         _write
