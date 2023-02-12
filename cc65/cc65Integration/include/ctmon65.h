@@ -62,7 +62,7 @@ struct timer_info {
   char  timout;       // single byte timout value
 };
 
-// the timer parameter value list and meaning 
+// the timer parameter value list and meaning
 #define   timer_0ms   0     // disbale timer and irq
 #define   timer_10ms  1     // 10 ms timer etc
 #define   timer_20ms  2
@@ -92,7 +92,8 @@ int __fastcall__ SetClock (void *clockinfo); // updated the clock with the data
 
 int __fastcall__ init_timer (char timer_value);           // set the time and turn on interupts
 unsigned long __fastcall__ get_timer ();                  // get the current timer value
-int __fastcall__ get_timer_tick_length ();                 // return the parameter used to set the timer
+int __fastcall__ get_timer_tick_length ();                // return the parameter used to set the timer
+void __fastcall__ stop_timer ();                          // stop the timer and reset the irq to original
 
 /*****************************************************************************/
 /*                                   Code                                    */

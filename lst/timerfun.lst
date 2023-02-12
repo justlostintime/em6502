@@ -103,14 +103,14 @@ Current file: timerfun.s
 000000r 2                       .endif
 000000r 2               .endmacro
 000000r 2               
-000000r 1               	.dbg		file, "timerfun.c", 1161, 1675975247
+000000r 1               	.dbg		file, "timerfun.c", 1123, 1676227501
 000000r 1               	.dbg		file, "/usr/share/cc65/include/stdio.h", 6887, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/stdlib.h", 6885, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/string.h", 5492, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/fcntl.h", 3550, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/errno.h", 5854, 1605895793
 000000r 1               	.dbg		file, "/usr/share/cc65/include/unistd.h", 4309, 1605895793
-000000r 1               	.dbg		file, "../../cc65Integration/include/ctmon65.h", 5154, 1675972372
+000000r 1               	.dbg		file, "../../cc65Integration/include/ctmon65.h", 5258, 1676224656
 000000r 1               	.forceimport	__STARTUP__
 000000r 1               	.dbg		sym, "printf", "00", extern, "_printf"
 000000r 1               	.dbg		sym, "sleep", "00", extern, "_sleep"
@@ -118,12 +118,14 @@ Current file: timerfun.s
 000000r 1               	.dbg		sym, "init_timer", "00", extern, "_init_timer"
 000000r 1               	.dbg		sym, "get_timer", "00", extern, "_get_timer"
 000000r 1               	.dbg		sym, "get_timer_tick_length", "00", extern, "_get_timer_tick_length"
+000000r 1               	.dbg		sym, "stop_timer", "00", extern, "_stop_timer"
 000000r 1               	.import		_printf
 000000r 1               	.import		_sleep
 000000r 1               	.import		_GetClock
 000000r 1               	.import		_init_timer
 000000r 1               	.import		_get_timer
 000000r 1               	.import		_get_timer_tick_length
+000000r 1               	.import		_stop_timer
 000000r 1               	.export		_thedatofweek
 000000r 1               	.export		_printDateTime
 000000r 1               	.export		_main
@@ -288,7 +290,7 @@ Current file: timerfun.s
 000066r 1               ;
 000066r 1               ; }
 000066r 1               ;
-000066r 1               	.dbg	line, "timerfun.c", 16
+000066r 1               	.dbg	line, "timerfun.c", 15
 000066r 1  A0 09        	ldy     #$09
 000068r 1  4C rr rr     	jmp     addysp
 00006Br 1               
@@ -313,19 +315,19 @@ Current file: timerfun.s
 00006Br 1               ;
 00006Br 1               ; unsigned long currenttime = 0;
 00006Br 1               ;
-00006Br 1               	.dbg	line, "timerfun.c", 19
+00006Br 1               	.dbg	line, "timerfun.c", 18
 00006Br 1  20 rr rr     	jsr     pushl0
 00006Er 1               ;
 00006Er 1               ; int loops = 20;
 00006Er 1               ;
-00006Er 1               	.dbg	line, "timerfun.c", 21
+00006Er 1               	.dbg	line, "timerfun.c", 20
 00006Er 1  20 rr rr     	jsr     decsp2
 000071r 1  A9 14        	lda     #$14
 000073r 1  20 rr rr     	jsr     pusha0
 000076r 1               ;
 000076r 1               ; result = init_timer(timer_10ms);
 000076r 1               ;
-000076r 1               	.dbg	line, "timerfun.c", 22
+000076r 1               	.dbg	line, "timerfun.c", 21
 000076r 1  A9 01        	lda     #$01
 000078r 1  20 rr rr     	jsr     _init_timer
 00007Br 1  A0 02        	ldy     #$02
@@ -333,7 +335,7 @@ Current file: timerfun.s
 000080r 1               ;
 000080r 1               ; printf("Init timer returned %04x, timeout parm = %d\n",result,get_timer_tick_length());
 000080r 1               ;
-000080r 1               	.dbg	line, "timerfun.c", 23
+000080r 1               	.dbg	line, "timerfun.c", 22
 000080r 1  A9 rr        	lda     #<(S0009)
 000082r 1  A2 rr        	ldx     #>(S0009)
 000084r 1  20 rr rr     	jsr     pushax
@@ -350,16 +352,16 @@ Current file: timerfun.s
 00009Dr 1               ;
 00009Dr 1               ; if (result){           // start the timer running
 00009Dr 1               ;
-00009Dr 1               	.dbg	line, "timerfun.c", 24
+00009Dr 1               	.dbg	line, "timerfun.c", 23
 00009Dr 1  A0 03        	ldy     #$03
 00009Fr 1  B1 rr        	lda     (sp),y
 0000A1r 1  88           	dey
 0000A2r 1  11 rr        	ora     (sp),y
-0000A4r 1  F0 73        	beq     L0002
+0000A4r 1  F0 78        	beq     L0002
 0000A6r 1               ;
 0000A6r 1               ; printf("Timer was correctly started\n");
 0000A6r 1               ;
-0000A6r 1               	.dbg	line, "timerfun.c", 25
+0000A6r 1               	.dbg	line, "timerfun.c", 24
 0000A6r 1  A9 rr        	lda     #<(S000A)
 0000A8r 1  A2 rr        	ldx     #>(S000A)
 0000AAr 1  20 rr rr     	jsr     pushax
@@ -368,7 +370,7 @@ Current file: timerfun.s
 0000B2r 1               ;
 0000B2r 1               ; for (loops = 0; loops < 20; loops++) {
 0000B2r 1               ;
-0000B2r 1               	.dbg	line, "timerfun.c", 26
+0000B2r 1               	.dbg	line, "timerfun.c", 25
 0000B2r 1  A9 00        	lda     #$00
 0000B4r 1  92 rr        	sta     (sp)
 0000B6r 1  A0 01        	ldy     #$01
@@ -382,91 +384,100 @@ Current file: timerfun.s
 0000C4r 1  E9 00        	sbc     #$00
 0000C6r 1  50 02        	bvc     L0007
 0000C8r 1  49 80        	eor     #$80
-0000CAr 1  10 59        L0007:	bpl     L0008
-0000CCr 1               ;
-0000CCr 1               ; printf("Sleep 1 second\n");
-0000CCr 1               ;
-0000CCr 1               	.dbg	line, "timerfun.c", 27
-0000CCr 1  A9 rr        	lda     #<(S000B)
-0000CEr 1  A2 rr        	ldx     #>(S000B)
-0000D0r 1  20 rr rr     	jsr     pushax
-0000D3r 1  A0 02        	ldy     #$02
-0000D5r 1  20 rr rr     	jsr     _printf
-0000D8r 1               ;
-0000D8r 1               ; sleep(1);
-0000D8r 1               ;
-0000D8r 1               	.dbg	line, "timerfun.c", 28
-0000D8r 1  A2 00        	ldx     #$00
-0000DAr 1  A9 01        	lda     #$01
-0000DCr 1  20 rr rr     	jsr     _sleep
-0000DFr 1               ;
-0000DFr 1               ; printDateTime();
-0000DFr 1               ;
-0000DFr 1               	.dbg	line, "timerfun.c", 29
-0000DFr 1  20 rr rr     	jsr     _printDateTime
-0000E2r 1               ;
-0000E2r 1               ; printf("Call get_timer...");
-0000E2r 1               ;
-0000E2r 1               	.dbg	line, "timerfun.c", 30
-0000E2r 1  A9 rr        	lda     #<(S000C)
-0000E4r 1  A2 rr        	ldx     #>(S000C)
-0000E6r 1  20 rr rr     	jsr     pushax
-0000E9r 1  A0 02        	ldy     #$02
-0000EBr 1  20 rr rr     	jsr     _printf
-0000EEr 1               ;
-0000EEr 1               ; currenttime = get_timer();
-0000EEr 1               ;
-0000EEr 1               	.dbg	line, "timerfun.c", 31
-0000EEr 1  20 rr rr     	jsr     _get_timer
-0000F1r 1  A0 04        	ldy     #$04
-0000F3r 1  20 rr rr     	jsr     steaxysp
-0000F6r 1               ;
-0000F6r 1               ; printf("%09lu tick len = %d ms\n",currenttime,get_timer_tick_length());
-0000F6r 1               ;
-0000F6r 1               	.dbg	line, "timerfun.c", 32
-0000F6r 1  A9 rr        	lda     #<(S000D)
-0000F8r 1  A2 rr        	ldx     #>(S000D)
-0000FAr 1  20 rr rr     	jsr     pushax
-0000FDr 1  A0 09        	ldy     #$09
-0000FFr 1  20 rr rr     	jsr     ldeaxysp
-000102r 1  20 rr rr     	jsr     pusheax
-000105r 1  20 rr rr     	jsr     _get_timer_tick_length
-000108r 1  20 rr rr     	jsr     pushax
-00010Br 1  A0 08        	ldy     #$08
-00010Dr 1  20 rr rr     	jsr     _printf
-000110r 1               ;
-000110r 1               ; for (loops = 0; loops < 20; loops++) {
-000110r 1               ;
-000110r 1               	.dbg	line, "timerfun.c", 26
-000110r 1  A2 00        	ldx     #$00
-000112r 1  A9 01        	lda     #$01
-000114r 1  20 rr rr     	jsr     addeq0sp
-000117r 1  80 A1        	bra     L0003
-000119r 1               ;
-000119r 1               ; printf("Timer failed to start\n");
-000119r 1               ;
-000119r 1               	.dbg	line, "timerfun.c", 35
-000119r 1  A9 rr        L0002:	lda     #<(S000E)
-00011Br 1  A2 rr        	ldx     #>(S000E)
-00011Dr 1  20 rr rr     	jsr     pushax
-000120r 1  A0 02        	ldy     #$02
-000122r 1  20 rr rr     	jsr     _printf
-000125r 1               ;
-000125r 1               ; printf("Completed test\n");
-000125r 1               ;
-000125r 1               	.dbg	line, "timerfun.c", 37
-000125r 1  A9 rr        L0008:	lda     #<(S000F)
-000127r 1  A2 rr        	ldx     #>(S000F)
-000129r 1  20 rr rr     	jsr     pushax
-00012Cr 1  A0 02        	ldy     #$02
-00012Er 1  20 rr rr     	jsr     _printf
-000131r 1               ;
-000131r 1               ; }
-000131r 1               ;
-000131r 1               	.dbg	line, "timerfun.c", 39
-000131r 1  4C rr rr     	jmp     incsp8
-000134r 1               
-000134r 1               	.dbg	line
-000134r 1               .endproc
-000134r 1               
-000134r 1               
+0000CAr 1  0A           L0007:	asl     a
+0000CBr 1  A9 00        	lda     #$00
+0000CDr 1  AA           	tax
+0000CEr 1  2A           	rol     a
+0000CFr 1  F0 59        	beq     L0008
+0000D1r 1               ;
+0000D1r 1               ; printf("Sleep 1 second\n");
+0000D1r 1               ;
+0000D1r 1               	.dbg	line, "timerfun.c", 26
+0000D1r 1  A9 rr        	lda     #<(S000B)
+0000D3r 1  A2 rr        	ldx     #>(S000B)
+0000D5r 1  20 rr rr     	jsr     pushax
+0000D8r 1  A0 02        	ldy     #$02
+0000DAr 1  20 rr rr     	jsr     _printf
+0000DDr 1               ;
+0000DDr 1               ; sleep(1);
+0000DDr 1               ;
+0000DDr 1               	.dbg	line, "timerfun.c", 27
+0000DDr 1  A2 00        	ldx     #$00
+0000DFr 1  A9 01        	lda     #$01
+0000E1r 1  20 rr rr     	jsr     _sleep
+0000E4r 1               ;
+0000E4r 1               ; printDateTime();
+0000E4r 1               ;
+0000E4r 1               	.dbg	line, "timerfun.c", 28
+0000E4r 1  20 rr rr     	jsr     _printDateTime
+0000E7r 1               ;
+0000E7r 1               ; printf("Call get_timer...");
+0000E7r 1               ;
+0000E7r 1               	.dbg	line, "timerfun.c", 29
+0000E7r 1  A9 rr        	lda     #<(S000C)
+0000E9r 1  A2 rr        	ldx     #>(S000C)
+0000EBr 1  20 rr rr     	jsr     pushax
+0000EEr 1  A0 02        	ldy     #$02
+0000F0r 1  20 rr rr     	jsr     _printf
+0000F3r 1               ;
+0000F3r 1               ; currenttime = get_timer();
+0000F3r 1               ;
+0000F3r 1               	.dbg	line, "timerfun.c", 30
+0000F3r 1  20 rr rr     	jsr     _get_timer
+0000F6r 1  A0 04        	ldy     #$04
+0000F8r 1  20 rr rr     	jsr     steaxysp
+0000FBr 1               ;
+0000FBr 1               ; printf("%09lu tick len = %d ms\n",currenttime,get_timer_tick_length());
+0000FBr 1               ;
+0000FBr 1               	.dbg	line, "timerfun.c", 31
+0000FBr 1  A9 rr        	lda     #<(S000D)
+0000FDr 1  A2 rr        	ldx     #>(S000D)
+0000FFr 1  20 rr rr     	jsr     pushax
+000102r 1  A0 09        	ldy     #$09
+000104r 1  20 rr rr     	jsr     ldeaxysp
+000107r 1  20 rr rr     	jsr     pusheax
+00010Ar 1  20 rr rr     	jsr     _get_timer_tick_length
+00010Dr 1  20 rr rr     	jsr     pushax
+000110r 1  A0 08        	ldy     #$08
+000112r 1  20 rr rr     	jsr     _printf
+000115r 1               ;
+000115r 1               ; for (loops = 0; loops < 20; loops++) {
+000115r 1               ;
+000115r 1               	.dbg	line, "timerfun.c", 25
+000115r 1  A2 00        	ldx     #$00
+000117r 1  A9 01        	lda     #$01
+000119r 1  20 rr rr     	jsr     addeq0sp
+00011Cr 1  80 9C        	bra     L0003
+00011Er 1               ;
+00011Er 1               ; printf("Timer failed to start\n");
+00011Er 1               ;
+00011Er 1               	.dbg	line, "timerfun.c", 34
+00011Er 1  A9 rr        L0002:	lda     #<(S000E)
+000120r 1  A2 rr        	ldx     #>(S000E)
+000122r 1  20 rr rr     	jsr     pushax
+000125r 1  A0 02        	ldy     #$02
+000127r 1  20 rr rr     	jsr     _printf
+00012Ar 1               ;
+00012Ar 1               ; stop_timer();
+00012Ar 1               ;
+00012Ar 1               	.dbg	line, "timerfun.c", 37
+00012Ar 1  20 rr rr     L0008:	jsr     _stop_timer
+00012Dr 1               ;
+00012Dr 1               ; printf("Completed test\n");
+00012Dr 1               ;
+00012Dr 1               	.dbg	line, "timerfun.c", 39
+00012Dr 1  A9 rr        	lda     #<(S000F)
+00012Fr 1  A2 rr        	ldx     #>(S000F)
+000131r 1  20 rr rr     	jsr     pushax
+000134r 1  A0 02        	ldy     #$02
+000136r 1  20 rr rr     	jsr     _printf
+000139r 1               ;
+000139r 1               ; }
+000139r 1               ;
+000139r 1               	.dbg	line, "timerfun.c", 41
+000139r 1  4C rr rr     	jmp     incsp8
+00013Cr 1               
+00013Cr 1               	.dbg	line
+00013Cr 1               .endproc
+00013Cr 1               
+00013Cr 1               

@@ -11,6 +11,7 @@
       .export        _init_timer
       .export        _get_timer
       .export        _get_timer_tick_length
+      .export        _stop_timer
 
 .DATA
 ticklength:   .byte 0                ; this is the external timer parameter see ctmon65h
@@ -18,8 +19,17 @@ timervalue:   .byte 0,0,0,0
 settimerreq:  .byte $1E,$06
 settimerrsp:  .byte 00,00
 timerlengthtable: .word 0,10,20,30,40,50,100,250,500,1000
+timeroriginalvector: .word 0
 
 .CODE
+; reset the timer interupt and turn off irq catching
+; void __fastcall__ stop_timer();
+;
+.proc _stop_timer
+         lda		#0
+         jmp    _init_timer
+.endproc
+;
 ; int __fastcall__ get_timer_tick_length()
 ; return the value of the tick as an integer
 ; tick is in the format of the start timer request see ctmon65.h
@@ -36,15 +46,6 @@ timerlengthtable: .word 0,10,20,30,40,50,100,250,500,1000
 ; returns the current timer value
 .proc _get_timer
 
-; example return long from c code
-; return 0x67891234;
-;ldx     #$12
-;lda     #$89
-;sta     sreg
-;lda     #$67
-;sta     sreg+1
-;lda     #$34
-;rts
 ;debug print called message
 ;    jsr    PUTSIL
 ;    .byte  "_get_timer called ",$0a,$0d,0
@@ -67,6 +68,11 @@ timerlengthtable: .word 0,10,20,30,40,50,100,250,500,1000
 .proc _init_timer
       sta   settimerreq+1              ; save the actual tick value
       sta   ticklength                 ; save parameter to read back
+      lda   IRQVEC
+      sta   timeroriginalvector
+      lda   IRQVEC+1
+      sta   timeroriginalvector+1
+      
       lda   #<(_IRQCALL)
       sta   IRQVEC
       lda   #>(_IRQCALL)
@@ -108,6 +114,10 @@ done:
        lda  settimerreq+1       ; if 0 then turn irq off
        cmp  #0
        bne  enableirq
+       lda	timeroriginalvector
+       sta  IRQVEC
+       lda  timeroriginalvector+1
+       sta  IRQVEC
        sei                                    ; disable IRQVEC
        bra  irqexit
 enableirq:

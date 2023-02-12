@@ -15,6 +15,9 @@ void main() {
   char *flags;
   int  *flaginit;
   int count = 0,i,halfcount,a,b;
+  unsigned long starttime,endtime,final;
+  
+  init_timer(timer_10ms);
 
   while(count <=0 || count >= MaxPrime) {
     printf("Enter the number of primes 2-%d:>",MaxPrime);
@@ -28,6 +31,8 @@ void main() {
     break;
   }
 
+  starttime = get_timer();
+  
   count++;
   halfcount = count/2;
   flags = malloc(count);
@@ -38,24 +43,17 @@ void main() {
   flags[1]=0;
   flags[2]=1;
   flags[count]=1;
-  //printflags(flags,count);
-
-//300 print "Begin scan loop through from 2 to ";n;" and mark numbers, initialized  ";n;" Entries"
-//320 a = 3 : b = 6
-//
-//330 @$[b] = 0 : b = b + a : if b <= n goto .
-//350 inc a : if (a > n or a+a > n )  goto 390
-//360 if @$[a] = 0 goto 350
-//370 b = a + a : goto 330
-//
-//390 print "Completed scan"
 
   for (a = 3; (a+a) < count; a++) {
     if (flags[a] == 0) continue;
     for (b = a+a; b < count; b += a) flags[b] = 0;
   }
 
-  printf("Completed scan\nList of the itsy Primes :\n");
+  endtime = get_timer();
+  final = (endtime-starttime) * get_timer_tick_length();
+  stop_timer();
+  
+  printf("Completed scan in %lu.%lu seconds\nList of the Primes 0-%d:\n", final/1000,final%1000,count);
   //printflags(flags,count);
 
   a=0;

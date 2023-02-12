@@ -33,6 +33,9 @@ void main() {
     } else {
     printf("Timer failed to start\n");
   }
+  
+  stop_timer();
+  
   printf("Completed test\n");
 
 }

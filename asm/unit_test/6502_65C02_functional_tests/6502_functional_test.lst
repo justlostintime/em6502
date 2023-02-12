@@ -1,0 +1,139 @@
+AS65 Assembler for R6502 [1.42].                                     Page    1
+-------------------------- 6502_functional_test.a65 --------------------------
+
+2:            cmp absrlo,x    ;test result
+"6502_functional_test.a65",5101 (tst_ax) : Overwriting previously used memory location.
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5101 (trap_ne) : Overwriting previously used memory location.
+4:            pla         ;load status
+"6502_functional_test.a65",5101 (tst_ax) : Overwriting previously used memory location.
+1:            eor #$ff-fnz|fao         ;invert expected flags + always on bits
+"6502_functional_test.a65",5101 (eor_flag) : Overwriting previously used memory location.
+6:            cmp absflo,x    ;test flags
+"6502_functional_test.a65",5101 (tst_ax) : Overwriting previously used memory location.
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5101 (trap_ne) : Overwriting previously used memory location.
+5102:        dex
+"6502_functional_test.a65",5102 : Overwriting previously used memory location.
+5103:        bpl tora7
+"6502_functional_test.a65",5103 : Overwriting previously used memory location.
+5105:        ldx #3      ;abs,x
+"6502_functional_test.a65",5105 : Overwriting previously used memory location.
+1:            lda #0             ;allow test to change I-flag (no mask)
+"6502_functional_test.a65",5107 (load_flag) : Overwriting previously used memory location.
+2:            pha         ;use stack to load status
+"6502_functional_test.a65",5107 (set_ax) : Overwriting previously used memory location.
+3:            lda absORa,x    ;precharge accu
+"6502_functional_test.a65",5107 (set_ax) : Overwriting previously used memory location.
+4:            plp
+"6502_functional_test.a65",5107 (set_ax) : Overwriting previously used memory location.
+5108:        ora absOR,x
+"6502_functional_test.a65",5108 : Overwriting previously used memory location.
+1:            php         ;save flags
+"6502_functional_test.a65",5109 (tst_ax) : Overwriting previously used memory location.
+2:            cmp absrlo,x    ;test result
+"6502_functional_test.a65",5109 (tst_ax) : Overwriting previously used memory location.
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5109 (trap_ne) : Overwriting previously used memory location.
+4:            pla         ;load status
+"6502_functional_test.a65",5109 (tst_ax) : Overwriting previously used memory location.
+1:            eor #0|fao         ;invert expected flags + always on bits
+"6502_functional_test.a65",5109 (eor_flag) : Overwriting previously used memory location.
+6:            cmp absflo,x    ;test flags
+"6502_functional_test.a65",5109 (tst_ax) : Overwriting previously used memory location.
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5109 (trap_ne) : Overwriting previously used memory location.
+5110:        dex
+"6502_functional_test.a65",5110 : Overwriting previously used memory location.
+5111:        bpl tora8
+"6502_functional_test.a65",5111 : Overwriting previously used memory location.
+5112:        ldx #3
+"6502_functional_test.a65",5112 : Overwriting previously used memory location.
+1:            lda #$ff             ;allow test to change I-flag (no mask)
+"6502_functional_test.a65",5114 (load_flag) : Overwriting previously used memory location.
+2:            pha         ;use stack to load status
+"6502_functional_test.a65",5114 (set_ax) : Overwriting previously used memory location.
+3:            lda absORa,x    ;precharge accu
+"6502_functional_test.a65",5114 (set_ax) : Overwriting previously used memory location.
+4:            plp
+"6502_functional_test.a65",5114 (set_ax) : Overwriting previously used memory location.
+5115:        ora absOR,x
+"6502_functional_test.a65",5115 : Overwriting previously used memory location.
+1:            php         ;save flags
+"6502_functional_test.a65",5116 (tst_ax) : Overwriting previously used memory location.
+2:            cmp absrlo,x    ;test result
+"6502_functional_test.a65",5116 (tst_ax) : Overwriting previously used memory location.
+AS65 Assembler for R6502 [1.42].                                     Page    2
+-------------------------- 6502_functional_test.a65 --------------------------
+
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5116 (trap_ne) : Overwriting previously used memory location.
+4:            pla         ;load status
+"6502_functional_test.a65",5116 (tst_ax) : Overwriting previously used memory location.
+1:            eor #$ff-fnz|fao         ;invert expected flags + always on bits
+"6502_functional_test.a65",5116 (eor_flag) : Overwriting previously used memory location.
+6:            cmp absflo,x    ;test flags
+"6502_functional_test.a65",5116 (tst_ax) : Overwriting previously used memory location.
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5116 (trap_ne) : Overwriting previously used memory location.
+5117:        dex
+"6502_functional_test.a65",5117 : Overwriting previously used memory location.
+5118:        bpl tora9
+"6502_functional_test.a65",5118 : Overwriting previously used memory location.
+5120:        ldy #3      ;abs,y
+"6502_functional_test.a65",5120 : Overwriting previously used memory location.
+1:            lda #0             ;allow test to change I-flag (no mask)
+"6502_functional_test.a65",5122 (load_flag) : Overwriting previously used memory location.
+2:            pha         ;use stack to load status
+"6502_functional_test.a65",5122 (set_ay) : Overwriting previously used memory location.
+3:            lda absORa,y    ;precharge accu
+"6502_functional_test.a65",5122 (set_ay) : Overwriting previously used memory location.
+4:            plp
+"6502_functional_test.a65",5122 (set_ay) : Overwriting previously used memory location.
+5123:        ora absOR,y
+"6502_functional_test.a65",5123 : Overwriting previously used memory location.
+1:            php         ;save flags
+"6502_functional_test.a65",5124 (tst_ay) : Overwriting previously used memory location.
+2:            cmp absrlo,y    ;test result
+"6502_functional_test.a65",5124 (tst_ay) : Overwriting previously used memory location.
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5124 (trap_ne) : Overwriting previously used memory location.
+4:            pla         ;load status
+"6502_functional_test.a65",5124 (tst_ay) : Overwriting previously used memory location.
+1:            eor #0|fao         ;invert expected flags + always on bits
+"6502_functional_test.a65",5124 (eor_flag) : Overwriting previously used memory location.
+6:            cmp absflo,y    ;test flags
+"6502_functional_test.a65",5124 (tst_ay) : Overwriting previously used memory location.
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5124 (trap_ne) : Overwriting previously used memory location.
+5125:        dey
+"6502_functional_test.a65",5125 : Overwriting previously used memory location.
+5126:        bpl tora10
+"6502_functional_test.a65",5126 : Overwriting previously used memory location.
+5127:        ldy #3
+"6502_functional_test.a65",5127 : Overwriting previously used memory location.
+1:            lda #$ff             ;allow test to change I-flag (no mask)
+"6502_functional_test.a65",5129 (load_flag) : Overwriting previously used memory location.
+2:            pha         ;use stack to load status
+"6502_functional_test.a65",5129 (set_ay) : Overwriting previously used memory location.
+3:            lda absORa,y    ;precharge accu
+"6502_functional_test.a65",5129 (set_ay) : Overwriting previously used memory location.
+4:            plp
+"6502_functional_test.a65",5129 (set_ay) : Overwriting previously used memory location.
+5130:        ora absOR,y
+"6502_functional_test.a65",5130 : Overwriting previously used memory location.
+1:            php         ;save flags
+"6502_functional_test.a65",5131 (tst_ay) : Overwriting previously used memory location.
+2:            cmp absrlo,y    ;test result
+"6502_functional_test.a65",5131 (tst_ay) : Overwriting previously used memory location.
+1:        bne *           ;failed not equal (non zero)
+"6502_functional_test.a65",5131 (trap_ne) : Overwriting previously used memory location.
+AS65 Assembler for R6502 [1.42].                                     Page    3
+-------------------------- 6502_functional_test.a65 --------------------------
+
+4:            pla         ;load status
+"6502_functional_test.a65",5131 (tst_ay) : Overwriting previously used memory location.
+1:            eor #$ff-fnz|fao         ;invert expected flags + always on bits
+"6502_functional_test.a65",5131 (eor_flag) : Overwriting previously used memory location.
+6108 lines read, 64 errors in pass 1.
+
