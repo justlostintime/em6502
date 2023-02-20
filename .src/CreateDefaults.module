@@ -125,6 +125,19 @@ Public Sub _call()
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
+    If Not Exist(.AsmComputerDefinitions &/ "console") Then
+      Comp = New ComputerDef
+      Comp.Name = "console"
+      Comp.Speed = 999
+      Comp.AutoStart = &h0200
+      Comp.AutoStartActive = True
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "hello.raw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
+      Comp["console"] = [&h0E000, 16, "TinyBasic and ctmon65 on the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp.Save(.AsmComputerDefinitions)
+    Endif
+
     copyDirectory("dev", .AsmDeviceDirectory)
     copyDirectory("asm", .AsmSourceDirectory)
     copyDirectory("cc65", .Cc65SourceDirectory)

@@ -1,0 +1,207 @@
+' Gambas class file
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+'' Device Console
+'' This simulates a console device that is Ansi complient
+'' using the console the emulator starts on
+'' it acts like a rs232 connected device.
+'' This is configured to work with the
+'' CTMON65 default rom, but may be used more generally
+
+'fast unsafe
+
+Public MemoryStart As Long = 0
+Public MemoryEnd As Long = 0
+Public MemoryLen As Long = 0
+Public LastValue As Byte
+Public Databuffer As Byte[]
+Public EchoChar As Boolean = false
+TermCtlOld As TerminalSettings
+
+Property read name as string use $name
+Property Read hidden as boolean use $hidden = false
+Property Status as byte use $Status = 0
+Property UseIrqRX as boolean use $UseIrqRX = false
+Property UseIrqTX as boolean use $UseIrqTX = false
+Property ReaderTask as task use $ReaderTask
+Property TheCpu as Variant use $TheCpu
+
+RS232CONFIG as string[] = ["7bit,even parity,2 stop bits","7bit,odd parity,2 stop bits","7bit,even parity,1 stop bit","7bit,odd parity,1 stop bit",
+                           "8bit,no parity,2 stop bits","8bit,no parity,1 stop bits","8bit,even parity,1 stop bit","8bit,odd parity,1 stop bits"]
+RS232SYNC as string[] = ["sync divide by 1","sync divide by 16","sync divide by 64","ACIA MASTER RESET"]
+
+class KeyboardReader
+
+event halt(Reason as string)
+
+'==================================================================================================
+Public Sub _new(Start As Long, len As Long, StartMessage As string)
+
+  MemoryStart = Start
+  MemoryEnd = Start+len-1
+  MemoryLen = len
+  DataBuffer = New Byte[]
+  $name = "CON"
+  TermCtlOld = File.In.Term.GetAttr()
+
+  $ReaderTask = new KeyboardReader as "mytask"
+  wait 0.01
+  Write #File.out, "\e[32m"
+  print StartMessage
+
+  Catch
+    print "Console Device error :" ; Error.text, Error.where,"\n\r";
+End
+'======================================================================================
+Public sub halt()
+
+   $ReaderTask.Stop()
+   wait 0.01
+   File.In.Term.SetAttr(0, TermCtlOld)
+   File.in.term.echo = true
+   Debug "Console Halted"
+
+end
+
+'===================================================================================================
+Public Sub _Put(Value As Byte, address as long)
+  'print "TTY: Write Request Address=$";hex(address,4);;"With Data=$";hex(Value,2)
+'================================================================================
+' Check for data being sent
+'================================================================================
+  if address = MemoryStart+1 then         'put the data
+    LastValue = value
+    print chr(value);
+    flush
+'=================================================================================
+' Else it must be config info
+'=================================================================================
+  else                                              'Write Status and config stuff
+    debug "Console : Config set ACIA : ";bin(Value,8);"\n\r";
+    if (value and &h03) = &h03 then
+      debug "Console: ACIA Master reset detected";"\n\r";
+      ' add cleanup code here if needed, reset does not change any config values
+      return
+    endif
+
+    $Status = value                                 'set the config for this acia 6850
+    if (value and &h80) = &h80 then
+      $UseIrqRX = true
+      debug "Console: RX IRQ enabled","\n\r";
+    endif
+    if (value and &h20) = &h20 then
+      $UseIrqTX = true
+      debug "Console: TX IRQ enabled","\n\r";
+    endif
+    debug "Console: Character Definition :";RS232CONFIG[(value and &h16) shr 2];"\n\r";
+    debug "ACIA master:";RS232SYNC[value and &h03];"\n\r";
+  endif
+catch
+  print "Console put error :";error.text;"\n\r";
+End
+'
+'================================================================================
+Public Sub _get(address As Long) As Byte
+ ' print "console: Read Request Address=$";hex(address,4)
+ If address = MemoryStart + 1 Then                   'Then Read A byte
+        if DataBuffer.count > 0 Then
+           Return DataBuffer.Pop()
+        Else
+           Return 0
+        Endif
+ else                                                ' Read The Status register
+   dim status as byte = 2                            ' Can Always write
+'  Status = bset(status,1)                           ' Can Always write something
+   if DataBuffer.count > 0 then
+'     debug "Console : Byte Avaiable for read COUNT = "  ' DataBuffer.count
+      Status += 1                                    ' Set if something to read
+'     Status = bset(status,0)                        ' set if something to be read
+'  else
+'     Status = bclr(status,0)
+   endif
+  endif
+
+  return status
+
+End
+'==========================================================================
+Public sub mytask_error(errinf as string)
+   error "Console Message: ";errinf
+end
+
+'==========================================================================
+ControlBuffer as new byte[]
+ControlMode as boolean = false
+
+Public Sub mytask_read(bkeypress As string)
+
+ 'print "Console key recieved ";asc(bkeypress)
+
+ if asc(bkeypress) = 27 then                          ' is it an escape key
+     'print "Enter control mode"
+     ControlMode = true
+ endif
+
+ if ControlMode then
+    ControlBuffer.add(asc(bKeyPress),0)
+    'print "Console key recieved ";asc(bkeypress); "len=";ControlBuffer.count
+    if ControlBuffer.count = 3 then
+       ProcessControlInfo()
+       ControlBuffer.clear()
+       ControlMode=False
+    endif
+ else
+    if asc(bkeypress) = 127 then bKeyPress = chr(8)
+    if bkeypress = "\n" then bkeypress = "\r"
+    DataBuffer.Add(asc(bKeypress), 0)
+ endif
+
+
+ If EchoChar Then
+    print bKeyPress;
+    flush
+ Endif
+
+End
+
+Sub ProcessControlInfo()
+   if ControlBuffer[1] = 79 then
+     select case ControlBuffer[0]
+       case 81        ' send a quit interupt Message
+           print "Console Request Halt emulator\n\r";
+           raise Halt("User request termination\n\r")
+
+       case 82        ' send a reset to cpu
+           debug "Console : reset cpu\n\r";
+           $TheCpu.ResetPending = True
+           $TheCpu.InteruptPending = True
+
+       case 83        ' send nmi to cpu
+           debug "Console : Send NMI\n\r";
+           $TheCpu.NmiPending = True
+           $TheCpu.InteruptPending = True
+
+     end select
+     return
+   endif
+
+   while ControlBuffer.count > 0
+     DataBuffer.add(ControlBuffer.pop(),0)
+   wend
+
+end
+'====================================================================================
+fast unsafe Public Sub _InRange(Address As Long) As Boolean
+
+  If Address >= MemoryStart And Address <= MemoryEnd Then Return True
+  Return False
+
+End
+
+
+
+
+

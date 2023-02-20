@@ -43,6 +43,13 @@ TTYNAME as string = "TTYForm"
 
 Property read name as string use $name
 Property Read hidden as boolean use $hidden = false
+Property Status as byte use $Status = 0
+Property UseIrqRX as boolean use $UseIrqRX = false
+Property UseIrqTX as boolean use $UseIrqTX = false
+
+RS232CONFIG as string[] = ["7bit,even parity,2 stop bits","7bit,odd parity,2 stop bits","7bit,even parity,1 stop bit","7bit,odd parity,1 stop bit",
+                           "8bit,no parity,2 stop bits","8bit,no parity,1 stop bits","8bit,even parity,1 stop bit","8bit,odd parity,1 stop bits"]
+RS232SYNC as string[] = ["sync divide by 1","sync divide by 16","sync divide by 64","ACIA MASTER RESET"]
 
 TTYFORM As Form
 
@@ -62,21 +69,21 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
 
       try $WrPipe = pipe $OutPipe for write
       if error then
-        print "Error opening Output pipe Driver Side ";$OutPipe
+        print "Error opening Output pipe Driver Side ";$OutPipe;"\n\r";
       else
         try $RdPipe = pipe $InPipe for read watch
         if error then
-           print "Error opening Input pipe Driver Side ";$InPipe
+           print "Error opening Input pipe Driver Side ";$InPipe;"\n\r";
         endif
       endif
   'else
       try $tWrPipe = pipe $InPipe for write
       if error then
-        print "Error opening Output pipe Task Side ";$INPipe
+        print "Error opening Output pipe Task Side ";$INPipe;"\n\r";
       else
         try $tRdPipe = pipe $OutPipe for read watch
         if error then
-           print "Error opening Output pipe Task Side ";$InPipe
+           print "Error opening Output pipe Task Side ";$InPipe;"\n\r";
         endif
       endif
 
@@ -92,7 +99,7 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
       endif
   'endif
   Catch
-    print "TTY Device error :" ; Error.text, Error.where
+    print "TTY Device error :" ; Error.text, Error.where;"\n\r";
 End
 '======================================================================================
 Public sub halt()
@@ -113,6 +120,10 @@ fast unsafe Public Sub _Put(Value As Byte, address as long)
       TTYForm.Show()
       $hidden = false
   endif
+
+'================================================================================
+' Check for data being sent
+'================================================================================
   if address = MemoryStart+1 then         'put the data
     LastValue = value
    ' if value = 10 or value = 13 then
@@ -121,10 +132,31 @@ fast unsafe Public Sub _Put(Value As Byte, address as long)
       write #$WrPipe, Value as byte
       'TermOut.refresh()
    ' endif
+'=================================================================================
+' Else it must be config info
+'=================================================================================
   else                                              'Write Status and config stuff
-    'print "Status set ACIA"&bin(Value)
+    'print "TTY : Config set ACIA : ";bin(Value,8)
+    if (value and &h03) = &h03 then
+      debug "TTY: ACIA Master reset detected"
+      ' add cleanup code here if needed, reset does not change any config values
+      return
+    endif
+
+    $Status = value                                 'set the config for this acia 6850
+    if (value and &h80) = &h80 then
+      $UseIrqRX = true
+      debug "TTY: RX IRQ enabled"
+    endif
+    if (value and &h20) = &h20 then
+      $UseIrqTX = true
+      print "TTY: TX IRQ enabled"
+    endif
+      debug "TTY: Character Definition :";RS232CONFIG[(value and &h16) shr 2]
+      debug "ACIA master:";RS232SYNC[value and &h03]
   endif
 End
+'
 '================================================================================
 fast unsafe Public Sub _get(address As Long) As Byte
  'print "TTY: Read Request Address=$";hex(address,4)
@@ -142,7 +174,7 @@ fast unsafe Public Sub _get(address As Long) As Byte
    dim status as byte = 2                            ' Can Always write
 '  Status = bset(status,1)                           ' Can Always write something
    if DataBuffer.count > 0 then
-'     debug "TTY : Byte Avaiable for read COUNT = "  ;DataBuffer.count
+'     debug "TTY : Byte Avaiable for read COUNT = "  'DataBuffer.count
       Status += 1                                    ' Set if something to read
 '     Status = bset(status,0)                        ' set if something to be read
 '  else
@@ -195,13 +227,13 @@ Sub openTTYWindow()
 
   try TermOut.ConnectTo($tWrPipe, $tRdPipe,me)
   if error then
-    print "TTY Device Error at openTTYWindow;ConnectTo : ";error.text,error.where
+    print "TTY Device Error at openTTYWindow;ConnectTo : ";error.text,error.where;"\n\r";
   endif
 
   Write #$WrPipe, "\e[32m"              ' set text color to green
 
   Catch
-     print "TTY Device Error at openTTYWindow : ";error.text,error.where
+     print "TTY Device Error at openTTYWindow : ";error.text,error.where;"\n\r";
 
 End
 '=================================================================
@@ -255,7 +287,7 @@ fast unsafe Public Sub file_read()
   wend
 
   Catch
-  print "TTY Device File Read : ";Error.text
+  print "TTY Device File Read : ";Error.text;"\n\r";
 
 End
 '===========================================================================================

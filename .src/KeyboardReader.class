@@ -1,0 +1,42 @@
+' Gambas class file
+
+Export
+Inherits Task
+
+Extern getchar() As Integer In "libc:6"
+
+KeyboardInput As Integer
+TermCtlOld As TerminalSettings
+TermCtlNew As TerminalSettings
+
+
+Public Sub main()
+
+  File.in.term.echo = False
+
+  TermCtlOld = File.In.Term.GetAttr()
+  TermCtlNew = TermCtlOld.Copy()
+
+  TermCtlNew.ICANON = False
+  TermCtlNew.MakeRaw()
+
+  File.In.Term.SetAttr(0, TermCtlNew)
+
+  While True
+
+    Wait 0.01
+    KeyboardInput = getchar()
+    'Print "keypress = "; KeyboardInput
+    If KeyboardInput <> -1 Then
+      Write #File.out, Chr(KeyboardInput), 1
+      Flush #File.out
+    Endif
+
+  Wend
+
+Catch
+  Error "KeyboardReader Error: "; Error.text, Error.Where
+
+End
+
+

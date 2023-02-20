@@ -1,3 +1,23 @@
+* Sun Feb 19 2023 Justlostintime <justlostintime@gmail.com> 1.2.3
+
+* Sun Feb 19 2023 Justlostintime <justlostintime@gmail.com> 1.2.3
+
+* Sun Feb 19 2023 Justlostintime <justlostintime@gmail.com> 1.2.3
+
+* Sun Feb 19 2023 Justlostintime <justlostintime@gmail.com> 1.2.3
+
+* Sun Feb 19 2023 Justlostintime <justlostintime@gmail.com> 1.2.3
+
+* Sun Feb 19 2023 Justlostintime <justlostintime@gmail.com> 1.2.3
+
+* Sun Feb 19 2023 Justlostintime <justlostintime@gmail.com> 1.2.3
+
+* Sun Feb 19 2023 Justlostintime <justlostintime@gmail.com> 1.2.2
+
+* Sun Feb 12 2023 Justlostintime <justlostintime@gmail.com> 1.2.2
+- Very many bug fixes, added support directory for cc65, examples, implemented c standard libries to work with ctmon65
+- added some speed ups for the emulator. cleaned up som of the tiny basic code.
+
 * Sun Oct 02 2022 Justlostintime <justlostintime@gmail.com> 1.1.22
 
 * Tue Sep 20 2022 Justlostintime <justlostintime@gmail.com> 1.1.22

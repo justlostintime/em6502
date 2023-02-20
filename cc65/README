@@ -1,0 +1,5 @@
+This reqires the latest cc65 from the github repository, 
+as the defult older versions don't support the kim1 
+
+This is needed to force the cc65 compiler to see the
+ctmon65 configuration.

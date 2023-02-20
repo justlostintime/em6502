@@ -12,6 +12,8 @@ void printDate(struct clock_info *c);
 
 char getclockinfo[] = { 0x07};
 
+const char *dayofweek[] = {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+
 void main() {
   struct clock_info buffer;
   struct clock_info newtime;
@@ -49,7 +51,7 @@ void main() {
   GetClock(&newtime);
 
   printDate(&newtime);
-  
+
   printf("Now move time and date back in time\n");
   newtime.month   = 0x12;
   newtime.day     = 0x1;
@@ -63,12 +65,12 @@ void main() {
   SetClock(&newtime);
   GetClock(&newtime);
   printDate(&newtime);
-  
+
 }
 
 void printDate(struct clock_info *c) {
 
-  printf("%02x-%02x-%02x%02x %02x:%02x:%02x %02x\n",c->month,c->day,c->century,c->year,c->hour,c->minute,c->second,c->dayofweek);
+  printf("%02x-%02x-%02x%02x %02x:%02x:%02x %s\n",c->month,c->day,c->century,c->year,c->hour,c->minute,c->second,dayofweek[c->dayofweek]);
 
 }
 
