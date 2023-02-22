@@ -1,6 +1,37 @@
 # 65C02 Emulator/ Development Environment
 This emulator Development environment is written in gambas3
-you will need the latest gambas build from gambas daily builds or 3.17
+you will need the latest gambas build from gambas daily builds or 3.18
+The upgrade to 3.18 happened again because of bytecode updates and syntax updates and range checking
+that have been added to Gambas3. There also seems to be a good bit of performance improvement as well.
+Gambas 3.18 can be found at:
+
+Ubuntu the packages for ppa gambas can be found at
+https://launchpad.net/~gambas-team/+archive/ubuntu/gambas3
+
+Debian the package can be installed from repository:
+deb http://http.us.debian.org/debian/ bookworm main
+
+opensuse 15.4 at : 
+https://download.opensuse.org/repositories/home:/munix9/15.4/x86_64/gambas3-3.18.0-lp154.11.1.x86_64.rpm
+Opensuse tumbleweed at:
+https://download.opensuse.org/repositories/home:/munix9/openSUSE_Tumbleweed/x86_64/gambas3-3.18.0-11.1.x86_64.rpm
+
+or :
+https://download.opensuse.org/repositories/home:/munix9/openSUSE_Tumbleweed/aarch64/gambas3-3.18.0-11.2.aarch64.rpm
+
+Arch/Manjaro at and built from
+git clone https://gitlab.com/gambas/gambas.git
+or
+https://gitlab.com/gambas/gambas/-/archive/3.18.0/gambas-3.18.0.tar.bz2
+
+## Version 1.2.2
+Lots of bug fixes and addition, see the commit history.
+Itegrated the cc65 c compiler, and created support libraries for ctmon65
+Added a number of C program examples, timers, interrupts, dynamic memory allocation etc.
+
+The packages generation for opensuse seems to be a little broken for 15.4
+You must use zypper install em6502-1....
+Then ignore the unsigned package message.   
 
 ## Some version before 1.1.19
 Some versions of the emulator release before 1.1.19 may have required a newer version of the Gambas bytecode
