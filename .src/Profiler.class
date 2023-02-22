@@ -23,6 +23,13 @@ Public Sub _new(TheCpu As CPU6502)
 
 End
 
+Public Sub reset()
+
+  profile.clear()
+
+End
+
+
 Public Sub count(address As Long, cycles As Integer)
 
   profile[Hex(address, 4)] += cycles

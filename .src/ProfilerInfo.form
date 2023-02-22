@@ -12,27 +12,26 @@
     Value = True
   }
   { ShowInfo Button
-    MoveScaled(53,1,26,4)
+    MoveScaled(56,1,23,4)
     Enabled = False
     ToolTip = ("Display Current profile Information\nYou do not need to stop profiling to\nget the current information from the profiler.\n")
     Text = ("Show/Update Profile Info")
   }
   { Label1 Label
     MoveScaled(28,6,20,4)
-    Visible = False
     Text = ("Profile From Address")
   }
   { !ProfileAddress TextBox
     MoveScaled(48,6,11,4)
     #Public = True
-    Visible = False
-    ToolTip = ("Starting address in hex for profile reporting\nIf ommitted then all traed address space is reported")
+    ToolTip = ("Starting address in hex for profile reporting\nIf ommitted then all traed address space is reported\n-1 mean everything")
+    Text = ("-1")
   }
   { !ProfileLength TextBox
     MoveScaled(69,6,9,4)
     #Public = True
-    Visible = False
     ToolTip = ("The length in hex of address space to report for profile\nthis is only valid if a start address is provided.")
+    Text = ("0")
   }
   { !ProfileDisplay TerminalView
     MoveScaled(1,12,78,36)
@@ -44,7 +43,6 @@
   }
   { Label2 Label
     MoveScaled(60,6,8,4)
-    Visible = False
     Text = ("length")
   }
   { Label3 Label
@@ -70,5 +68,9 @@
       MoveScaled(2,3,19,4)
       Text = ("Sort By Cycles")
     }
+  }
+  { ProfileReset_Button Button
+    MoveScaled(47,1,8,4)
+    Text = ("Clear")
   }
 }

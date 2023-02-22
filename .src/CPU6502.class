@@ -32,6 +32,7 @@ Public AddressMap As New Object[]         ' Address bus map object pointers
 Public RealMemory As New Object[1024 * 64]  ' Used to map for read byte and write byte lots of space
 maphigh As New Long[]
 maplow As New Long[]
+
 Public SingleStep As Boolean              ' Turn On single step mode
 Public DisplayStatus As Boolean           ' Turn On the status screen
 Public DisplayInstruction As Boolean      ' Cause the instruction to be executed to be displayed to the trace screen
@@ -52,7 +53,7 @@ Property NMIPending As Boolean Use $NMIPending = False
 Property ResetPending As Boolean Use $ResetPending = False
 Property Halted As Boolean Use $Halted = False
 Property Profiling As Boolean Use $Profiling = False
-Property Read ProfileInfo As String[]
+
 Property cpu65c02 As Boolean Use $cpu65c02 = False
 
 Property MillisecondTicks As Long Use $MillisecondTicks = 2000        ' based upon @mhz oscillator speed
@@ -909,10 +910,17 @@ Fast Unsafe Private Sub Profiling_Write(Value As Boolean)
 
 End
 
-Fast Unsafe Private Function ProfileInfo_Read() As String[]
+Fast Unsafe Public Sub ProfileReset()
+
+  If InstProfile Then InstProfile.reset()
+
+End
+
+'Property Read ProfileInfo As String[]
+Fast Unsafe Public Function ProfileInfo(Optional StartAddress As Integer = -1, length As Integer = 0) As String[]
 
   If InstProfile Then
-    Return InstProfile.report(-1, 0, $ProfileSortOrder)
+    Return InstProfile.report(startAddress, length, $ProfileSortOrder)
   Endif
 
 End

@@ -17,9 +17,23 @@ End
 
 Public Sub ShowInfo_Click()
 
-  ProfileDisplay.Clear()
+  Dim start As Integer
+  Dim len As Integer
+  Dim addr As String
 
-  For Each s As String In FMain.MyComputer.ProfileInfo
+  ProfileDisplay.Clear()
+  addr = Trim(ProfileAddress.text)
+  If Left(addr, 1) = "$" Then addr = "&h0" & Right(addr, -1)
+  If Not IsNumber(addr) Then
+    ProfileAddress.text = -1
+    addr = "-1"
+  Endif
+  If Not IsNumber(ProfileLength.text) Then ProfileLength.text = 0
+
+  start = Eval(addr)
+  len = Eval(profileLength.text)
+
+  For Each s As String In FMain.MyComputer.ProfileInfo(start, len)
     ProfileDisplay.print(s & "\r\n")
   Next
 
@@ -65,5 +79,12 @@ End
 Public Sub SortCount_Click()
 
   FMain.MyComputer.ProfileSortOrder = False
+
+End
+
+Public Sub ProfileReset_Button_Click()
+
+  FMain.MyComputer.ProfileReset()
+  ProfileDisplay.Clear()
 
 End

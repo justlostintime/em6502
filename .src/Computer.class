@@ -16,7 +16,6 @@ Property BreakPoints As Boolean
 Property StartAddress As Long
 Property SetMemoryProtection As Boolean
 Property Profiling As Boolean
-Property Read ProfileInfo As String[]
 Property ProfileSortOrder As Boolean
 Property MemoryUpdates As Boolean
 
@@ -344,9 +343,9 @@ Private Sub Profiling_Write(Value As Boolean)
 
 End
 
-Private Function ProfileInfo_Read() As String[]
+Public Function ProfileInfo(Optional startAddress As Integer = -1, length As Integer = 0) As String[]
 
-  Return MyCpu.ProfileInfo
+  Return MyCpu.ProfileInfo(startAddress, length)
 
 End
 
@@ -361,6 +360,13 @@ Private Sub ProfileSortOrder_Write(Value As Boolean)
   MyCpu.ProfileSortOrder = Value
 
 End
+
+Public Sub ProfileReset()
+
+  MyCpu.ProfileReset()
+
+End
+
 
 Private Function MemoryUpdates_Read() As Boolean
 
