@@ -49,16 +49,22 @@ Public Sub Form_Open()
 
   LoadComputersConfig()
 
-  DeviceList.Columns.Count = 4
+  DeviceList.Columns.Count = 5
   DeviceList.Rows.Count = 50
   DeviceList.Header = GridView.Horizontal
   DeviceList.Columns[0].text = "Device Name       "
   DeviceList.Columns[0].Width = 100
+
   DeviceList.Columns[1].Text = "Start "
   DeviceList.Columns[1].Width = 75
+
   DeviceList.Columns[2].text = "Length"
   DeviceList.Columns[2].Width = 75
-  DeviceList.Columns[3].text = "Device Specific Parameters"
+
+  DeviceList.Columns[3].text = "RW"
+  DeviceList.Columns[3].Width = 50
+
+  DeviceList.Columns[4].text = "Device Specific Parameters"
 
   FMain.Text = Application.Title & " " & Application.Version & " Computer Name : " & CurrentComputerDefinition
 
@@ -815,8 +821,8 @@ Public Sub SaveComputersConfig()
   CurrentCompDev.Clear()
   For i As Integer = 0 To DeviceList.Rows.Max
     If DeviceList[i, 0].text = "" Then Continue
-    CurrentCompDev[DeviceList[i, 0].text] = [Eval("&h0" & DeviceList[i, 1].text), Eval("&h0" & DeviceList[i, 2].text), DeviceList[i, 3].text]
-    'Print DeviceList[i, 0].text, DeviceList[i, 1].text, DeviceList[i, 2].text, DeviceList[i, 3].text
+    CurrentCompDev[DeviceList[i, 0].text] = [Eval("&h0" & DeviceList[i, 1].text), Eval("&h0" & DeviceList[i, 2].text), DeviceList[i, 4].text, DeviceList[i, 3].text]
+    'Print DeviceList[i, 0].text, DeviceList[i, 1].text, DeviceList[i, 2].text, DeviceList[i, 4].text,DeviceList[i, 3].text
   Next
 
   CurrentCompDev.save()
@@ -846,7 +852,8 @@ Sub SetComp(Cname As String)
     DeviceList[DevIndex, 0].text = CurrentCompDev.key
     DeviceList[DevIndex, 1].text = Hex(ddev[0], 4)
     DeviceList[DevIndex, 2].text = Hex(ddev[1], 4)
-    DeviceList[DevIndex, 3].text = ddev[2]
+    DeviceList[DevIndex, 3].text = ddev[3]
+    DeviceList[DevIndex, 4].text = ddev[2]
     Inc DevIndex
   Next
 
@@ -957,7 +964,7 @@ Public Sub RmDevice_Click()
 
   For i As Integer = 0 To DeviceList.Rows.Max
     If DeviceList[i, 0].text = "" Or If i = DeviceList.row Then Continue
-    devlist.Add([DeviceList[i, 0].text, DeviceList[i, 1].text, DeviceList[i, 2].text, DeviceList[i, 3].text])
+    devlist.Add([DeviceList[i, 0].text, DeviceList[i, 1].text, DeviceList[i, 2].text, DeviceList[i, 4].text, DeviceList[i, 3].text])
   Next
   DeviceList.Clear()
   Dim DevIndex As Integer = 0
@@ -965,7 +972,8 @@ Public Sub RmDevice_Click()
     DeviceList[DevIndex, 0].text = v[0]
     DeviceList[DevIndex, 1].text = v[1]
     DeviceList[DevIndex, 2].text = v[2]
-    DeviceList[DevIndex, 3].text = v[3]
+    DeviceList[DevIndex, 3].text = v[4]
+    DeviceList[DevIndex, 4].text = v[3]
     Inc DevIndex
   Next
   DeviceList.Refresh()

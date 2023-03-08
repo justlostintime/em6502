@@ -33,7 +33,7 @@ RS232CONFIG as string[] = ["7bit,even parity,2 stop bits","7bit,odd parity,2 sto
                            "8bit,no parity,2 stop bits","8bit,no parity,1 stop bits","8bit,even parity,1 stop bit","8bit,odd parity,1 stop bits"]
 RS232SYNC as string[] = ["sync divide by 1","sync divide by 16","sync divide by 64","ACIA MASTER RESET"]
 
-class KeyboardReader
+class KeyboardRdr
 
 event halt(Reason as string)
 
@@ -47,7 +47,7 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
   $name = "CON"
   TermCtlOld = File.In.Term.GetAttr()
 
-  $ReaderTask = new KeyboardReader as "mytask"
+  $ReaderTask = new KeyboardRdr as "mytask"
   wait 0.01
   Write #File.out, "\e[32m"
   print StartMessage

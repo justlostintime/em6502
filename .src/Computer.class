@@ -28,27 +28,55 @@ Event AutoStart(address As Long, speed As Integer)
 
 
 Public Devices As ScriptManager
+Public Services As ScriptManager
+
 Property Read Config As ComputerDef Use $Config
 Property SpeedScaler As Long
 Property Read CyclesPerSecond As Long
+Property Read DevicePath As String Use $DevicePath
 
 
 Public Sub Configure(Configuration As ComputerDef)
 
   Dim cDev As Class
+  Dim sDevName As String
+  Dim rw As Integer
 
   $Config = Configuration
+
   For Each device As Variant[] In $Config
+    If $Config.key == "NOTE" Then Continue               ' you can put notes into the config
     Dim vname As String[] = Split($Config.key, ":")
-    Try cDev = Devices(vname[0] & ".dev")
-    If Error Then
-      Message.Error(("Unable to start computer error found In configuration\nSee Error display panel for details"), ("ok"))
+    If Exist($DevicePath &/ vname[0] & ".dev") Then
+      sDevName = vname[0] & ".dev"
+      Try cDev = Devices(sDevName)
+    Else If Exist($DevicePath &/ vname[0] & ".srv") Then
+      sDevName = vname[0] & ".srv"
+      Try cDev = Services(sDevName)
+      Continue           ' this is a service class not a device so end processing
+    Else
+      Message.Error(("Computer Definition contains invalid Device name") & " : " & vname[0] & (" Not Device or Service"))
       Return
     Endif
-    Try MyCpu.AddMAp(device[0], device[1], cDev, device[2])
+    If Error Then
+      Message.Error("COMP DEF :" & sDevName & " : " & (" Unable To start computer Error found In configuration \nSee Error display panel For details "), (" ok "))
+      Return
+    Endif
+    If device[3] == "rw" Then
+      rw = CPU6502.mem_rw
+    Else If device[3] == "ro" Then
+      rw = CPU6502.mem_read
+    Else If Device[3] == "wo" Then
+      rw = CPU6502.mem_write
+    Else
+      rw = CPU6502.mem_rw
+    Endif
+
+    Try MyCpu.AddMap(device[0], device[1], cDev, device[2], rw) ' specify if it is read write or rw
     If Error Then
       Message("Error processing Device initialization " & cDev.Name & " Initialization Skipped")
     Endif
+
   Next
 
   Try MyCpu.Reset()
@@ -69,8 +97,11 @@ Public Sub _new()
   MyCpu.DisplayInstruction = True
   MyCpu.DisplayStatus = True
   Running = False
+  $DevicePath = user.home &/ "6502/dev"
+
   MonitorList = New Collection(gb.ignorecase)
-  Devices = New ScriptManager(True, user.home &/ "6502/dev")
+  Devices = New ScriptManager(True, $DevicePath)
+  Services = New ScriptManager(True, $DevicePath)
 
 End
 

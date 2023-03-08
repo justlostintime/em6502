@@ -20,12 +20,12 @@ Public Sub _call()
       Comp.Speed = 500
       Comp.AutoStart = &h0200
       Comp.AutoStartActive = True
-      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "Default Tiny Basic running with CTMON65 monitor"]
-      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
-      Comp["HaltButton"] = [0, 0, "Quit Button"]
-      Comp["ShowMhz"] = [0, 0, "3000"]
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin", "rw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+      Comp["TTYSIM"] = [&h0E000, 16, "Default Tiny Basic running with CTMON65 monitor", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
+      Comp["ShowMhz"] = [0, 0, "3000", "na"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
@@ -35,13 +35,13 @@ Public Sub _call()
       Comp.Speed = 500
       Comp.AutoStart = &h0200
       Comp.AutoStartActive = True
-      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
-      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "Default Tiny Basic running with CTMON65 monitor"]
-      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
-      Comp["HaltButton"] = [0, 0, "Quit Button"]
-      Comp["ShowMhz"] = [0, 0, "3000"]
-      Comp["TTYSIM:1"] = [&h0E020, 16, "Tiny Basic Debug Console"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "rw"]
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin", "ro"]
+      Comp["TTYSIM"] = [&h0E000, 16, "Default Tiny Basic running with CTMON65 monitor", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
+      Comp["ShowMhz"] = [0, 0, "3000", "na"]
+      Comp["TTYSIM:1"] = [&h0E020, 16, "Tiny Basic Debug Console", "rw"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
@@ -51,12 +51,12 @@ Public Sub _call()
       Comp.Speed = 500
       Comp.AutoStart = &h0200
       Comp.AutoStartActive = True
-      Comp["RamMemory"] = [&h0000, &h00200, ""]
-      Comp["RamMemory:1"] = [&h0200, &h0DE00, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "CTMON2Ram Tiny Basic running with CTMON65 monitor"]
-      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
-      Comp["HaltButton"] = [0, 0, "Quit Button"]
+      Comp["RamMemory"] = [&h0000, &h00200, "", "rw"]
+      Comp["RamMemory:1"] = [&h0200, &h0DE00, .AsmBinaryDirectory &/ "mytb.bin", "rw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMON2Ram Tiny Basic running with CTMON65 monitor", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
@@ -66,12 +66,12 @@ Public Sub _call()
       Comp.Speed = 500
       Comp.AutoStart = &h0200
       Comp.AutoStartActive = True
-      Comp["RamMemory"] = [&h0000, &h0200, ""]
-      Comp["MMU"] = [&h0200, &h0DE00, "&h0E030,20;" & .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "CTMONMMU Tiny Basic running with CTMON65 monitor"]
-      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
-      Comp["HaltButton"] = [0, 0, "Quit Button"]
+      Comp["RamMemory"] = [&h0000, &h0200, "", "rw"]
+      Comp["MMU"] = [&h0200, &h0DE00, "&h0E030,20;" & .AsmBinaryDirectory &/ "mytb.bin", "rw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMONMMU Tiny Basic running with CTMON65 monitor", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
@@ -81,12 +81,12 @@ Public Sub _call()
       Comp.Speed = 500
       Comp.AutoStart = -1
       Comp.AutoStartActive = True
-      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin"]
-      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Basic Loaded  at $0200"]
-      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
-      Comp["ResetButton"] = [0, 0, "Reset button"]
-      Comp["HaltButton"] = [0, 0, "Quit Button"]
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin", "rw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Basic Loaded  at $0200", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["ResetButton"] = [0, 0, "Reset button", "na"]
+      Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
@@ -96,17 +96,17 @@ Public Sub _call()
       Comp.Speed = 500
       Comp.AutoStart = &h0200
       Comp.AutoStartActive = True
-      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "useirq.bin"]
-      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "CTMONTIMER CTMON65 Running with Timer at $E020"]
-      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
-      Comp["IrqTimer"] = [&h0E020, 5, "1000"]
-      Comp["CycleTimer"] = [&h0E030, 5, "5000"]
-      Comp["ResetButton"] = [0, 0, "Reset button"]
-      Comp["HaltButton"] = [0, 0, "Quit Button"]
-      Comp["NMIButton"] = [0, 0, "NMI Button"]
-      Comp["IrqButton"] = [0, 0, "IRQ Button"]
-      Comp["ShowMhz"] = [0, 0, "3000"]
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "useirq.bin", "rw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+      Comp["TTYSIM"] = [&h0E000, 16, "CTMONTIMER CTMON65 Running with Timer at $E020", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["IrqTimer"] = [&h0E020, 5, "1000", "rw"]
+      Comp["CycleTimer"] = [&h0E030, 5, "5000", "rw"]
+      Comp["ResetButton"] = [0, 0, "Reset button", "na"]
+      Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
+      Comp["NMIButton"] = [0, 0, "NMI Button", "na"]
+      Comp["IrqButton"] = [0, 0, "IRQ Button", "na"]
+      Comp["ShowMhz"] = [0, 0, "3000", "na"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
@@ -114,14 +114,14 @@ Public Sub _call()
       Comp = New ComputerDef
       Comp.Name = "C-Example"
       Comp.Speed = 999
-      Comp.AutoStart = &h0200
+      Comp.AutoStart = &H0200
       Comp.AutoStartActive = True
-      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "hello.raw"]
-      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
-      Comp["TTYSIM"] = [&h0E000, 16, "cc65 c program hello.c running with CTMON65 monitor"]
-      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
-      Comp["HaltButton"] = [0, 0, "Quit Button"]
-      Comp["ShowMhz"] = [0, 0, "3000"]
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "hello.raw", "rw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+      Comp["TTYSIM"] = [&h0E000, 16, "cc65 c program hello.c running with CTMON65 monitor", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
+      Comp["ShowMhz"] = [0, 0, "3000", "na"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
@@ -129,12 +129,14 @@ Public Sub _call()
       Comp = New ComputerDef
       Comp.Name = "console"
       Comp.Speed = 999
-      Comp.AutoStart = &h0200
+      Comp.AutoStart = -1                         ' Force a system reset, enter the monitor/6502 reset vector
       Comp.AutoStartActive = True
-      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "hello.raw"]
-      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin"]
-      Comp["Console"] = [&h0E000, 16, "TinyBasic and ctmon65 on the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI"]
-      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3"]
+      Comp["KeyboardRdr"] = [0, 0, "#Service", "na"]    ' This is a service class used by one of the devices
+      Comp["RamMemory"] = [&h0000, &h0E000, "", "rw"]   ' Default to the monitor program
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+      Comp["Console"] = [&h0E000, 16, "TinyBasic and ctmon65 on the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["NOTE"] = [0, 0, "NOTES: \n All services Should be declared before they are used by a Device or other service", "na"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 

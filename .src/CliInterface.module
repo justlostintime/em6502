@@ -21,7 +21,6 @@ Public Sub main()
   Settings["Init"] = sDummy
   FMain.ReadConfig()
   FMain.WriteConfig()
-  Class.Load("keyboardreader")
 
   Settings.Save()
 

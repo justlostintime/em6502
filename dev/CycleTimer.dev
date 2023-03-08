@@ -1,9 +1,11 @@
-'Gambas class definition - 6502 device prototype
+'Gambas class definition - Cpu cycle timer interface
 'Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
 '  See project license file.
 '  Author Justlostintime, Westwood
+
+'' This device simulates a system timer driven by the cpu cycle clock
 
 Fast Unsafe
 
@@ -51,13 +53,14 @@ public sub _new(address as long, len as long, parameters as string)
   if error then
     error "CycleTimer  expects the Parameter field to hold a decimal time length only\nGot Error : ";error.text
   endif
-  
+
   debug $Name;;"Default timeout set to :";;$Period
 
 end
 
 ' If present this is called by the cpu to allow init of any cpu related
 ' interfaces right after the device is instantiated.
+'
 public sub CpuInit()
    $TheCpu.ExternalOssilator = me
 end

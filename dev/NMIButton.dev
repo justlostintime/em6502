@@ -13,7 +13,7 @@ use "gb.form"
 Public MemoryStart As Long = 0
 Public MemoryEnd As Long = 0
 Public MemoryLen As Long = 0
-Public MyObs As Observer
+'Public MyObs As Observer
 
 Property read name as string use $name
 Property Read hidden as boolean use $hidden = false
@@ -101,5 +101,5 @@ Public Sub MyNmiButton_close()
   Settings["NmiForm/Window/H"] = NmiForm.h
   Settings["NmiForm/Window/w"] = NmiForm.w
   Settings.Save()
-  
+
 End

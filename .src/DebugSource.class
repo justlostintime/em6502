@@ -9,7 +9,10 @@ ListingFileText As String = ""
 'DisplayFileText As String = ""
 AddressPerLine As New String[]                                    ' contains an entry for every line of the diplayed text
 SourceArray As String[]
+CommentArray As String[]
+
 StepOver As String = ""
+
 
 '' Create the form and set the cpu and computer running
 '' The file name must be the full path to a listing file
@@ -98,18 +101,36 @@ End
 
 Sub MakeFileReady()
 
+  Dim SourceLine As String[]
+  Dim SourceAddress As String[]
+  Dim Comment As String[]
+  Dim CommentArray As String[]
+
+
   SourceArray = Split(ListingFileText, "\n", "", False, True)
+  CommentArray = New String[SourceArray.count]
 
   For i As Integer = SourceArray.max DownTo 0
-    If Left(SourceArray[i], 4) == "----" Or If SourceArray[i] = "" Then
-      SourceArray.Remove(i)
+    If InStr(SourceArray[i], ";") Then
+      comment = Split(SourceArray[i], ";", "", False, True)
+      CommentArray[i] = comment.last
+      SourceArray[i] = comment[0]
+    Endif
+
+    If CommentArray[i] = "" Then
+      If Left(SourceArray[i], 4) == "----" Or If SourceArray[i] = "" Then
+        SourceArray.Remove(i)
+        CommentArray.Remove(i)
+      Endif
     Endif
   Next
 
-  For Each s As String In SourceArray
 
-    Dim SourceLine As String[] = Split(s, "\t", "", False, True)
-    Dim SourceAddress As String[] = Split(SourceLine[0], " ", "", True, False)
+  For Each s As String In SourceArray
+    s = ConvertTabs(s, 8)
+    'SourceLine = Split(s, "\t", "", False, True)
+    SourceAddress = Split(s, " ", "", True, False)
+
     If SourceAddress.Count >= 2 Then
       AddressPerLine.Add(Upper(SourceAddress[1]))
     Else
@@ -118,8 +139,11 @@ Sub MakeFileReady()
   Next
 
   For i = 0 To SourceArray.Max
-    SourceArray[i] = IIf(AddressPerLine[i][0] = "U", AddressPerLine[i], " " & AddressPerLine[i]) & Right(ConvertTabs(SourceArray[i], 8), -30)
+    SourceArray[i] = IIf(AddressPerLine[i][0] = "U", AddressPerLine[i], " " & AddressPerLine[i]) & " " & ConvertTabs(SourceArray[i], 8) & IIf(CommentArray[i] <> "", " ; " & CommentArray[i], "")
   Next
+
+Catch
+  Stop
 
 End
 

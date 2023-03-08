@@ -22,6 +22,7 @@ Public Sub Display(value As String)
   For i As Integer = 0 To Source.Max
     Source[i] = SetTabs(Source[i])
   Next
+
   AsmListing.text = Source.join("\n")
   AsmListing.Refresh()
   Wait 0.001
@@ -29,6 +30,7 @@ Public Sub Display(value As String)
 End
 
 Tabstops As Integer[] = [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88]
+TabLength As Integer = 8
 
 Sub NextStop(currentpos As Integer) As Integer
 
@@ -37,7 +39,8 @@ Sub NextStop(currentpos As Integer) As Integer
       Return Tabstops[i]
     Endif
   Next
-  Return CurrentPos + (CurrentPos Mod 10)
+
+  Return CurrentPos + (CurrentPos Mod TabLength)
 
 End
 

@@ -28,10 +28,16 @@ Property ProfileSortOrder As Boolean Use $ProfileSortOrder
 'When the following Is False just Return $ff On a bad Memory Read Or Write
 Property ChkBadMemAccess As Boolean Use $ChkBadMemAccess = True ' turn on or off catching bad read or writes
 
-Public AddressMap As New Object[]         ' Address bus map object pointers
-Public RealMemory As New Object[1024 * 64]  ' Used to map for read byte and write byte lots of space
-maphigh As New Long[]
-maplow As New Long[]
+Public Enum mem_read = 1, mem_write = 2, mem_rw = 4
+
+Public AddressMap_Read As New Object[]            ' Address bus map object pointers
+Public AddressMap_Write As New Object[]           ' Address bus map object pointers
+
+Public RealMemory_Read As New Object[1024 * 64]   ' Used to map for read byte lots of space
+Public RealMemory_Write As New Object[1024 * 64]  ' Used to map for write byte lots of space
+
+'maphigh As New Long[]
+'maplow As New Long[]
 
 Public SingleStep As Boolean              ' Turn On single step mode
 Public DisplayStatus As Boolean           ' Turn On the status screen
@@ -106,7 +112,16 @@ Fast Unsafe Public Sub Halt()
   SingleStep = True
   $Halted = True
   Wait 0.001
-  For Each o As Object In AddressMap
+
+  For Each o As Object In AddressMap_Read
+    If Object.Class(o).Exist("halt") Then
+      o.halt()                                                          ' tell each device to shutdown if needed
+      Wait 0.001
+    Endif
+  Next
+
+  For Each o As Object In AddressMap_Write
+    If AddressMap_Read.Exist(o) Then Continue                           ' Dont repeat the message if wr object
     If Object.Class(o).Exist("halt") Then
       o.halt()                                                          ' tell each device to shutdown if needed
       Wait 0.001
@@ -442,7 +457,9 @@ Fast Unsafe Public Sub Indirect()
 
 End
 
-Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams As Variant = "") As Object
+Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams As Variant = "", rw As Integer = mem_rw) As Object
+
+  Dim iorw As Integer
 
   Dim params As Variant[] = [Start, Len, vParams]
 
@@ -457,28 +474,43 @@ Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams 
 
   object.attach(dev, Me, "MyDevice")
 
-  AddressMap.Add(Dev)
+  If (rw And &h0005) > 0 Then AddressMap_Read.Add(Dev)
+  If (rw And &h0006) > 0 Then AddressMap_Write.Add(Dev)
+
   If len = 0 Then Return dev                            ' allow devices which require no memory, such as buttons and switches
 
-  mapLow.Add(Start)
-  mapHigh.Add(Start + len - 1)
+  'mapLow.Add(Start)
+  'mapHigh.Add(Start + len - 1)
 
   For mem As Integer = Start To Start + len - 1        ' build a real map of the memory for speed later.. I know lots of wasted space
-    RealMemory[mem] = Dev
+    If (rw And &h0005) > 0 Then RealMemory_read[mem] = Dev
+    If (rw And &h0006) > 0 Then RealMemory_write[mem] = Dev
   Next
 
   If Device.Exist("IoAddress") Then                    '  We allow a device to also have an io control address
-    AddressMap.Add(Dev)
-    mapLow.Add(Dev.IoAddress)
-    If Device.Exist("IoLength") Then
-      mapHigh.Add(Dev.IoAddress + (Dev.IoLength - 1))
-      For mem = Dev.IoAddress To (Dev.IoLength - 1)
-        RealMemory[mem] = Dev
-      Next
+    If device.Exist("IoRw") Then
+      iorw = device.IoRw
     Else
-      mapHigh.Add(Dev.IoAddress)
-      RealMemory[Dev.IoAddress] = dev
+      iorw = mem_rw
     Endif
+
+    If (rw And &h0005) > 0 Then AddressMap_Read.Add(Dev)
+    If (rw And &h0006) > 0 Then AddressMap_Write.Add(Dev)
+
+    If Device.Exist("IoLength") Then
+
+      For mem = Dev.IoAddress To (Dev.IoAddress + Dev.IoLength - 1)
+        If (iorw And &h0005) > 0 Then RealMemory_read[mem] = Dev
+        If (iorw And &h0006) > 0 Then RealMemory_write[mem] = Dev
+      Next
+
+    Else
+
+      If (iorw And &h0005) > 0 Then RealMemory_read[Dev.IoAddress] = dev
+      If (iorw And &h0006) > 0 Then RealMemory_write[Dev.IoAddress] = dev
+
+    Endif
+
   Endif
 
   ' now let the computer know what binary images were loaded when the device was created
@@ -495,13 +527,19 @@ Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams 
 
 End
 
-Fast Unsafe Public Sub GetDevice(Address As Long) As Object
+Fast Unsafe Public Sub GetDevice(Address As Long, Optional rw As Integer = mem_read) As Object
 
-  For i As Integer = 0 To AddressMap.Max
-    If AddressMap[i]._InRange(Address) Then Return AddressMap[i]
-  Next
+  Dim dev As Object
 
-  If $ChkBadMemAccess Then Error.Raise(("Invalid Memory Address") & " [" & Hex(Address, 4) & "]")
+  If rw = mem_read Or If rw = mem_rw Then
+    dev = RealMemory_read[Address]
+  Else If rw = mem_write Then
+    dev = RealMemory_write[address]
+  End If
+
+  If $ChkBadMemAccess And If dev = Null Then Error.Raise(("Invalid Memory Address") & " [" & Hex(Address, 4) & "]")
+
+  Return dev
 
 End
 
@@ -509,13 +547,7 @@ Fast Unsafe Public Sub ReadByte()
 
   Dim dev As Object = Null
 
-  ' For i As Integer = 0 To maplow.Max
-  '   If AddressBus >= maplow[i] And If AddressBus <= maphigh[i] Then
-  '     dev = AddressMap[i]
-  '   Endif
-  ' Next
-
-  dev = RealMemory[AddressBus]
+  dev = RealMemory_Read[AddressBus]
 
   If dev Then
     DataBus = dev[AddressBus]
@@ -533,14 +565,7 @@ Fast Unsafe Public Sub WriteByte()
 
   Dim dev As Object = Null
 
-  'dev = GetDevice(AddressBus)
-  ' For i As Integer = 0 To maplow.Max
-  '   If AddressBus >= maplow[i] And If AddressBus <= maphigh[i] Then
-  '     dev = AddressMap[i]
-  '   Endif
-  ' Next
-
-  dev = RealMemory[AddressBus]
+  dev = RealMemory_write[AddressBus]
 
   If dev Then
     dev[AddressBus] = Databus
@@ -558,7 +583,14 @@ Fast Unsafe Public Sub Reset()
   $IRQPending = False
   $ResetPending = False
 
-  For Each od As Object In AddressMap
+  For Each od As Object In AddressMap_read
+    If Object.Class(od).Exist("Reset") Then
+      od.reset()
+    Endif
+  Next
+
+  For Each od As Object In AddressMap_write
+    If AddressMap_read.Exist(od) Then Continue             ' dont tell device twice to reset
     If Object.Class(od).Exist("Reset") Then
       od.reset()
     Endif
@@ -838,17 +870,26 @@ Fast Unsafe Public Sub Peek(Addr As Long) As Byte
 
   Dim dev As Object
 
-  Try dev = GetDevice(Addr)
-  If Error Then Return &hFF
+  dev = RealMemory_Read[addr]
+  If dev = Null And If $ChkBadMemAccess Then
+    Error.Raise(("Invalid Memory Address - Read") & " [" & Hex(Addr, 4) & "]")
+  Else
+    Return &h0FF
+  Endif
+
   Return dev[Addr]
 
 End
 
-Fast Unsafe Public Sub Poke(addr As Long, value As Integer)
+Fast Unsafe Public Sub Poke(addr As Long, value As Variant)
 
   Dim dev As Object
 
-  dev = GetDevice(Addr)
+  dev = RealMemory_Write[addr]
+  If dev = Null And If $ChkBadMemAccess Then
+    Error.Raise(("Invalid Memory Address - Write") & " [" & Hex(Addr, 4) & "]")
+  Endif
+
   dev[Addr] = CByte(value)
 
 End
@@ -922,5 +963,17 @@ Fast Unsafe Public Function ProfileInfo(Optional StartAddress As Integer = -1, l
   If InstProfile Then
     Return InstProfile.report(startAddress, length, $ProfileSortOrder)
   Endif
+
+End
+
+Private Function ChkBadMemAccess_Read() As Boolean
+
+
+
+End
+
+Private Sub ChkBadMemAccess_Write(Value As Boolean)
+
+
 
 End

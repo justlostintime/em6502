@@ -1,0 +1,350 @@
+'Gambas class definition - Hex Display LS-2074M2G
+'Released Under:
+'  GNU GENERAL Public LICENSE
+'  Version 3, 29 June 2007
+'  See project license file.
+
+'' Memory maped io or memory
+'' Anything with two leading '' will
+'' be displayed as part of the help system
+'' so be verbose here
+'' any function you see here are manditory to
+'' correctly interface to the virtual machine
+'' These are written in gambas and you may want to visit the site
+'' http://gambas.sourceforge.net or https://gambaswiki.org/wiki
+
+'Enabling this will improve performance a very great amount
+'
+'Fast Unsafe                                       ' use this to compile to binary
+
+'====================================================================================================
+' These are the memory constraints this device will occupy in the 6502 memory map
+'
+Property MemoryStart As Long use $MemoryStart = 0                    ' Start of this block of memory
+Property MemoryEnd As Long use $MemoryEnd = 0                        ' If this is zero then the device has no mapped memory
+Property MemoryLen As Long use $MemoryLen = 0                        ' Length of this memory block
+Property ReaderTask as task use $ReaderTask
+Property TxActive as boolean use $TxActive                           ' set when startbit sent, clears when stop bit sent
+Property TXByte as short use $TxByte                                 ' Value being sent containts start and stop bits
+Property TxBegin as boolean use $TxBegin                             ' set when first startbit is ready to send
+
+'======================================================================================================
+'' If required the Device may request a secondary control address area
+'' See MMU for example This is Looked for  by the CPU as configuration time.
+'
+' Property IoAddress as long use $IoAddress = 0                       ' IoAddress control area
+' Property IoLength as long  use $IoLength  = 5                       ' IoAddress Space Length
+' Property IoRw as integer use $IoRw = 4                              ' rw=4, ro=1,wo=2
+Property TheCpu as Variant use $TheCpu                                ' if present it will be filled in by the cpu
+                                                                      ' And my be used by device to access cpu info/controls
+
+'' This is the memory for the hex display, it uses data byte bits,0,1,2,3,4,5,6 only 7 bits.
+'' bit 7 is used for rx data simulated serial port ... lol
+'' The lower 8 bits form the address are used to address the display bits the upper 8 bits are ignored
+'' after each update the display is redrawn.
+'' There are also 7 independant leds that may be turned on off
+
+DevMemory as variant[]
+Public LastValue As Byte
+Public Databuffer As Byte[]
+Public EchoChar As Boolean = false
+TermCtlOld As TerminalSettings
+Public MyTimer as timer
+const BitTime as short = 34
+
+class KeyboardRdr
+
+'========================================================================================================
+'These are required and provided by you .. see _new()
+'
+Property read Name as string use $name
+
+'===================================================================================================================
+'This is expected to contain the text parameter list passed to your device
+'during configuration
+
+Property read Parameters as string use $Parameters  ' coma seperated list of all loaded binaries/Or anything else your device requires
+
+'========================================================================================================================
+' These are the possible interupts the device may raise to the cpu
+' Example usage:
+' if ButtonPress then Raise IRQ()
+'
+Event IRQ()                                ' Device can create an IRQ
+Event NMI()                                ' Device can create an NMI
+Event Reset()                              ' Device can force a reset of the CPU
+Event Halt(Reason as string)               ' A device can raise this event to terminate the computer session
+
+'======================================================================================================
+' The emulator will pass the following information when your device is loaded
+' Start    This is the start location your device will occupy
+' Length   This is the number of memory mapped bytes required by your device
+' UserDefinedParameters - This is any configuration information your device requires at startup
+' Configuration information is split using comma seperation by default
+'
+public sub _new(address as long, length as long, UserDefinedParameters as string)
+  Dim MyParms as string[] = split(UserDefinedParameters)                    ' any parameters you may need for your device
+
+  $MemoryStart = address
+  $MemoryEnd = address + Length - 1
+  $MemoryLen = Length
+  DevMemory  = New Byte[Length]                ' this is an example of needing memory, see the TTYSIM for there example
+  $Name = "LS2074M2G"                          ' this may be anything you like, but should be unique to your device
+  $Parameters = UserDefinedParameters          ' save the config parameters
+  'Debug $Name;;"Defined at : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length)
+  
+  TermCtlOld = File.In.Term.GetAttr()
+  $ReaderTask = new KeyboardRdr as "mytask"
+  wait 0.01
+  Write #File.out, "\e[32m" & UserDefinedParameters & "\r\n"
+  flush #File.out
+  Databuffer = new byte[]
+  
+  MyTimer = new timer as "TheTimer"
+  MyTimer.delay = 250
+  MyTimer.Start()
+  
+end
+
+'=================================================================================================
+' Called when a device requires special initialization when the cpu is initialized
+'  Nothing is provided but the TheCpu is set before this is called if exposed by the device
+'  returns nothing
+
+public sub CpuInit()
+    ' add cpu initialization code here see
+    ' cycletimer.dev for example
+    $TheCpu.ExternalOssilator = me
+end
+'=================================================================================================
+' The get is used by the emulater to request a byte from your device
+' this is an example of ram interface
+' The emulater validates the address for your device before it is called
+' See the RamMemory or the ResetButtom devices for examples
+'
+public sub _get(address as long) as byte
+
+   debug "read ", address
+   return DevMemory[address]
+
+end
+
+'=====================================================================================
+' This is called by the emulater to pass a byte to your device
+' This is an example of simple memory
+' See the RamMemory or the ResetButtom devices for examples
+'
+public sub _put(Value as byte, address as long)
+  static CurrentCount as integer = 0
+  static CurrentByte as short = 0
+  dim RxChar as byte
+  dim dispSeg as byte  = address and &h00ff               ' we only use the low order byte of the address
+  dim dispData as short = cshort(value) and &h00ff
+  dispSeg = not dispSeg
+
+  debug "write",address, Value
+  ' DevMemory.add([value,dispSeg],0)
+
+  'error "HexDisplay value data=";hex(dispData,2);"(";dispData shr 7 ;") Address=";hex(dispSeg,2);
+
+  if dispSeg = 1 then
+      dispdata = dispdata and &h0080
+      dim disptmp as short = dispdata shl 2
+     ' print "disptmp=";hex(disptmp);
+
+      CurrentByte = (CurrentByte shr 1) or disptmp
+      'print ", RxData = &x";bin(CurrentByte);;
+      inc CurrentCount
+      if CurrentCount = 10 then
+          if (CurrentByte and &h0201) = &h0200 then
+            RxChar = (CurrentByte shr 1) and &h00ff
+           ' print " <";hex(RxChar,2);"> ";quote(chr$(RxChar));"\r\n"
+            print chr(RxChar);
+            flush
+            
+            CurrentByte = 0
+            CurrentCount = 0
+          else
+            CurrentByte = 0
+            CurrentCount = 0
+            'print " --\r\n"
+          endif
+      else
+          'print "\r\n"
+      endif
+  else
+      'print "\n\r"
+  endif
+
+end
+
+'============================================================================================
+'this can be called by other devices or the computer
+'the cpu keeps its own dictionary of device addresses
+'
+Public Sub _InRange(Address As Long) As Boolean
+
+' If Address >= $IoAddress and if address < $IoAddress + $IoLength then return true
+  If Address >= $MemoryStart And Address <= $MemoryEnd Then Return True
+  Return False
+
+End
+
+'===========================================================================
+' This will be called as the computer shuts down
+' Can be implemented if required to clean anything up
+'
+Public sub halt()
+
+   $ReaderTask.Stop()
+   wait 0.01
+   File.In.Term.SetAttr(0, TermCtlOld)
+   File.in.term.echo = true
+
+end
+
+'==========================================================================
+' This is called when Cpu is reset
+' This shoud only change the internal state of the device
+'
+Public Sub Reset()
+  DataBuffer.clear()
+  Debug "Device Reset"
+end
+
+'==========================================================================
+'' The emulator looks for this when the defined computer tries to load device specific
+'' files
+'
+public sub load(Parmlist as string)
+  dim parameters as string[] = split(ParmList,",","",true,false)
+
+end
+
+'==========================================================================
+'We will start the bit banging of the character
+
+Public sub TxChar(value as byte)
+
+  while $TxActive
+    wait
+  wend
+  
+  $TxByte = cshort(value) and &h00ff
+  $TxByte = $TxByte shl 1
+  $TxByte = $TxByte or &h0200
+  'now the byte to send is ready with start and stop bits
+  $TxBegin = True
+  $TxActive = true
+  
+end
+
+'==========================================================================
+Public sub TheTimer_Timer()
+ 
+    if $TxActive or if Databuffer.count = 0 then return
+    TxChar(Databuffer.pop())
+
+end
+
+'==========================================================================
+Public sub Tick()
+static BitCount as short = 9
+Static TickCounter as short = 0
+
+if $TxActive then
+  if $TxBegin then    
+     BitCount = 9
+     TickCounter = BitTime
+     $TxBegin = false
+  endif
+  
+  if TickCounter > 0 then
+     dec TickCounter
+     return
+  endif
+  
+  if ($TxByte and &h01) = 0 then
+     $TheCpu.IRQPending = true
+     $TheCpu.InteruptPending = true
+  endif
+  
+  dec BitCount
+  TickCounter = BitTime
+  
+  if BitCount = 0 then
+     $TxActive = false
+  endif
+
+endif
+
+end
+
+'==========================================================================
+Public sub mytask_error(errinf as string)
+   error "Console Message: ";errinf
+end
+
+'==========================================================================
+ControlBuffer as new byte[]
+ControlMode as boolean = false
+
+Public Sub mytask_read(bkeypress As string)
+
+ Write #file.out, "Console key recieved "&quote(bkeypress)&" "&asc(bkeypress)&"\n\r"
+
+ if asc(bkeypress) = 27 then                          ' is it an escape key
+     write #file.out, "Enter control mode\n\r"
+     ControlMode = true
+ endif
+
+ if ControlMode then
+    ControlBuffer.add(asc(bKeyPress),0)
+    write #file.out, "Console key recieved "&asc(bkeypress)& "len="&str(ControlBuffer.count)&"\n\r"
+    if ControlBuffer.count = 3 then
+       ProcessControlInfo()
+       ControlBuffer.clear()
+       ControlMode=False
+    endif
+ else
+    if asc(bkeypress) = 127 then bKeyPress = chr(8)
+    if bkeypress = "\n" then bkeypress = "\r"
+    DataBuffer.Add(asc(bKeypress), 0)
+    
+ endif
+
+
+ If EchoChar Then
+    write #file.out, bKeyPress
+ Endif
+ 
+ flush #file.out
+ 
+End
+
+Sub ProcessControlInfo()
+   if ControlBuffer[1] = 79 then
+     select case ControlBuffer[0]
+       case 81        ' send a quit interupt Message
+           write #file.out, "Console Request Halt emulator\n\r"
+           raise Halt("User request termination\n\r")
+
+       case 82        ' send a reset to cpu
+           write #file.out, "Console : reset cpu\n\r"
+           $TheCpu.ResetPending = True
+           $TheCpu.InteruptPending = True
+
+       case 83        ' send nmi to cpu
+           write #file.out, "Console : Send NMI\n\r"
+           $TheCpu.NmiPending = True
+           $TheCpu.InteruptPending = True
+
+     end select
+     return
+   endif
+
+   while ControlBuffer.count > 0
+     DataBuffer.add(ControlBuffer.pop(),0)
+   wend
+
+end

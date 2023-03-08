@@ -30,10 +30,14 @@ Property MemoryLen As Long use $MemoryLen = 0                        ' Length of
 '
 'Property IoAddress as long use $IoAddress = 0                       ' IoAddress control area
 'Property IoLength as long  use $IoLength  = 5                       ' IoAddress Space Length
+'Property IoRw as integer use $IoRw = 4                              ' the io ports are wr=4, ro=1, wo=2
+'Property TheCpu as Variant use $TheCpu                              ' if present it will be filled in by the cpu
+                                                                     ' And my be used by device to access cpu info/controls
 
 'This is an example of memory implementation but is not required, if your device does something else
 'see the reset button example
-DevMemory as byte[]
+
+DevMemory as byte[]                 ' this is the buffer for the hex display
 
 '========================================================================================================
 'These are required and provided by you .. see _new()
@@ -56,23 +60,32 @@ Event Reset()                              ' Device can force a reset of the CPU
 Event Halt(Reason as string)               ' A device can raise this event to terminate the computer session
 
 '======================================================================================================
-The emulator will pass the following information when your device is loaded
+' The emulator will pass the following information when your device is loaded
 ' Start    This is the start location your device will occupy
 ' Length   This is the number of memory mapped bytes required by your device
 ' UserDefinedParameters - This is any configuration information your device requires at startup
 ' Configuration information is split using comma seperation by default
 '
-public sub _new(address as long, len as long, parameters as string)
-  MyParms as string[] = split(parameters)                    ' any parameters you may need for your device
+public sub _new(address as long, length as long, UserDefinedParameters as string)
+  Dim MyParms as string[] = split(UserDefinedParameters)                    ' any parameters you may need for your device
 
-  MemoryStart = Start
-  MemoryEnd = start + Length - 1
-  MemoryLen = Length
-  Mem = New Byte[Length]                ' this is an example of needing memory, see the TTYSIM for ther example
+  $MemoryStart = address
+  $MemoryEnd = address + Length - 1
+  $MemoryLen = Length
+  DevMemory  = New Byte[Length]                ' this is an example of needing memory, see the TTYSIM for ther example
   $Name = "Widgit"                      ' this may be anything you like, but should be unique to your device
   $Parameters = UserDefinedParameters   ' save the config parameters
   'Debug $Name;;"Defined at : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length)
 
+end
+
+'=================================================================================================
+' Called when a device requires special initialization when the cpu is initialized
+'  Nothing is provided but the TheCpu is set before this is called if exposed by the device
+'  returns nothing
+public sub CpuInit()
+    ' add cpu initialization code here see
+    ' cycletimer.dev for example
 end
 
 '=================================================================================================
@@ -94,10 +107,8 @@ end
 ' See the RamMemory or the ResetButtom devices for examples
 '
 public sub _put(Value as byte, address as long)
-
-  debug "write",address, Value
-  devmemory[address] = value
-
+   debug "write",address, Value
+   devmemory[address] = value
 end
 
 '============================================================================================
@@ -125,6 +136,7 @@ end
 ' This shoud only change the internal state of the device
 '
 Public Sub Reset()
+  DevMemory = new byte[8]
   Debug "Device Reset"
 end
 

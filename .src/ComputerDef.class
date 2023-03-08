@@ -6,7 +6,7 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-Public Devices As New Collection(gb.ignorecase)
+Public Devices As New Collection(gb.ignorecase)   ' The list of devices including memory and rom
 Property Name As String Use $name                 ' Name of this configuration
 Property Speed As Float Use $Speed                ' Mghz to emulate
 Property Read key As String Use $key              ' current device for next
@@ -130,6 +130,7 @@ Public Sub WriteInfo(Comp As Settings)
     Comp["Device/" & Hex(index, 4) & "/StartAddress"] = s[0]
     Comp["Device/" & Hex(index, 4) & "/Length"] = s[1]
     Comp["Device/" & Hex(index, 4) & "/Parameter"] = s[2]
+    Comp["Device/" & Hex(index, 4) & "/RW"] = s[3]
     Inc index
   Next
   Comp.Save()
@@ -147,8 +148,7 @@ Public Sub ReadInfo(comp As Settings)
   DevCount = Comp["Device/Count"]
   For i As Integer = 0 To DevCount - 1
     Dim Index As String = Hex(i, 4)
-    Devices[Comp["Device/" & index & "/key"]] = [Comp["Device/" & index & "/StartAddress"], Comp["Device/" & index & "/Length"], Comp["Device/" & index & "/Parameter"]]
-    'Inc index
+    Devices[Comp["Device/" & index & "/key"]] = [Comp["Device/" & index & "/StartAddress"], Comp["Device/" & index & "/Length"], Comp["Device/" & index & "/Parameter"], Comp["Device/" & index & "/RW"]]
   Next
 
 End

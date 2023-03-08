@@ -1,14 +1,14 @@
 ' Gambas class file
 
-Export
 Inherits Task
+
+'Fast Unsafe
 
 Extern getchar() As Integer In "libc:6"
 
 KeyboardInput As Integer
 TermCtlOld As TerminalSettings
 TermCtlNew As TerminalSettings
-
 
 Public Sub main()
 
@@ -35,8 +35,6 @@ Public Sub main()
   Wend
 
 Catch
-  Error "KeyboardReader Error: "; Error.text, Error.Where
+  Error "KeyboardRdr Error: "; Error.text, Error.Where
 
 End
-
-
