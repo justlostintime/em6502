@@ -310,7 +310,12 @@ Fast Unsafe Public Sub ExecuteInstruction()
   Dim inst As Integer
   Dim addrMode, aaa, cc As Integer
 
+  If pc > &h0ffff Or If pc < 0 Then
+    Stop
+  Endif
+
   AddressBus = pc
+
   ReadByte()
   inst = DataBus
 
@@ -427,7 +432,7 @@ Fast Unsafe Public Sub IndirectAbsX()
   addrTemp = DataBus
   Inc AddressBus
   ReadByte()
-  AddressBus = ((DataBus Shl 8) Or addrTemp)
+  AddressBus = (DataBus Shl 8) Or addrTemp
 
 End
 
@@ -568,7 +573,10 @@ Fast Unsafe Public Sub ReadByte()
 
   Dim dev As Object = Null
 
-  dev = RealMemory_Read[AddressBus]
+  Try dev = RealMemory_Read[AddressBus]
+  If Error Then
+    dev = Null
+  Endif
 
   If dev Then
     DataBus = dev[AddressBus]
@@ -586,7 +594,10 @@ Fast Unsafe Public Sub WriteByte()
 
   Dim dev As Object = Null
 
-  dev = RealMemory_write[AddressBus]
+  Try dev = RealMemory_write[AddressBus]
+  If Error Then
+    dev = Null
+  Endif
 
   If dev Then
     dev[AddressBus] = Databus
@@ -623,10 +634,10 @@ Fast Unsafe Public Sub Reset()
 
   AddressBus = &H00FFFC
   ReadByte()                    ' load Databus with value
-  PC = DataBus
+  PC = CLong(DataBus)
   Inc AddressBus
   ReadByte()
-  PC = (PC Or (DataBus Shl 8))
+  PC = PC Or (CLong(DataBus) Shl 8)
 
   If SingleStep Then
     If FMain.Verbose Then Error "@ "; ("PC Reset");; Hex(pc)

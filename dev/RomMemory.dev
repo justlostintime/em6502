@@ -49,6 +49,7 @@ Public Sub _get(memoryAddress As Long) As Byte
   'Endif
 
   return Mem[memoryAddress - MemoryStart]
+  'return result
 
 End
 

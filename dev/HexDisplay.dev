@@ -16,7 +16,7 @@
 'Enabling this will improve performance a very great amount
 '
 Fast Unsafe                                       ' use this to compile to binary
-
+use "gb.gui","gb.form"
 '====================================================================================================
 ' These are the memory constraints this device will occupy in the 6502 memory map
 '
@@ -54,8 +54,10 @@ const BitTime as short = 119
 Const BitTimeOne as short = BitTime - 37
 Const BitTimeZero as short = BitTime - 43
 
+
 class KeyboardRdr
 class DISPHEX
+MyDispHex as DispHex
 
 '========================================================================================================
 'These are required and provided by you .. see _new()
@@ -88,6 +90,9 @@ Event Halt(Reason as string)               ' A device can raise this event to te
 public sub _new(address as long, length as long, UserDefinedParameters as string)
   Dim MyParms as string[] = split(UserDefinedParameters)                    ' any parameters you may need for your device
   Class.load("disphex")
+   MyDispHex = new DispHex
+  'DispHex.show()
+   MyDispHex.show()
 
   $MemoryStart = address
   $MemoryEnd = address + Length - 1
@@ -107,7 +112,8 @@ public sub _new(address as long, length as long, UserDefinedParameters as string
   MyTimer = new timer as "TheTimer"
   MyTimer.delay = 50
   MyTimer.Start()
-  DispHex.show()
+
+  wait
 
 catch
   print "HexDisplay Error :";error.text,error.where
@@ -147,7 +153,7 @@ public sub _put(Value as byte, address as long)
   static CurrentByte as short = 0
   static InByte as boolean = false
   static LedValue as byte = 0
-  
+
   dim RxChar as byte
   dim dispSeg as byte  = not (address and &h00ff)               ' we only use the low order byte of the address
   dim dispHi as byte = (address and &h00ff00) shr 8             ' Get high order byte of the address
@@ -197,8 +203,8 @@ public sub _put(Value as byte, address as long)
           'print "\r\n"
       endif
   else
-  
-      DispHex.WriteChar(Value,DispSeg,ledValue)
+
+      MyDispHex.WriteChar(Value,DispSeg,ledValue)
       InByte = false
       CurrentByte = 0
   endif

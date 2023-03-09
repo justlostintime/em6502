@@ -117,7 +117,7 @@ End
 Public Sub The_computer_Autostart(Address As Long, speed As Integer)
 
   With FMAIN
-    .MyComputer.StartAddress = address
+    If Address <> -1 Then .MyComputer.StartAddress = address
     .MyComputer.SpeedScaler = speed
   End With
 
