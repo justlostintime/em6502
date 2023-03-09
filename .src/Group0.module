@@ -135,8 +135,8 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Return
 
   Grp0Case20:  ' rti
-    .sr = BClr(.pop(), 4)         '  ignore bit not loaded
-    .sr = BClr(.sr, 5)                 '  brk and ignore are not reloaded
+    .sr = BClr(.pop(), 4)              '  Brk Bit not reloaded
+    .sr = BClr(.sr, 5)                 '  ignore are not reloaded
     Dim tmplow As Byte = .Pop()
     .PC = .Pop()      ' Pop The high Byte
     .Pc = .PC Shl 8
@@ -215,7 +215,7 @@ Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As I
     Goto STZ
 
   Grp0Case37:'JMP (indirect,X) 65c02
-    .IndirectX()
+    .IndirectAbsX()
     .pc = .AddressBus
     Return
 

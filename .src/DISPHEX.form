@@ -1,0 +1,56 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,35,17)
+  Background = Color.LightGray
+  Resizable = False
+  Padding = 2
+  { !HEXTEXT LCDLabel
+    MoveScaled(1,6,31,9)
+    #Public = True
+    #Translate = False
+    Enabled = False
+    Font = Font["FreeMono"]
+    Foreground = Color.DarkRed
+    NoTabFocus = True
+    Mouse = Cursor.None
+    Ignore = True
+    Text = "6502 ba"
+    Alignment = Align.Left
+  }
+  { led1 Label
+    MoveScaled(1,1,4,4)
+    Background = &H8FC08F
+    Border = Border.Sunken
+  }
+  { led2 Label
+    MoveScaled(6,1,4,4)
+    Background = &H8FC08F
+    Border = Border.Sunken
+  }
+  { led3 Label
+    MoveScaled(10,1,4,4)
+    Background = &H8FC08F
+    Border = Border.Sunken
+  }
+  { led4 Label
+    MoveScaled(15,1,4,4)
+    Background = &HC04747
+    Border = Border.Sunken
+  }
+  { led5 Label
+    MoveScaled(19,1,4,4)
+    Background = &HC04747
+    Border = Border.Sunken
+  }
+  { led6 Label
+    MoveScaled(24,1,4,4)
+    Background = &HC0C047
+    Border = Border.Sunken
+  }
+  { led7 Label
+    MoveScaled(28,1,4,4)
+    Background = &HC0C047
+    Border = Border.Sunken
+  }
+}

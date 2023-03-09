@@ -12,6 +12,7 @@
     Foreground = Color.TextForeground
     ToolTip = ("This is a list of Watched items")
     Mode = Select.Multiple
+    Padding = 4
     Header = GridView.Both
     ScrollBar = Scroll.Vertical
     Sorted = True

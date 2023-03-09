@@ -1,0 +1,232 @@
+' Gambas class file
+
+Export
+
+$DisplayBuffer As New String[7]
+$Leds As New Boolean[7]
+
+$MyTimer As New Timer As "MyTimer"
+
+Const LA As Integer = &h008
+Const LB As Integer = &h004
+Const LC As Integer = &h002
+Const LD As Integer = &h010
+Const LE As Integer = &h001
+Const LF As Integer = &h020
+Const LG As Integer = &h040
+Const LS As Integer = &h080
+
+CharacterMap1 As Collection = [
+  Str(LS): " ",
+  Str(LS + LE + LF): "!",
+  Str(LS + LF + LB): "\"",
+  Str(LS + LF + LB + LA + LG): "#",
+  Str(LS + LD + LF + LA + LC): "$",
+  Str(LS + LB + LG): "%",
+  Str(LS + LD + LB + LG): "&",
+  Str(LS + LF): "'",
+  Str(LS + LD + LE + LF + LA): "(",
+  Str(LS + LD + LB + LA + LC): ")",
+  Str(LS + LF + LA): "*",
+  Str(LS + LE + LF + LG): "+",
+  Str(LS + LD + LC): ",",
+  Str(LS + LG): "-",
+  Str(LS + LD): ".",
+  Str(LS + LE + LB + LG): "/",
+  Str(LS + LD + LE + LF + LB + LA + LC): "0",
+  Str(LS + LB + LC): "1",
+  Str(LS + LD + LE + LB + LA + LG): "2",
+  Str(LS + LD + LB + LA + LG + LC): "3",
+  Str(LS + LF + LB + LG + LC): "4",
+  Str(LS + LD + LF + LA + LG + LC): "5",
+  Str(LS + LD + LE + LF + LA + LG + LC): "6",
+  Str(LS + LB + LA + LC): "7",
+  Str(LS + LD + LE + LF + LB + LA + LG + LC): "8",
+  Str(LS + LF + LB + LA + LG + LC): "9",
+  Str(LS + LD + LA): ":",
+  Str(LS + LD + LA + LC): ";",
+  Str(LS + LD + LE): "<",
+  Str(LS + LD + LG): "=",
+  Str(LS + LD + LC): ">",
+  Str(LS + LE + LB + LA + LG): "?",
+  Str(LS + LD + LE + LB + LA + LG + LC): "@",
+  Str(LS + LE + LF + LB + LA + LG + LC): "A",
+  Str(LS + LD + LE + LF + LG + LC): "B",
+  Str(LS + LD + LE + LF + LA): "C",
+  Str(LS + LD + LE + LB + LG + LC): "D",
+  Str(LS + LD + LE + LF + LA + LG): "E",
+  Str(LS + LE + LF + LA + LG): "F",
+  Str(LS + LD + LE + LF + LA + LC): "G",
+  Str(LS + LE + LF + LB + LG + LC): "H",
+  Str(LS + LB + LC): "I",
+  Str(LS + LD + LE + LB + LC): "J",
+  Str(LS + LE + LF + LB + LG): "K",
+  Str(LS + LD + LE + LF): "L",
+  Str(LS + LE + LB + LG + LC): "M",
+  Str(LS + LE + LF + LB + LA + LC): "N",
+  Str(LS + LD + LE + LF + LB + LA + LC): "O",
+  Str(LS + LE + LF + LB + LA + LG): "P",
+  Str(LS + LF + LB + LA + LG + LC): "Q",
+  Str(LS + LE + LG): "R",
+  Str(LS + LD + LF + LA + LG + LC): "S",
+  Str(LS + LE + LF + LA): "T",
+  Str(LS + LD + LE + LF + LB + LC): "U",
+  Str(LS + LD + LE + LF + LB + LC): "V",
+  Str(LS + LD + LE + LF + LB + LC): "W",
+  Str(LS + LG + LC): "X"
+]
+
+CharacterMap2 As Collection = [
+  Str(LS + LD + LF + LB + LG + LC): "Y",
+  Str(LS + LD + LE + LB + LA): "Z",
+  Str(LS + LD + LE + LF + LA): "[",
+  Str(LS + LF + LG + LC): "\",",
+  Str(LS + LD + LB + LA + LC): "]",
+  Str(LS + LF + LB + LA): "^",
+  Str(LS + LD): "_",
+  Str(LS + LB): "`",
+  Str(LS + LD + LE + LB + LA + LG + LC): "a",
+  Str(LS + LD + LE + LF + LG + LC): "b",
+  Str(LS + LD + LE + LG): "c",
+  Str(LS + LD + LE + LB + LG + LC): "d",
+  Str(LS + LD + LE + LF + LB + LA + LG): "e",
+  Str(LS + LE + LF + LA + LG): "f",
+  Str(LS + LD + LF + LB + LA + LG + LC): "g",
+  Str(LS + LE + LF + LG + LC): "h",
+  Str(LS + LC): "i",
+  Str(LS + LD + LE + LB + LC): "j",
+  Str(LS + LE + LF + LB + LG): "k",
+  Str(LS + LE + LF): "l",
+  Str(LS + LE + LB + LG + LC): "m",
+  Str(LS + LE + LG + LC): "n",
+  Str(LS + LD + LE + LG + LC): "o",
+  Str(LS + LE + LF + LB + LA + LG): "p",
+  Str(LS + LF + LB + LA + LG + LC): "q",
+  Str(LS + LE + LG): "r",
+  Str(LS + LD + LF + LA + LG + LC): "s",
+  Str(LS + LD + LE + LF + LG): "t",
+  Str(LS + LD + LE + LC): "u",
+  Str(LS + LD + LE + LC): "v",
+  Str(LS + LD + LE + LC): "w",
+  Str(LS + LG + LC): "x",
+  Str(LS + LD + LF + LB + LG + LC): "y",
+  Str(LS + LD + LE + LB + LA): "z",
+  Str(LS + LD + LE + LF + LA): "{",
+  Str(LS + LE + LF): "|",
+  Str(LS + LD + LB + LA + LC): "}",
+  Str(LS + LD + LA + LG): "~",
+  Str(LS + LD + LE + LB + LG + LC): ".."
+]
+
+
+Public Sub Form_Open()
+
+  For Each s As String In CharacterMap2
+    If Not CharacterMap1.Exist(CharacterMap2.key) Then
+      CharacterMap1.add(s, CharacterMap2.key)
+    Endif
+  Next
+
+End
+
+Sub BitToValue(bitset As Byte) As Integer
+
+  Select Case CInt(bitset) And &h00ff
+    Case &h002
+      Return 0
+    Case &h004
+      Return 1
+    Case &h008
+      Return 2
+    Case &h010
+      Return 3
+    Case &h020
+      Return 4
+    Case &h040
+      Return 5
+    Case &h080
+      Return 6
+  End Select
+
+  Return 0
+
+End
+
+Public Sub WriteChar(value As Byte, position As Byte, ledvalue As Byte)
+
+  Static LastBuffer As String = ""
+  Static LedPattern As Byte = 0
+
+  Dim NewBuffer As String
+
+  If LedValue <> LedPattern Then
+    SetLeds(value)
+    LedPattern = value
+  Endif
+
+  Dim dispval As String = CharacterMap1[Str(CInt(value) And &h00ff)]
+  Dim where As Integer = BitToValue(position)
+
+  $DisplayBuffer[where] = dispVal
+  NewBuffer = $DisplayBuffer.join("")
+  If NewBuffer = LastBuffer Then Return
+  LastBuffer = NewBuffer
+  HEXTEXT.text = NewBuffer
+  DispHex.Refresh()
+  Wait
+
+End
+
+Sub SetLeds(SetBits As Byte)
+
+  Static LastValue As Byte = 0
+  If SetBits = LastValue Then Return
+  LastValue = SetBits
+
+  If SetBits And &h01 Then
+    led4.Visible = True
+  Else
+    led4.Visible = False
+  Endif
+
+  If SetBits And &h02 Then
+    led3.Visible = True
+  Else
+    led3.Visible = False
+  Endif
+
+  If SetBits And &h04 Then
+    led2.Visible = True
+  Else
+    led2.Visible = False
+  Endif
+
+  If SetBits And &h08 Then
+    led1.Visible = True
+  Else
+    led1.Visible = False
+  Endif
+
+  If SetBits And &h10 Then
+    led6.Visible = True
+  Else
+    led6.Visible = False
+  Endif
+
+  ' If SetBits And &h20 Then
+  '   led6.Visible = True
+  ' Else
+  '   led6.Visible = False
+  ' Endif
+
+  ' If SetBits And &h40 Then
+  '   led7.Visible = True
+  ' Else
+  '   led7.Visible = False
+  ' Endif
+
+End
+
+
+
+

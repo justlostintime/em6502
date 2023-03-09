@@ -272,6 +272,7 @@ Public Sub DumpMem(fromAdr As Long, toAdr As Long, Optional linelen As Integer =
     result &= Hex(i, 4) & " "
     AsChrs = ""
     For j As Integer = 0 To LineLen - 1
+      If i + j > &h0ffff Then Break
       Dim Val As Byte = MyCpu.Peek(i + j)
       Result &= Hex(Val, 2) & " "
       Dim chrs As String = Chr(val)

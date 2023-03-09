@@ -277,6 +277,13 @@ Fast Unsafe Sub StepInfo()
 
 End
 
+Fast Unsafe Public Sub ResetOssilator()
+
+  OssilatorCounter = $MillisecondTicks
+
+End
+
+
 FlagsOn As String[] = ["C", "Z", "I", "D", "B", "-", "V", "N"]
 FlagsOff As String[] = ["c", "z", "i", "d", "b", "-", "v", "n"]
 
@@ -407,6 +414,20 @@ Fast Unsafe Public Sub Immediate()
 
   AddressBus = PC
   Inc pc
+
+End
+
+Fast Unsafe Public Sub IndirectAbsX()
+
+  Dim addrTemp As Long
+
+  AbsX()                                       ' get the table and offset
+
+  ReadByte()                                   ' Get the value into the address bus
+  addrTemp = DataBus
+  Inc AddressBus
+  ReadByte()
+  AddressBus = ((DataBus Shl 8) Or addrTemp)
 
 End
 
@@ -698,8 +719,9 @@ End
 Fast Unsafe Public Sub IRQ()
 
   $IRQPending = False
-  If BTst(sr, 2) Then Return                          ' Ignore this if the irq is disabled
+  If BTst(sr, 2) Then Return                                   ' Ignore this if the irq is disabled
 
+  SR = BClr(sr, 4)                                             ' Clear the break bit, this is an irq
   interupt(&h0FFFE)
   SR = BSet(sr, 2)                                             ' Disable the IRQ, restored upon irq return
 
@@ -707,9 +729,10 @@ End
 
 Fast Unsafe Public Sub BRK()
 
-  sr = BSet(sr, 4)
+  sr = BSet(sr, 4)                                             ' set the break flag
   interupt(&H0FFFE)
-  SR = BSet(sr, 2)                                                     ' disable the IRQ
+  SR = BSet(sr, 2)                                             ' disable the IRQ
+  SR = BClr(SR, 4)                                            ' This flag is never really stored disabled for testing
 
 End
 
@@ -871,10 +894,13 @@ Fast Unsafe Public Sub Peek(Addr As Long) As Byte
   Dim dev As Object
 
   dev = RealMemory_Read[addr]
-  If dev = Null And If $ChkBadMemAccess Then
-    Error.Raise(("Invalid Memory Address - Read") & " [" & Hex(Addr, 4) & "]")
-  Else
-    Return &h0FF
+
+  If dev = Null Then
+    If $ChkBadMemAccess Then
+      Error.Raise(("Invalid Memory Address - Read") & " [" & Hex(Addr, 4) & "]")
+    Else
+      Return &h0FF
+    Endif
   Endif
 
   Return dev[Addr]
@@ -886,8 +912,12 @@ Fast Unsafe Public Sub Poke(addr As Long, value As Variant)
   Dim dev As Object
 
   dev = RealMemory_Write[addr]
-  If dev = Null And If $ChkBadMemAccess Then
-    Error.Raise(("Invalid Memory Address - Write") & " [" & Hex(Addr, 4) & "]")
+  If dev = Null
+    If $ChkBadMemAccess Then
+      Error.Raise(("Invalid Memory Address - Write") & " [" & Hex(Addr, 4) & "]")
+    Else
+      Return
+    Endif
   Endif
 
   dev[Addr] = CByte(value)

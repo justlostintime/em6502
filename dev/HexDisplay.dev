@@ -15,7 +15,7 @@
 
 'Enabling this will improve performance a very great amount
 '
-'Fast Unsafe                                       ' use this to compile to binary
+Fast Unsafe                                       ' use this to compile to binary
 
 '====================================================================================================
 ' These are the memory constraints this device will occupy in the 6502 memory map
@@ -50,9 +50,12 @@ Public Databuffer As Byte[]
 Public EchoChar As Boolean = false
 TermCtlOld As TerminalSettings
 Public MyTimer as timer
-const BitTime as short = 34
+const BitTime as short = 119
+Const BitTimeOne as short = BitTime - 37
+Const BitTimeZero as short = BitTime - 43
 
 class KeyboardRdr
+class DISPHEX
 
 '========================================================================================================
 'These are required and provided by you .. see _new()
@@ -84,6 +87,7 @@ Event Halt(Reason as string)               ' A device can raise this event to te
 '
 public sub _new(address as long, length as long, UserDefinedParameters as string)
   Dim MyParms as string[] = split(UserDefinedParameters)                    ' any parameters you may need for your device
+  Class.load("disphex")
 
   $MemoryStart = address
   $MemoryEnd = address + Length - 1
@@ -92,18 +96,21 @@ public sub _new(address as long, length as long, UserDefinedParameters as string
   $Name = "LS2074M2G"                          ' this may be anything you like, but should be unique to your device
   $Parameters = UserDefinedParameters          ' save the config parameters
   'Debug $Name;;"Defined at : $"; Hex(Start, 6);"-$";Hex(MemoryEnd,6); " For length("; length; ")$"; Hex(length)
-  
+
   TermCtlOld = File.In.Term.GetAttr()
   $ReaderTask = new KeyboardRdr as "mytask"
   wait 0.01
   Write #File.out, "\e[32m" & UserDefinedParameters & "\r\n"
   flush #File.out
   Databuffer = new byte[]
-  
+
   MyTimer = new timer as "TheTimer"
-  MyTimer.delay = 250
+  MyTimer.delay = 50
   MyTimer.Start()
-  
+  DispHex.show()
+
+catch
+  print "HexDisplay Error :";error.text,error.where
 end
 
 '=================================================================================================
@@ -114,6 +121,7 @@ end
 public sub CpuInit()
     ' add cpu initialization code here see
     ' cycletimer.dev for example
+    $TheCpu.MillisecondTicks  = BitTime                   ' over ride the counter, to use nanoseconds
     $TheCpu.ExternalOssilator = me
 end
 '=================================================================================================
@@ -137,43 +145,62 @@ end
 public sub _put(Value as byte, address as long)
   static CurrentCount as integer = 0
   static CurrentByte as short = 0
+  static InByte as boolean = false
+  static LedValue as byte = 0
+  
   dim RxChar as byte
-  dim dispSeg as byte  = address and &h00ff               ' we only use the low order byte of the address
+  dim dispSeg as byte  = not (address and &h00ff)               ' we only use the low order byte of the address
+  dim dispHi as byte = (address and &h00ff00) shr 8             ' Get high order byte of the address
   dim dispData as short = cshort(value) and &h00ff
-  dispSeg = not dispSeg
+  dim disptmp as short
 
   debug "write",address, Value
-  ' DevMemory.add([value,dispSeg],0)
 
-  'error "HexDisplay value data=";hex(dispData,2);"(";dispData shr 7 ;") Address=";hex(dispSeg,2);
+  'error "HexDisplay value data=";hex(dispData,2);"(";dispData shr 7 ;") Address=";hex(dispHi,2);"-";hex(dispSeg,2);
 
   if dispSeg = 1 then
-      dispdata = dispdata and &h0080
-      dim disptmp as short = dispdata shl 2
-     ' print "disptmp=";hex(disptmp);
 
+      dispdata = dispdata and &h0080
+
+      if not InByte
+         if dispData = 0 then
+            InByte = true
+            CurrentCount = 0
+          else
+            'Print
+            LedValue = value and &h07f
+          endif
+      endif
+
+
+      disptmp  = dispdata shl 2                                       ' always  or into the 10th bit position
+      'print "disptmp=";hex(disptmp);
       CurrentByte = (CurrentByte shr 1) or disptmp
-      'print ", RxData = &x";bin(CurrentByte);;
+
       inc CurrentCount
+
+      'print ", RxData = &x";bin(CurrentByte,10);;CurrentCount;"\r\n"
+
       if CurrentCount = 10 then
           if (CurrentByte and &h0201) = &h0200 then
             RxChar = (CurrentByte shr 1) and &h00ff
-           ' print " <";hex(RxChar,2);"> ";quote(chr$(RxChar));"\r\n"
+            'print " <";hex(RxChar,2);"> ";quote(chr$(RxChar));"\r\n"
             print chr(RxChar);
             flush
-            
+            InByte = False
             CurrentByte = 0
-            CurrentCount = 0
           else
-            CurrentByte = 0
-            CurrentCount = 0
-            'print " --\r\n"
+            InByte = False
+           ' print " --\r\n"
           endif
       else
           'print "\r\n"
       endif
   else
-      'print "\n\r"
+  
+      DispHex.WriteChar(Value,DispSeg,ledValue)
+      InByte = false
+      CurrentByte = 0
   endif
 
 end
@@ -223,55 +250,58 @@ end
 
 '==========================================================================
 'We will start the bit banging of the character
-
+tempbyte as short
 Public sub TxChar(value as byte)
 
-  while $TxActive
-    wait
-  wend
-  
+  'write #File.out, "send char at "& str($TheCpu.MillisecondTicks) &" Ticks\n\r"
+  'flush #File.out
+
   $TxByte = cshort(value) and &h00ff
   $TxByte = $TxByte shl 1
   $TxByte = $TxByte or &h0200
   'now the byte to send is ready with start and stop bits
   $TxBegin = True
-  $TxActive = true
-  
+  $TxActive = True
+
 end
 
 '==========================================================================
 Public sub TheTimer_Timer()
- 
+
     if $TxActive or if Databuffer.count = 0 then return
     TxChar(Databuffer.pop())
-
+    if DataBuffer.count = 0 then MyTimer.Stop()
 end
 
 '==========================================================================
 Public sub Tick()
-static BitCount as short = 9
-Static TickCounter as short = 0
+static BitCount as short = 0
 
 if $TxActive then
-  if $TxBegin then    
-     BitCount = 9
-     TickCounter = BitTime
+  if $TxBegin then
+     BitCount = 10
      $TxBegin = false
   endif
-  
-  if TickCounter > 0 then
-     dec TickCounter
-     return
-  endif
-  
+  'print "TX Bit = " ; $TxByte and &h01;"\n\r"
+  flush
   if ($TxByte and &h01) = 0 then
      $TheCpu.IRQPending = true
      $TheCpu.InteruptPending = true
+
+     if BitCount = 10 then
+        $TheCpu.MillisecondTicks = BitTime
+     else
+        $TheCpu.MillisecondTicks = BitTimeZero
+     endif
+  else
+     $TheCpu.MillisecondTicks = BitTimeOne
   endif
-  
+
+  $TheCpu.ResetOssilator()
   dec BitCount
-  TickCounter = BitTime
-  
+
+  $TxByte = $TxByte shr 1
+
   if BitCount = 0 then
      $TxActive = false
   endif
@@ -291,16 +321,16 @@ ControlMode as boolean = false
 
 Public Sub mytask_read(bkeypress As string)
 
- Write #file.out, "Console key recieved "&quote(bkeypress)&" "&asc(bkeypress)&"\n\r"
+ 'Write #file.out, "Console key recieved "&quote(bkeypress)&" "&asc(bkeypress)&"\n\r"
 
  if asc(bkeypress) = 27 then                          ' is it an escape key
-     write #file.out, "Enter control mode\n\r"
+     'write #file.out, "Enter control mode\n\r"
      ControlMode = true
  endif
 
  if ControlMode then
     ControlBuffer.add(asc(bKeyPress),0)
-    write #file.out, "Console key recieved "&asc(bkeypress)& "len="&str(ControlBuffer.count)&"\n\r"
+    'write #file.out, "Console key recieved "&asc(bkeypress)& "len="&str(ControlBuffer.count)&"\n\r"
     if ControlBuffer.count = 3 then
        ProcessControlInfo()
        ControlBuffer.clear()
@@ -308,18 +338,18 @@ Public Sub mytask_read(bkeypress As string)
     endif
  else
     if asc(bkeypress) = 127 then bKeyPress = chr(8)
-    if bkeypress = "\n" then bkeypress = "\r"
+    'if bkeypress = "\r" then DataBuffer.Add(asc("\n"), 0)
     DataBuffer.Add(asc(bKeypress), 0)
-    
+    MyTimer.Start()
  endif
 
 
  If EchoChar Then
     write #file.out, bKeyPress
  Endif
- 
+
  flush #file.out
- 
+
 End
 
 Sub ProcessControlInfo()
