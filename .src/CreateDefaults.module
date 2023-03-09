@@ -140,6 +140,19 @@ Public Sub _call()
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
+    If Not Exist(.AsmComputerDefinitions &/ "badge6502") Then
+      Comp = New ComputerDef
+      Comp.Name = "badge6502"
+      Comp.Speed = 999
+      Comp.AutoStart = -1                         ' Force a system reset, enter the monitor/6502 reset vector
+      Comp.AutoStartActive = True
+      Comp["KeyboardRdr"] = [0, 0, "#Service", "na"]    ' This is a service class used by one of the devices
+      Comp["RamMemory"] = [&h0000, &h08000, "", "rw"]   ' Default to the monitor program
+      Comp["RomMemory"] = [&h08000, &h08000, .AsmBinaryDirectory &/ "Badge32k.bin", "ro"]
+      Comp["HexDisplay"] = [&h08000, &h08000, "BadgeOS on the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI", "wo"]
+      Comp.Save(.AsmComputerDefinitions)
+    Endif
+
     copyDirectory("dev", .AsmDeviceDirectory)
     copyDirectory("asm", .AsmSourceDirectory)
     copyDirectory("cc65", .Cc65SourceDirectory)
