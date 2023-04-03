@@ -425,7 +425,7 @@ NextIlNow       lda     ILTrace               ;Do we need to trace this
                 jsr     dbgLine               ;Print the IL trace information
 
 NextIL2         ldy     CUROFF
-;                jsr     SkipSpaces
+;                jsr     SkipSpaces           ; no longer needed as tokenizer takes care of this
 ;                sty     CUROFF
 ;Task IO Management
                 lda     taskRDPending         ; if it is zero then Nothing pending
@@ -446,13 +446,21 @@ NextILStr       jsr     getILByte
 ;    next word in the input buffer.  Ie, the next word
 ;    in the user program.
 ;
-                asl
-                cmp     #ILTBLend-ILTBL+2
-                bcc     ILgood
+               clc                          ; Clear carry before shift
+               asl                          ; valid for 0-127
+               bcs     ILbad                ; Out of range
+               tax                          ; Move value to x
+               db      $7c                  ; jmp (ILTBL,X) ; dasm does not support 65c02 inst
+               dw      ILTBL                ; Actual IL table address
+
+;              asl
+;              cmp     #ILTBLend-ILTBL+2
+;              bcc     ILgood
 ;
 ; This handles an illegal IL opcode.  This is serious
 ; and there's no way to recover.
 ;
+iBadOP
 ILbad           jsr     puts
                 db      CR,LF
                 db      "Illegal IL "

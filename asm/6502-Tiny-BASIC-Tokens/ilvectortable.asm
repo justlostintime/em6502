@@ -1,50 +1,50 @@
             seg Code
-
-            dw	iXINIT	;0
-            dw	iDONE	;1
-            dw	iPRS	;2
-            dw	iPRN	;3
-            dw	iSPC	;4
-            dw	iNLINE	;5
-            dw	iNXT	;6
-            dw	iXFER	;7
-            dw	iSAV	;8
-            dw	iRSTR	;9
-            dw	iCMPR	 ;10
-            dw	iINNUM	;11
-            dw	iFIN	;12
-            dw	iERR	;13
-            dw	iADD	;14
-            dw	iSUB	;15
-            dw	iNEG	;16
-            dw	iMUL	;17
-            dw	iDIV	;18
-            dw	iSTORE	;19
-            dw	iIND	;20
-            dw	iLST	;21
-            dw	iINIT	;22
-            dw	iGETLINE;23
-            dw	iINSRT	;24
-            dw	iRTN	;25
-            dw	MONITOR	;26
-            dw	iLIT	;27
-            dw	iCALL	;28
-            dw	iJMP	;29
-            dw	iVINIT	;30
-            dw	iERRGOTO;31
-            dw	iTST	;32
-            dw	iTSTV	;33
-            dw	iTSTL	;34
-            dw	iTSTN	;35
-            dw	iFREE	;36
-            dw	iRANDOM	;37
-            dw	iABS	;38
+ILTBL1:
+      dw    iXINIT        ;0
+      dw    iDONE         ;1
+      dw    iPRS          ;2
+      dw    iPRN          ;3
+      dw    iSPC          ;4
+      dw    iNLINE        ;5
+      dw    iNXT          ;6
+      dw    iXFER         ;7
+      dw    iSAV          ;8
+      dw    iRSTR         ;9
+      dw    iCMPR         ;10
+      dw    iINNUM        ;11
+      dw    iFIN          ;12
+      dw    iERR          ;13
+      dw    iADD          ;14
+      dw    iSUB          ;15
+      dw    iNEG          ;16
+      dw    iMUL          ;17
+      dw    iDIV          ;18
+      dw    iSTORE        ;19
+      dw    iIND          ;20
+      dw    iLST          ;21
+      dw    iINIT         ;22
+      dw    iGETLINE      ;23
+      dw    iINSRT        ;24
+      dw    iRTN          ;25
+      dw    MONITOR       ;26
+      dw    iLIT          ;27
+      dw    iCALL         ;28
+      dw    iJMP          ;29
+      dw    iVINIT        ;30
+      dw    iERRGOTO      ;31
+      dw    iTST          ;32
+      dw    iTSTV         ;33
+      dw    iTSTL         ;34
+      dw    iTSTN         ;35
+      dw    iFREE         ;36
+      dw    iRANDOM       ;37
+      dw    iABS          ;38
 ;
 ; Disk functions.  There must be pointers
 ; to functions even if no disk is supported.
 ; Makes things easier in IL.inc.
 ;
-	if	DISK_ACCESS
+    if    DISK_ACCESS
       dw    iOPENREAD    ;39
       dw    iOPENWRITE   ;40
       dw    iDCLOSE      ;41
@@ -52,34 +52,35 @@
       dw    iDLIST       ;43 Did you remember your towel?
       dw    iDDIR        ;44
       dw    iRMFILE      ;45
-	else
-      dw    NextIL	      ;39
-      dw    NextIL	      ;40
-      dw    NextIL	      ;41
-      dw    NextIL	      ;42
-      dw    NextIL	      ;43
-      dw    NextIL	      ;44
-      dw    NextIL	      ;45
-	endif
+    else
+      dw    NextIL       ;39
+      dw    NextIL       ;40
+      dw    NextIL       ;41
+      dw    NextIL       ;42
+      dw    NextIL       ;43
+      dw    NextIL       ;44
+      dw    NextIL       ;45
+    endif
 ;
-	    dw  iCLEARSCREEN  ;46
-	    dw  iPOKEMEMORY   ;47
-	    dw  iPEEKMEMORY   ;48
-	    dw  iTSTLET       ;49       Test if the let with no LET keyword
-	    dw  iTSTDONE      ;50       Test if we are at the end of a line
-	    dw  iGETCHAR      ;51       Get a character from the terminal
-	    dw  iPUTCHAR      ;52       Put a char to the terminal
-	    dw  iCallFunc     ;53       call a machine rtn accumulator
-	    dw  iBranch       ;54       if value on stack is 0 then next line, else next instuction
-	    dw  iTSTStr       ;55       Test Specifically for the start of a quoted string
-	    dw  iSetIrq       ;56       sets the irq handler
-	    dw  iTstIrq       ;57       test if irq is pending
-	    dw  iRET          ;58       return from interupt
-	    dw  iINSTR        ;59       read a string return first char on top of stack
+      dw  iCLEARSCREEN  ;46
+      dw  iPOKEMEMORY   ;47
+      dw  iPEEKMEMORY   ;48
+      dw  iTSTLET       ;49       Test if the let with no LET keyword
+      dw  iTSTDONE      ;50       Test if we are at the end of a line
+      dw  iGETCHAR      ;51       Get a character from the terminal
+      dw  iPUTCHAR      ;52       Put a char to the terminal
+      dw  iCallFunc     ;53       call a machine rtn accumulator
+      dw  iBranch       ;54       if value on stack is 0 then next line, else next instuction
+      dw  iTSTStr       ;55       Test Specifically for the start of a quoted string
+      dw  iSetIrq       ;56       sets the irq handler
+      dw  iTstIrq       ;57       test if irq is pending
+      dw  iRET          ;58       return from interupt
+      dw  iINSTR        ;59       read a string return first char on top of stack
       dw  iMOD          ;60       returns remainder of division
       dw  iTaskSet      ;61       sets a line number for the start of a task
       dw  iETask        ;62       Terminates a task
       dw  iNTask        ;63       goto next task
+ILTBL2:
       dw  iArray        ;64       Allow Variable to have a subscript
       dw  iTaskKill     ;65       kill a running task
       dw  iTaskStat     ;66       return the state of a task PID
@@ -130,4 +131,22 @@
       dw  iCopyBlock    ;111      Copy a block or memory from one location to another 16 bit length
       dw  iCmpBlock     ;112      Compare to parts of memory
       dw  iShift        ;113      Shift left 0 or right 1
+
+      dw  iBadOP        ;114      Invalid IL op code
+      dw  iBadOP        ;115      Invalid IL op code
+      dw  iBadOP        ;116      Invalid IL op code
+      dw  iBadOP        ;117      Invalid IL op code
+      dw  iBadOP        ;118      Invalid IL op code
+      dw  iBadOP        ;119      Invalid IL op code
+      dw  iBadOP        ;120      Invalid IL op code
+      dw  iBadOP        ;121      Invalid IL op code
+      dw  iBadOP        ;122      Invalid IL op code
+      dw  iBadOP        ;123      Invalid IL op code
+      dw  iBadOP        ;124      Invalid IL op code
+      dw  iBadOP        ;125      Invalid IL op code
+      dw  iBadOP        ;126      Invalid IL op code
+      dw  iBadOP        ;127      Invalid IL op code
+
+
+
 

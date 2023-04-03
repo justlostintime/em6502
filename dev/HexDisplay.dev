@@ -50,9 +50,11 @@ Public Databuffer As Byte[]
 Public EchoChar As Boolean = false
 TermCtlOld As TerminalSettings
 Public MyTimer as timer
-const BitTime as short = 119
-Const BitTimeOne as short = BitTime - 37
-Const BitTimeZero as short = BitTime - 43
+
+' The following are the cpu clock timing used to receive the bits to the program via irq
+const BitTime as short = 119                          ' start bit
+Const BitTimeOne as short = BitTime - 37              ' first bit
+Const BitTimeZero as short = BitTime - 43             ' remainder bits
 
 
 class KeyboardRdr
@@ -91,7 +93,6 @@ public sub _new(address as long, length as long, UserDefinedParameters as string
   Dim MyParms as string[] = split(UserDefinedParameters)                    ' any parameters you may need for your device
   Class.load("disphex")
    MyDispHex = new DispHex
-  'DispHex.show()
    MyDispHex.show()
 
   $MemoryStart = address
@@ -129,6 +130,7 @@ public sub CpuInit()
     ' cycletimer.dev for example
     $TheCpu.MillisecondTicks  = BitTime                   ' over ride the counter, to use nanoseconds
     $TheCpu.ExternalOssilator = me
+     MyDispHex.TheCpu = $TheCpu                           ' Tell the hex display how to quit
 end
 '=================================================================================================
 ' The get is used by the emulater to request a byte from your device
@@ -173,7 +175,7 @@ public sub _put(Value as byte, address as long)
             InByte = true
             CurrentCount = 0
           else
-            'Print
+            ' Print "Set Led ";hex(value,2);"\n\r"
             LedValue = value and &h07f
           endif
       endif
@@ -289,7 +291,7 @@ if $TxActive then
      $TxBegin = false
   endif
   'print "TX Bit = " ; $TxByte and &h01;"\n\r"
-  flush
+  'flush
   if ($TxByte and &h01) = 0 then
      $TheCpu.IRQPending = true
      $TheCpu.InteruptPending = true

@@ -1,5 +1,7 @@
 * Thu Mar 09 2023 Justlostintime <justlostintime@gmail.com> 1.2.4
 
+* Thu Mar 09 2023 Justlostintime <justlostintime@gmail.com> 1.2.4
+
 * Thu Mar 09 2023 Justlostintime <justlostintime@gmail.com> 1.2.3
 - Fix bug in auto start when set to run from reset, when started from command line
 

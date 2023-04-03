@@ -6,6 +6,7 @@ $DisplayBuffer As New String[7]
 $Leds As New Boolean[7]
 
 $MyTimer As New Timer As "MyTimer"
+Property TheCpu As Cpu6502 Use $TheCpu
 
 Const LA As Integer = &h008
 Const LB As Integer = &h004
@@ -160,8 +161,8 @@ Public Sub WriteChar(value As Byte, position As Byte, ledvalue As Byte)
   Dim NewBuffer As String
 
   If LedValue <> LedPattern Then
-    SetLeds(value)
-    LedPattern = value
+    SetLeds(ledvalue)
+    LedPattern = ledvalue
   Endif
 
   Dim dispval As String = CharacterMap1[Str(CInt(value) And &h00ff)]
@@ -230,3 +231,9 @@ End
 
 
 
+
+Public Sub Form_Close()
+
+  $TheCpu.halt()
+
+End
