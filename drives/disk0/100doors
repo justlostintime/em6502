@@ -10,16 +10,18 @@
 18 Print "Answer the question:   what state are the doors in after the last pass?"
 19 Print "       Which are open, which are closed?"
 50 a = task(100)  : Rem Run the optimized solution
-60 b = task(1000) : print "TASK id =";b : Rem The long way
-65 b!a = 1        : rem turn on the spinner
+60 b = task(1000) : rem print "TASK id =";b : Rem The long way
+65 c = task(2000) : Rem Show a pretty spinner
 70 taskw(a,b)
+75 taskk(c)
 80 gosub 1200
 90 end
 
 100 Rem Optimized solution
-105 ? "100 Doors optimized"
+105 ? 27$;"11;1f100 Doors optimized"
+109 g = 0
 110 LET N=1:LET D=3
-120 PRINT N,
+120 PRINT 27$;"[12;";g*4;"f";N;:inc g
 140 LET N=N+D:LET D=D+2
 150 if N<=100 goto 120
 155 ? "Done"
@@ -27,6 +29,7 @@
 
 1000 Rem Full test of doors long solution
 1002 m = 45056  : Rem the memory location for array
+1005 ? 27$;"[13;1f100 Doors the full Scan";
 1010 i=1 : rem initialize memory
 1015 rem poke(m+i,0) : inc i : if i <= 100 then goto .
 1016 @$[i] = 0 : inc i : if i <= 100 then goto .
@@ -46,8 +49,8 @@
 1200 Rem Print out the result
 1202 m = 45056  : Rem the memory location for array
 1203 i=1
-1204 ?  "(i=";i;" Val=";$@$[i];") " : inc i : if i <= 100 goto .
-1205 ? 13$;"100 Doors the full Scan"
+1204 rem ?  "(i=";i;" Val=";$@$[i];") " : inc i : if i <= 100 goto .
+1205 27$;"[15;4f";
 1210 i = 1
 1230 rem if peek(m+i) ? i,
 1235 if @$[i]   ? i,
@@ -56,11 +59,12 @@
 1260 return
 
 2000 rem diplay a spinner on the screen
-2010 if a = 0 then return
-2020 inc b : ? 13$;
-2030 if b  = 0 then ? " | " ;: return
-2040 if b  = 1 then ? " / " ;: return
-2050 if b  = 2 then ? "---"; : return
-2060 if b  = 3 then ? " \ "; : b = 0 : return
-2070 return
+2010 b = 0 : a = 0
+2020 inc b : inc a : if (a % 1000) = 0 then taskn() : goto .
+2030 if b  = 0 then ? 27$;"[14;4f";" | " ;27$;"[8m";
+2040 if b  = 1 then ? 27$;"[14;4f";" / " ;27$;"[8m";
+2050 if b  = 2 then ? 27$;"[14;4f";"---";27$;"[8m" ;
+2060 if b  = 3 then ? 27$;"[14;4f";" \ ";27$;"[8m"; : b = 0 
+2070 goto 2020
+
 

@@ -132,7 +132,7 @@ Public Sub _call()
       Comp.AutoStart = -1                         ' Force a system reset, enter the monitor/6502 reset vector
       Comp.AutoStartActive = True
       Comp["KeyboardRdr"] = [0, 0, "#Service", "na"]    ' This is a service class used by one of the devices
-      Comp["RamMemory"] = [&h0000, &h0E000, "", "rw"]   ' Default to the monitor program
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin", "rw"]
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
       Comp["Console"] = [&h0E000, 16, "TinyBasic and ctmon65 on the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI", "rw"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
@@ -150,6 +150,21 @@ Public Sub _call()
       Comp["RamMemory"] = [&h0000, &h08000, "", "rw"]   ' Default to the monitor program
       Comp["RomMemory"] = [&h08000, &h08000, .AsmBinaryDirectory &/ "Badge32k.bin", "ro"]
       Comp["HexDisplay"] = [&h08000, &h08000, "BadgeOS on the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI", "wo"]
+      Comp.Save(.AsmComputerDefinitions)
+    Endif
+
+    If Not Exist(.AsmComputerDefinitions &/ "tinybasic") Then
+      Comp = New ComputerDef
+      Comp.Name = "console"
+      Comp.Speed = 999
+      Comp.AutoStart = &H0200
+      Comp.AutoStartActive = True
+      Comp["KeyboardRdr"] = [0, 0, "#Service", "na"]    ' This is a service class used by one of the devices
+      Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin", "rw"]
+      Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+      Comp["Console"] = [&h0E000, 16, "TinyBasic and ctmon65 on the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI", "rw"]
+      Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["NOTE"] = [0, 0, "NOTES: \n All services Should be declared before they are used by a Device or other service", "na"]
       Comp.Save(.AsmComputerDefinitions)
     Endif
 
