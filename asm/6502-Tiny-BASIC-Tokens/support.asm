@@ -945,7 +945,7 @@ SetInConsole
 ;
 iCLEARSCREEN
                 jsr     puts
-                db      $1b,'[,'2,'J,0
+                db      $1b,'[,'2,'J,$1b,'[,'1,';,'1,'H,0
                 jmp     NextIL
 
 ;====================================================

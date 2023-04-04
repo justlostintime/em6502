@@ -1,5 +1,5 @@
 5 cls
-10 Print "PROGRAM 100doors.bas"
+10 print "PROGRAM 100doors.bas"
 11 Print "There are 100 doors in a row that are all initially closed."
 12 Print "You make 100 passes by the doors."
 13 Print "The first time through, visit every door and  toggle  the doors"
@@ -12,24 +12,24 @@
 50 a = task(100)  : Rem Run the optimized solution
 60 b = task(1000) : rem print "TASK id =";b : Rem The long way
 65 c = task(2000) : Rem Show a pretty spinner
-70 taskw(a,b)
-75 taskk(c)
+70 taskw(a,b)     : Rem Wait for tasks to complete
+75 kill c         : Rem Kill the spinner task
 80 gosub 1200
 90 end
 
 100 Rem Optimized solution
-105 ? 27$;"11;1f100 Doors optimized"
+105 ? 27$;"[11;1H100 Doors optimized"
 109 g = 0
 110 LET N=1:LET D=3
-120 PRINT 27$;"[12;";g*4;"f";N;:inc g
+120 PRINT 27$;"[12;";g*4;"H";N;:inc g
 140 LET N=N+D:LET D=D+2
 150 if N<=100 goto 120
-155 ? "Done"
+155 ? ".. Done"
 160 return
 
 1000 Rem Full test of doors long solution
 1002 m = 45056  : Rem the memory location for array
-1005 ? 27$;"[13;1f100 Doors the full Scan";
+1005 ? 27$;"[13;1H100 Doors the full Scan";
 1010 i=1 : rem initialize memory
 1015 rem poke(m+i,0) : inc i : if i <= 100 then goto .
 1016 @$[i] = 0 : inc i : if i <= 100 then goto .
@@ -43,14 +43,14 @@
 1055 @$[j] = not @$[j]
 1060 j=j+i : if j <= 100 goto 1055
 
-1080 gosub 2000: inc i : if i <= 100 goto 1030
+1080 inc i : if i <= 100 goto 1030
 1090 return
 
 1200 Rem Print out the result
 1202 m = 45056  : Rem the memory location for array
 1203 i=1
 1204 rem ?  "(i=";i;" Val=";$@$[i];") " : inc i : if i <= 100 goto .
-1205 27$;"[15;4f";
+1205 print 27$;"[15;4H";
 1210 i = 1
 1230 rem if peek(m+i) ? i,
 1235 if @$[i]   ? i,
@@ -60,11 +60,12 @@
 
 2000 rem diplay a spinner on the screen
 2010 b = 0 : a = 0
-2020 inc b : inc a : if (a % 1000) = 0 then taskn() : goto .
-2030 if b  = 0 then ? 27$;"[14;4f";" | " ;27$;"[8m";
-2040 if b  = 1 then ? 27$;"[14;4f";" / " ;27$;"[8m";
-2050 if b  = 2 then ? 27$;"[14;4f";"---";27$;"[8m" ;
-2060 if b  = 3 then ? 27$;"[14;4f";" \ ";27$;"[8m"; : b = 0 
-2070 goto 2020
+2015 inc a : if a < 100 then taskn : goto .
+2020 inc b : a = 0
+2030 if b  = 0 then ? 27$;"[14;4H";" | " ;
+2040 if b  = 1 then ? 27$;"[14;4H";" / " ;
+2050 if b  = 2 then ? 27$;"[14;4H";"---";
+2060 if b  = 3 then ? 27$;"[14;4H";" \ ";: b = 0
+2070 goto 2015
 
 

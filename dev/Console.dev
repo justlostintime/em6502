@@ -18,7 +18,6 @@ Public MemoryEnd As Long = 0
 Public MemoryLen As Long = 0
 Public LastValue As Byte
 Public Databuffer As Byte[]
-Public EchoChar As Boolean = false
 TermCtlOld As TerminalSettings
 
 Property read name as string use $name
@@ -27,6 +26,7 @@ Property Status as byte use $Status = 0
 Property UseIrqRX as boolean use $UseIrqRX = false
 Property UseIrqTX as boolean use $UseIrqTX = false
 Property ReaderTask as task use $ReaderTask
+Property EchoChar As Boolean use $EchoChar = false
 Property TheCpu as Variant use $TheCpu
 
 RS232CONFIG as string[] = ["7bit,even parity,2 stop bits","7bit,odd parity,2 stop bits","7bit,even parity,1 stop bit","7bit,odd parity,1 stop bit",
@@ -49,9 +49,9 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
 
   $ReaderTask = new KeyboardRdr as "mytask"
   wait 0.01
-  Write #File.out, "\e[32m"
-  print StartMessage
-
+  Write #File.out, "\e[32m"&StartMessage&"\n\r"
+  flush #File.out
+  
   Catch
     print "Console Device error :" ; Error.text, Error.where,"\n\r";
 End
@@ -74,8 +74,8 @@ Public Sub _Put(Value As Byte, address as long)
 '================================================================================
   if address = MemoryStart+1 then         'put the data
     LastValue = value
-    print chr(value);
-    flush
+    write #File.out, value as byte
+    flush #File.out
 '=================================================================================
 ' Else it must be config info
 '=================================================================================
@@ -160,7 +160,7 @@ Public Sub mytask_read(bkeypress As string)
  endif
 
 
- If EchoChar Then
+ If $EchoChar Then
     print bKeyPress;
     flush
  Endif
