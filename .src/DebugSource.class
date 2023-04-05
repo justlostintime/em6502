@@ -8,6 +8,7 @@ Property DebugFile As String Use $DebugFile
 ListingFileText As String = ""
 'DisplayFileText As String = ""
 AddressPerLine As New String[]                                    ' contains an entry for every line of the diplayed text
+LinenumberPerLine As New String[]
 SourceArray As String[]
 CommentArray As String[]
 
@@ -79,10 +80,10 @@ Public Sub Step(Address As String)
 
   Dim i As Integer = AddressPerLine.Find(Address)
 
-  If i = -1 Then Return                           ' not withing this source code
+  If i = -1 Then Return                           ' not within this source code
   Dim j As Integer = i + 1
   While j < AddressPerLine.count
-    If AddressPerLine[j] = Address Then
+    If AddressPerLine[j] = Address Or If Not IsHexa(AddressPerLine[j]) Then
       Inc i
       Inc j
     Else
@@ -113,37 +114,46 @@ Sub MakeFileReady()
   For i As Integer = SourceArray.max DownTo 0
     If InStr(SourceArray[i], ";") Then
       comment = Split(SourceArray[i], ";", "", False, True)
-      CommentArray[i] = comment.last
-      SourceArray[i] = comment[0]
-    Endif
-
-    If CommentArray[i] = "" Then
-      If Left(SourceArray[i], 4) == "----" Or If SourceArray[i] = "" Then
-        SourceArray.Remove(i)
-        CommentArray.Remove(i)
+      If comment.count = 1 And comment[0][0] = ";" Then
+        SourceArray[i] = ""
+        CommentArray[i] = Trim(comment.Join(""))
+      Else
+        SourceArray[i] = comment[0]
+        comment.Remove(0)
+        CommentArray[i] = Trim(comment.Join(""))
       Endif
     Endif
   Next
 
 
-  For Each s As String In SourceArray
+  For i = 0 To SourceArray.Max
+    Dim s As String = SourceArray[i]
     s = ConvertTabs(s, 8)
     'SourceLine = Split(s, "\t", "", False, True)
     SourceAddress = Split(s, " ", "", True, False)
+    If SourceAddress.count > 1 And If IsNumber(SourceAddress[0]) Then
+      LinenumberPerLine.add(SourceAddress[0])
+    Else
+      LineNumberPerLine.Add("*")
+    Endif
 
     If SourceAddress.Count >= 2 Then
       AddressPerLine.Add(Upper(SourceAddress[1]))
     Else
       AddressPerLine.add("----")
     Endif
-  Next
-
-  For i = 0 To SourceArray.Max
-    SourceArray[i] = IIf(AddressPerLine[i][0] = "U", AddressPerLine[i], " " & AddressPerLine[i]) & " " & ConvertTabs(SourceArray[i], 8) & IIf(CommentArray[i] <> "", " ; " & CommentArray[i], "")
+    SourceArray[i] = ConvertTabs(SourceArray[i], 8) & IIf(CommentArray[i] <> "", " ; " & CommentArray[i], "")
   Next
 
 Catch
+  Error Error.text, Error.where
   Stop
+
+End
+
+Sub field(value As String, fieldlen As Integer) As String
+
+  Return Right(Space(fieldlen) & value, fieldlen)
 
 End
 
@@ -274,7 +284,7 @@ Sub NextValidLine(lineno As Integer) As Integer
 
   While lineno < SourceArray.count
 
-    If AddressPerLine[lineno][0] == "U" Or If Trim(Mid(SourceArray[lineno], 6, 4)) = "" Or If SourceArray[lineno] Like "* equ *" Or If SourceArray[lineno] Like "*.word*" Or If SourceArray[lineno] Like "*.byte*" Then
+    If AddressPerLine[lineno][0] == "U" Or If Trim(Mid(SourceArray[lineno], 6, 4)) = "" Or If SourceArray[lineno] Like "* equ *" Or If SourceArray[lineno] Like "*.word*" Or If SourceArray[lineno] Like "*.byte*" Or If Not IsHexa(AddressPerLine[lineno][0]) Then
       Inc lineno
     Else
       Break
@@ -286,7 +296,7 @@ Sub NextValidLine(lineno As Integer) As Integer
 
   Dim j As Integer = LineNo + 1
   While j < AddressPerLine.count
-    If AddressPerLine[j] = Address Then
+    If AddressPerLine[j] = Address Or If Not IsHexa(AddressPerLine(LineNo)) Then
       Inc LineNo
       Inc j
     Else

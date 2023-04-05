@@ -200,7 +200,7 @@ taskZeroEnd
 ;
 ;==========================================================================================
 ; Find the next gosub function parameter info  position on the stack
-; Returns y = index and c set if found clera c otherwise
+; Returns y = index and c set if found clear c otherwise
 GosubFindParms   ldy     GOSUBSTACKPTR          ;Get the Pointer to the top of stack
                  dey                            ;Point to stack entry type
 
@@ -211,8 +211,8 @@ GosubFindLoop   cpy     #0                     ;If we reach the top of the stack
                 beq     GosubNotFunc
                 cpy     #GOSUBSTACKSIZE        ;Tst if we are outside the stack size
                 bcs     GosubNotFunc           ;Not valid
-                
-;Look for the   GOSUG_RTN_VALUE stack position
+
+;Look for the   GOSUB_RTN_VALUE stack position
                 lda     (GOSUBSTACK),y         ;Get the type of call - if it is not a fn call error
                 cmp     #GOSUB_RTN             ;if we find this then this function had no parameters
                 beq     GosubNotFunc
@@ -224,17 +224,17 @@ GosubFindLoop   cpy     #0                     ;If we reach the top of the stack
                 dey
                 dey
                 jmp     GosubFindLoop
-                
+
 GosubParmFnd    dey                            ;Point to hopefully Math Stack frame information
                 dey
                 dey
                 dey
-                
+
                 lda     (GOSUBSTACK),y         ;This should be a stack frame pointer
                 cmp     #GOSUB_STACK_FRAME     ;Stack frame pointer So should contain the start position of Variables
                 bne     GosubNotFunc           ;No parameters passed but expected
                 sec
                 rts
-                
+
 GosubNotFunc    clc
                 rts

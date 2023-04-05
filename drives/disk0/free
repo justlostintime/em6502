@@ -1,2 +1,2 @@
-10 PRINT "Memory free ",FREE()
+10 PRINT "Memory free ",%FREE()
 20 PRINT "TINY BASIC"

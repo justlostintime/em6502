@@ -3,7 +3,7 @@
 12 L=0
 17 n=500
 20 M=d
-40 rem cls
+40 cls
 50 ?"Press any letter to start"
 60 W = RND()
 70 if getch()=13 then goto 60
