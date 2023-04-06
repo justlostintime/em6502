@@ -348,7 +348,12 @@ Sub DiskCmdProcess()
 
       dim directoryPath as string = $DiskDriveLocation &/ drives[ActiveDrive]
       'print "Pia Respond to Get Dir ";directoryPath
-      dim Directories as string[] =  Dir(directoryPath, "*", gb.File)
+      dim Directories as new string[]
+      try Directories =  Dir(directoryPath, "*", gb.File)
+      if error then
+        error "Get Directory "", Error :",error.text;"\n\r";
+        flush #file.err
+      endif
 
       For Each s As String In Directories
        ' print "Pia DIrectory entry added :";;s
@@ -367,7 +372,8 @@ Sub DiskCmdProcess()
       'print "Pia Respond to remove File  : "&Filename
       Try kill filename
       If Error Then
-        Error "Pia Disk remove file error : ";error.text, error.where
+        Error "Pia Disk remove file ";filename;", error : ";error.text;"\n\r";
+        flush #file.err
         OutputBuffer.add(PR_NAK,0)
         OutPutBuffer.add(ERR_NOT_FOUND,0)
       Else
@@ -381,7 +387,8 @@ Sub DiskCmdProcess()
       'print "Pia Respond to Open File for read : "&Filename
       Try CurrentFile = Open filename For Read
       If Error Then
-        Error "Pia Disk open file error : ";error.text, error.where
+        Error "Pia Disk open file ";filename;", error : ";error.text;"\n\r";
+        flush #file.err
         OutputBuffer.add(PR_NAK,0)
         OutPutBuffer.add(ERR_NOT_FOUND,0)
       Else
@@ -431,7 +438,8 @@ Sub DiskCmdProcess()
         Try CurrentFile = Open filename For write Create
       endif
       If Error Then
-        Error "Open for write error : ";error.text, error.where
+        Error "Open for write ";filename;", error : ";error.text;"\n\r";
+        flush #file.err
         OutputBuffer.add(PR_NAK, 0)
         OutPutBuffer.add(ERR_NOT_FOUND,0)
       Else
@@ -558,7 +566,7 @@ Sub DiskCmdProcess()
 Catch
   error "PIA DISK Disk Command Process Error:";error.text,error.where
   outputbuffer.add(PR_NAK,0)
-  
+
 End
 
 public sub piainterupts_timer()

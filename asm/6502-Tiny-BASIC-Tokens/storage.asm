@@ -103,10 +103,11 @@ iOPENWRITE
                 jsr     getILByte           ;get the append or create byte
                 cmp     #1                  ;create/truncate
                 bne     iopencont
-                jsr     DiskRmFile          ;by default files opened for write are append
                 jsr     ResetFileName       ;point back to the file name
+                jsr     DiskRmFile          ;by default files opened for write are append
+              
 iopencont:
-
+                jsr     ResetFileName       ;point back to the file name
                 jsr     DiskOpenWrite       ;attempt to open file
                 bcc     Wopenok             ;branch if opened ok
 ;
