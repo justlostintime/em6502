@@ -97,7 +97,7 @@ START:
 ;
 CO:
 	GETLINE                    ;WRITE PROMPT AND GET LINE
-	TSTL       XEC             ;TEST FOR LINE NUMBER
+	TSTL       XEC             ;TEST FOR LINE NUMBER, if none then execute the line
 	INSERT                     ;INSERT IT (MAY BE DELETE)
 	IJMP       CO
 XEC:
@@ -603,22 +603,12 @@ NotKnownStatement:
 ; Process Expresions, precidence is represented by the
 ; various call levels
 ;
-EXPR:   TSTB        EXPRNEXT,oLeftBracket
-        Call        EXPR
-        TSTB        ExpectBrace,oRightBracket
-        RTN
-
-ExpectBrace:
-        ENDIO
-        ERRMSG      ERR_CLOSINGBRACKET
-
-EXPRNEXT:
+EXPR:   
         TSTB        EXPRLOGS,kNot
 ekNot:
         Call       EXPR
         LOGNOT
         RTN
-
 
 ;=========================================================
 ;Look for logical operators, but does get first part of expression
