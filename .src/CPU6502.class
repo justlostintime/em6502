@@ -36,16 +36,14 @@ Public AddressMap_Write As New Object[]           ' Address bus map object point
 Public RealMemory_Read As New Object[1024 * 64]   ' Used to map for read byte lots of space
 Public RealMemory_Write As New Object[1024 * 64]  ' Used to map for write byte lots of space
 
-'maphigh As New Long[]
-'maplow As New Long[]
-
-Public SingleStep As Boolean              ' Turn On single step mode
-Public DisplayStatus As Boolean           ' Turn On the status screen
-Public DisplayInstruction As Boolean      ' Cause the instruction to be executed to be displayed to the trace screen
-Public DisplayMemory As Boolean           ' Causes the update of all memory monitor Watch list etc
-Public LastTraceInstruction As String     ' When trace is on this will contain the last data
-Public TotalInstructions As Long = 0      ' Number of instructions executed
-Property Read InstructionsPerSecond As Long Use $InstructionsPerSecond ' Number of instructions executed per second
+Property SingleStep As Boolean Use $SingleStep                 '' Turn On single step mode
+Property DisplayStatus As Boolean Use $DisplayStatus           '' Turn On the status screen
+Property DisplayInstruction As Boolean Use $DisplayInstruction '' Cause the instruction to be executed to be displayed to the trace screen
+Property DisplayMemory As Boolean Use $DisplayMemory           '' Causes the update of all memory monitor Watch list etc
+Private DisplayRequired As Boolean = False                    ' Used for faster check if anydisplay info needed
+Public LastTraceInstruction As String                         ' When trace is on this will contain the last data
+Public TotalInstructions As Long = 0                          ' Number of instructions executed
+Property Read InstructionsPerSecond As Long Use $InstructionsPerSecond '' Number of instructions executed per second
 
 Public CpuClock As Timer                  ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
 
@@ -94,6 +92,92 @@ Fast Unsafe Public Sub _free()
 
 End
 
+Private Sub SingleStep_write(value As Boolean)             ' Turn On single step mode
+
+  If value Then
+    DisplayRequired = True
+    $SingleStep = True
+  Else
+    $SingleStep = False
+    If $DisplayInstruction Or $DisplayMemory Or $DisplayStatus Then
+      Return
+    Endif
+    DisplayRequired = False
+  Endif
+
+End
+
+Private Sub SingleStep_read() As Boolean
+
+  Return $SingleStep
+
+End
+
+Private Sub DisplayStatus_write(value As Boolean)          ' Turn On the status screen
+
+  If value Then
+    DisplayRequired = True
+    $DisplayStatus = True
+  Else
+    $DisplayStatus = False
+    If $DisplayInstruction Or $DisplayMemory Or $SingleStep Then
+      Return
+    Endif
+    DisplayRequired = False
+  Endif
+
+End
+
+Private Sub DisplayStatus_Read() As Boolean
+
+  Return $DisplayStatus
+
+End
+
+
+Private Sub DisplayInstruction_write(value As Boolean)     ' Cause the instruction to be executed to be displayed to the trace screen
+
+  If value Then
+    DisplayRequired = True
+    $DisplayInstruction = True
+  Else
+    $DisplayInstruction = False
+    If $SingleStep Or $DisplayMemory Or $Displaystatus Then
+      Return
+    Endif
+    DisplayRequired = False
+  Endif
+
+End
+
+Private Sub DisplayInstruction_Read() As Boolean
+
+  Return $DisplayInstruction
+
+End
+
+
+Private Sub DisplayMemory_write(value As Boolean)          ' Causes the update of all memory monitor Watch list etc
+
+  If value Then
+    DisplayRequired = True
+    $DisplayMemory = True
+  Else
+    $DisplayMemory = False
+    If $DisplayInstruction Or $SingleStep Or $DisplayStatus Then
+      Return
+    Endif
+    DisplayRequired = False
+  Endif
+
+End
+
+Private Sub DisplayMemory_Read() As Boolean
+
+  Return $DisplayMemory
+
+End
+
 Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
 
   Static StartInstructionCount As Long = 0
@@ -109,7 +193,7 @@ End
 Fast Unsafe Public Sub Halt()
 
   CpuClock.Enabled = False                                              ' Stop the cpu internal clock
-  SingleStep = True
+  $SingleStep = True
   $Halted = True
   Wait 0.001
 
@@ -208,7 +292,7 @@ Fast Unsafe Public Sub Run()
     If $Breakpoints Or $InteruptPending Then
       If $BreakPoints Then
         If BreakPointList.ExistSorted(pc) Then
-          SingleStep = True
+          $SingleStep = True
           $Breakpoints = False
           Raise breakpoint(pc)
           StepInfo()
@@ -241,26 +325,29 @@ Fast Unsafe Public Sub Run()
     Endif
 
     ExecuteInstruction()
+    '
+    'If $DisplayRequired Or If $DisplayMemory Or $SingleStep Or $DisplayInstruction Or $DisplayStatus Then
+    If DisplayRequired Then
 
-    If (DisplayMemory Or SingleStep Or DisplayInstruction Or DisplayMemory) Then
-      If DisplayStatus Then
+      If $DisplayStatus Then
         Dim pinfo As New CpuStatus(pc, sp, ac, X, Y, sr, DataBus, AddressBus, TotalInstructions, $InstructionsPerSecond, $TotalCycles, $CyclesPerSecond)
         Raise StatusInfo(pinfo)
       Endif
 
-      If SingleStep Then
-        StepInfo()
-        Return
-      Else If DisplayInstruction Then
-        StepInfo()
-      Else If DisplayMemory Then
+      If $DisplayMemory Then
         Raise MemUpdated()
       Endif
+
+      If $SingleStep Or If $DisplayInstruction Then
+        StepInfo()
+        If $SingleStep Then Return
+      Endif
+
     Endif
 
-    If counter = $SpeedScaler Then     'This is also used to keep the GUI responsive to inputs
-      Wait 0                           'This is used to check the GUI and throttle the cpu speed
-      counter = 0                      'The larger the number the faster the cpu functions
+    If counter = $SpeedScaler Then   'This is also used to keep the GUI responsive to inputs
+      Wait 0                         'This is used to check the GUI and throttle the cpu speed
+      counter = 0                    'The larger the number the faster the cpu functions
     Else
       Inc counter
     Endif
@@ -639,7 +726,7 @@ Fast Unsafe Public Sub Reset()
   ReadByte()
   PC = PC Or (CLong(DataBus) Shl 8)
 
-  If SingleStep Then
+  If $SingleStep Then
     If FMain.Verbose Then Error "@ "; ("PC Reset");; Hex(pc)
     StepInfo()
   Endif
@@ -743,7 +830,7 @@ Fast Unsafe Public Sub BRK()
   sr = BSet(sr, 4)                                             ' set the break flag
   interupt(&H0FFFE)
   SR = BSet(sr, 2)                                             ' disable the IRQ
-  SR = BClr(SR, 4)                                            ' This flag is never really stored disabled for testing
+  SR = BClr(SR, 4)                                             ' This flag is never really stored disabled for testing
 
 End
 

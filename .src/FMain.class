@@ -383,8 +383,10 @@ Public Sub SetTrace_Click()
   MyComputer.Trace(SetTrace.value)
   If SetTrace.value = True Then
     SetTrace.text = "Trace"
+    SetTrace.Background = Color.DarkGreen
   Else
     SetTrace.text = "Trace"
+    SetTrace.Background = Color.LightGray
   Endif
 
 End
@@ -394,9 +396,11 @@ Public Sub SetStatus_Click()
   If SetStatus.value = True Then
     MyComputer.StatusOn()
     SetStatus.text = "Status"
+    SetStatus.Background = Color.DarkGreen
   Else
     MyComputer.StatusOff()
     SetStatus.text = "Status"
+    SetStatus.Background = Color.LightGray
   Endif
 
 End

@@ -591,8 +591,9 @@
         ReadOnly = True
       }
       { Label7 Label
-        MoveScaled(4,39,24,4)
+        MoveScaled(2,39,30,4)
         Font = Font["Ubuntu Mono,-1"]
+        Alignment = Align.Center
         Text = ("SR or P Flags")
       }
       { flag_n CheckBox
@@ -646,7 +647,7 @@
         Text = ("PC")
       }
       { SR_info TextBox
-        MoveScaled(2,42,13,4)
+        MoveScaled(2,42,32,4)
         ToolTip = ("Displays the CPU flag register as a value")
         ReadOnly = True
       }
@@ -711,13 +712,13 @@
         ReadOnly = True
       }
       { MHZ TextBox
-        MoveScaled(16,42,13,4)
+        MoveScaled(18,47,11,4)
         ToolTip = ("Displays the the emulated speed of the cpu\nthis is calculated from the number of cpu cycles per\nsecond the emulateris able to execute.\nIt seems to be able to run at a maximum speed\nof about 4.1MHZ on a 2GHZ computer.\nYour milage may vary!")
         Alignment = Align.Right
         ReadOnly = True
       }
       { Label18 Label
-        MoveScaled(29,42,5,4)
+        MoveScaled(29,47,5,4)
         Font = Font["Open Sans"]
         Text = ("Mhz")
       }
