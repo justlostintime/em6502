@@ -137,7 +137,7 @@ GOSUB_FOR         equ     2       ; Jump point for a for function
 GOSUB_NEXT        equ     3       ; Next interation and jump point
 GOSUB_MSG         equ     4       ; this identifies the entry as an IPC message
 GOSUB_STACK_FRAME equ     5       ; used to contain the gosubs stackframe info when passing parameters
-                                  ; 0 byte is the original stack offset, byte 1 is the paameter count
+                                  ; 0 byte is the original stack offset, byte 1 is the parameter count
                                   ; 2 byte  is unused, 3 byte  is the type GOSUB_STACK_FRAME
 GOSUB_STACK_SAVE  equ     6       ; SAVES THE FULL MATH STACK INFORMATION
 GOSUB_SCRATCH_PAD equ     7       ; Used when a work space is needed in il code
@@ -1309,8 +1309,6 @@ iArrayFNparm:   jsr    GosubFindParms       ; Get a pointer to the current funct
                 lda     R0                  ; get parm to be accessed
                 cmp     (GOSUBSTACK),y      ; compare to max number allowed
                 bcs     iArrayError         ; the parameter index should be less than the count
-                cmp     #0
-                beq     iArrayExit          ; Skip the rest if index is zero
                 asl     R0                  ; Do the multiply by 2
                 rol     R0+1
 

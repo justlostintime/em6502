@@ -215,21 +215,30 @@ GosubFindLoop   cpy     #0                     ;If we reach the top of the stack
 ;Look for the   GOSUB_RTN_VALUE stack position
                 lda     (GOSUBSTACK),y         ;Get the type of call - if it is not a fn call error
                 cmp     #GOSUB_RTN             ;if we find this then this function had no parameters
-                beq     GosubNotFunc
+                beq     GosubParmFnd           ;We can pass parameters to a function that returns nothing
 
-                cmp     #GOSUB_RTN_VALUE
-                beq     GosubParmFnd         ;Skip any non Gosub related entries
+                cmp     #GOSUB_RTN_VALUE       ;Parameters with the gosub call
+                beq     GosubParmFnd           ;Skip any non Gosub related entries
+                
+                cmp     #GOSUB_STACK_FRAME     ;Stack frame pointer So should contain the start position of Variables
+                beq     GosubParmSkip          ;We have a stackframe good
+                
                 dey
                 dey
                 dey
                 dey
                 jmp     GosubFindLoop
 
-GosubParmFnd    dey                            ;Point to hopefully Math Stack frame information
-                dey
-                dey
-                dey
+GosubParmFnd    cpy     #3                     ; Check if we are outside the stack
+                bcc     GosubNotFunc           ; if y < 3 then error not found
+                cpy     #GOSUBSTACKSIZE        ; Largest value
+                bcs     GosubNotFunc           ; no parameters passed
 
+                dey                            ; Point to hopefully Math Stack frame information
+                dey
+                dey
+                dey
+GosubParmSkip
                 lda     (GOSUBSTACK),y         ;This should be a stack frame pointer
                 cmp     #GOSUB_STACK_FRAME     ;Stack frame pointer So should contain the start position of Variables
                 bne     GosubNotFunc           ;No parameters passed but expected

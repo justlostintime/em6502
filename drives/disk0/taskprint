@@ -1,47 +1,53 @@
 1 cls: ?27$;"[?25l";
+3 p = 10 : Rem define start position of each text line ref using taskid!p task id for main is 0
 5 x=task(1000): y= task(4000): z= task(6000)
-10 ?27$;"[10;40Ha=";a;
-20 a = a + 1
-30 goto 10
+10 ?27$;"[10;";p;"HMain ";PID;" a=";a;
+20 inc a : taskn
+30 if a <= 1000 goto 10
+40  kill(x): kill(y): kill(z)
+50 cls : ?27$;"[?25hComplete!"
+60 end
 
-1000 b=0
-1010 ?27$;"[11;40Hb=";b;
-1020 b=b+1
+999  Rem Each task has it's own set of variables a-z , parameters etc, reset to 0 on task start m= main task 0
+1000 ?27$;"[11;"; m!p;"HTask 1000 Pid  ";PID;" a=";a;
+1020 inc a
 1025 gosub 2000
-1030 goto 1010
+1030 taskn : goto 1000
 
-2000 c=c+1
-2010 ?27$;"[12;40Hc=";c;
-2015 gosub 3000
+2000 inc b
+2010 ?27$;"[12;"; m!p;"HSub  2000 Pid  ";PID;" b=";b;
+2015 taskn : gosub 3000
 2020 return
 
-3000 d=d+1
-3010 ?27$;"[13;40Hd=";d;
+3000 inc c
+3010 ?27$;"[13;"; m!p;"HSub  3000 Pid  ";PID;" c=";c;
 3020 return
 
+3999 Rem Each task has it's own set of variables a-z , parameters etc m = main task 0
 4000 l = 16 : p = 10
-4010 ?27$;"[";l;";";p;"H @":gosub 5000
-4020 ?27$;"[14;40Hp1=";p;
-4030 if p < 50 p=p+1:goto 4010
-4040 ?27$;"[";l;";";p;"H@ ";:gosub 5000
-4050 ?27$;"[14;40Hp2=";p;
-4060 if p > 9 p=p-1:goto 4040
+4010 ?27$;"[";l;";";p;"H @":rem gosub 5000
+4020 ?27$;"[14;"; m!p;"HTask 4000 Pid  ";PID;" p1=";p;
+4030 if p < 50 inc p :taskn :goto 4010
+4040 ?27$;"[";l;";";p;"H@ ";:rem gosub 5000
+4050 ?27$;"[14;"; m!p+42;"HTask 4000 Pid  ";PID;" p2=";p;
+4060 if p > 9 dec p:taskn : goto 4040
 4070 goto 4010
 
-5000 rem delay
+5000 rem delay, z = 0 is main pid
 5010 v = 0
-5015 t=t+1
-5016 ?27$;"[20;40Ht=";t;
-5020 rem if v < 10 then v = v + 1:goto5020
+5015 inc t : rem this t is of the task that calls this
+5016 ?27$;"[";20 + pid % 2 ;";"; z!p;"HSub  5000 Pid  ";PID;" t=";t;
+5020 if v < 10 then inc v :goto 5020
 5030 return
 
-6000 m = 5 : n = 50
+5999 Rem Each task has it's own set of variables a-z , parameters etc
+6000 m = 5 : n = 50 : rem z = main task 0
 6010 ?27$;"[";m-1;";";n;"H "
-6015 ?27$;"[";m;";";n;"H#":gosub 5000
-6020 ?27$;"[21;40Hm1=";m;
-6030 if m < 20 m=m+1:goto 6010
+6015 ?27$;"[";m;";";n;"H#":rem gosub 5000
+6020 ?27$;"[23;"; z!p;"HTask 6000 Pid  ";PID;" m1=";m;
+6030 if m < 20 inc m:taskn : goto 6010
 6040 ?27$;"[";m+1;";";n;"H ";
-6045 ?27$;"[";m;";";n;"H#";:gosub 5000
-6050 ?27$;"[21;40Hm2=";m;
-6060 if m > 5 m=m-1:goto 6040
+6045 ?27$;"[";m;";";n;"H#";:rem gosub 5000
+6050 ?27$;"[23;"; z!p+42;"HTask 6000 Pid ";PID;" m2=";m;
+6060 if m > 5 dec m:taskn: goto 6040
 6070 goto 6010

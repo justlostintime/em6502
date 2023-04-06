@@ -1,3 +1,8 @@
+* Wed Apr 05 2023 Justlostintime <justlostintime@gmail.com> 1.2.4
+
+* Wed Apr 05 2023 Justlostintime <justlostintime@gmail.com> 1.2.4
+- fix bug in debugging dasm source listing display
+
 * Tue Apr 04 2023 Justlostintime <justlostintime@gmail.com> 1.2.4
 - Updated tiny basic cls, 100doors, use multi task
 

@@ -84,9 +84,9 @@ SaveIOblock     tya
                 pha
                 txa
                 pha
-                
-                
-                
+
+
+
                 pla
                 tax
                 pla
@@ -464,9 +464,41 @@ iTaskGetMathStack
 iTaskPutMathPtr
                 jsr     CopyStackR1             ; Get the top of stack to R1
                 jsr     ipc_getcontext          ; MQ now has the context address
-                lda     R2
-                ldy     #MATHSTACKPTRPOS
-                sta     (MQ),y
+                lda     R2                      ; R2 contains the number of parameters/offset
+                ldy     #MATHSTACKPTRPOS        ; Pointer to new tasks stack pointer
+                sta     (MQ),y                  ; update it to point to the free space on stack
+;if parm count > 0 then we need to create a parameter block on the tasks gosubStack
+                cmp     #0                      ; if no parameters then
+                beq     iTaskPutMathPtrExit     ; just get out of here
+                
+                ldy     #GOSUBSTKPOS
+                lda     (MQ),y                  ; get the address of the new tasks gosub stack into R1
+                sta     R1
+                iny
+                lda     (MQ),y
+                sta     R1+1
+                
+                lda     #0                      ; Store the math stack offset into new gosub stack, always 0
+                sta     (R1),y
+                
+                iny
+                clc                             ; We need to turn stack ptr to actual parm count
+                sbc     #1                      ; Stack pointer always point to next free byte
+                asl
+                sta     (R1),y
+                
+                iny
+                lda     #$FF                    ; Dummy field, not used
+                sta     (R1),y
+                iny
+                lda     #GOSUB_STACK_FRAME      ; Tell its a stck frame, ie identify param cnt etc
+                sta     (R1),y
+                iny
+                tya
+                ldy     #GOSUBPTRPOS
+                sta     (MQ),y                  ; update the new tasks gosub stk pointer
+                
+iTaskPutMathPtrExit
                 jmp     NextIL
 ;
 ;================================================================

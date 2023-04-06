@@ -830,8 +830,9 @@ ekTaskLinenum:
         TSTB        F2AZNoParms,oComma              ;Parameters to be passed to task
         SAVEMATHSTACK                               ;Push The mathstack
         TASKGETMATHSTACK                            ;Make the New Task Stack The current stack
+
 F2AZLOOP:
-        CALL        EXPR                            ;do the expression leave answer on tasks stack
+        CALL        EXPR    
         TSTB        F2AZEndParm,oComma              ;Parameters to be passed tp task
         IJMP        F2AZLOOP                        ;check for more
 
@@ -1019,7 +1020,7 @@ FactExpectedOpeningBracket:
         ERRMSG     ERR_EXPECTED_OPENING_BRACKET
 ;===============================================================================================================================
 ;========================= Gosub and function interface ========================================================================
-; Process gosub no return value
+; Process gosub 1000(Parm1, ...) no return value
 ;
 ekGosub:
         CALL       GOSUBSTATEMENT                 ; Do the gosub
@@ -1080,8 +1081,8 @@ GOSUBCOMPILED:
         RTN
 
 GOSUBCONT:
-        TSTB       GOSUBDONE,oLeftBracket         ;Check if any Parameters
-        STK2TMP                                   ;Transfer stack top to temp
+        TSTB       GOSUBDONE,oLeftBracket         ;Check if any Parameters If not bracket get out
+        STK2TMP                                   ;Transfer stack top to temp, temp gets line to goto
         PUSHMATHSTACK                             ;Record stack frame for return
 GOSUBLOOP:
         CALL       EXPR                           ; Allows what ever fits onto stack

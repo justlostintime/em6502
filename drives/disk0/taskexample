@@ -1,14 +1,25 @@
-10 cls : Print 27$;"[14;20H1)Testing task creation"
-20 z = task(100): z=task(200)
-30 Print 27$;"[1;20HMain Loop Index ";y
-40 y = y +1
-60 goto 30
-100 Print 27$;"[15;20H2)Start New Task PID "; PID
-110 Print 27$;"[2;20HTask PID ";PID; " Index ";d
-120 d = d+1
+10 cls : print 27$;"[?25l"
+15 Print 27$;"[14;20H1) Testing task creation count to 200 on main"
+
+19 Rem this main task gives up it time slice every loop
+20 z = task(100): y =task(200,1,2,3)
+30 Print 27$;"[1;20HMain PID  ";PID; "  Counter ";a
+40 a = a + 1 : taskn 
+60 if a <= 200 then goto 30
+70 kill(z): kill(y)
+80 print 27$;"[?25h"
+90 end
+
+99  Rem This task releases to another task every 30 loop
+100 Print 27$;"[15;20H2) Start New Task PID="; PID
+110 Print 27$;"[2;20HTask PID ";PID; " Counter ";a
+120 a = a + 1 : if a % 30 = 0 then taskn
 140 goto 110
-150 end
-200 print 27$;"[16;20H3)Start new task2 PID ";PID
-210 ? 27$;"[3;20HPID ";PID; " Counter ";e
-220 e = e+1
+150 return 
+
+199 Rem this task never gives up its time slice
+200 print 27$;"[16;20H3) Start new task2 PID=";PID;", Parms :";#[0],#[1],#[2]
+210 print 27$;"[3;20HTask PID ";PID; " Counter ";a
+220 a = a + 1
 230 goto 210
+240 return
