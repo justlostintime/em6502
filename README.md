@@ -25,7 +25,7 @@ git clone https://gitlab.com/gambas/gambas.git
 or
 https://gitlab.com/gambas/gambas/-/archive/3.18.0/gambas-3.18.0.tar.bz2
 
-# This app can be updated and installed from this reposirory for Deb/Mint/Ubuntu
+# This app can be updated and installed from this repository for Deb/Mint/Ubuntu
 ```
 sudo -i
 curl -s --compressed "https://raw.githubusercontent.com/justlostintime/ppa/main/ubuntu/KEY.gpg" | gpg --dearmor > /etc/apt/trusted.gpg.d/westwood-archive-key.gpg
