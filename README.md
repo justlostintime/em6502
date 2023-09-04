@@ -1,4 +1,4 @@
-# 65C02 Emulator/ Development Environment
+# 6502/65C02 Emulator/ Development Environment
 This emulator Development environment is written in gambas3
 you will need the latest gambas build from gambas daily builds or 3.18
 The upgrade to 3.18 happened again because of bytecode updates and syntax updates and range checking
