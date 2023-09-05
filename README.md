@@ -1,8 +1,9 @@
-# 65C02 Emulator/ Development Environment
+# 6502/65C02 Emulator/ Development Environment
 This emulator Development environment is written in gambas3
 you will need the latest gambas build from gambas daily builds or 3.18
 The upgrade to 3.18 happened again because of bytecode updates and syntax updates and range checking
 that have been added to Gambas3. There also seems to be a good bit of performance improvement as well.
+
 Gambas 3.18 can be found at:
 
 Ubuntu the packages for ppa gambas can be found at
@@ -23,6 +24,15 @@ Arch/Manjaro at and built from
 git clone https://gitlab.com/gambas/gambas.git
 or
 https://gitlab.com/gambas/gambas/-/archive/3.18.0/gambas-3.18.0.tar.bz2
+
+# em6502 can be updated and installed from following repository for Deb/Mint/Ubuntu
+```
+sudo -i
+curl -s --compressed "https://raw.githubusercontent.com/justlostintime/ppa/main/ubuntu/KEY.gpg" | gpg --dearmor > /etc/apt/trusted.gpg.d/westwood-archive-key.gpg
+sudo curl -s --compressed -o /etc/apt/sources.list.d/gsh.list "https://raw.githubusercontent.com/justlostintime/ppa/main/ubuntu/gsh.list"
+sudo apt update
+sudo apt install em6502
+```
 
 ## Version 1.2.2
 Lots of bug fixes and addition, see the commit history.
