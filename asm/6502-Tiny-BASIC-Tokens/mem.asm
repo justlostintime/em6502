@@ -1,6 +1,6 @@
 ;===================================================================
 ;This file contains the memory allocation and free functions
-;in herant in this is the management of free memory in the system
+; This is the management of free memory in the system
 ; the interface to these functions
 ; a,x returns or provides the low hi bytes of the managed addresses
 ; This uses the programend, to memory end as the area to manage

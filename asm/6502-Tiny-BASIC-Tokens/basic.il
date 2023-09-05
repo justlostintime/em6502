@@ -107,12 +107,11 @@ XEC:
 ;
 STMT:
         TSTIRQ      notirq        ;if it is an irq posted, this will cause transfer to irq handler
-        DEBUGBASIC                ;Check if we are doing a debug for this session
-
 ;==========================================================================================
 ; Process a let statement implied or explicit.
 ;
 notirq:
+        DEBUGBASIC                                ;Check if we are doing a debug for this session
         TSTLET      DoVector                      ; Test if Let keyword or a variable
 ekLet:
         TSTV        DoVector                      ; Test for variable
@@ -201,7 +200,7 @@ S1W:
 ;
 ekGoto:
         TSTBRANCH  ekGotoCompiled                 ; test the two byte vector following the goto if zero then normal line lookup
-                                                  ; Else we have the address ad just goto that address
+                                                  ; Else we have the address and just goto that address
         TSTB       ekGotoLine,oPeriod             ; If it is a period, then just go to start of this line
         REPEATLINE                                ; Repeat the same line again
         IJMP       STMT                           ; Go do the statement
@@ -603,7 +602,7 @@ NotKnownStatement:
 ; Process Expresions, precidence is represented by the
 ; various call levels
 ;
-EXPR:   
+EXPR:
         TSTB        EXPRLOGS,kNot
 ekNot:
         Call       EXPR
@@ -822,7 +821,7 @@ ekTaskLinenum:
         TASKGETMATHSTACK                            ;Make the New Task Stack The current stack
 
 F2AZLOOP:
-        CALL        EXPR    
+        CALL        EXPR
         TSTB        F2AZEndParm,oComma              ;Parameters to be passed tp task
         IJMP        F2AZLOOP                        ;check for more
 
@@ -978,7 +977,7 @@ FactVarPTR:
 FactVarPtrNoTst
         TSTB        F2CLocalTask,oBang
         IND                                       ; we just got a pid
-        TSTVT       UNKNOWNID                     ; if it is not another variabe then error, Call test var. task
+        TSTVT       UNKNOWNID                     ; if it is not another variable then error, Call test var. task
 
 F2CLocalTask:
         SETR2       tInteger                      ; Sets the default type to integer

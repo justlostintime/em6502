@@ -1085,7 +1085,7 @@ End
 Public Sub Form_Resize()
 
   AllControls.x = FMain.W - AllControls.Width - 4
-  InfoSection.w = AllControls.x - 4
+  InfoSection.w = AllControls.x - 15
   InfoSection.h = FMain.h - 50
   EditProg.w = InfoSection.w - 10
   EditProg.h = InfoSection.h - EditorButtons.h - 40
@@ -1125,9 +1125,11 @@ End
 Public Sub ShowWatchWindow_Click()
 
   If watchMem.Visible Then
+    ShowWatchWindow.text = "Show Watch Window"
     watchMem.hide()
   Else
     watchMem.Show()
+    ShowWatchWindow.text = "Hide Watch Window"
   Endif
 
 End

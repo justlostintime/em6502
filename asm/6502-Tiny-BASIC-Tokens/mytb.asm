@@ -669,6 +669,7 @@ iFastXfer
                 beq     iXFER
 
                 jsr     popR0                ; get where to transfer
+FastFastXfer
                 lda     R0
                 sta     CURPTR
                 lda     R0+1
@@ -2466,6 +2467,7 @@ iTRACEPROG      jsr     popR0
   if IL_DEBUG_TEXT
                 include "ILKeyText.inc"
   endif
+                include  "time.asm"
                 include  "io.asm"
                 include  "tokenizer.asm"
                 include  "compile.asm"

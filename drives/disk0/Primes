@@ -1,5 +1,5 @@
 5 cls
-10  ? "Sieve of Eratosthenes, Calculate primes from 2 to n
+10  ? "Sieve of Eratosthenes, Calculate primes from 2 to n"
 20  ? "using the following method to calculate the Sieve"
 30  ? " (a) List all integers from 2 to n"
 40  ? " (b) The first integer on the list is 2"

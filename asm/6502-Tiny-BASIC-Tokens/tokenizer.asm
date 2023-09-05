@@ -20,7 +20,7 @@ tLong             equ     $A6                    ; Signed 32 bit integer
 
 tArray            equ     $A1                    ; Identifies Array Type, the byte following defines the length of each element
                                                  ; Arrays of string are arrays of pointers 2 bytes each
-tPointer          equ     $A3                    ; Pointer  unsigned 16 bit 
+tPointer          equ     $A3                    ; Pointer  unsigned 16 bit
 tIndirect         equ     $A5                     ; Points to an address that points to the data 16 bits
 tuByte            equ     $A7                    ; Unsigned byte value 8 bit unsigned value
 tUint             equ     $A9                    ; unsigned integer type 16 bit
@@ -29,10 +29,14 @@ tUlong            equ     $AB                    ; Unsigned 32 bit integer
 Operators: BYTE "<>"
            BYTE "<="
            BYTE ">="
+           Byte "<<"
+           Byte ">>"
            BYTE "<",0
            BYTE "=",0
            BYTE ">",0
+           Byte "++"
            BYTE "+",0
+           Byte "--"
            BYTE "-",0
            BYTE "/",0
            BYTE "%",0
@@ -48,12 +52,16 @@ Operators: BYTE "<>"
            BYTE "!",0
            BYTE "?",0
            BYTE ".",0
+           BYTE "&",0
+           Byte "'",0
+           Byte "|",0
+           Byte "~",0
            BYTE 0,0
 
-OperValues: BYTE  oNotEqual,oLessEqual,oGreaterEqual,oLess,oEqual,oGreater
-            BYTE  oPlus, oMinus, oDivide, oModulo, oMultiply
+OperValues: BYTE  oNotEqual,oLessEqual,oGreaterEqual,oSHL,oSHR,oLess,oEqual,oGreater
+            BYTE  oINC, oPlus, oDEC, oMinus, oDivide, oModulo, oMultiply
             BYTE  oLeftBracket, oRightBracket, oComma, oSemiColon, oLeftSQBracket, oRightSQBracket
-            BYTE  oColon, oDollar, oBang, oQuestion, oPeriod
+            BYTE  oColon, oDollar, oBang, oQuestion, oPeriod, oAmphistan, oQuote, oBar,oTilde
 
 oQuestion         equ     kPrint
 ;    2 is =
@@ -88,6 +96,14 @@ oModulo           equ     $ED
 oMultiply         equ     $EE
 
 oPercent          equ     oModulo
+oAmphistan        equ     kAnd
+oBar              equ     kOr
+oQuote            equ     kRem
+oTilde            equ     kXor
+oSHR              equ     kShr
+oSHL              equ     kShl
+oINC              equ     kInc
+oDEC              equ     kDec
 
 tOperatorX        equ     $F0   ;+ operator Value  ; stores the value used to do the relational operator compare
 
@@ -851,7 +867,7 @@ iTSTRELOPNOT:
 ; skip it if zero, transfer and skip next integer value if not zero
 ; used by both gosub, goto and gofN
 ;
-iTSTBRANCH:
+iTSTBRANCH:   ; il format TSTBRANCH whereToGoIfFailed
               jsr       getILByte               ; Get jump address if vector is valid
               sta       offset                  ; Mark offset for later if vector found
               ldy       CUROFF                  ; get offset of first byte of compiled value
@@ -871,7 +887,11 @@ ITSTBRANCHCont
               ora       R0                      ; Get the second byte of the mem
               BEQ       iTSTBRANCHNoCompile     ; If both are zero then not compiled
               pla
-              cmp       #kTask                  ; Task defied with Task() so bypass the first bracket
+              cmp       #kGoto                  ; Short cut lots if a goto stuff
+              bne       NotGoto
+              jmp       FastFastXfer
+NotGoto:
+              cmp       #kTask                  ; Task defined with Task() so bypass the first bracket
               bne       iTSTBRANCHCont
               lda       (CURPTR),y
               cmp       #oLeftBracket

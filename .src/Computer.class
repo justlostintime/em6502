@@ -7,8 +7,8 @@
 '  See project license file.
 
 Fast Unsafe
-MyCpu As CPU6502
-Running As Boolean
+Public MyCpu As CPU6502
+Public Running As Boolean
 Public MonitorList As Collection  ' format is [ HEXADDR:[start,end], HEXADDR:[start, end] ]
 
 Property Read SingleStep As Boolean

@@ -299,7 +299,8 @@
   { AllControls Panel
     MoveScaled(84,1,111,100)
     { LoadPanel Panel
-      MoveScaled(0,1,74,70)
+      MoveScaled(0,0,74,71)
+      Background = Color.SoftBlue
       { !EnableBreakPoints CheckBox
         MoveScaled(2,1,30,5)
         #Public = True
@@ -410,6 +411,7 @@
     }
     { ControlPanel Panel
       MoveScaled(0,72,74,27)
+      Background = Color.Transparent
       { RunModeSet RadioButton
         MoveScaled(1,10,17,4)
         Font = Font["Ubuntu Mono,-1"]
@@ -440,11 +442,13 @@
       }
       { StartStop Button
         MoveScaled(2,0,14,4)
+        Background = Color.Green
         ToolTip = ("Enable/Disables the computer for execution")
         Text = ("Start")
       }
       { resetCpu Button
         MoveScaled(27,5,8,4)
+        Background = Color.Red
         ToolTip = ("Resets the CPU and all devices")
         Text = ("Reset")
       }
@@ -510,7 +514,7 @@
     }
     { DumpPanel Panel
       MoveScaled(75,80,35,18)
-      Background = Color.Transparent
+      Background = Color.White
       Border = Border.Etched
       { DumpMem Button
         MoveScaled(1,9,16,3)
@@ -541,12 +545,12 @@
       { ShowWatchWindow Button
         MoveScaled(1,13,33,3)
         ToolTip = ("Hides or shows the Watch Window")
-        Text = ("Show Hide Watch Window")
+        Text = ("Show  Watch Window")
       }
     }
     { CPUInfoPanel Panel
       MoveScaled(75,0,35,80)
-      Background = Color.LightBackground
+      Background = Color.SoftRoyal
       ToolTip = ("Dynamically when status is enabled display the current status of the 6502 cpu")
       Border = Border.Sunken
       { Label15 Label
@@ -610,7 +614,7 @@
         MoveScaled(1,52,24,4)
         Font = Font["FreeSans,-1"]
         ToolTip = ("Flag Not used ignored by cpu")
-        Text = ("ignored")
+        Text = ("Ignored")
       }
       { Flag_B CheckBox
         MoveScaled(1,55,24,4)

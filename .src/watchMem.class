@@ -118,6 +118,11 @@ Public Sub RemoveWatch_Click()
 
   Dim theselection As Integer[] = WatchList.Rows.Selection
 
+  If hexedit Then
+    HexEdit.Hide()
+    HexEdit = Null
+  Endif
+
   For i As Integer = theselection.max DownTo 0
     Settings.Clear("WatchVar" &/ ItemsWatchedList[theselection[i]].Symbol, True)
     ItemsWatchedList[theselection[i]].ShutDown()
@@ -134,6 +139,10 @@ End
 Public Sub ClearAll_Click()
 
   FMain.MyComputer.MemoryUpdates = False
+  If hexedit Then
+    HexEdit.Hide()
+    HexEdit = Null
+  Endif
 
   WatchList.Clear()
   WatchList.Rows.Count = 0
@@ -148,6 +157,10 @@ End
 Public Sub EnableDisableWatch_Click()
 
   If FMain.MyComputer.MemoryUpdates = True Then
+    If hexedit Then
+      HexEdit.Hide()
+      HexEdit = Null
+    Endif
     FMain.MyComputer.MemoryUpdates = False
     EnableDisableWatch.text = "Enable"
     WatchMem.title = "Watch Memory location - Disabled"
@@ -181,6 +194,11 @@ End
 
 Public Sub AddWatch_Click()
 
+  If hexedit Then
+    HexEdit.Hide()
+    HexEdit = Null
+  Endif
+
   Dim newitem As String = Trim(WatchAddValue.text)
   Dim addr As String = ""
 
@@ -200,3 +218,80 @@ Public Sub AddWatch_Click()
   WatchAddValue.text = ""
 
 End
+
+Public HexEdit As Textbox
+Public address As Long
+
+Public Sub WatchList_DblClick()
+
+  If FMain.MyComputer.MemoryUpdates = False Then
+    Message.Info("Watching must be enabled before Updating values", "Continue")
+    Return
+  Endif
+
+  If hexedit Then
+    HexEdit.Hide()
+    HexEdit = Null
+  Endif
+
+  Dim Col3 As Variant = WatchList.Columns[2]
+  Dim currow As Integer = WatchList.row
+  Dim Cell As Variant = WatchList[WatchList.row, 2]
+  Dim Cella As Variant = WatchList[WatchList.row, 1]
+  HexEdit = New TextBox(WatchMem) As "HexWatch"
+  Address = Eval("&H0" & Right(Cella.text, -1))
+  hexedit.top = Cell.top + WatchList.top
+  hexedit.Left = Cell.left + WatchList.left
+  hexedit.w = Cell.w
+  hexedit.h = Cell.h
+
+  hexedit.MaxLength = 4
+  hexedit.text = Left(Cell.text, 2) & Mid(Cell.text, 4, 2)
+  hexedit.Raise()
+  hexedit.Show()
+  hexedit.Pos = 0
+  hexedit.SetFocus()
+  Desktop.SendKeys("[Insert]")
+
+End
+
+
+Public Sub HEXWATCH_KeyPress()
+
+  ' Dim thekey As Integer = Asc(Key.text)
+
+  Select Case key.code
+    Case Key.Escape
+      If hexedit Then
+        HexEdit.Hide()
+        HexEdit = Null
+      Endif
+      Stop Event
+    Case Key.Return, Key.Enter
+      If Not SetMemValue() Then Return
+      HexEdit.Hide()
+      HexEdit = Null
+      Stop Event
+  End Select
+
+End
+
+Sub SetMemValue() As Boolean
+
+  Dim byte1 As Byte
+  Dim Byte2 As Byte
+
+  If Not IsHexa(hexedit.text) Then
+    Message.Info("Invalid Hex format : 0-9 or a-f only")
+    Return False
+  Endif
+
+  byte1 = Eval("&H" & Left(hexedit.text, 2))
+  byte2 = Eval("&H" & Mid(hexedit.text, 3, 2))
+  FMain.MyComputer.MyCpu.Poke(Address, byte1)
+  FMain.MyComputer.MyCpu.Poke(Address + 1, byte2)
+  Return True
+
+End
+
+

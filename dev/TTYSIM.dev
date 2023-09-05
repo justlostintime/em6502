@@ -20,6 +20,8 @@ Public MemoryStart As Long = 0
 Public MemoryEnd As Long = 0
 Public MemoryLen As Long = 0
 Public TermOut As TerminalView
+Public TermLog as Button
+Public TermMsg as TextBox
 Public LastValue As Byte
 Public Databuffer As Byte[]
 Public EchoChar As Boolean = false
@@ -37,7 +39,7 @@ Public $tRdPipe as file                 'TaskRead interface
 Public $tWrPipe as file                 'TaskWrite interface
 
 Public TTYTermProcess as process
-
+$LogFile as file
 
 TTYNAME as string = "TTYForm"
 
@@ -46,6 +48,9 @@ Property Read hidden as boolean use $hidden = false
 Property Status as byte use $Status = 0
 Property UseIrqRX as boolean use $UseIrqRX = false
 Property UseIrqTX as boolean use $UseIrqTX = false
+Property Recording as boolean use $Recording = false
+
+Logpath as string = user.home &/ "6502/log/"
 
 RS232CONFIG as string[] = ["7bit,even parity,2 stop bits","7bit,odd parity,2 stop bits","7bit,even parity,1 stop bit","7bit,odd parity,1 stop bit",
                            "8bit,no parity,2 stop bits","8bit,no parity,1 stop bits","8bit,even parity,1 stop bit","8bit,odd parity,1 stop bits"]
@@ -211,17 +216,43 @@ Sub openTTYWindow()
   TTYForm = New Form As "MyTerminal"
   TTYFORM.title = " em6502 : TTY"& hex(MemoryStart,6)
   TTYForm.persistent = true
-  TTYForm.arrangement = arrange.fill
+  TTYForm.arrangement = arrange.None
+
+  TermLog = new Button(TTYForm) as "LogSet"
+  TermLog.y = 5
+  Termlog.x = 5
+  Termlog.height = 25
+  TermLog.Width  = 100
+  TermLog.Text = "Start Recording"
+  
+  TermMsg  = new textbox(TTYForm)
+  TermMsg.font = font["Arial,12,bold"]
+  TermMsg.x = TermLog.x+TermLog.w + 5
+  TermMsg.y = TermLog.y
+  TermMsg.height = TermLog.Height
+  
+  TermMsg.Width = TTYForm.width - TermMsg.x - 5
+  TermMsg.ReadOnly = true
+  TermMsg.show()
 
   TermOut = New TerminalView(TTYForm) As "MyView"
   TermOut.font = font["Arial,12,bold"]
   TermOut.Enabled = True
   TermOut.ReadOnly = False
   TermOut.Width = TTYForm.width - 2
-  TermOut.Height = TTYForm.Height - 2
+  TermOut.Height = TTYForm.Height - 29
   TermOut.Limit=3000
-  TermOut.Y = 1
+
+  TermOut.Y = 35
   TermOut.X = 1
+  TermMsg  = new textbox(TTYForm)
+  TermMsg.font = font["Arial,12,bold"]
+  TermMsg.x = TermLog.x+TermLog.w + 5
+  TermMsg.y = TermLog.y
+  TermMsg.height = TermLog.Height
+  TermMsg.Width = TTYForm.width - TermMsg.x - 5
+  TermMsg.ReadOnly = true
+
   TTYFORM.show()
 
 
@@ -236,6 +267,29 @@ Sub openTTYWindow()
      print "TTY Device Error at openTTYWindow : ";error.text,error.where;"\n\r";
 
 End
+'=================================================================
+Public Sub LogSet_click()
+   if TermLog.Text = "Start Recording" then
+      if not exist(logpath) then
+        mkdir logpath
+      endif
+      dim LogFileName as string =  Logpath &/ TTYNAME &"_"& replace(str(now),"/","_") & ".log"
+      try $LogFile = open LogFileName for write create
+      if error then
+          TermMsg.text = "Unable to open : "&LogFileName&" : "&error.text
+      else
+          TermLog.text = "Stop Recording"
+          TermMsg.text = "Log File :"&LogFileName
+          $Recording = true
+      endif
+   else
+      TermLog.text = "Start Recording"
+      $Recording = false
+      TermMsg.text = "Log File Saved"
+      try close $Logfile
+   endif
+   TermMsg.refresh()
+end
 '=================================================================
 Public Sub MyTerminal_open()
   TTYForm.x = Settings[TTYNAME&"/Window/X", 100]
@@ -256,8 +310,11 @@ Public Sub MyTerminal_close()
 End
 '================================================================================
 Public sub MyTerminal_resize()
-    TermOut.h = TTYForm.h - 2
+    TermOut.h = TTYForm.h - 29
     TermOut.w = TTYForm.w - 2
+    dim minw as integer = TTYForm.width - TermMsg.x - 5
+    if minw < 30 then minw = 30
+    TermMsg.Width = minw
 end
 '==========================================================================================
 Public Sub MyTerminal_hide()
@@ -308,6 +365,7 @@ Public Sub PreProcess(ByRef data As Variant, ByRef len As Variant) As Boolean
 '
   'error "To display : ";data
  ' error len
+ if $Recording then write #$LogFile ,Data
  Return True
 
 End
