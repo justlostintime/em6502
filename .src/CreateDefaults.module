@@ -40,8 +40,8 @@ Public Sub _call()
     Comp.Speed = 999
     Comp.AutoStart = &h0200
     Comp.AutoStartActive = True
-    Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "rw"]
-    Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin", "ro"]
+    Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
+    Comp["RamMemory"] = [&h0000, &h0E000, .AsmBinaryDirectory &/ "mytb.bin", "rw"]
     Comp["TTYSIM"] = [&h0E000, 16, "Concurrent Tiny Basic running with CTMON65 monitor", "rw"]
     Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
     Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
