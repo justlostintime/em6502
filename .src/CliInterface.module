@@ -11,7 +11,7 @@ Public UpdateDevNoPrompt As Boolean = False
 
 Public Sub main()
 
-  Dim bVersion, bAbout, bDevMode, bPrintInstMatrix, bStartSingleStep, bVerbose As Boolean
+  Dim bVersion, bAbout, bDevMode, bPrintInstMatrix, bStartSingleStep, bVerbose, blistcomputers As Boolean
   Dim sComputerName As String
 
   Dim sDummy As String = Settings["Init", "Done"]
@@ -20,6 +20,10 @@ Public Sub main()
 
   Settings["Init"] = sDummy
   FMain.ReadConfig()
+  If Not Exist(FMain.AsmComputerDefinitions &/ FMain.CurrentComputerDefinition) Then
+    FMain.CurrentComputerDefinition = "Default"
+  Endif
+
   FMain.WriteConfig()
 
   Settings.Save()
@@ -27,18 +31,21 @@ Public Sub main()
   Args.Begin(Application.name & " <options>")
   bVersion = Args.Has("v", "version", ("Display the version Of the emulator"))
   bAbout = Args.Has("a", "about", ("Information about ") & Application.name)
-  bDevMode = Args.Has("d", "devmode", ("Developer Mode, removes ~/6502 directory and recreats \nall default settings(be carefull all your stuff will be gone!)\n Usefull to get new application updates"))
+  bDevMode = Args.Has("d", "devmode", ("Developer Mode, removes ~/6502 directory and recreates all default settings(be carefull all your stuff will be gone!). Usefull to get new application updates."))
   bPrintInstMatrix = Args.Has("p", "print", ("Print Supported Instruction Matrix and exit"))
   bStartSingleStep = Args.Has("s", "singlestep", ("Start the emulator in single step mode"))
   sComputerName = Args.Get("c", "computer", ("Provies the name of the computer to run, No GUI is started"), "", "")
   UpdateDevNoPrompt = Args.Has("u", "update", ("Update Device definitions no prompt"))
   bVerbose = Args.Has("V", "verbose", ("Display Verbose messages"))
-
-
+  bListComputers = Args.Has("l", "list_computers", ("List all available computer definitions"))
 
   Args.End()
 
-  ''Define the default assembled source and binary directories
+  '' Define the default assembled source and binary directories
+  If bListComputers Then
+    List_computer_info()
+    Quit 0
+  Endif
 
   With FMAIN
 
@@ -53,9 +60,6 @@ Public Sub main()
     Settings.Clear()
     Settings.Save()
   Endif
-
-
-
 
   CreateDefaults()
 
@@ -82,6 +86,27 @@ Catch
   Quit 1
 
 End
+
+Public Sub List_computer_info()
+
+  Dim dirlist As String[] = Dir(User.home &/ "6502/computer", "", gb.file)
+  Dim comp As ComputerDef
+
+  Print "Available computers:"
+  For Each s As String In dirlist
+    comp = New ComputerDef("", s)
+    Print "---------------------------------------------------------------------------------------------"
+    If Left(Comp.Description, s.len) <> s Then Print comp.name
+    Print comp.Description
+    Print "Devices:"
+    For Each si As String[] In comp
+      Print "              "; Left(comp.key & Space(30), 30), Hex(si[0], 4), Hex(si[1], 4), Quote(si[2])
+    Next
+    Print
+  Next
+
+End
+
 
 Public Sub PrintMatrix()
 

@@ -74,7 +74,7 @@
     Index = 1
     Text = ("Computers")
     { CompDefs Panel
-      MoveScaled(0,0,82,86)
+      MoveScaled(0,0,82,95)
       Background = Color.SoftBlue
       Expand = True
       AutoResize = True
@@ -176,7 +176,7 @@
         Text = ("Make Active")
       }
       { DeviceList TableView
-        MoveScaled(1,42,80,35)
+        MoveScaled(1,55,80,35)
         ToolTip = ("Select your required device from the list. If it is the second or more device of this type you must add a  colon and index after the device type\nexample     ttydev:1\nor your device will not be recognized. \nThe second colum contains the starting address for the device and the next colum contains the length of memory required by the device.\nThe forth colum contains device specific parameters.\nExample for a rom contains the binary file to be loaded.\nfor ram it contains the if any the binary to load at boot.\n\n")
         Padding = 8
         Header = GridView.Horizontal
@@ -188,14 +188,29 @@
         Text = ("Device Management - Press enter after any change here")
       }
       { RmDevice Button
-        MoveScaled(1,35,9,4)
+        MoveScaled(1,50,9,4)
         ToolTip = ("To Remove a device click on an item in the row to me removed\nthen click the remove device button. \nChanges are not permenant until the Computer Config is\nsaved.")
         Text = ("Remove")
       }
       { DevInfoLabel2 Label
-        MoveScaled(11,35,68,6)
+        MoveScaled(11,49,68,6)
         Font = Font["Ubuntu Mono,-1"]
         Text = ("To add a device Click in an empty first Column and Select the Device from\n the dropdown. Changes are not permenant until Comp Config is saved.")
+      }
+      { CompVbox VBox
+        MoveScaled(1,34,81,16)
+        Expand = True
+        Centered = True
+        { Label13 Label
+          MoveScaled(1,1,24,3)
+          Alignment = Align.Center
+          Border = Border.Sunken
+          Text = ("Computer Description")
+        }
+        { CompDescription TextArea
+          MoveScaled(1,4,77,12)
+          Wrap = True
+        }
       }
     }
     Index = 2

@@ -41,6 +41,7 @@ Public Sub Form_Open()
   DefaultComputer.text = DefaultComputerDefinition
 
   MyComputer = New Computer As "the_computer"
+
   Dim Comp As New ComputerDef(AsmComputerDefinitions, CurrentComputerDefinition)
 
   Updatetimer = New Timer As "MyTimer"
@@ -822,6 +823,7 @@ Public Sub SaveComputersConfig()
   CurrentCompDev.Speed = SpeedDef.value
   CurrentCompDev.AutoStart = IIf(AutoStartAddress.text = "", -1, Eval("&H0" & AutoStartAddress.text))
   CurrentCompDev.AutoStartActive = AutoStartActive.value
+  CurrentCompDev.Description = CompDescription.text
   CurrentCompDev.Clear()
   For i As Integer = 0 To DeviceList.Rows.Max
     If DeviceList[i, 0].text = "" Then Continue
@@ -847,6 +849,7 @@ Sub SetComp(Cname As String)
   If Not IsNull(CurrentCompDev) Then CurrentCompDev.save()
   CurrentCompDev = New ComputerDef(AsmComputerDefinitions, cname)
   ComputerName.text = CurrentCompDev.Name
+  CompDescription.text = CurrentCompDev.Description
   SpeedDef.value = CurrentCompDev.Speed
   AutoStartAddress.text = IIf(CurrentCompDev.AutoStart = -1, "", Hex(CurrentCompDev.AutoStart, 4))
   AutoStartActive.value = CurrentCompDev.AutoStartActive
@@ -1101,7 +1104,9 @@ Public Sub Form_Resize()
   DevInfoLabel1.x = devicelist.x
   DevInfoLabel1.Width = DeviceList.Width
   DevInfoLabel2.Width = DeviceList.Width - DevInfoLabel2.x
-
+  CompVbox.Width = CompDefs.width
+  CompDescription.Left = devicelist.left
+  CompDescription.Width = DeviceList.Width
   AsmOutput.X = 1
   AsmOutput.w = InfoSection.W - 10
 
@@ -1210,3 +1215,4 @@ Public Sub addbreak_KeyRelease()
   Endif
 
 End
+

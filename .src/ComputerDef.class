@@ -1,18 +1,19 @@
 ' Gambas class file
 
 ' Author Westwood JustLostintime
-'Released Under:
+' Released Under:
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
 '  See project license file.
 
-Public Devices As New Collection(gb.ignorecase)   ' The list of devices including memory and rom
-Property Name As String Use $name                 ' Name of this configuration
-Property Speed As Float Use $Speed                ' Mghz to emulate
-Property Read key As String Use $key              ' current device for next
-Property AutoStart As Long Use $AutoStart = -1    ' the computer will automatically run at this address
-Property AutoStartActive As Boolean Use $AutoStartActive = False   ' will be set if it is active
+Public Devices As New Collection(gb.ignorecase)                                                                                       ' The list of devices including memory and rom
+Property Name As String Use $name                                                                                                              ' Name of this configuration
+Property Speed As Float Use $Speed                                                                                                            ' Mghz to emulate
+Property Read key As String Use $key                                                                                                            ' current device for next
+Property AutoStart As Long Use $AutoStart = -1                                                                                       ' the computer will automatically run at this address
+Property AutoStartActive As Boolean Use $AutoStartActive = False                                                  ' will be set if it is active
 Property SourceDirectory As String Use $SourceDirectory = FMain.AsmComputerDefinitions  ' where the definition is located
+Property Description As String Use $Description                                                                                        'This is a description of the computer
 
 
 Public Sub _get(Index As String) As Variant
@@ -75,9 +76,19 @@ Public Sub Save(Optional Directory As String = "")
 
 End
 
+Public Sub Merge(Name As String, Optional Directory As String = FMain.AsmDeviceDirectory)
+
+
+
+End
+
+
 Public Sub _new(Optional Directory As String = "", ComputerName As String = "")
 
   If ComputerName <> "" Then
+    If directory = "" Then
+      Directory = FMain.AsmDeviceDirectory
+    Endif
     Load(Directory, ComputerName)
     Return
   Endif
@@ -124,6 +135,8 @@ Public Sub WriteInfo(Comp As Settings)
   Comp["AutoStart"] = $AutoStart
   Comp["AutoStartActive"] = $AutoStartActive
   Comp["Device/Count"] = Devices.count
+  Comp["Description"] = IIf($Description = "", $Name, $Description)
+
   Dim index As Integer = 0
   For Each s As Variant In Devices
     Comp["Device/" & Hex(index, 4) & "/key"] = Devices.Key
@@ -133,6 +146,7 @@ Public Sub WriteInfo(Comp As Settings)
     Comp["Device/" & Hex(index, 4) & "/RW"] = s[3]
     Inc index
   Next
+
   Comp.Save()
 
 End
@@ -146,10 +160,10 @@ Public Sub ReadInfo(comp As Settings)
   $AutoStart = Comp["AutoStart", $AutoStart]
   $AutoStartActive = Comp["AutoStartActive", $AutoStartActive]
   DevCount = Comp["Device/Count"]
+  $Description = Comp["Description", $Name]
   For i As Integer = 0 To DevCount - 1
     Dim Index As String = Hex(i, 4)
     Devices[Comp["Device/" & index & "/key"]] = [Comp["Device/" & index & "/StartAddress"], Comp["Device/" & index & "/Length"], Comp["Device/" & index & "/Parameter"], Comp["Device/" & index & "/RW"]]
   Next
 
 End
-
