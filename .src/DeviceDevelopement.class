@@ -94,7 +94,7 @@ Public Sub Selectalldev_Click()
 
 End
 
-Public Sub devcompile_Click()
+Public Sub CompileMenu_Click()
 
   Dim DispInfo As String = "Compile Errors\n"
 
@@ -118,9 +118,10 @@ Public Sub devcompile_Click()
     Message.Info("No Compile errors!", "OK")
   Endif
 
+
 End
 
-Public Sub TestDev_Click()
+Public Sub TestMenu_Click()
 
   If CurrentDeviceClass = Null Then Return
   Dim atest As New DeviceTester
@@ -129,5 +130,13 @@ Public Sub TestDev_Click()
 
   DeviceTester.SetDevice(CurrentFile)
 
+
+
+End
+
+Public Sub Form_Resize()
+
+  DeviceEditor.height = DeviceDevelopement.Height - (DeviceEditor.Top + 50)
+  DeviceEditor.width = DeviceDevelopement.width - 20
 
 End
