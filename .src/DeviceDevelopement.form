@@ -30,10 +30,16 @@
     }
   }
   { CompileMenu Menu
-    Text = ("Compile")
+    Text = ("Compiler")
+    { DoCompileMenu Menu
+      Text = ("Do Compile")
+    }
   }
   { TestMenu Menu
-    Text = ("Test Device")
+    Text = ("Device Tester")
+    { DoTesting Menu
+      Text = ("Begin Testing")
+    }
   }
   { DeviceEditor TextEditor
     MoveScaled(1,1,166,106)
