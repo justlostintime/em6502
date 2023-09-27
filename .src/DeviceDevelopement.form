@@ -44,7 +44,7 @@
   { DeviceEditor TextEditor
     MoveScaled(1,1,166,106)
     Font = Font["FreeMono"]
-    ToolTip = ("This is a gambas language source code file witch will emulate a hardware device.")
+    ToolTip = ("This is a gambas language source code file which will emulate a hardware device.")
     Expand = True
     PopupMenu = "EditDev"
     Mode = "Gambas"
