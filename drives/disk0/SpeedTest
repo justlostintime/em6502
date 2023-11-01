@@ -1,0 +1,83 @@
+10 goto 100 : rem skip the irq handler
+20 inc a
+30 ireturn
+
+100 print" test each of the types of function and task calls 2000 times"
+110 irq 20
+120  gosub 900(5)
+130  b=0:a=0
+140  inc b : if b < 2000 goto 140 
+145 z = a
+150  print "Total Time for goto using line number :";z
+
+160  b=0:a=0
+170  inc b : if b < 2000 goto .
+180  print "Total Time for goto using .           :";a
+
+190  b=0:c=200: a=0
+200  inc b: if b < 2000 goto c
+210  print "Total Time for goto using Variable    :";a
+
+215  print "Begin gosub and fn test, adjusted times for goto loop"
+220  b=0:a=0
+230  inc b: if b < 2000 gosub 810 : goto 230
+240  print "Total Time for gosub using line number:";a-z
+
+250  b=0:c=810:a=0
+260  inc b: if b < 2000 gosub c :goto 260
+270  print "Total Time for gosub using Variable   :";a-z
+
+280  b=0:a=0
+290  inc b: if b < 2000 d = fn 840() : goto 290
+300  print "Total Time for fn no parm with line # :";a-z,d
+
+310  b=0:c=840:a=0
+320  inc b: if b < 2000 d = fn c() : goto 320
+330  print "Total Time for fn no parm with Var    :";a-z,d
+
+340  b=0:c=840:a=0
+350  inc b: if b < 2000 d = fn 840(100) : goto 350
+360  print "Total Time for fn 1 parm using Line # :";a-z,d
+
+370  b=0:c=840:a=0
+380  inc b: if b < 2000 d = fn c(100) : goto 380
+390  print "Total Time for fn 1 parm using Var    :";a-z,d
+
+400  print "times to start and stop tasks 20 times, goto loop times removed"
+405  gosub 950
+410  b=0:a=0
+420  inc b : if b > 20 goto 430
+425  x = task(860,b) : print "Starting Task ";b;" ";
+427  taskw(x) 
+428  print "Task Exit Value :";x!^
+429  goto 420
+430  print "Total Time to start/stop Task 20x   :";a-z
+
+790  gosub 950
+799  end
+
+800 Rem test to call a sub no return value
+810 return
+
+830 Rem Test to call a sub that return a value
+840 return(1000)
+
+850 Rem Test task entry point
+860 inc a
+865 ?"Task Starts:";#[0]
+867 inc a : if a < 30 goto .
+870 return(#[0])
+880 print "Task exit error"
+890 end
+
+900 rem set the timeout  900(timeout length)
+910 poke(57360,30)        : rem cmd turn on/off
+920 poke(57360,#[0])      : rem value 9 = 1 second, 1-5 = value * 10ms 6 = 10ms, 7=250ms, 8=500ms
+925 a = peek(57360)       : rem get the ack or nak
+930 return
+
+950 rem set timeout off
+960 poke(57360,30)
+970 poke(57360,0)
+975 a = peek(57360)
+980 return

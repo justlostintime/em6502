@@ -26,7 +26,7 @@ Public Sub _call()
     Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
     Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
     Comp["ShowMhz"] = [0, 0, "3000", "na"]
-    Comp.Description = "Default\n this is a very basic template that can be used to create other Machines"
+    Comp.Description = "Default\n Concurrent tiny basic, Can be used as template"
 
     If Not Exist(.AsmComputerDefinitions &/ "Default") Then
       Comp.Save(.AsmComputerDefinitions)

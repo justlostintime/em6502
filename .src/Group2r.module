@@ -6,7 +6,7 @@
 '  Version 3, 29 June 2007
 '  See project license file.
 
-Fast Unsafe Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
 
   With TheCpu
     On aaa Goto Grp2Case0, Grp2Case1, Grp2Case2, Grp2Case3, Grp2Case4, Grp2Case5, Grp2Case6, Grp2Case7

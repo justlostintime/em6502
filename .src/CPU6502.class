@@ -8,7 +8,7 @@
 
 Fast Unsafe
 
-Public PC As Long = &H0000                ' Program counter
+Public PC As Long = &H0000             ' Program counter
 Public SP As Byte = &HFF                  ' Stack Pointer 0x100-0x1ff 256 bytes fifo
 
 Public SR As Byte = (1 Shl 3)             ' Status Register start with irq disabled
@@ -178,7 +178,7 @@ Private Sub DisplayMemory_Read() As Boolean
 
 End
 
-Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
+Public Sub MyClock_Timer()                     ' the cpu psudotimer
 
   Static StartInstructionCount As Long = 0
   Static StartCycleCount As Long = 0
@@ -190,7 +190,7 @@ Fast Unsafe Public Sub MyClock_Timer()                     ' the cpu psudotimer
 
 End
 
-Fast Unsafe Public Sub Halt()
+Public Sub Halt()
 
   CpuClock.Enabled = False                                              ' Stop the cpu internal clock
   $SingleStep = True
@@ -214,7 +214,7 @@ Fast Unsafe Public Sub Halt()
 
 End
 
-Fast Unsafe Public Sub ReadBytes(address As Long, length As Integer) As Byte[]
+Public Sub ReadBytes(address As Long, length As Integer) As Byte[]
 
   Dim result As New Byte[]
   Dim sdb As Byte = databus
@@ -234,7 +234,7 @@ Fast Unsafe Public Sub ReadBytes(address As Long, length As Integer) As Byte[]
 
 End
 
-Fast Unsafe Public Sub WriteBytes(buffer As Byte[], address As Long, length As Integer)
+Public Sub WriteBytes(buffer As Byte[], address As Long, length As Integer)
 
   Dim sdb As Byte = databus
   Dim sab As Long = AddressBus
@@ -252,7 +252,7 @@ Fast Unsafe Public Sub WriteBytes(buffer As Byte[], address As Long, length As I
 
 End
 
-Fast Unsafe Public Sub LoadMemory(FileName As String)
+Public Sub LoadMemory(FileName As String)
 
   Dim BinInfo As File
   Dim al, ah As Byte
@@ -284,7 +284,7 @@ Fast Unsafe Public Sub LoadMemory(FileName As String)
 
 End
 
-Fast Unsafe Public Sub Run()
+Public Sub Run()
 
   Dim counter As Long = 0
 
@@ -324,7 +324,53 @@ Fast Unsafe Public Sub Run()
       Endif
     Endif
 
-    ExecuteInstruction()
+    'ExecuteInstruction()
+    'Public Sub ExecuteInstruction()
+
+    Dim inst As Integer
+    Dim addrMode, aaa, cc As Integer
+
+    If pc > &h0ffff Or If pc < 0 Then
+      Stop
+    Endif
+
+    AddressBus = pc
+
+    ReadByte()
+    inst = DataBus
+
+    CycleCount = Disassembler.InstructionCycles[inst]
+    $TotalCycles += CycleCount
+
+    If $Profiling Then
+      InstProfile.count(pc, CycleCount)
+    Endif
+
+    Inc pc
+    AddressBus = pc
+
+    'addrMode = Disassembler.AddrMode[inst]
+    ' address mode is same as bbb in instruction
+    addrMode = (inst Shr 2) And &h07
+    'aaa = disassembler.aaa[inst]
+    aaa = inst Shr 5
+    'cc = disassembler.cc[inst]
+    cc = inst And &h03
+
+    Select Case cc
+      Case 0
+        Group0(Me, aaa, addrMode)
+      Case 1
+        Group1(Me, aaa, AddrMode)
+      Case 2
+        Group2(Me, aaa, AddrMode)
+      Case 3
+        Group3(Me, aaa, AddrMode)
+    End Select
+
+    Inc TotalInstructions
+
+    'End
     '
     'If $DisplayRequired Or If $DisplayMemory Or $SingleStep Or $DisplayInstruction Or $DisplayStatus Then
     If DisplayRequired Then
@@ -357,14 +403,14 @@ Fast Unsafe Public Sub Run()
 End
 
 '' Create an event with all the information needed to display the next Instruction with status
-Fast Unsafe Sub StepInfo()
+sub StepInfo()
 
   LastTraceInstruction = Left(Disassembler.Inst(Me, pc) & Space(40), 40) & "->[" & SRText() & "] " & Hex(ac, 2) & " " & Hex(X, 2) & " " & Hex(Y, 2) & " " & "1" & Hex(sp, 2)
   Raise NextInst(LastTraceInstruction)
 
 End
 
-Fast Unsafe Public Sub ResetOssilator()
+Public Sub ResetOssilator()
 
   OssilatorCounter = $MillisecondTicks
 
@@ -374,7 +420,7 @@ End
 FlagsOn As String[] = ["C", "Z", "I", "D", "B", "-", "V", "N"]
 FlagsOff As String[] = ["c", "z", "i", "d", "b", "-", "v", "n"]
 
-Fast Unsafe Sub SRText() As String
+Sub SRText() As String
 
   Dim flag As String = ""
 
@@ -392,7 +438,7 @@ End
 
 CycleCount As Integer
 
-Fast Unsafe Public Sub ExecuteInstruction()
+Public Sub ExecuteInstruction()
 
   Dim inst As Integer
   Dim addrMode, aaa, cc As Integer
@@ -439,7 +485,7 @@ Fast Unsafe Public Sub ExecuteInstruction()
 
 End
 
-Fast Unsafe Public Sub Absolute()
+Public Sub Absolute()
 
   Dim addrTemp As Long
 
@@ -453,21 +499,21 @@ Fast Unsafe Public Sub Absolute()
 
 End
 
-Fast Unsafe Public Sub AbsX()
+Public Sub AbsX()
 
   Absolute()
   AddressBus += X
 
 End
 
-Fast Unsafe Public Sub AbsY()
+Public Sub AbsY()
 
   Absolute()
   AddressBus += Y
 
 End
 
-Fast Unsafe Public Sub ZeroPage()
+Public Sub ZeroPage()
 
   ReadByte()
   AddressBus = DataBus
@@ -475,7 +521,7 @@ Fast Unsafe Public Sub ZeroPage()
 
 End
 
-Fast Unsafe Public Sub ZeroPageIndirect()
+Public Sub ZeroPageIndirect()
 
   Dim addrTemp As Long
 
@@ -488,28 +534,28 @@ Fast Unsafe Public Sub ZeroPageIndirect()
 
 End
 
-Fast Unsafe Public Sub ZeroPageX()
+Public Sub ZeroPageX()
 
   ZeroPage()
   AddressBus += X
 
 End
 
-Fast Unsafe Public Sub ZeroPageY()
+Public Sub ZeroPageY()
 
   ZeroPage()
   AddressBus += Y
 
 End
 
-Fast Unsafe Public Sub Immediate()
+Public Sub Immediate()
 
   AddressBus = PC
   Inc pc
 
 End
 
-Fast Unsafe Public Sub IndirectAbsX()
+Public Sub IndirectAbsX()
 
   Dim addrTemp As Long
 
@@ -523,7 +569,7 @@ Fast Unsafe Public Sub IndirectAbsX()
 
 End
 
-Fast Unsafe Public Sub IndirectX()
+Public Sub IndirectX()
 
   Dim addrTemp As Long
 
@@ -538,7 +584,7 @@ Fast Unsafe Public Sub IndirectX()
 
 End
 
-Fast Unsafe Public Sub IndirectY()
+Public Sub IndirectY()
 
   Dim addrTemp As Long
 
@@ -557,7 +603,7 @@ Fast Unsafe Public Sub IndirectY()
 
 End
 
-Fast Unsafe Public Sub Indirect()
+Public Sub Indirect()
 
   Dim addrTemp As Long
 
@@ -640,7 +686,7 @@ Public Sub AddMap(Start As Long, Len As Long, Device As Class, Optional vParams 
 
 End
 
-Fast Unsafe Public Sub GetDevice(Address As Long, Optional rw As Integer = mem_read) As Object
+Public Sub GetDevice(Address As Long, Optional rw As Integer = mem_read) As Object
 
   Dim dev As Object
 
@@ -656,7 +702,7 @@ Fast Unsafe Public Sub GetDevice(Address As Long, Optional rw As Integer = mem_r
 
 End
 
-Fast Unsafe Public Sub ReadByte()
+Public Sub ReadByte()
 
   Dim dev As Object = Null
 
@@ -677,7 +723,7 @@ Fast Unsafe Public Sub ReadByte()
 
 End
 
-Fast Unsafe Public Sub WriteByte()
+Public Sub WriteByte()
 
   Dim dev As Object = Null
 
@@ -696,7 +742,7 @@ Fast Unsafe Public Sub WriteByte()
 
 End
 
-Fast Unsafe Public Sub Reset()
+Public Sub Reset()
 
   $NMIPending = False
   $IRQPending = False
@@ -733,13 +779,13 @@ Fast Unsafe Public Sub Reset()
 
 End
 
-Fast Unsafe Public Sub DisplayCurrentInst()
+Public Sub DisplayCurrentInst()
 
   StepInfo()
 
 End
 
-Fast Unsafe Public Sub Branch()
+Public Sub Branch()
 
   If BTst(databus, 7) Then
     Dim offset As Byte = &100 - databus
@@ -750,7 +796,7 @@ Fast Unsafe Public Sub Branch()
 
 End
 
-Fast Unsafe Public Sub Compare(Value As Byte)
+Public Sub Compare(Value As Byte)
 
   Dim RSLT As Byte = value - DATABUS
 
@@ -773,7 +819,7 @@ Fast Unsafe Public Sub Compare(Value As Byte)
 
 End
 
-Fast Unsafe Public Sub Push(Optional Value As Byte = databus)
+Public Sub Push(Optional Value As Byte = databus)
 
   databus = Value
   AddressBus = &h0100 + sp
@@ -782,7 +828,7 @@ Fast Unsafe Public Sub Push(Optional Value As Byte = databus)
 
 End
 
-Fast Unsafe Public Sub Pop() As Byte
+Public Sub Pop() As Byte
 
   Inc sp
   AddressBus = &h0100 + sp
@@ -791,7 +837,7 @@ Fast Unsafe Public Sub Pop() As Byte
 
 End
 
-Fast Unsafe Public Sub interupt(sVector As Long)
+Public Sub interupt(sVector As Long)
 
   Push(pc Shr 8)
   Push(pc And &h000ff)
@@ -805,7 +851,7 @@ Fast Unsafe Public Sub interupt(sVector As Long)
 
 End
 
-Fast Unsafe Public Sub NMI()
+Public Sub NMI()
 
   $NMIPending = False
 
@@ -814,7 +860,7 @@ Fast Unsafe Public Sub NMI()
 
 End
 
-Fast Unsafe Public Sub IRQ()
+Public Sub IRQ()
 
   $IRQPending = False
   If BTst(sr, 2) Then Return                                   ' Ignore this if the irq is disabled
@@ -825,7 +871,7 @@ Fast Unsafe Public Sub IRQ()
 
 End
 
-Fast Unsafe Public Sub BRK()
+Public Sub BRK()
 
   sr = BSet(sr, 4)                                             ' set the break flag
   interupt(&H0FFFE)
@@ -834,14 +880,14 @@ Fast Unsafe Public Sub BRK()
 
 End
 
-Fast Unsafe Public Sub SetSR(reg As Byte)
+Public Sub SetSR(reg As Byte)
 
   If reg = 0 Then sr = BSet(sr, 1) Else sr = BClr(sr, 1)       ' correctly set the zero flag
   If BTst(reg, 7) Then sr = BSet(sr, 7) Else sr = BClr(sr, 7)  ' correctly set the negative flag
 
 End
 
-Fast Unsafe Public Sub ShiftRight()
+Public Sub ShiftRight()
 
   If BTst(Databus, 0) Then sr = BSet(sr, 0) Else sr = BClr(sr, 0)
   Dim newvalue As Byte = (Databus Shr 1)
@@ -850,7 +896,7 @@ Fast Unsafe Public Sub ShiftRight()
 
 End
 
-Fast Unsafe Public Sub ShiftLeft()
+Public Sub ShiftLeft()
 
   If BTst(Databus, 7) Then sr = BSet(sr, 0) Else sr = BClr(sr, 0)
   Dim newvalue As Byte = (DataBus Shl 1)
@@ -859,7 +905,7 @@ Fast Unsafe Public Sub ShiftLeft()
 
 End
 
-Fast Unsafe Public Sub RotateRight()
+Public Sub RotateRight()
 
   Dim newvalue As Byte = (DataBus Shr 1)
 
@@ -870,7 +916,7 @@ Fast Unsafe Public Sub RotateRight()
 
 End
 
-Fast Unsafe Public Sub RotateLeft()
+Public Sub RotateLeft()
 
   Dim newvalue As Byte = (DataBus Shl 1)
 
@@ -881,14 +927,14 @@ Fast Unsafe Public Sub RotateLeft()
 
 End
 
-Fast Unsafe Public Sub AndAc()
+Public Sub AndAc()
 
   ac = (ac And DataBus)
   SetSR(ac)
 
 End
 
-Fast Unsafe Public Sub AdcDecMode()
+Public Sub AdcDecMode()
 
   Dim carry As Integer = IIf(BTst(sr, 0), 1, 0)
 
@@ -901,7 +947,7 @@ Fast Unsafe Public Sub AdcDecMode()
 
 End
 
-Fast Unsafe Public Sub SbcDecMode()
+Public Sub SbcDecMode()
 
   Dim carry As Integer = IIf(BTst(sr, 0), 1, 0)
 
@@ -918,7 +964,7 @@ Fast Unsafe Public Sub SbcDecMode()
 
 End
 
-Fast Unsafe Sub SetBcd(Value As Integer) ' ignore the extra 100's value
+Sub SetBcd(Value As Integer) ' ignore the extra 100's value
 
   Dim ones As Integer = Value Mod 10
   Dim tens As Integer = (value \ 10) Mod 10
@@ -927,7 +973,7 @@ Fast Unsafe Sub SetBcd(Value As Integer) ' ignore the extra 100's value
 
 End
 
-Fast Unsafe Public Sub AdcAc()
+Public Sub AdcAc()
 
   If BTst(SR, 3) Then
     AdcDecMode()
@@ -959,7 +1005,7 @@ Fast Unsafe Public Sub AdcAc()
 
 End
 
-Fast Unsafe Public Sub SbcAc()
+Public Sub SbcAc()
 
   If BTst(SR, 3) Then
     SbcDecMode()
@@ -973,21 +1019,21 @@ Fast Unsafe Public Sub SbcAc()
 
 End
 
-Fast Unsafe Public Sub EorAc()
+Public Sub EorAc()
 
   ac = (ac Xor databus)
   SetSR(ac)
 
 End
 
-Fast Unsafe Public Sub OrAc()
+Public Sub OrAc()
 
   ac = (ac Or databus)
   SetSR(ac)
 
 End
 
-Fast Unsafe Public Sub Peek(Addr As Long) As Byte
+Public Sub Peek(Addr As Long) As Byte
 
   Dim dev As Object
 
@@ -1005,7 +1051,7 @@ Fast Unsafe Public Sub Peek(Addr As Long) As Byte
 
 End
 
-Fast Unsafe Public Sub Poke(addr As Long, value As Variant)
+Public Sub Poke(addr As Long, value As Variant)
 
   Dim dev As Object
 
@@ -1022,53 +1068,53 @@ Fast Unsafe Public Sub Poke(addr As Long, value As Variant)
 
 End
 
-Fast Unsafe Private Function SpeedScaler_Read() As Long
+Private Function SpeedScaler_Read() As Long
 
   Return $SpeedScaler
 
 End
 
-Fast Unsafe Private Sub SpeedScaler_Write(Value As Long)
+Private Sub SpeedScaler_Write(Value As Long)
 
   $SpeedScaler = value
 
 End
 
-Fast Unsafe Public Sub MyDevice_halt(Reason As String)
+Public Sub MyDevice_halt(Reason As String)
 
   Halt()
   Print Reason
 
 End
 
-Fast Unsafe Public Sub MyDevice_IRQ()
+Public Sub MyDevice_IRQ()
 
   $IRQPending = True
   $InteruptPending = True
 
 End
 
-Fast Unsafe Public Sub MyDevice_NMI()
+Public Sub MyDevice_NMI()
 
   $NMIPending = True
   $InteruptPending = True
 
 End
 
-Fast Unsafe Public Sub MyDevice_Reset()
+Public Sub MyDevice_Reset()
 
   $ResetPending = True
   $InteruptPending = True
 
 End
 
-Fast Unsafe Private Function Profiling_Read() As Boolean
+Private Function Profiling_Read() As Boolean
 
   Return $Profiling
 
 End
 
-Fast Unsafe Private Sub Profiling_Write(Value As Boolean)
+Private Sub Profiling_Write(Value As Boolean)
 
   If Value = True Then
     InstProfile = New Profiler(Me)
@@ -1079,14 +1125,14 @@ Fast Unsafe Private Sub Profiling_Write(Value As Boolean)
 
 End
 
-Fast Unsafe Public Sub ProfileReset()
+Public Sub ProfileReset()
 
   If InstProfile Then InstProfile.reset()
 
 End
 
 'Property Read ProfileInfo As String[]
-Fast Unsafe Public Function ProfileInfo(Optional StartAddress As Integer = -1, length As Integer = 0) As String[]
+Public Function ProfileInfo(Optional StartAddress As Integer = -1, length As Integer = 0) As String[]
 
   If InstProfile Then
     Return InstProfile.report(startAddress, length, $ProfileSortOrder)
@@ -1094,14 +1140,1260 @@ Fast Unsafe Public Function ProfileInfo(Optional StartAddress As Integer = -1, l
 
 End
 
-Private Function ChkBadMemAccess_Read() As Boolean
+' to optimize the cpu speed and work better with fast unsafe
+' moved group files integre-rated here
+' Gambas module file
+
+'****************************************************************************************************************
+'***************************************************************************************************************
+
+Public Sub Group0(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+
+  With TheCpu
+    Dim tempreg As Long
+    On aaa Goto Grp0Case0, Grp0Case1, Grp0Case2, Grp0Case3, Grp0Case4, Grp0Case5, Grp0Case6, Grp0Case7
+    Return
+
+  Grp0Case0:
+    On addressmode Goto Grp0Case00, Grp0Case01, Grp0Case02, Grp0Case03, Grp0Case04, Grp0Case05, Grp0Case06, Grp0Case07
+    Return
+
+  Grp0Case00: 'brk
+    Inc .pc            ' allow for extra byte to identify type of break
+    .push(.pc Shr 8)
+    .push(.pc And &h000FF)
+    .brk()
+    Return
+
+  Grp0Case02: 'php
+    .push(.sr)
+    Return
+
+  Grp0Case04: ' bpl
+    .Immediate()
+    If Not BTst(.Sr, 7) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case06: ' clc
+    .sr = BClr(.sr, 0)
+    Return
+
+  Grp0Case01:'TSB zeropage    65c02
+    .ZeroPage()
+
+  TSB:
+    Dim Tsba As Byte = .AC
+    .ReadByte()
+    .OrAc()
+    .DataBus = .AC
+    .AC = Tsba
+    .WriteByte
+    Return
+
+  Grp0Case03:'TSB absolute   65c02
+    .Absolute()
+    Goto TSB
+
+  Grp0Case05:'TRB ZeroPage  65c02
+    .ZeroPage()
+
+  TRB:
+    tsba = .AC
+    .DataBus = &h0FF
+    .EorAc()
+    .ReadByte()
+    .AndAc()
+    .DataBus = .AC
+    .WriteByte()
+    .AC = tsba
+    Return
+
+  Grp0Case07:'TRB Absolute  65c02
+    .Absolute()
+    Goto TRB
+
+    '-------------------------------------------------------------------
+  Grp0Case1:
+    On addressmode Goto Grp0Case10, Grp0Case11, Grp0Case12, Grp0Case13, Grp0Case14, Grp0Case15, Grp0Case16, Grp0Case17
+    Return
+
+  Grp0Case10:'JSR abs
+    .Absolute()
+    tempreg = .AddressBus
+    Dec .pc
+    .push(.pc Shr 8)
+    .push(.pc And &h000FF)
+    .pc = tempreg
+    Return
+
+  Grp0Case11:'bit zpg
+    .ZeroPage()
+
+  bitDo:
+    .ReadByte()
+    Dim bittmp As Byte = (.AC And .DataBus)
+    If BTst(.DataBus, 7) Then .Sr = BSet(.SR, 7) Else .SR = BClr(.SR, 7)
+    If BTst(.DataBus, 6) Then .Sr = BSet(.SR, 6) Else .SR = BClr(.SR, 6)
+    If bittmp = 0 Then .SR = BSet(.SR, 1) Else .sr = BClr(.sr, 1)
+    Return
+
+  Grp0Case12:'plp
+    .sr = .Pop()
+    .sr = BClr(.sr, 4)           ' Brk And ignore are Not releoaded
+    .sr = BClr(.sr, 5)
+    Return
+
+  Grp0Case13:'bit abs
+    .Absolute()
+    Goto bitDo
+
+  Grp0Case14:'bmi rel
+    .Immediate()
+    If BTst(.Sr, 7) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case16:'sec impl
+    .sr = BSet(.sr, 0)
+    Return
+
+  Grp0Case15:'BIT ZeroPage,X 65c02
+    .ZeroPageX
+    Goto bitDo
+
+  Grp0Case17:'BIT Abs,X 65c02
+    .AbsX()
+    Goto bitDo
+
+    '-------------------------------------------------------------------
+  Grp0Case2:
+    On addressmode Goto Grp0Case20, Grp0Case21, Grp0Case22, Grp0Case23, Grp0Case24, Grp0Case25, Grp0Case26, Grp0Case27
+    Return
+
+  Grp0Case20:  ' rti
+    .sr = BClr(.pop(), 4)              '  Brk Bit not reloaded
+    .sr = BClr(.sr, 5)                 '  ignore are not reloaded
+    Dim tmplow As Byte = .Pop()
+    .PC = .Pop()      ' Pop The high Byte
+    .Pc = .PC Shl 8
+    .PC = .PC Or tmpLow
+    Return
+
+  Grp0Case22:  'pha
+    .push(.AC)
+    Return
+
+  Grp0Case23: ' jmp abs
+    .Absolute()
+    .pc = .AddressBus
+    Return
+
+  Grp0Case24: 'BVC rel
+    .Immediate()
+    If Not BTst(.Sr, 6) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case26: 'cli impl
+    .sr = BClr(.sr, 2)
+    Return
+
+  Grp0Case21: ' unused
+  Grp0Case25: ' unused
+  Grp0Case27: ' unused
+    Return
+    '-----------------------------------------------------------------------------------
+  Grp0Case3:
+    On addressmode Goto Grp0Case30, Grp0Case31, Grp0Case32, Grp0Case33, Grp0Case34, Grp0Case35, Grp0Case36, Grp0Case37
+    Return
+
+  Grp0Case30:' rts
+    tmplow = .Pop()
+    .PC = .Pop()      ' Pop The high Byte
+    .Pc = .PC Shl 8
+    .PC = .PC Or tmpLow
+    Inc .PC
+    Return
+
+  Grp0Case32: 'pla
+    .ac = .pop()
+    .setsr(.ac)
+    Return
+
+  Grp0Case33:' jmp Indirect
+    .Indirect()
+    .pc = .AddressBus
+    Return
+
+  Grp0Case34:' BVS rel
+    .Immediate()
+    If BTst(.Sr, 6) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case36:'SEI impl
+    .sr = BSet(.sr, 2)
+    Return
+
+  Grp0Case31:'STZ ZeroPage  65c02
+    .ZeroPage()
+  STZ:
+    .DataBus = 0
+    .WriteByte()
+    Return
+
+  Grp0Case35:'STZ ZeroPage,X 65c02
+    .ZeroPageX()
+    Goto STZ
+
+  Grp0Case37:'JMP (indirect,X) 65c02
+    .IndirectAbsX()
+    .pc = .AddressBus
+    Return
+
+    '---------------------------------------------------------------------------------------------------------------
+  Grp0Case4:
+    On addressmode Goto Grp0Case40, Grp0Case41, Grp0Case42, Grp0Case43, Grp0Case44, Grp0Case45, Grp0Case46, Grp0Case47
+    Return
+
+  Grp0Case40: 'BRA branch always
+    .Immediate()
+    .ReadByte()
+    .Branch()
+    Return
+
+  Grp0Case41:' sty zpg
+    .ZeroPage()
+    .databus = .Y
+    .writebyte()
+    Return
+
+  Grp0Case42:'dey impl
+    Dec .y
+    .SetSR(.y)
+    .SetSR(.Y)
+    Return
+
+  Grp0Case43:' sty abs
+    .Absolute()
+    .databus = .Y
+    .WriteByte()
+    Return
+
+  Grp0Case44:'bcc rel
+    .Immediate()
+    If Not (BTst(.Sr, 0)) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case45:' sty zpg,x
+    .ZeroPageX()
+    .databus = .Y
+    .WriteByte()
+    Return
+
+  Grp0Case46:'tya impl
+    .ac = .Y
+    .setsr(.AC)
+    Return
 
 
+  Grp0Case47: 'STZ ABS 65c02
+    .DataBus = 0
+    .Absolute()
+    .WriteByte()
+    Return
+
+    '------------------------------------------------------------------------------------------
+  Grp0Case5:
+    On addressmode Goto Grp0Case50, Grp0Case51, Grp0Case52, Grp0Case53, Grp0Case54, Grp0Case55, Grp0Case56, Grp0Case57
+    Return
+
+  Grp0Case50:'ldy #
+    .Immediate()
+    .ReadByte()
+    .Y = .DataBus
+    .SetSR(.Y)
+    Return
+
+  Grp0Case51:'ldy zpg
+    .ZeroPage()
+    .ReadByte()
+    .y = .DataBus
+    .SetSR(.Y)
+    Return
+
+  Grp0Case52:'tay impl
+    .Y = .AC
+    .SetSR(.AC)
+    Return
+
+  Grp0Case53:'ldy abs
+    .Absolute()
+    .ReadByte()
+    .Y = .databus
+    .Setsr(.Y)
+    Return
+
+  Grp0Case54:'BCS Rel
+    .Immediate()
+    If BTst(.Sr, 0) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case55:'$B4 LDY zpg,X
+    .ZeroPageX()
+    .ReadByte()
+    .Y = .DataBus
+    .SetSR(.Y)
+    Return
+
+  Grp0Case56:'$B8 CLV impl
+    .sr = BClr(.SR, 6)
+    Return
+
+  Grp0Case57: '$BC LDY abs,X
+    .AbsX()
+    .ReadByte()
+    .Y = .DataBus
+    .SetSR(.Y)
+    Return
+
+    '--------------------------------------------------------------------------------------------------------------
+  Grp0Case6:
+    On addressmode Goto Grp0Case60, Grp0Case61, Grp0Case62, Grp0Case63, Grp0Case64, Grp0Case65, Grp0Case66, Grp0Case67
+    Return
+
+  Grp0Case60:'$C0 CPY #
+    .Immediate()
+  CmpY:
+    .ReadByte()
+    .Compare(.Y)
+    Return
+
+  Grp0Case61:'$C4 CPY zpg
+    .ZeroPage()
+    Goto CmpY
+
+  Grp0Case62:'$C8 INY impl
+    Inc .Y
+    .SetSR(.Y)
+    Return
+
+  Grp0Case63:'$CC CPY abs
+    .Absolute()
+    Goto CmpY
+
+  Grp0Case64:'$D0 BNE rel
+    .Immediate()
+    If Not BTst(.sr, 1) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case66:'$D8 CLD impl
+    .SR = BClr(.SR, 3)
+    Return
+
+  Grp0Case65:'Not Used
+  Grp0Case67:'No tUsed
+    Return
+
+    '-----------------------------------------------------------------------------------------------
+  Grp0Case7:
+    On addressmode Goto Grp0Case70, Grp0Case71, Grp0Case72, Grp0Case73, Grp0Case74, Grp0Case75, Grp0Case76, Grp0Case77
+  Grp0Case70:'$E0 CPX #
+    .Immediate()
+    .ReadByte()
+    .compare(.X)
+    Return
+
+  Grp0Case71:'$E4 CPX zpg
+    .ZeroPage()
+    .ReadByte()
+    .Compare(.X)               'Bug fix , missing parameter 01-17-2023
+    Return
+
+  Grp0Case72:'$E8 INX impl
+    Inc .X
+    .SetSR(.X)
+    Return
+
+  Grp0Case73:' $EC CPX abs
+    .Absolute()
+    .ReadByte()
+    .compare(.X)
+    Return
+
+  Grp0Case74:' $F0 BEQ rel
+    .Immediate()
+    If BTst(.sr, 1) Then
+      .ReadByte()
+      .Branch()
+    Endif
+    Return
+
+  Grp0Case76:' $F8 SED impl
+    .SR = BSet(.SR, 3)
+    Return
+
+  Grp0Case75:' Not Used
+  Grp0Case77:' Not Used
+    Return
+
+  End With
 
 End
 
-Private Sub ChkBadMemAccess_Write(Value As Boolean)
+'****************************************************************************************************************
+'***************************************************************************************************************
+Public Sub Group1 (TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
 
+  With TheCpu
+    On aaa Goto Grp1Case0, Grp1Case1, Grp1Case2, Grp1Case3, Grp1Case4, Grp1Case5, Grp1Case6, Grp1Case7
+    Return
 
+  Grp1Case0:
+    On addressmode Goto Grp1Case00, Grp1Case01, Grp1Case02, Grp1Case03, Grp1Case04, Grp1Case05, Grp1Case06, Grp1Case07
+    Return
+
+  Grp1Case00:'$01 ORA X,ind
+    .IndirectX
+  ora:
+    .ReadByte()
+    .ac = (.ac Or .databus)
+    .SetSR(.ac)
+    Return
+
+  Grp1Case01:'$05 ORA zpg
+    .ZeroPage()
+    Goto ora
+
+  Grp1Case02:'$09 ORA #
+    .Immediate()
+    Goto ora
+
+  Grp1Case03:'$0D ORA abs
+    .Absolute()
+    Goto ora
+
+  Grp1Case04:'$11 ORA ind,Y
+    .IndirectY()
+    Goto ora
+
+  Grp1Case05:'$15 ORA zpg,X
+    .ZeroPageX()
+    Goto ora
+
+  Grp1Case06:'$19 ORA abs,Y
+    .AbsY()
+    Goto ora
+
+  Grp1Case07:'$1D ORA abs,X
+    .AbsX()
+    Goto ora
+    '----------------------------------------------------------------------------
+  Grp1Case1:
+    On addressmode Goto Grp1Case10, Grp1Case11, Grp1Case12, Grp1Case13, Grp1Case14, Grp1Case15, Grp1Case16, Grp1Case17
+    Return
+
+  Grp1Case10:'$21 AND X,ind
+    .IndirectX()
+  DoAnd:
+    .ReadByte()
+    .ac = (.ac And .Databus)
+    .SetSR(.AC)
+    Return
+
+  Grp1Case11:' $25 AND zpg
+    .ZeroPage()
+    Goto DoAnd
+
+  Grp1Case12:' $29 AND #
+    .Immediate()
+    Goto DoAnd
+
+  Grp1Case13:' $2D AND abs
+    .Absolute()
+    Goto DoAnd
+
+  Grp1Case14:'$31 AND ind,Y
+    .IndirectY()
+    Goto DoAnd
+
+  Grp1Case15:'$35 AND zpg,X
+    .ZeroPageX()
+    Goto DoAnd
+
+  Grp1Case16:'$39 AND abs,Y
+    .AbsY()
+    Goto DoAnd
+
+  Grp1Case17:'$3D AND abs,X
+    .AbsX()
+    Goto DoAnd
+
+  Grp1Case2:
+    On addressmode Goto Grp1Case20, Grp1Case21, Grp1Case22, Grp1Case23, Grp1Case24, Grp1Case25, Grp1Case26, Grp1Case27
+    Return
+
+  Grp1Case20:'$41 EOR X,ind
+    .IndirectX()
+  EOR:
+    .ReadByte()
+    .AC = (.AC Xor .DataBus)
+    .SetSR(.AC)
+    Return
+
+  Grp1Case21:'$45 EOR zpg
+    .ZeroPage()
+    Goto EOR
+
+  Grp1Case22:'$49 EOR #
+    .Immediate()
+    Goto EOR
+
+  Grp1Case23:'$4D EOR abs
+    .Absolute()
+    Goto EOR
+
+  Grp1Case24:'$51 EOR ind, Y
+    .IndirectY()
+    Goto EOR
+
+  Grp1Case25:'$55 EOR zpg, X
+    .ZeroPageX()
+    Goto EOR
+
+  Grp1Case26:'$59 EOR abs, Y
+    .AbsY()
+    Goto EOR
+
+  Grp1Case27:'$5D EOR abs, X
+    .AbsY()
+    Goto EOR
+
+    '-------------------------------------------------------------------------------
+  Grp1Case3:
+    On addressmode Goto Grp1Case30, Grp1Case31, Grp1Case32, Grp1Case33, Grp1Case34, Grp1Case35, Grp1Case36, Grp1Case37
+    Return
+
+  Grp1Case30:'$61 ADC X, ind
+    .IndirectX()
+  AddAc:
+    .ReadByte()
+    .AdcAC()
+    Return
+
+  Grp1Case31:'$65 ADC zpg
+    .ZeroPage()
+    Goto AddAC
+
+  Grp1Case32:'$69 ADC #
+    .Immediate()
+    Goto AddAc
+
+  Grp1Case33:'$6D ADC abs
+    .Absolute()
+    Goto AddAC
+
+  Grp1Case34:'$71 ADC ind, Y
+    .IndirectY()
+    Goto AddAC
+
+  Grp1Case35:'$75 ADC zpg, X
+    .ZeroPage()
+    Goto AddAC
+
+  Grp1Case36:'$79 ADC abs, Y
+    .AbsY()
+    Goto AddAc
+
+  Grp1Case37:'$7D ADC abs, X
+    .AbsX()
+    Goto AddAc
+    '----------------------------------------------------------------------------
+  Grp1Case4:
+    On addressmode Goto Grp1Case40, Grp1Case41, Grp1Case42, Grp1Case43, Grp1Case44, Grp1Case45, Grp1Case46, Grp1Case47
+    Return
+
+  Grp1Case40: ' sta x, ind
+    .IndirectX
+    Goto StoreAC
+
+  Grp1Case41: ' sta zeropage 65c02
+    .ZeroPage
+    Goto StoreAC
+
+  Grp1Case43: ' sta $8000 abs
+    .Absolute()
+    Goto StoreAC
+
+  Grp1Case44: ' sta ind,y
+    .IndirectY()
+    Goto StoreAC
+
+  Grp1Case45: ' sta zeropage,x
+    .ZeroPageX()
+    Goto StoreAC
+
+  Grp1Case46: ' sta abs,y
+    .AbsY()
+    Goto StoreAC
+
+  Grp1Case47: ' sta abs,X
+    .AbsX()
+
+  StoreAC:
+    .DataBus = .AC
+    .WriteByte()
+    Return
+
+  Grp1Case42: 'BIT immediate
+    .Immediate()
+    .ReadByte()
+    Dim bittmp As Byte = (.AC And .DataBus)
+    If BTst(.DataBus, 7) Then .Sr = BSet(.SR, 7) Else .SR = BClr(.SR, 7)
+    If BTst(.DataBus, 6) Then .Sr = BSet(.SR, 6) Else .SR = BClr(.SR, 6)
+    If bittmp = 0 Then .SR = BSet(.SR, 1) Else .sr = BClr(.sr, 1)
+    Return
+
+    '-------------------------------------------------------------------------------------
+  Grp1Case5:
+    On addressmode Goto Grp1Case50, Grp1Case51, Grp1Case52, Grp1Case53, Grp1Case54, Grp1Case55, Grp1Case56, Grp1Case57
+    Return
+
+  Grp1Case50:  'lda Indirect,X
+    .IndirectX()
+    Goto LoadAC
+
+  Grp1Case51:  'lda zpg
+    .ZeroPage()
+    Goto LoadAc
+
+  Grp1Case52:  'lda,#
+    .Immediate()
+    Goto LoadAC
+
+  Grp1Case53:  'lda $8000   Absolute address
+    .Absolute()
+    Goto LoadAC
+
+  Grp1Case54:
+    .IndirectY()
+    Goto LoadAC
+
+  Grp1Case55: ' lda zpg,X
+    .ZeroPageX
+    Goto LoadAC
+
+  Grp1Case56: ' lda abs,y
+    TheCpu.AbsY()
+    Goto LoadAC
+
+  Grp1Case57: ' lda abs,x
+    .AbsX()
+    Goto LoadAc
+
+  LoadAC:
+    .ReadByte()
+    .ac = .DataBus
+    .setsr(.ac)
+    Return
+
+  Grp1Case6:
+    On addressmode Goto Grp1Case60, Grp1Case61, Grp1Case62, Grp1Case63, Grp1Case64, Grp1Case65, Grp1Case66, Grp1Case67
+    Return
+
+  Grp1Case60:'$C1 CMP X, ind
+    .IndirectX()
+  cmp:
+    .ReadByte()
+    .Compare(.ac)
+    Return
+
+  Grp1Case61:'$C5 CMP zpg
+    .ZeroPage()
+    Goto cmp
+
+  Grp1Case62:'$C9 CMP #
+    .Immediate()
+    Goto Cmp
+
+  Grp1Case63:'$CD CMP abs
+    .Absolute()
+    Goto Cmp
+
+  Grp1Case64:'$D1 CMP ind, Y
+    .IndirectY()
+    Goto cmp
+
+  Grp1Case65:'$D5 CMP zpg, X
+    .ZeroPageX()
+    Goto cmp
+
+  Grp1Case66:'$D9 CMP abs, Y
+    .AbsY()
+    Goto cmp
+
+  Grp1Case67:'$DD CMP abs, X
+    .AbsX()
+    Goto cmp
+    '-------------------------------------------------------------------------------------------
+  Grp1Case7:
+    On addressmode Goto Grp1Case70, Grp1Case71, Grp1Case72, Grp1Case73, Grp1Case74, Grp1Case75, Grp1Case76, Grp1Case77
+  Grp1Case70:'$E1 SBC X, ind
+    .IndirectX()
+  sbc:
+    .ReadByte()
+    .SbcAc()
+    Return
+
+  Grp1Case71:'$E5 SBC zpg
+    .ZeroPage()
+    Goto Sbc
+
+  Grp1Case72:'$E9 SBC #
+    .Immediate()
+    Goto SBC
+
+  Grp1Case73:'$ED SBC abs
+    .Absolute()
+    Goto SBC
+
+  Grp1Case74:'$F1 SBC ind, Y
+    .IndirectY()
+    Goto sbc
+
+  Grp1Case75:'$F5 SBC zpg, X
+    .ZeroPageX()
+    Goto sbc
+
+  Grp1Case76:'$F9 SBC abs, Y
+    .AbsY()
+    Goto sbc
+
+  Grp1Case77:'$FD SBC abs, X
+    .AbsX()
+    Goto sbc
+
+  End With
 
 End
+
+'****************************************************************************************************************
+'***************************************************************************************************************
+Public Sub Group2(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+
+  With TheCpu
+    On aaa Goto Grp2Case0, Grp2Case1, Grp2Case2, Grp2Case3, Grp2Case4, Grp2Case5, Grp2Case6, Grp2Case7
+    Return
+
+  Grp2Case0:
+    On addressmode Goto Grp2Case00, Grp2Case01, Grp2Case02, Grp2Case03, Grp2Case04, Grp2Case05, Grp2Case06, Grp2Case07
+    Return
+
+  Grp2Case00:' not used
+    Return
+
+  Grp2Case01:'$06 ASL zpg
+    .ZeroPage()
+
+  DoAsl:
+    .ReadByte()
+    .ShiftLeft()
+    .WriteByte()
+    Return
+
+  Grp2Case02:'$0A ASL A
+    .DataBus = .AC
+    .ShiftLeft()
+    .AC = .DataBus
+    Return
+
+  Grp2Case03:'$0E ASL abs
+    .Absolute()
+    Goto DoAsl
+
+  Grp2Case05:'$16 ASL zpg, X
+    .ZeroPageX()
+    Goto DoAsl
+
+  Grp2Case07:'$1E ASL abs, X
+    .AbsX()
+    Goto DoAsl
+
+
+  Grp2Case04: 'ORA (ZeroPageIndirect) 65c02
+    .ZeroPageIndirect()
+    .ReadByte()
+    .OrAc()
+    Return
+
+  Grp2Case06: 'INA - inc A 65c02
+    Inc .AC
+    .setsr(.ac)
+    Return
+
+    '---------------------------------------------------------------------------
+  Grp2Case1:
+    On addressmode Goto Grp2Case10, Grp2Case11, Grp2Case12, Grp2Case13, Grp2Case14, Grp2Case15, Grp2Case16, Grp2Case17
+    Return
+
+  Grp2Case10:'not used
+    Return
+
+  Grp2Case11:'$26 ROL zpg
+    .ZeroPage()
+  DoRol:
+    .ReadByte()
+    .RotateLeft()
+    .WriteByte()
+    Return
+
+  Grp2Case12:'$2A ROL A
+    .DataBus = .AC
+    .RotateLeft()
+    .AC = .DataBus
+    Return
+
+  Grp2Case13:'$2E ROL abs
+    .Absolute()
+    Goto DoRol
+
+  Grp2Case15:'$36 ROL zpg, X
+    .ZeroPageX()
+    Goto DoRol
+
+  Grp2Case16:'DEA  - dec A 65c02
+    Dec .AC
+    .setsr(.ac)
+    Return
+
+  Grp2Case17:'$3E ROL abs, X
+    .AbsX()
+    Goto DoRol
+
+  Grp2Case14:'AND ZeroPageIndirect 65c02
+    .ZeroPageIndirect()
+    .ReadByte()
+    .AndAc()
+    Return
+
+
+
+    '=============================================================================================
+  Grp2Case2:
+    On addressmode Goto Grp2Case20, Grp2Case21, Grp2Case22, Grp2Case23, Grp2Case24, Grp2Case25, Grp2Case26, Grp2Case27
+    Return
+
+  Grp2Case20:' not used
+    Return
+
+  Grp2Case21:'$46 LSR zpg
+    .ZeroPage()
+
+  DoLsr:
+    .ReadByte
+    .ShiftRight()
+    .WriteByte()
+    Return
+
+  Grp2Case22:'$4A LSR A
+    .databus = .AC
+    .ShiftRight()
+    .AC = .DataBus
+    Return
+
+  Grp2Case23:'$4E LSR abs
+    .Absolute()
+    Goto DoLsr
+
+  Grp2Case25:'$56 LSR zpg, X
+    .ZeroPageX()
+    Goto DoLsr
+
+  Grp2Case27:'$5E LSR abs, X
+    .AbsX()
+    Goto DoLsr
+
+  Grp2Case24:'EOR ZeroPageIndirect 65c02
+    .ZeroPageIndirect()
+    .ReadByte()
+    .EorAc()
+    Return
+
+  Grp2Case26:'PHY - Push Y 65c02
+    .Push(.Y)
+    Return
+    '----------------------------------------------------------------------------
+  Grp2Case3:
+    On addressmode Goto Grp2Case30, Grp2Case31, Grp2Case32, Grp2Case33, Grp2Case34, Grp2Case35, Grp2Case36, Grp2Case37
+    Return
+
+  Grp2Case30:'not used
+    Return
+
+  Grp2Case31:'$66 ROR zpg
+    .ZeroPage()
+
+  DoRor:
+    .ReadByte()
+    .RotateRight()
+    .WriteByte()
+    Return
+
+  Grp2Case32:'$6A ROR A
+    .DataBus = .AC
+    .RotateRight()
+    .AC = .DataBus
+    Return
+
+  Grp2Case33:'$6E ROR abs
+    .Absolute()
+    Goto DoRor
+
+  Grp2Case35:'$76 ROR zpg, X
+    .ZeroPageX()
+    Goto DoRor
+
+  Grp2Case37:'$7E ROR abs, X
+    .AbsX()
+    Goto DoRor
+
+  Grp2Case34:'ADC ZeroPageIndirect 65c02
+    .ZeroPageIndirect
+    .ReadByte()
+    .AdcAc()
+    Return
+
+  Grp2Case36:'PLY - Pull Y 65c02
+    .Y = .Pop()
+    .setsr(.Y)
+    Return
+
+    '-----------------------------------------------------------------------------
+
+  Grp2Case4:
+    On addressmode Goto Grp2Case40, Grp2Case41, Grp2Case42, Grp2Case43, Grp2Case44, Grp2Case45, Grp2Case46, Grp2Case47
+    Return
+
+  Grp2Case40:'not used
+    Return
+
+  Grp2Case41:'$86 STX zpg
+    .ZeroPage()
+  storeX:
+    .DataBus = .X
+    .WriteByte()
+    Return
+
+  Grp2Case42:'$8A TXA impl
+    .ac = .X
+    .SetSR(.AC)
+    Return
+
+  Grp2Case43:'$8E STX abs
+    .Absolute()
+    Goto storeX
+
+  Grp2Case44:'STA ZeroPageIndirect 65c02
+    .ZeroPageIndirect()
+    .DataBus = .AC
+    .WriteByte()
+    Return
+
+  Grp2Case45:'$96 STX zpg, Y
+    .ZeroPageX()
+    Goto storeX
+
+  Grp2Case46:'$9A TXS impl
+    .sp = .X
+    Return
+
+  Grp2Case47:'STZ abs,X  65c02
+    .AbsX()
+    .DataBus = 0
+    .WriteByte()
+    Return
+    '--------------------------------------------------------------------------
+  Grp2Case5:
+    On addressmode Goto Grp2Case50, Grp2Case51, Grp2Case52, Grp2Case53, Grp2Case54, Grp2Case55, Grp2Case56, Grp2Case57
+    Return
+
+  Grp2Case50:'$A2 LDX #
+    .Immediate()
+  ldx:
+    .ReadByte()
+    .X = .DataBus
+    .SetSR(.X)
+    Return
+
+  Grp2Case51:'$A6 LDX zpg
+    .ZeroPage()
+    Goto ldx
+
+  Grp2Case52:'$AA TAX impl
+    .X = .AC
+    .SetSR(.X)
+    Return
+
+  Grp2Case53:'$AE LDX abs
+    .Absolute()
+    Goto ldx
+
+  Grp2Case55:'$B6 LDX zpg, Y
+    .ZeroPageY()
+    Goto ldx
+
+  Grp2Case56:'$BA TSX impl
+    .X = .SP
+    Return
+
+  Grp2Case57:'$BE LDX abs, Y
+    .AbsY()
+    Goto Ldx
+
+  Grp2Case54:'LDA ZeroPageIndirect
+    .ZeroPageIndirect()
+    .ReadByte()
+    .ac = .DataBus
+    .setsr(.ac)
+    Return
+
+    '-------------------------------------------------------------------------------------
+  Grp2Case6:
+    On addressmode Goto Grp2Case60, Grp2Case61, Grp2Case62, Grp2Case63, Grp2Case64, Grp2Case65, Grp2Case66, Grp2Case67
+    Return
+
+  Grp2Case60:' Not Used
+    Return
+
+  Grp2Case61:'$C6 DEC zpg
+    .ZeroPage()
+  DecMem:
+    .ReadByte()
+    Dec .DataBus
+    .WriteByte()
+    .SetSR(.DataBus)
+    Return
+
+  Grp2Case62:'$CA DEX impl
+    Dec .X
+    .SetSR(.X)
+    Return
+
+  Grp2Case63:'$CE DEC abs
+    .Absolute()
+    Goto DecMem
+
+  Grp2Case65:'$D6 DEC zpg, X
+    .ZeroPageX()
+    Goto DecMem
+
+  Grp2Case67:'$DE DEC abs, X
+    .AbsX()
+    Goto DecMem
+
+  Grp2Case64:'CMP ZeroPageIndirect
+    .ZeroPageIndirect()
+    .ReadByte()
+    .Compare(.ac)
+    Return
+
+  Grp2Case66:'PHX Push X  65c02
+    .Push(.X)
+    Return
+
+    '------------------------------------------------------------------------------------------------
+  Grp2Case7:
+    On addressmode Goto Grp2Case70, Grp2Case71, Grp2Case72, Grp2Case73, Grp2Case74, Grp2Case75, Grp2Case76, Grp2Case77
+
+  Grp2Case70:' not used
+    Return
+
+  Grp2Case71:'$E6 INC zpg
+    .ZeroPage()
+
+  IncMem:
+    .ReadByte()
+    Inc .DataBus
+    .WriteByte()
+    .SetSR(.DataBus)
+    Return
+
+  Grp2Case72:'$EA NOP impl
+    Return
+
+  Grp2Case73:'$EE INC abs
+    .Absolute()
+    Goto IncMem
+
+  Grp2Case75:'$F6 INC zpg, X
+    .ZeroPageX()
+    Goto incMem
+
+  Grp2Case74:'SBC ZeroPageIndirect
+    .ZeroPageIndirect()
+    .ReadByte()
+    .SbcAc()
+    Return
+
+  Grp2Case77:'$FE INC abs, X
+    .AbsX()
+    Goto IncMem
+
+  Grp2Case76:'PLX Pull X   65c02
+    .X = .Pop()
+    .SetSR(.X)
+    Return
+
+  End With
+
+End
+
+'****************************************************************************************************************
+'****************************************************************************************************************
+
+Public Sub Group3(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+
+  With TheCpu
+
+    On aaa Goto Grp3Case0, Grp3Case1, Grp3Case2, Grp3Case3, Grp3Case4, Grp3Case5, Grp3Case6, Grp3Case7
+    Return
+
+  Grp3Case0:
+    On addressmode Goto Grp3Case00, Grp3Case01, Grp3Case02, Grp3Case03, Grp3Case04, Grp3Case05, Grp3Case06, Grp3Case07
+    Return
+
+  Grp3Case00:
+  Grp3Case01:
+  Grp3Case02:
+  Grp3Case03:
+  Grp3Case04:
+  Grp3Case05:
+  Grp3Case06:
+  Grp3Case07:
+    Return
+
+  Grp3Case1:
+    On addressmode Goto Grp3Case10, Grp3Case11, Grp3Case12, Grp3Case13, Grp3Case14, Grp3Case15, Grp3Case16, Grp3Case17
+    Return
+
+  Grp3Case10:
+  Grp3Case11:
+  Grp3Case12:
+  Grp3Case13:
+  Grp3Case14:
+  Grp3Case15:
+  Grp3Case16:
+  Grp3Case17:
+    Return
+
+    '-------------------------------------------------------------------
+  Grp3Case2:
+    On addressmode Goto Grp3Case20, Grp3Case21, Grp3Case22, Grp3Case23, Grp3Case24, Grp3Case25, Grp3Case26, Grp3Case27
+    Return
+
+  Grp3Case20:
+  Grp3Case21:
+  Grp3Case22:
+  Grp3Case23:
+  Grp3Case24:
+  Grp3Case25:
+  Grp3Case26:
+  Grp3Case27:
+    Return
+
+  Grp3Case3:
+    On addressmode Goto Grp3Case30, Grp3Case31, Grp3Case32, Grp3Case33, Grp3Case34, Grp3Case35, Grp3Case36, Grp3Case37
+    Return
+
+  Grp3Case30:
+  Grp3Case31:
+  Grp3Case32:
+  Grp3Case33:
+  Grp3Case34:
+  Grp3Case35:
+  Grp3Case36:
+  Grp3Case37:
+    Return
+
+    '---------------------------------------------------------------------------------------------------------------
+  Grp3Case4:
+    On addressmode Goto Grp3Case40, Grp3Case41, Grp3Case42, Grp3Case43, Grp3Case44, Grp3Case45, Grp3Case46, Grp3Case47
+    Return
+
+  Grp3Case40:
+  Grp3Case41:
+  Grp3Case42:
+  Grp3Case43:
+  Grp3Case44:
+  Grp3Case45:
+  Grp3Case46:
+  Grp3Case47:
+    Return
+
+
+    '------------------------------------------------------------------------------------------
+  Grp3Case5:
+    On addressmode Goto Grp3Case50, Grp3Case51, Grp3Case52, Grp3Case53, Grp3Case54, Grp3Case55, Grp3Case56, Grp3Case57
+    Return
+
+  Grp3Case50:
+  Grp3Case51:
+  Grp3Case52:
+  Grp3Case53:
+  Grp3Case54:
+  Grp3Case55:
+  Grp3Case56:
+  Grp3Case57:
+    Return
+
+    '--------------------------------------------------------------------------------------------------------------
+  Grp3Case6:
+    On addressmode Goto Grp3Case60, Grp3Case61, Grp3Case62, Grp3Case63, Grp3Case64, Grp3Case65, Grp3Case66, Grp3Case67
+    Return
+
+  Grp3Case60:
+  Grp3Case61:
+  Grp3Case62:
+  Grp3Case63:
+  Grp3Case64:
+  Grp3Case65:
+  Grp3Case66:
+  Grp3Case67:
+    Return
+
+    '-----------------------------------------------------------------------------------------------
+  Grp3Case7:
+    On addressmode Goto Grp3Case70, Grp3Case71, Grp3Case72, Grp3Case73, Grp3Case74, Grp3Case75, Grp3Case76, Grp3Case77
+
+  Grp3Case70:
+  Grp3Case71:
+  Grp3Case72:
+  Grp3Case73:
+  Grp3Case74:
+  Grp3Case75:
+  Grp3Case76:
+  Grp3Case77:
+    Return
+
+  End With
+
+End
+

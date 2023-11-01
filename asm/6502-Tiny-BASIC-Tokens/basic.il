@@ -961,7 +961,8 @@ FactVariable:
         TSTV        FactWithBracket
         TSTBYTE     FactFNParm,R2,GOSUB_RTN_VALUE
         CALL        FactVarPTR
-        CALL        FactVariableValue
+;        CALL        FactVariableValue
+        IND                                      ; get the variable value
         RTN
 
 FactFNParm:
@@ -996,6 +997,10 @@ F2INTEGER:
         TSTB        FactMissingRightBracket,oRightSQBracket
         SUBSCRIPT   tInteger                      ; Integer type array
         SETR2       tInteger                      ; Set word datatype
+        TSTB        F2PTRLOADED,oBang             ; for a word it can be fillowed by a! as ref to other task variables
+        IND                                       ; Get the value of the task context to access
+        TSTVT       UNKNOWNID                     ; if it is not another variable name then it is a halt error
+        IJMP        FactVarPTR                    ; Process the value on the other side
 F2PTRLOADED:
         RTN
 

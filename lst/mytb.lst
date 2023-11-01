@@ -1,195 +1,195 @@
 ------- FILE mytb.asm LEVEL 1 PASS 6
-      1 U428d				   input      processor	6502
-      2 U428d ????						;=====================================================
-      3 U428d ????						; Concurrent Tiny Basic, no longer Tiny
-      4 U428d ????						; Derived from Bob's Tiny Basic, and Lots of
-      5 U428d ????						; Free Time. Now abiut 6K Full OS features.
-      6 U428d ????						;
-      7 U428d ????						; While working on the Corsham Technologies KIM Clone
-      8 U428d ????						; project, I wanted to include a TINY BASIC since that
-      9 U428d ????						; was a highly desirable feature of early computers.
-     10 U428d ????						;
-     11 U428d ????						; Rather than negotiating copyright issues for
-     12 U428d ????						; existing BASICs, I decided to just write one from
-     13 U428d ????						; scratch.
-     14 U428d ????						;
-     15 U428d ????						; 10/07/2017
-     16 U428d ????						;
-     17 U428d ????						; This implements a stripped down Tiny BASIC
-     18 U428d ????						; interpreter using the Interpretive Language (IL)
-     19 U428d ????						; method as described in the first few issues of
-     20 U428d ????						; Dr Dobb's Journal.  The IL interpreter can be used
-     21 U428d ????						; to write various languages simply by changing the
-     22 U428d ????						; IL code rather than the interpreter itself.
-     23 U428d ????						;
-     24 U428d ????						; 10/15/2021 v0.4 - Bob Applegate
-     25 U428d ????						;		* Fixed major bug in findLine that
-     26 U428d ????						;		  caused corrupted lines, crashes, etc.
-     27 U428d ????						;		* If no parameter given to RND, assume
-     28 U428d ????						;		  32766.
-     29 U428d ????						;		* No more error 5 when a program
-     30 U428d ????						;		  reaches the end without an END.
-     31 U428d ????						;
-     32 U428d ????						; 02/15/2022 v0.5 JustLostInTime@gmail.com
-     33 U428d ????						;		 * Unexpanded version to play with everything
-     34 U428d ????						;		 * Add some usefull system level functions
-     35 U428d ????						;		 * allow a larger number of tiny basic formats
-     36 U428d ????						;		 * Add byte at start of line holding length
-     37 U428d ????						;		   for faster execution of goto and gosub
-     38 U428d ????						;		 * Re-added gosub
-     39 U428d ????						;		 * allow ; or , at end if print stmt
-     40 U428d ????						;		   without CRLF being added.
-     41 U428d ????						;		 * Added extended function erase to
-     42 U428d ????						;		   use the extended ctmon65 rm file
-     43 U428d ????						;		 * Fix quoted text to not have to backtrack
-     44 U428d ????						;		 * Add IRQ handler, Call Gosub and Iret at end
-     45 U428d ????						;		 * Add concurrency features
-     46 U428d ????						;		 * Add Compile at runtime for gosub and goto addresses
-     47 U428d ????						;
-     48 U428d ????						; www.corshamtech.com
-     49 U428d ????						; bob@corshamtech.com
-     50 U428d ????						; JustLostInTime@gmail.com
-     51 U428d ????						;
-     52 U428d ????						;=====================================================
-     53 U428d ????						;
-     54 U428d ????						; Create TRUE and FALSE values for conditionals.
-     55 U428d ????						;
-     56 U428d ????
-     57 U428d ????	       00 00	   FALSE      equ	0
-     58 U428d ????	       ff ff ff ff TRUE       equ	~FALSE
-     59 U428d ????						;
-     60 U428d ????						;---------------------------------------------------------
-     61 U428d ????						; One of these must be set to indicate which environment
-     62 U428d ????						; Tiny BASIC will be running in.  Here are the current
-     63 U428d ????						; environments:
-     64 U428d ????						;
-     65 U428d ????						; KIM - This is a bare KIM-1.	You'll need to add a few
-     66 U428d ????						; more K of RAM.
-     67 U428d ????						;
-     68 U428d ????						; XKIM - The Corsham Technologies xKIM extended monitor,
-     69 U428d ????						; which enhances, without replacing, the standard KIM
-     70 U428d ????						; monitor.  It gives access to routines to save/load files
-     71 U428d ????						; to a micro SD card.
-     72 U428d ????						;
-     73 U428d ????						; CTMON65 is a from-scratch monitor written for the
-     74 U428d ????						; Corsham Tech SS-50 6502 CPU board, but the monitor can
-     75 U428d ????						; easily be ported to other systems.  It has support for
-     76 U428d ????						; using a micro SD card for file storage/retrieval.
-     77 U428d ????						;
-     78 U428d ????	       00 00	   KIM	      equ	FALSE	;Basic KIM-1, no extensions
-     79 U428d ????	       00 00	   XKIM       equ	FALSE	;Corsham Tech xKIM monitor
-     80 U428d ????	       ff ff ff ff CTMON65    equ	TRUE	;Corsham Tech CTMON65
-     81 U428d ????	       ff ff ff ff IL_DEBUG_TEXT equ	TRUE	;Print out as text IL instructions
-     82 U428d ????						;
-     83 U428d ????						;   Need to define some macros for the dasm assembler
-     84 U428d ????						;
-     85 U428d ????				      MACRO	dw
-     86 U428d ????				      .word	{0}
-     87 U428d ????				      ENDM
-     88 U428d ????
-     89 U428d ????				      MACRO	db
-     90 U428d ????				      .byte	{0}
-     91 U428d ????				      ENDM
-     92 U428d ????
-     93 U428d ????						;
-     94 U428d ????						; If set, include disk functions.
-     95 U428d ????						;
-     96 U428d ????	       ff ff ff ff DISK_ACCESS equ	TRUE
-     97 U428d ????						;
-     98 U428d ????						; If ILTRACE is set then dump out the address of every
-     99 U428d ????						; IL opcode before executing it.
-    100 U428d ????						; 0 = off, 7=IL trace, 6 = Basic Prog Trace, 7+6 = both
-    101 U428d ????						;
-    102 U428d ????	       00 00	   ILTRACE    equ	%00000000	;%0100000 = Basic STMT Trace, %10000000 = il trace etc
-    103 U428d ????						;
-    104 U428d ????						; If FIXED is set, put the IL code and the user
-    105 U428d ????						; program space at fixed locations in memory.	This is
-    106 U428d ????						; meant only for debugging.
-    107 U428d ????						;
-    108 U428d ????	       00 00	   FIXED      equ	FALSE
-    109 U428d ????
-    110 U428d ????	       00 0f	   terminalIOblockLen equ	[TerminalIOblockEnd - TerminalIOblock]
-    111 U428d ????
-    112 U428d ????						;
-    113 U428d ????						; Sets the arithmetic stack depth.  This is *TINY*
-    114 U428d ????						; BASIC, so keep this small!
-    115 U428d ????						;
-    116 U428d ????	       00 14	   MATHSTACKSIZE equ	20	;number of entries in math stack
-    117 U428d ????	       00 32	   ILSTACKSIZE equ	50	;number of entries in ilstack
-    118 U428d ????	       00 10	   GOSUBSTACKSIZE equ	16	;Depth of gosub/For-Next nesting max is 64 times TASKTABLE LENGTH must < 256
-    119 U428d ????	       00 25	   VARIABLESSIZE equ	37	;26 variables + 1 for exit code + 10 entries (20bytes) for ioblock
-    120 U428d ????	       00 0a	   TASKCOUNT  equ	10	;Task Table count, up to 10 tasks
-    121 U428d ????	       00 ff	   TASKCYCLESDEFAULT equ	255	;Default Task Switch 0-255 uses a single byte
-    122 U428d ????	       00 02	   TASKCYCLESHIGH equ	2	;hi order count
-    123 U428d ????	       00 10	   MESSAGESMAX equ	GOSUBSTACKSIZE	;Not used msg q and gosub grow towards each other and over flow when they meet
-    124 U428d ????
-    125 U428d ????	       00 36	   taskSTDIN  equ	[[VARIABLESSIZE - 10]*2]	;io vector
-    126 U428d ????	       00 38	   taskSTDOUT equ	[[[VARIABLESSIZE - 10]*2]+2]	;io vector
-    127 U428d ????
-    128 U428d ????	       00 3f	   taskIOinPort equ	[[[VARIABLESSIZE - 10]*2]+4+5]	;Offset into the ioblock
-    129 U428d ????	       00 3b	   taskIOoutPort equ	[[[VARIABLESSIZE - 10]*2]+4+1]	;Offset into the ioblock
-    130 U428d ????	       00 46	   taskIOstatusPort equ	[[[VARIABLESSIZE - 10]*2]+4+12]	;Offset into the ioblock
-    131 U428d ????						;
-    132 U428d ????						; Gosub entry types
-    133 U428d ????
-    134 U428d ????	       00 01	   GOSUB_RTN  equ	$01	; This is a simple gosub return
-    135 U428d ????	       00 81	   GOSUB_RTN_VALUE equ	$81	; subroutine will return a value
-    136 U428d ????	       00 02	   GOSUB_FOR  equ	2	; Jump point for a for function
-    137 U428d ????	       00 03	   GOSUB_NEXT equ	3	; Next interation and jump point
-    138 U428d ????	       00 04	   GOSUB_MSG  equ	4	; this identifies the entry as an IPC message
-    139 U428d ????	       00 05	   GOSUB_STACK_FRAME equ	5	; used to contain the gosubs stackframe info when passing parameters
-    140 U428d ????						; 0 byte is the original stack offset, byte 1 is the parameter count
-    141 U428d ????						; 2 byte  is unused, 3 byte  is the type GOSUB_STACK_FRAME
-    142 U428d ????	       00 06	   GOSUB_STACK_SAVE equ	6	; SAVES THE FULL MATH STACK INFORMATION
-    143 U428d ????	       00 07	   GOSUB_SCRATCH_PAD equ	7	; Used when a work space is needed in il code
-    144 U428d ????						;
-    145 U428d ????						; Common ASCII constants
-    146 U428d ????						;
-    147 U428d ????	       00 07	   BEL	      equ	$07
-    148 U428d ????	       00 08	   BS	      equ	$08
-    149 U428d ????	       00 09	   TAB	      equ	$09
-    150 U428d ????	       00 0a	   LF	      equ	$0A
-    151 U428d ????	       00 0d	   CR	      equ	$0D
-    152 U428d ????	       00 22	   quote      equ	$22
-    153 U428d ????	       00 20	   SPACE      equ	$20
-    154 U428d ????	       00 2c	   COMMA      equ	',
-    155 U428d ????	       00 3b	   SEMICOLON  equ	';
-    156 U428d ????	       00 3a	   COLON      equ	':
-    157 U428d ????	       00 24	   DOLLAR     equ	'$
-    158 U428d ????						;
-    159 U428d ????						; These are error codes
-    160 U428d ????						;
-    161 U428d ????	       00 00	   ERR_NONE   equ	0	;No Errror
-    162 U428d ????	       00 01	   ERR_EXPR   equ	1	;expression error
-    163 U428d ????	       00 02	   ERR_UNDER  equ	2	;The Math stack underflow
-    164 U428d ????	       00 03	   ERR_OVER   equ	3	;The Math stack overflow
-    165 U428d ????	       00 04	   ERR_EXTRA_STUFF equ	4	;Stuff at end of line
-    166 U428d ????	       00 05	   ERR_SYNTAX equ	5	;various syntax errors
-    167 U428d ????	       00 06	   ERR_DIVIDE_ZERO equ	6	;divide by zero
-    168 U428d ????	       00 07	   ERR_READ_FAIL equ	7	;error loading file
-    169 U428d ????	       00 08	   ERR_WRITE_FAIL equ	8	;error saving file
-    170 U428d ????	       00 09	   ERR_NO_FILENAME equ	9	;Forgot to include the file name
-    171 U428d ????	       00 0a	   ERR_FILE_NOT_FOUND equ	10	;The file name provided not found
-    172 U428d ????	       00 0b	   ERR_STACK_UNDER_FLOW equ	11	;the gosub stack underflow
-    173 U428d ????	       00 0c	   ERR_STACK_OVER_FLOW equ	12	;the gosub Stack overflow
-    174 U428d ????	       00 0d	   ERR_BAD_LINE_NUMBER equ	13	;Bad line number specified Not found
-    175 U428d ????	       00 0e	   ERR_NO_EMPTY_TASK_SLOT equ	14	;Unable to create a new task no/slots
-    176 U428d ????	       00 0f	   ERR_INDEX_OUT_OF_RANGE equ	15	;Subscript out of range
-    177 U428d ????	       00 10	   ERR_INVALID_PID equ	16	;Invalid PID provided
-    178 U428d ????	       00 11	   ERR_OUT_OF_MSG_SPACE equ	17	;Out of space for new messsages
-    179 U428d ????	       00 12	   ERR_INVALID_STK_FRAME equ	18	;The stack frame was expected not found
-    180 U428d ????	       00 13	   ERR_NO_RETURN_VALUE_PROVIDED equ	19	;No value returned by a gofn call
-    181 U428d ????	       00 14	   ERR_LINE_NOT_FOUND equ	20	;Gosub/goto/gofn line number not found
-    182 U428d ????	       00 15	   ERR_IL_STACK_OVER_FLOW equ	21	;The IL return stack has overflowed
-    183 U428d ????	       00 16	   ERR_EXPECTVAR equ	22	;Expected a variable name or definition
-    184 U428d ????	       00 17	   ERR_CLOSINGBRACKET equ	23	;Expected a closing bracket
-    185 U428d ????	       00 18	   ERR_MISSINGEQUALSIGN equ	24	;Expected an equal sign for assignment
-    186 U428d ????	       00 19	   ERR_FUNCTION_EXPECTED_PARAMETERS equ	25	;Function expected parameters
-    187 U428d ????	       00 1a	   ERR_EXPECTED_OPENING_BRACKET equ	26	;Expected opening bracket [ or (
-    188 U428d ????						;
-    189 U428d ????						;=====================================================
-    190 U428d ????						; Zero page storage.
-    191 U428d ????						;
+      1 U4294				   input      processor	6502
+      2 U4294 ????						;=====================================================
+      3 U4294 ????						; Concurrent Tiny Basic, no longer Tiny
+      4 U4294 ????						; Derived from Bob's Tiny Basic, and Lots of
+      5 U4294 ????						; Free Time. Now abiut 6K Full OS features.
+      6 U4294 ????						;
+      7 U4294 ????						; While working on the Corsham Technologies KIM Clone
+      8 U4294 ????						; project, I wanted to include a TINY BASIC since that
+      9 U4294 ????						; was a highly desirable feature of early computers.
+     10 U4294 ????						;
+     11 U4294 ????						; Rather than negotiating copyright issues for
+     12 U4294 ????						; existing BASICs, I decided to just write one from
+     13 U4294 ????						; scratch.
+     14 U4294 ????						;
+     15 U4294 ????						; 10/07/2017
+     16 U4294 ????						;
+     17 U4294 ????						; This implements a stripped down Tiny BASIC
+     18 U4294 ????						; interpreter using the Interpretive Language (IL)
+     19 U4294 ????						; method as described in the first few issues of
+     20 U4294 ????						; Dr Dobb's Journal.  The IL interpreter can be used
+     21 U4294 ????						; to write various languages simply by changing the
+     22 U4294 ????						; IL code rather than the interpreter itself.
+     23 U4294 ????						;
+     24 U4294 ????						; 10/15/2021 v0.4 - Bob Applegate
+     25 U4294 ????						;		* Fixed major bug in findLine that
+     26 U4294 ????						;		  caused corrupted lines, crashes, etc.
+     27 U4294 ????						;		* If no parameter given to RND, assume
+     28 U4294 ????						;		  32766.
+     29 U4294 ????						;		* No more error 5 when a program
+     30 U4294 ????						;		  reaches the end without an END.
+     31 U4294 ????						;
+     32 U4294 ????						; 02/15/2022 v0.5 JustLostInTime@gmail.com
+     33 U4294 ????						;		 * Unexpanded version to play with everything
+     34 U4294 ????						;		 * Add some usefull system level functions
+     35 U4294 ????						;		 * allow a larger number of tiny basic formats
+     36 U4294 ????						;		 * Add byte at start of line holding length
+     37 U4294 ????						;		   for faster execution of goto and gosub
+     38 U4294 ????						;		 * Re-added gosub
+     39 U4294 ????						;		 * allow ; or , at end if print stmt
+     40 U4294 ????						;		   without CRLF being added.
+     41 U4294 ????						;		 * Added extended function erase to
+     42 U4294 ????						;		   use the extended ctmon65 rm file
+     43 U4294 ????						;		 * Fix quoted text to not have to backtrack
+     44 U4294 ????						;		 * Add IRQ handler, Call Gosub and Iret at end
+     45 U4294 ????						;		 * Add concurrency features
+     46 U4294 ????						;		 * Add Compile at runtime for gosub and goto addresses
+     47 U4294 ????						;
+     48 U4294 ????						; www.corshamtech.com
+     49 U4294 ????						; bob@corshamtech.com
+     50 U4294 ????						; JustLostInTime@gmail.com
+     51 U4294 ????						;
+     52 U4294 ????						;=====================================================
+     53 U4294 ????						;
+     54 U4294 ????						; Create TRUE and FALSE values for conditionals.
+     55 U4294 ????						;
+     56 U4294 ????
+     57 U4294 ????	       00 00	   FALSE      equ	0
+     58 U4294 ????	       ff ff ff ff TRUE       equ	~FALSE
+     59 U4294 ????						;
+     60 U4294 ????						;---------------------------------------------------------
+     61 U4294 ????						; One of these must be set to indicate which environment
+     62 U4294 ????						; Tiny BASIC will be running in.  Here are the current
+     63 U4294 ????						; environments:
+     64 U4294 ????						;
+     65 U4294 ????						; KIM - This is a bare KIM-1.	You'll need to add a few
+     66 U4294 ????						; more K of RAM.
+     67 U4294 ????						;
+     68 U4294 ????						; XKIM - The Corsham Technologies xKIM extended monitor,
+     69 U4294 ????						; which enhances, without replacing, the standard KIM
+     70 U4294 ????						; monitor.  It gives access to routines to save/load files
+     71 U4294 ????						; to a micro SD card.
+     72 U4294 ????						;
+     73 U4294 ????						; CTMON65 is a from-scratch monitor written for the
+     74 U4294 ????						; Corsham Tech SS-50 6502 CPU board, but the monitor can
+     75 U4294 ????						; easily be ported to other systems.  It has support for
+     76 U4294 ????						; using a micro SD card for file storage/retrieval.
+     77 U4294 ????						;
+     78 U4294 ????	       00 00	   KIM	      equ	FALSE	;Basic KIM-1, no extensions
+     79 U4294 ????	       00 00	   XKIM       equ	FALSE	;Corsham Tech xKIM monitor
+     80 U4294 ????	       ff ff ff ff CTMON65    equ	TRUE	;Corsham Tech CTMON65
+     81 U4294 ????	       ff ff ff ff IL_DEBUG_TEXT equ	TRUE	;Print out as text IL instructions
+     82 U4294 ????						;
+     83 U4294 ????						;   Need to define some macros for the dasm assembler
+     84 U4294 ????						;
+     85 U4294 ????				      MACRO	dw
+     86 U4294 ????				      .word	{0}
+     87 U4294 ????				      ENDM
+     88 U4294 ????
+     89 U4294 ????				      MACRO	db
+     90 U4294 ????				      .byte	{0}
+     91 U4294 ????				      ENDM
+     92 U4294 ????
+     93 U4294 ????						;
+     94 U4294 ????						; If set, include disk functions.
+     95 U4294 ????						;
+     96 U4294 ????	       ff ff ff ff DISK_ACCESS equ	TRUE
+     97 U4294 ????						;
+     98 U4294 ????						; If ILTRACE is set then dump out the address of every
+     99 U4294 ????						; IL opcode before executing it.
+    100 U4294 ????						; 0 = off, 7=IL trace, 6 = Basic Prog Trace, 7+6 = both
+    101 U4294 ????						;
+    102 U4294 ????	       00 00	   ILTRACE    equ	%00000000	;%0100000 = Basic STMT Trace, %10000000 = il trace etc
+    103 U4294 ????						;
+    104 U4294 ????						; If FIXED is set, put the IL code and the user
+    105 U4294 ????						; program space at fixed locations in memory.	This is
+    106 U4294 ????						; meant only for debugging.
+    107 U4294 ????						;
+    108 U4294 ????	       00 00	   FIXED      equ	FALSE
+    109 U4294 ????
+    110 U4294 ????	       00 0f	   terminalIOblockLen equ	[TerminalIOblockEnd - TerminalIOblock]
+    111 U4294 ????
+    112 U4294 ????						;
+    113 U4294 ????						; Sets the arithmetic stack depth.  This is *TINY*
+    114 U4294 ????						; BASIC, so keep this small!
+    115 U4294 ????						;
+    116 U4294 ????	       00 14	   MATHSTACKSIZE equ	20	;number of entries in math stack
+    117 U4294 ????	       00 32	   ILSTACKSIZE equ	50	;number of entries in ilstack
+    118 U4294 ????	       00 10	   GOSUBSTACKSIZE equ	16	;Depth of gosub/For-Next nesting max is 64 times TASKTABLE LENGTH must < 256
+    119 U4294 ????	       00 25	   VARIABLESSIZE equ	37	;26 variables + 1 for exit code + 10 entries (20bytes) for ioblock
+    120 U4294 ????	       00 0a	   TASKCOUNT  equ	10	;Task Table count, up to 10 tasks
+    121 U4294 ????	       00 ff	   TASKCYCLESDEFAULT equ	255	;Default Task Switch 0-255 uses a single byte
+    122 U4294 ????	       00 02	   TASKCYCLESHIGH equ	2	;hi order count
+    123 U4294 ????	       00 10	   MESSAGESMAX equ	GOSUBSTACKSIZE	;Not used msg q and gosub grow towards each other and over flow when they meet
+    124 U4294 ????
+    125 U4294 ????	       00 36	   taskSTDIN  equ	[[VARIABLESSIZE - 10]*2]	;io vector
+    126 U4294 ????	       00 38	   taskSTDOUT equ	[[[VARIABLESSIZE - 10]*2]+2]	;io vector
+    127 U4294 ????
+    128 U4294 ????	       00 3f	   taskIOinPort equ	[[[VARIABLESSIZE - 10]*2]+4+5]	;Offset into the ioblock
+    129 U4294 ????	       00 3b	   taskIOoutPort equ	[[[VARIABLESSIZE - 10]*2]+4+1]	;Offset into the ioblock
+    130 U4294 ????	       00 46	   taskIOstatusPort equ	[[[VARIABLESSIZE - 10]*2]+4+12]	;Offset into the ioblock
+    131 U4294 ????						;
+    132 U4294 ????						; Gosub entry types
+    133 U4294 ????
+    134 U4294 ????	       00 01	   GOSUB_RTN  equ	$01	; This is a simple gosub return
+    135 U4294 ????	       00 81	   GOSUB_RTN_VALUE equ	$81	; subroutine will return a value
+    136 U4294 ????	       00 02	   GOSUB_FOR  equ	2	; Jump point for a for function
+    137 U4294 ????	       00 03	   GOSUB_NEXT equ	3	; Next interation and jump point
+    138 U4294 ????	       00 04	   GOSUB_MSG  equ	4	; this identifies the entry as an IPC message
+    139 U4294 ????	       00 05	   GOSUB_STACK_FRAME equ	5	; used to contain the gosubs stackframe info when passing parameters
+    140 U4294 ????						; 0 byte is the original stack offset, byte 1 is the parameter count
+    141 U4294 ????						; 2 byte  is unused, 3 byte  is the type GOSUB_STACK_FRAME
+    142 U4294 ????	       00 06	   GOSUB_STACK_SAVE equ	6	; SAVES THE FULL MATH STACK INFORMATION
+    143 U4294 ????	       00 07	   GOSUB_SCRATCH_PAD equ	7	; Used when a work space is needed in il code
+    144 U4294 ????						;
+    145 U4294 ????						; Common ASCII constants
+    146 U4294 ????						;
+    147 U4294 ????	       00 07	   BEL	      equ	$07
+    148 U4294 ????	       00 08	   BS	      equ	$08
+    149 U4294 ????	       00 09	   TAB	      equ	$09
+    150 U4294 ????	       00 0a	   LF	      equ	$0A
+    151 U4294 ????	       00 0d	   CR	      equ	$0D
+    152 U4294 ????	       00 22	   quote      equ	$22
+    153 U4294 ????	       00 20	   SPACE      equ	$20
+    154 U4294 ????	       00 2c	   COMMA      equ	',
+    155 U4294 ????	       00 3b	   SEMICOLON  equ	';
+    156 U4294 ????	       00 3a	   COLON      equ	':
+    157 U4294 ????	       00 24	   DOLLAR     equ	'$
+    158 U4294 ????						;
+    159 U4294 ????						; These are error codes
+    160 U4294 ????						;
+    161 U4294 ????	       00 00	   ERR_NONE   equ	0	;No Errror
+    162 U4294 ????	       00 01	   ERR_EXPR   equ	1	;expression error
+    163 U4294 ????	       00 02	   ERR_UNDER  equ	2	;The Math stack underflow
+    164 U4294 ????	       00 03	   ERR_OVER   equ	3	;The Math stack overflow
+    165 U4294 ????	       00 04	   ERR_EXTRA_STUFF equ	4	;Stuff at end of line
+    166 U4294 ????	       00 05	   ERR_SYNTAX equ	5	;various syntax errors
+    167 U4294 ????	       00 06	   ERR_DIVIDE_ZERO equ	6	;divide by zero
+    168 U4294 ????	       00 07	   ERR_READ_FAIL equ	7	;error loading file
+    169 U4294 ????	       00 08	   ERR_WRITE_FAIL equ	8	;error saving file
+    170 U4294 ????	       00 09	   ERR_NO_FILENAME equ	9	;Forgot to include the file name
+    171 U4294 ????	       00 0a	   ERR_FILE_NOT_FOUND equ	10	;The file name provided not found
+    172 U4294 ????	       00 0b	   ERR_STACK_UNDER_FLOW equ	11	;the gosub stack underflow
+    173 U4294 ????	       00 0c	   ERR_STACK_OVER_FLOW equ	12	;the gosub Stack overflow
+    174 U4294 ????	       00 0d	   ERR_BAD_LINE_NUMBER equ	13	;Bad line number specified Not found
+    175 U4294 ????	       00 0e	   ERR_NO_EMPTY_TASK_SLOT equ	14	;Unable to create a new task no/slots
+    176 U4294 ????	       00 0f	   ERR_INDEX_OUT_OF_RANGE equ	15	;Subscript out of range
+    177 U4294 ????	       00 10	   ERR_INVALID_PID equ	16	;Invalid PID provided
+    178 U4294 ????	       00 11	   ERR_OUT_OF_MSG_SPACE equ	17	;Out of space for new messsages
+    179 U4294 ????	       00 12	   ERR_INVALID_STK_FRAME equ	18	;The stack frame was expected not found
+    180 U4294 ????	       00 13	   ERR_NO_RETURN_VALUE_PROVIDED equ	19	;No value returned by a gofn call
+    181 U4294 ????	       00 14	   ERR_LINE_NOT_FOUND equ	20	;Gosub/goto/gofn line number not found
+    182 U4294 ????	       00 15	   ERR_IL_STACK_OVER_FLOW equ	21	;The IL return stack has overflowed
+    183 U4294 ????	       00 16	   ERR_EXPECTVAR equ	22	;Expected a variable name or definition
+    184 U4294 ????	       00 17	   ERR_CLOSINGBRACKET equ	23	;Expected a closing bracket
+    185 U4294 ????	       00 18	   ERR_MISSINGEQUALSIGN equ	24	;Expected an equal sign for assignment
+    186 U4294 ????	       00 19	   ERR_FUNCTION_EXPECTED_PARAMETERS equ	25	;Function expected parameters
+    187 U4294 ????	       00 1a	   ERR_EXPECTED_OPENING_BRACKET equ	26	;Expected opening bracket [ or (
+    188 U4294 ????						;
+    189 U4294 ????						;=====================================================
+    190 U4294 ????						; Zero page storage.
+    191 U4294 ????						;
     192 U00f6 ????				      SEG.U	ZEROPAGE
     193 U0040					      org	$0040
     194 U0040
@@ -275,7 +275,7 @@
     274 U0060							;
     275 U0060							;=====================================================
     276 U0060							;
-    277  35bb ????				      SEG	Code
+    277  35c2 ????				      SEG	Code
     278  0200					      org	$0200
     279  0200							;
     280  0200							; Cold start is at $0200.  Warm start is at $0203.
@@ -487,9 +487,9 @@
     330  0244		       20 26 23 	      jsr	MemInit	;setup the free space available
     331  0247
     332  0247		       a9 01	   calcstack  lda	#1
-    333  0249		       8d 0d 37 	      sta	taskCounter	; Initialize number of tasks to 1
+    333  0249		       8d 14 37 	      sta	taskCounter	; Initialize number of tasks to 1
     334  024c		       a9 80		      lda	#TASKACTIVE	; bit 7 is set
-    335  024e		       8d 0f 36 	      sta	taskTable	; mark the main task as active
+    335  024e		       8d 16 36 	      sta	taskTable	; mark the main task as active
     336  0251		       20 73 25 	      jsr	taskSetStacks	; setup all the task stacks/Variables, Init task io block
     337  0254		       a9 70		      lda	#IL&$ff
     338  0256		       85 43		      sta	ILPC
@@ -504,18 +504,18 @@
     347  025c
     348  025c							;  Init time slices defaults
     349  025c		       a9 02		      lda	#TASKCYCLESHIGH
-    350  025e		       8d 0c 37 	      sta	taskResetValue+1
+    350  025e		       8d 13 37 	      sta	taskResetValue+1
     351  0261		       a9 ff		      lda	#TASKCYCLESDEFAULT
-    352  0263		       8d 0b 37 	      sta	taskResetValue
+    352  0263		       8d 12 37 	      sta	taskResetValue
     353  0266							;
     354  0266							; Initialize the pseudo-random number sequence...
     355  0266							;
     356  0266		       a9 5a		      lda	#$5a
-    357  0268		       8d 77 42 	      sta	rtemp1
+    357  0268		       8d 7e 42 	      sta	rtemp1
     358  026b		       a9 9d		      lda	#%10011101
-    359  026d		       8d 79 42 	      sta	random
+    359  026d		       8d 80 42 	      sta	random
     360  0270		       a9 5b		      lda	#%01011011
-    361  0272		       8d 7a 42 	      sta	random+1
+    361  0272		       8d 81 42 	      sta	random+1
     362  0275							;
     363  0275							;   Insert a Basic irq handler for the basic Language
     364  0275		       a9 d1		      lda	#ServiceIrq&$ff
@@ -531,9 +531,9 @@
     374  0282		       20 3b 2e    warm2      jsr	SetOutConsole
     375  0285		       20 48 2e 	      jsr	SetInConsole
     376  0288		       20 f4 2c 	      jsr	CRLF
-    377  028b		       ad 74 42 	      lda	errGoto
+    377  028b		       ad 7b 42 	      lda	errGoto
     378  028e		       85 43		      sta	ILPC
-    379  0290		       ad 75 42 	      lda	errGoto+1
+    379  0290		       ad 7c 42 	      lda	errGoto+1
     380  0293		       85 44		      sta	ILPC+1
     381  0295							;
     382  0295							; And continue with both starts here
@@ -548,16 +548,16 @@
     391  0299
     392  0299		       a9 00		      lda	#0
     393  029b		       85 5b		      sta	RunMode
-    394  029d		       8d ea 41 	      sta	LINBUF
+    394  029d		       8d f1 41 	      sta	LINBUF
     395  02a0
     396  02a0							; Clear everything from the stacks
     397  02a0
-    398  02a0		       8d 81 42 	      sta	taskIOPending	; No one waiting for io
-    399  02a3		       8d 82 42 	      sta	taskRDPending	; No one waiting for bg io
+    398  02a0		       8d 88 42 	      sta	taskIOPending	; No one waiting for io
+    399  02a3		       8d 89 42 	      sta	taskRDPending	; No one waiting for bg io
     400  02a6
     401  02a6		       20 ef 25 	      jsr	taskReset
     402  02a9							;
-    403  02a9		       a9 ea		      lda	#LINBUF&$ff
+    403  02a9		       a9 f1		      lda	#LINBUF&$ff
     404  02ab		       85 4f		      sta	CURPTR
     405  02ad		       a9 41		      lda	#LINBUF>>8
     406  02af		       85 50		      sta	CURPTR+1	;fall through...
@@ -573,7 +573,7 @@
     416  02b2		       e0 ff		      cpx	#$FF	; Should be empty
     417  02b4		       d0 29		      bne	ILbad	; Halt and catch fire now!
     418  02b6
-    419  02b6		       ce 09 37 	      dec	taskCurrentCycles
+    419  02b6		       ce 10 37 	      dec	taskCurrentCycles
     420  02b9		       d0 03		      bne	NextIlNow
     421  02bb		       20 18 26 	      jsr	iTaskSwitch	;check for a task switch
     422  02be		       a5 40	   NextIlNow  lda	ILTrace	;Do we need to trace this
@@ -585,11 +585,11 @@
     428  02c7							;		  jsr	  SkipSpaces	       ; no longer needed as tokenizer takes care of this
     429  02c7							;		  sty	  CUROFF
     430  02c7							;Task IO Management
-    431  02c7		       ad 82 42 	      lda	taskRDPending	; if it is zero then Nothing pending
+    431  02c7		       ad 89 42 	      lda	taskRDPending	; if it is zero then Nothing pending
     432  02ca		       f0 08		      beq	NextILStr
     433  02cc		       20 2d 2b 	      jsr	ReadLine	; else Pending and poll keyboard
     434  02cf		       90 03		      bcc	NextILStr	; if carry is clear then no end of line yet
-    435  02d1		       ce 82 42 	      dec	taskRDPending	; Carry is set if CR has been recieved
+    435  02d1		       ce 89 42 	      dec	taskRDPending	; Carry is set if CR has been recieved
     436  02d4							;
     437  02d4		       20 b0 29    NextILStr  jsr	getILByte
     438  02d7							;
@@ -968,22 +968,22 @@
     523  0428		       a9 38		      lda	#[[GOSUBSTACKSIZE - 2] * 4]	; Reserve two entries for gosubs
     524  042a		       85 4e		      sta	MESSAGEPTR	; message ptr is bottom stack space
     525  042c							;
-    526  042c		       ad 83 42 	      lda	ProgramStart	; user prog
+    526  042c		       ad 8a 42 	      lda	ProgramStart	; user prog
     527  042f		       85 4f		      sta	CURPTR
-    528  0431		       8d 10 36 	      sta	taskTable+1
-    529  0434		       8d 85 42 	      sta	ProgramEnd
-    530  0437		       ad 84 42 	      lda	ProgramStart+1
+    528  0431		       8d 17 36 	      sta	taskTable+1
+    529  0434		       8d 8c 42 	      sta	ProgramEnd
+    530  0437		       ad 8b 42 	      lda	ProgramStart+1
     531  043a		       85 50		      sta	CURPTR+1
-    532  043c		       8d 11 36 	      sta	taskTable+2
-    533  043f		       8d 86 42 	      sta	ProgramEnd+1
+    532  043c		       8d 18 36 	      sta	taskTable+2
+    533  043f		       8d 8d 42 	      sta	ProgramEnd+1
     534  0442		       a9 80		      lda	#TASKACTIVE
-    535  0444		       8d 0f 36 	      sta	taskTable	;Mark the first slot as active
+    535  0444		       8d 16 36 	      sta	taskTable	;Mark the first slot as active
     536  0447		       a9 01		      lda	#1
-    537  0449		       8d 0d 37 	      sta	taskCounter	;there is always one task / Main task
-    538  044c		       ad 0b 37 	      lda	taskResetValue
-    539  044f		       8d 09 37 	      sta	taskCurrentCycles	; set up the task switch counts
-    540  0452		       ad 0c 37 	      lda	taskResetValue+1
-    541  0455		       8d 0a 37 	      sta	taskCurrentCycles+1
+    537  0449		       8d 14 37 	      sta	taskCounter	;there is always one task / Main task
+    538  044c		       ad 12 37 	      lda	taskResetValue
+    539  044f		       8d 10 37 	      sta	taskCurrentCycles	; set up the task switch counts
+    540  0452		       ad 13 37 	      lda	taskResetValue+1
+    541  0455		       8d 11 37 	      sta	taskCurrentCycles+1
     542  0458							;
     543  0458							; fall into XINIT...
     544  0458							;
@@ -1384,9 +1384,9 @@
     939  0604		       85 5b		      sta	RunMode
     940  0606		       20 ef 25 	      jsr	taskReset
     941  0609							;
-    942  0609		       ad 74 42 	      lda	errGoto
+    942  0609		       ad 7b 42 	      lda	errGoto
     943  060c		       85 43		      sta	ILPC
-    944  060e		       ad 75 42 	      lda	errGoto+1
+    944  060e		       ad 7c 42 	      lda	errGoto+1
     945  0611		       85 44		      sta	ILPC+1
     946  0613		       4c b1 02 	      jmp	NextIL
     947  0616							;
@@ -1396,9 +1396,9 @@
     951  0616							; if we're in run mode, print the line number.  Stop
     952  0616							; program execution and return to the initial state.
     953  0616							;
-    954  0616		       ad 81 42    iERR       lda	taskIOPending
+    954  0616		       ad 88 42    iERR       lda	taskIOPending
     955  0619		       f0 03		      beq	iErrNext
-    956  061b		       ce 81 42 	      dec	taskIOPending
+    956  061b		       ce 88 42 	      dec	taskIOPending
     957  061e
     958  061e		       20 ac 29    iErrNext   jsr	getILWord	;get err code
     959  0621		       20 27 06 	      jsr	DisplayError
@@ -1441,7 +1441,7 @@
     993  066c		       20 32 21 	      jsr	puts
       0  066f					      db	":",0
       1  066f		       3a 00		      .byte.b	":",0
-    995  0671		       ad 0e 36 	      lda	taskPtr
+    995  0671		       ad 15 36 	      lda	taskPtr
     996  0674		       85 52		      sta	R0
     997  0676		       20 15 21 	      jsr	HexToOut
     998  0679							;
@@ -1464,9 +1464,9 @@
    1015  0687							;
    1016  0687		       a9 00	   ResetIL    lda	#0
    1017  0689		       85 47		      sta	ILSTACKPTR
-   1018  068b		       ad 74 42 	      lda	errGoto
+   1018  068b		       ad 7b 42 	      lda	errGoto
    1019  068e		       85 43		      sta	ILPC
-   1020  0690		       ad 75 42 	      lda	errGoto+1
+   1020  0690		       ad 7c 42 	      lda	errGoto+1
    1021  0693		       85 44		      sta	ILPC+1
    1022  0695		       4c b1 02 	      jmp	NextIL
    1023  0698
@@ -1722,7 +1722,7 @@
    1273  07dd		       65 53		      adc	R0+1
    1274  07df		       85 53		      sta	R0+1	; The new Variable Address is stored in R0
    1275  07e1		       a5 55		      lda	R1+1
-   1276  07e3		       cd 86 42 	      cmp	ProgramEnd+1	; lets check if we are processing an @ buffer pointer to free memory
+   1276  07e3		       cd 8d 42 	      cmp	ProgramEnd+1	; lets check if we are processing an @ buffer pointer to free memory
    1277  07e6		       d0 08		      bne	iArrayCheckVar
    1278  07e8				   iArrayExit
    1279  07e8		       20 a9 2b 	      jsr	pushR0	; Push R0 assume it is correct
@@ -1776,19 +1776,19 @@
    1327  0831							; tempIly, and dpl.
    1328  0831							;
    1329  0831		       20 3b 2e    iLST       jsr	SetOutConsole
-   1330  0834		       ad 83 42    iLST2      lda	ProgramStart
+   1330  0834		       ad 8a 42    iLST2      lda	ProgramStart
    1331  0837		       85 59		      sta	dpl
-   1332  0839		       ad 84 42 	      lda	ProgramStart+1
+   1332  0839		       ad 8b 42 	      lda	ProgramStart+1
    1333  083c		       85 5a		      sta	dpl+1
    1334  083e							;
    1335  083e							; dpl/dph point to the current line.  See if we're at
    1336  083e							; the end of the program.
    1337  083e							;
    1338  083e		       a5 59	   iLSTloop   lda	dpl
-   1339  0840		       cd 85 42 	      cmp	ProgramEnd
+   1339  0840		       cd 8c 42 	      cmp	ProgramEnd
    1340  0843		       d0 07		      bne	iLstNotEnd
    1341  0845		       a5 5a		      lda	dpl+1
-   1342  0847		       cd 86 42 	      cmp	ProgramEnd+1
+   1342  0847		       cd 8d 42 	      cmp	ProgramEnd+1
    1343  084a		       f0 15		      beq	iLstdone
    1344  084c							;
    1345  084c		       20 ca 21    iLstNotEnd jsr	PrintProgramLine
@@ -1896,17 +1896,17 @@
    1447  0898							;then adjust all program line after up or down depending on len of line
    1448  0898							;If next higher then just move everythimg down by length bytes
    1449  0898							;This call will return how many bytes in the line we found
-   1450  0898		       8c 80 42 	      sty	lineLength	;Save the length of the line we found
+   1450  0898		       8c 87 42 	      sty	lineLength	;Save the length of the line we found
    1451  089b							;
    1452  089b							; Compute the new end of the program first.
    1453  089b							;
    1454  089b		       38		      sec		;Set the carry bit
-   1455  089c		       ad 85 42 	      lda	ProgramEnd	;Get low byte of program end
-   1456  089f		       ed 80 42 	      sbc	lineLength	;Subtract the length of the current line
-   1457  08a2		       8d 85 42 	      sta	ProgramEnd	;save it
-   1458  08a5		       ad 86 42 	      lda	ProgramEnd+1
+   1455  089c		       ad 8c 42 	      lda	ProgramEnd	;Get low byte of program end
+   1456  089f		       ed 87 42 	      sbc	lineLength	;Subtract the length of the current line
+   1457  08a2		       8d 8c 42 	      sta	ProgramEnd	;save it
+   1458  08a5		       ad 8d 42 	      lda	ProgramEnd+1
    1459  08a8		       e9 00		      sbc	#0	;Process the carry
-   1460  08aa		       8d 86 42 	      sta	ProgramEnd+1	;We now have the new end of program with the line removed
+   1460  08aa		       8d 8d 42 	      sta	ProgramEnd+1	;We now have the new end of program with the line removed
    1461  08ad							;
    1462  08ad							; Copy CURPTR into R1 for working
    1463  08ad							;
@@ -1918,15 +1918,15 @@
    1469  08b5							; See if we're at the end.
    1470  08b5							;
    1471  08b5		       a5 54	   InsDelChk  lda	R1	;Compare the copy dest to end of memory to check if we are finished copy
-   1472  08b7		       cd 85 42 	      cmp	ProgramEnd
+   1472  08b7		       cd 8c 42 	      cmp	ProgramEnd
    1473  08ba		       d0 07		      bne	InsDelLoop
    1474  08bc		       a5 55		      lda	R1+1
-   1475  08be		       cd 86 42 	      cmp	ProgramEnd+1
+   1475  08be		       cd 8d 42 	      cmp	ProgramEnd+1
    1476  08c1		       f0 14		      beq	insert2	;Now the existing line was removed lets go insert the new line
    1477  08c3							;
    1478  08c3							; Move one byte, move to next location.
    1479  08c3							;
-   1480  08c3		       ac 80 42    InsDelLoop ldy	lineLength	;Move a byte up to remove the space
+   1480  08c3		       ac 87 42    InsDelLoop ldy	lineLength	;Move a byte up to remove the space
    1481  08c6		       f0 0f		      beq	insert2	;if this is zero it is a big oops
    1482  08c8		       b1 54		      lda	(R1),y
    1483  08ca		       a0 00		      ldy	#0
@@ -1949,17 +1949,17 @@
    1500  08de							;
    1501  08de							;		 jsr	 getLineLength	 ;get bytes needed Reload the number of bytes required for the new line
    1502  08de		       ae d2 1b 	      ldx	TOKENBUFFER
-   1503  08e1		       8e 80 42 	      stx	lineLength	; So update, the TOKENBUFFER already has the line length
+   1503  08e1		       8e 87 42 	      stx	lineLength	; So update, the TOKENBUFFER already has the line length
    1504  08e4							;
-   1505  08e4		       ad 85 42 	      lda	ProgramEnd	;Load the start address for the copy
+   1505  08e4		       ad 8c 42 	      lda	ProgramEnd	;Load the start address for the copy
    1506  08e7							;At this point curptr still contains the location we will insert data
    1507  08e7		       85 5c		      sta	FROM
-   1508  08e9		       ad 86 42 	      lda	ProgramEnd+1
+   1508  08e9		       ad 8d 42 	      lda	ProgramEnd+1
    1509  08ec		       85 5d		      sta	FROM+1
    1510  08ee							;
    1511  08ee		       a0 00	   mvup1      ldy	#0	;always zero from From copy position to use indirect addressing
    1512  08f0		       b1 5c		      lda	(FROM),y
-   1513  08f2		       ac 80 42 	      ldy	lineLength	;Now load y with new offset downward to store the byte
+   1513  08f2		       ac 87 42 	      ldy	lineLength	;Now load y with new offset downward to store the byte
    1514  08f5		       91 5c		      sta	(FROM),y	;Save the new byte
    1515  08f7							;
    1516  08f7		       a5 5c		      lda	FROM	;Check if we have copied the last byte
@@ -1981,12 +1981,12 @@
    1532  090e							;
    1533  090e				   mvUpDone
    1534  090e		       18		      clc		;Ok, We are now ready to copy the new line to the program
-   1535  090f		       ad 80 42 	      lda	lineLength	;Number of bytes to copy from line buff
-   1536  0912		       6d 85 42 	      adc	ProgramEnd	;Now pdate the end of program address for space we just opened
-   1537  0915		       8d 85 42 	      sta	ProgramEnd
-   1538  0918		       ad 86 42 	      lda	ProgramEnd+1
+   1535  090f		       ad 87 42 	      lda	lineLength	;Number of bytes to copy from line buff
+   1536  0912		       6d 8c 42 	      adc	ProgramEnd	;Now pdate the end of program address for space we just opened
+   1537  0915		       8d 8c 42 	      sta	ProgramEnd
+   1538  0918		       ad 8d 42 	      lda	ProgramEnd+1
    1539  091b		       69 00		      adc	#0
-   1540  091d		       8d 86 42 	      sta	ProgramEnd+1	;Program end now points to the correct enpty space
+   1540  091d		       8d 8d 42 	      sta	ProgramEnd+1	;Program end now points to the correct enpty space
    1541  0920							;
    1542  0920							;===================jlit use length before line newline
    1543  0920
@@ -2099,8 +2099,8 @@
    1650  098d							; error, set to the ILPC to the specified location.
    1651  098d							;
    1652  098d		       20 ac 29    iERRGOTO   jsr	getILWord
-   1653  0990		       8e 74 42 	      stx	errGoto
-   1654  0993		       8d 75 42 	      sta	errGoto+1
+   1653  0990		       8e 7b 42 	      stx	errGoto
+   1654  0993		       8d 7c 42 	      sta	errGoto+1
    1655  0996		       4c b1 02 	      jmp	NextIL
    1656  0999							;
    1657  0999							;=====================================================
@@ -2111,7 +2111,7 @@
    1662  0999							; opcode.  Else, add the offset to ILPC.
    1663  0999							;
    1664  0999		       20 b0 29    iTST       jsr	getILByte	;Get the relative jump address
-   1665  099c		       8d 7f 42 	      sta	offset	;save it to use if test faile
+   1665  099c		       8d 86 42 	      sta	offset	;save it to use if test faile
    1666  099f		       20 93 2b 	      jsr	saveIL	;in case of failure, to restore before jump calculation
    1667  09a2
    1668  09a2		       a4 51		      ldy	CUROFF
@@ -2137,7 +2137,7 @@
    1688  09c3
    1689  09c3							; Test for a single quote string
    1690  09c3		       20 b0 29    iTSTStr    jsr	getILByte
-   1691  09c6		       8d 7f 42 	      sta	offset
+   1691  09c6		       8d 86 42 	      sta	offset
    1692  09c9		       20 93 2b 	      jsr	saveIL
    1693  09cc		       a4 51		      ldy	CUROFF
    1694  09ce		       a9 22		      lda	#'"
@@ -2156,7 +2156,7 @@
    1707  09e0							;=================================================JLIT=
    1708  09e0							; Test if we have a let statement without the let keyword
    1709  09e0		       20 b0 29    iTSTLET    jsr	getILByte	; Get the relative offset byte
-   1710  09e3		       8d 7f 42 	      sta	offset	; Save the jump offset for fails
+   1710  09e3		       8d 86 42 	      sta	offset	; Save the jump offset for fails
    1711  09e6		       20 93 2b 	      jsr	saveIL	; save to restore when done if fail
    1712  09e9
    1713  09e9		       a4 51		      ldy	CUROFF	; Get the current offset into the buffer
@@ -2180,7 +2180,7 @@
    1731  0a01							; fails if byte is not equal to the value at the address
    1732  0a01							; The tests an indirect byte and branches if true
    1733  0a01		       20 b0 29    iTSTBYTE   jsr	getILByte	; Get the relative offset byte
-   1734  0a04		       8d 7f 42 	      sta	offset	; Save the jump offset for fails
+   1734  0a04		       8d 86 42 	      sta	offset	; Save the jump offset for fails
    1735  0a07		       20 93 2b 	      jsr	saveIL	; save to restore when done if fail
    1736  0a0a		       20 ac 29 	      jsr	getILWord	; Get a word into RO
    1737  0a0d		       86 52		      stx	R0
@@ -2197,7 +2197,7 @@
    1748  0a20							;=================================================JLIT=
    1749  0a20							; Test a byte	branch if it fails
    1750  0a20		       20 b0 29    iTSTB      jsr	getILByte	; Get the relative offset byte
-   1751  0a23		       8d 7f 42 	      sta	offset	; Save the jump offset for fails
+   1751  0a23		       8d 86 42 	      sta	offset	; Save the jump offset for fails
    1752  0a26		       20 93 2b 	      jsr	saveIL	; save to restore when done if fail
    1753  0a29		       20 b0 29 	      jsr	getILByte	; Get a byte into Acc
    1754  0a2c		       a4 51		      ldy	CUROFF	; Get offset in the stream
@@ -2213,7 +2213,7 @@
    1764  0a3b							;=================================================JLIT=
    1765  0a3b							; Test a byte	branch if it fails
    1766  0a3b		       20 b0 29    iTSTW      jsr	getILByte	; Get the relative offset byte
-   1767  0a3e		       8d 7f 42 	      sta	offset	; Save the jump offset for fails
+   1767  0a3e		       8d 86 42 	      sta	offset	; Save the jump offset for fails
    1768  0a41		       20 93 2b 	      jsr	saveIL	; save to restore when done if fail
    1769  0a44		       20 ac 29 	      jsr	getILWord	; Get a word into RO
    1770  0a47		       86 52		      stx	R0
@@ -2239,7 +2239,7 @@
    1790  0a65							;
    1791  0a65				   iTSTDONE
    1792  0a65		       20 b0 29 	      jsr	getILByte
-   1793  0a68		       8d 7f 42 	      sta	offset
+   1793  0a68		       8d 86 42 	      sta	offset
    1794  0a6b		       20 93 2b 	      jsr	saveIL
    1795  0a6e		       a4 51		      ldy	CUROFF
    1796  0a70		       84 59		      sty	dpl
@@ -2307,7 +2307,7 @@
    1858  0ac0		       85 58		      sta	R2
    1859  0ac2
    1860  0ac2		       20 b0 29    iTSTVV     jsr	getILByte	;offset
-   1861  0ac5		       8d 7f 42 	      sta	offset
+   1861  0ac5		       8d 86 42 	      sta	offset
    1862  0ac8							;
    1863  0ac8		       a4 51		      ldy	CUROFF	; Get the pointer into the program
    1864  0aca		       b1 4f		      lda	(CURPTR),y	; Get the next byte to process
@@ -2387,9 +2387,9 @@
    1938  0b24				   iTSTVat
    1939  0b24		       c8		      iny
    1940  0b25		       84 51		      sty	CUROFF	;it is a valid variable
-   1941  0b27		       ad 85 42 	      lda	ProgramEnd	;set flag to let evaluator to use PROGRAMEND as the root
+   1941  0b27		       ad 8c 42 	      lda	ProgramEnd	;set flag to let evaluator to use PROGRAMEND as the root
    1942  0b2a		       85 52		      sta	R0
-   1943  0b2c		       ad 86 42 	      lda	ProgramEnd+1
+   1943  0b2c		       ad 8d 42 	      lda	ProgramEnd+1
    1944  0b2f		       85 53		      sta	R0+1
    1945  0b31		       4c 16 07 	      jmp	pushR0nextIl	;place this onto the stack
    1946  0b34
@@ -2436,7 +2436,7 @@
    1987  0b64							; This tests for a valid line number
    1988  0b64							;
    1989  0b64		       20 b0 29    iTSTL      jsr	getILByte
-   1990  0b67		       8d 7f 42 	      sta	offset
+   1990  0b67		       8d 86 42 	      sta	offset
    1991  0b6a							;
    1992  0b6a		       a4 51		      ldy	CUROFF
    1993  0b6c		       b1 4f		      lda	(CURPTR),y
@@ -2461,7 +2461,7 @@
    2012  0b7f							; Convert to a number and push it onto the stack.
    2013  0b7f							;
    2014  0b7f		       20 b0 29    iTSTN      jsr	getILByte
-   2015  0b82		       8d 7f 42 	      sta	offset
+   2015  0b82		       8d 86 42 	      sta	offset
    2016  0b85							;
    2017  0b85		       a9 00		      lda	#0
    2018  0b87		       85 59		      sta	dpl
@@ -2528,7 +2528,7 @@
    2079  0bd7							; fail to meet the requirements.  This takes the
    2080  0bd7							; offset and adds/subtracts to/from ILPC.
    2081  0bd7							;
-   2082  0bd7		       ad 7f 42    tstBranch  lda	offset	;get signed offset
+   2082  0bd7		       ad 86 42    tstBranch  lda	offset	;get signed offset
    2083  0bda		       10 0e		      bpl	tstPositive
    2084  0bdc							;
    2085  0bdc							; Do negative branch.	Do sign extension.
@@ -2559,7 +2559,7 @@
    2110  0bf6							; Yes I know but this handles all sorts of irq/break issues
    2111  0bf6							;
    2112  0bf6		       20 b0 29    iTstIrq    jsr	getILByte	; get the offset to next instruction when not in irq
-   2113  0bf9		       8d 7f 42 	      sta	offset	; Store the not true jump address offset
+   2113  0bf9		       8d 86 42 	      sta	offset	; Store the not true jump address offset
    2114  0bfc		       ad 56 19    irqNo      lda	IRQPending	; Check if the pending value is set
    2115  0bff		       f0 20		      beq	tstBreak	; if no irq then check for an escape key pressed
    2116  0c01		       c9 01		      cmp	#1	; only do this if set to first time
@@ -2581,9 +2581,9 @@
    2132  0c21				   tstBreak
    2133  0c21		       20 67 04 	      jsr	BreakSet	; Check if the escape key was pressed
    2134  0c24		       d0 b1		      bne	tstBranch	; z not set of no break found
-   2135  0c26		       ad 81 42 	      lda	taskIOPending
+   2135  0c26		       ad 88 42 	      lda	taskIOPending
    2136  0c29		       f0 03		      beq	tstBrkComplete
-   2137  0c2b		       ce 81 42 	      dec	taskIOPending
+   2137  0c2b		       ce 88 42 	      dec	taskIOPending
    2138  0c2e		       4c 02 06    tstBrkComplete jmp	iFIN	; Exit out of run mode
    2139  0c31
    2140  0c31		       a2 0c	   ErrStkOver ldx	#ERR_STACK_OVER_FLOW	; Flag any error in line number
@@ -2611,33 +2611,33 @@
    2162  0c43		       05 55		      ora	R1+1
    2163  0c45		       f0 4a		      beq	irandom1
    2164  0c47							;
-   2165  0c47		       ad 7a 42 	      lda	random+1
-   2166  0c4a		       8d 77 42 	      sta	rtemp1
-   2167  0c4d		       ad 79 42 	      lda	random
+   2165  0c47		       ad 81 42 	      lda	random+1
+   2166  0c4a		       8d 7e 42 	      sta	rtemp1
+   2167  0c4d		       ad 80 42 	      lda	random
    2168  0c50		       0a		      asl
-   2169  0c51		       2e 77 42 	      rol	rtemp1
+   2169  0c51		       2e 7e 42 	      rol	rtemp1
    2170  0c54		       0a		      asl
-   2171  0c55		       2e 77 42 	      rol	rtemp1
+   2171  0c55		       2e 7e 42 	      rol	rtemp1
    2172  0c58		       18		      clc
-   2173  0c59		       6d 79 42 	      adc	random
+   2173  0c59		       6d 80 42 	      adc	random
    2174  0c5c
    2175  0c5c		       48		      pha
    2176  0c5d
-   2177  0c5d		       ad 77 42 	      lda	rtemp1
-   2178  0c60		       6d 7a 42 	      adc	random+1
-   2179  0c63		       8d 7a 42 	      sta	random+1
+   2177  0c5d		       ad 7e 42 	      lda	rtemp1
+   2178  0c60		       6d 81 42 	      adc	random+1
+   2179  0c63		       8d 81 42 	      sta	random+1
    2180  0c66
    2181  0c66		       68		      pla
    2182  0c67
    2183  0c67		       69 11		      adc	#$11
-   2184  0c69		       8d 79 42 	      sta	random
-   2185  0c6c		       ad 7a 42 	      lda	random+1
+   2184  0c69		       8d 80 42 	      sta	random
+   2185  0c6c		       ad 81 42 	      lda	random+1
    2186  0c6f		       69 36		      adc	#$36
-   2187  0c71		       8d 7a 42 	      sta	random+1
+   2187  0c71		       8d 81 42 	      sta	random+1
    2188  0c74
-   2189  0c74		       ad 79 42 	      lda	random
+   2189  0c74		       ad 80 42 	      lda	random
    2190  0c77		       85 52		      sta	R0
-   2191  0c79		       ad 7a 42 	      lda	random+1
+   2191  0c79		       ad 81 42 	      lda	random+1
    2192  0c7c		       29 7f		      and	#$7f	;make positive
    2193  0c7e		       85 53		      sta	R0+1
    2194  0c80							;
@@ -2696,22 +2696,22 @@
    2247  0c9c							;		jmp	NextIL
    2248  0c9c							;
    2249  0c9c							; Poke a value into a memory location
-   2250  0c9c		       8c 7b 42    iPOKEMEMORY sty	tempy
+   2250  0c9c		       8c 82 42    iPOKEMEMORY sty	tempy
    2251  0c9f		       20 3b 2c 	      jsr	popR0
    2252  0ca2		       20 53 2c 	      jsr	popR1
    2253  0ca5		       a0 00		      ldy	#0
    2254  0ca7		       a5 52		      lda	R0
    2255  0ca9		       91 54		      sta	(R1),y
-   2256  0cab		       ac 7b 42 	      ldy	tempy
+   2256  0cab		       ac 82 42 	      ldy	tempy
    2257  0cae		       4c b1 02 	      jmp	NextIL
    2258  0cb1							;
    2259  0cb1							; Get a value from a memory location
    2260  0cb1							;
-   2261  0cb1		       8c 7b 42    iPEEKMEMORY sty	tempy
+   2261  0cb1		       8c 82 42    iPEEKMEMORY sty	tempy
    2262  0cb4		       20 3b 2c 	      jsr	popR0
    2263  0cb7		       a0 00		      ldy	#0
    2264  0cb9		       b1 52		      lda	(R0),y
-   2265  0cbb		       ac 7b 42 	      ldy	tempy
+   2265  0cbb		       ac 82 42 	      ldy	tempy
    2266  0cbe		       85 52		      sta	R0
    2267  0cc0		       a9 00		      lda	#0
    2268  0cc2		       85 53		      sta	R0+1
@@ -2909,13 +2909,13 @@
    2460  0dfe
    2461  0dfe							;=====================================================
    2462  0dfe							; Define start of non page zero data
-   2463 U428d ????				      seg.u	TBData
-   2464 U35bb					      org	PROGEND
-   2465 U35bb							;=================================================================
-   2466 U35bb							;
-   2467 U35bb					      if	IL_DEBUG_TEXT
+   2463 U4294 ????				      seg.u	TBData
+   2464 U35c2					      org	PROGEND
+   2465 U35c2							;=================================================================
+   2466 U35c2							;
+   2467 U35c2					      if	IL_DEBUG_TEXT
 ------- FILE ILKeyText.inc LEVEL 2 PASS 6
-      0 U35bb					      include	"ILKeyText.inc"
+      0 U35c2					      include	"ILKeyText.inc"
       1  0dfe					      seg	Code
       2  0dfe					      if	IL_DEBUG_TEXT
       3  0dfe				   ILTEXTTABLE
@@ -3167,21 +3167,21 @@
     127  18f4							; Search for the il instruction and print the correct text for it
     128  18f4							; on entry a contains the ip instruction to print
     129  18f4
-    130 U35bb					      seg.u	TBData
-    131 U35bb		       00 00	   R0TempIL   ds	2
-    132 U35bd		       00	   ILSTA      ds	1
-    133 U35be
+    130 U35c2					      seg.u	TBData
+    131 U35c2		       00 00	   R0TempIL   ds	2
+    132 U35c4		       00	   ILSTA      ds	1
+    133 U35c5
     134  18f4					      Seg	Code
     135  18f4
-    136  18f4		       8d bd 35    PrintILText sta	ILSTA
+    136  18f4		       8d c4 35    PrintILText sta	ILSTA
     137  18f7		       98		      tya
     138  18f8		       48		      pha
     139  18f9		       8a		      txa
     140  18fa		       48		      pha
     141  18fb		       a5 52		      lda	R0
-    142  18fd		       8d bb 35 	      sta	R0TempIL
+    142  18fd		       8d c2 35 	      sta	R0TempIL
     143  1900		       a5 53		      lda	R0+1
-    144  1902		       8d bb 35 	      sta	R0TempIL
+    144  1902		       8d c2 35 	      sta	R0TempIL
     145  1905		       a9 fe		      lda	#ILTEXTTABLE&$FF
     146  1907		       85 52		      sta	R0
     147  1909		       a9 0d		      LDA	#ILTEXTTABLE>>8
@@ -3191,7 +3191,7 @@
     151  190f		       b1 52		      lda	(R0),y
     152  1911		       c9 ff		      cmp	#$FF
     153  1913		       f0 2a		      beq	PrintILNotFound
-    154  1915		       cd bd 35 	      cmp	ILSTA
+    154  1915		       cd c4 35 	      cmp	ILSTA
     155  1918		       f0 11		      beq	PrintILFound
     156  191a		       c8		      iny
     157  191b		       b1 52		      lda	(R0),y
@@ -3216,12 +3216,12 @@
     176  1939		       20 70 21 	      jsr	PrtStr	; print the string
     177  193c		       4c 45 19 	      jmp	PrintILDone
     178  193f
-    179  193f		       ad bd 35    PrintILNotFound lda	ILSTA
+    179  193f		       ad c4 35    PrintILNotFound lda	ILSTA
     180  1942		       20 15 21 	      jsr	HexToOut
     181  1945
-    182  1945		       ad bb 35    PrintILDone lda	R0TempIL
+    182  1945		       ad c2 35    PrintILDone lda	R0TempIL
     183  1948		       85 52		      sta	R0
-    184  194a		       ad bc 35 	      lda	R0TempIL+1
+    184  194a		       ad c3 35 	      lda	R0TempIL+1
     185  194d		       85 52		      sta	R0
     186  194f		       68		      pla
     187  1950		       aa		      tax
@@ -3256,17 +3256,17 @@
      18  1954
      19  1954							;========================================================================================
      20  1954							; Uninitialized data segment
-     21 U35be					      seg.u	TBData
-     22 U35be
-     23 U35be		       00 00	   BInVec     ds	2	; This is used by fuction to vector to current input rtn
-     24 U35c0		       00 00	   BOutVec    ds	2	; This is used by functions to vector to the current output rtn
-     25 U35c2		       00 00	   BStatVec   ds	2	; This is used by inteface to read write status/config information
-      0 U35c4				   BActiveDevice db	1	; the index of the current device block
-      1 U35c4		       01		      .byte.b	1
-      0 U35c5				   BActiveDriver db	1	; Index of the device drive block
-      1 U35c5		       01		      .byte.b	1
-     28 U35c6
-     29 U35c6							;============================================================================================
+     21 U35c5					      seg.u	TBData
+     22 U35c5
+     23 U35c5		       00 00	   BInVec     ds	2	; This is used by fuction to vector to current input rtn
+     24 U35c7		       00 00	   BOutVec    ds	2	; This is used by functions to vector to the current output rtn
+     25 U35c9		       00 00	   BStatVec   ds	2	; This is used by inteface to read write status/config information
+      0 U35cb				   BActiveDevice db	1	; the index of the current device block
+      1 U35cb		       01		      .byte.b	1
+      0 U35cc				   BActiveDriver db	1	; Index of the device drive block
+      1 U35cc		       01		      .byte.b	1
+     28 U35cd
+     29 U35cd							;============================================================================================
      30  1954					      Seg	Code
      31  1954							; IRQ BASIC Code Service RTN Support
       0  1954				   SaveIrqReg db	0	; Store current setting
@@ -3376,9 +3376,9 @@
     102  19e3							;======================================================================
     103  19e3							; Jump to the output/input function in BOutVec/BInVec
     104  19e3							;
-    105  19e3		       6c c0 35    VOUTCH     jmp	(BOutVec)	; Primary block io vectors
-    106  19e6		       6c be 35    VGETCH     jmp	(BInVec)
-    107  19e9		       6c c2 35    VSTAT      jmp	(BStatVec)
+    105  19e3		       6c c7 35    VOUTCH     jmp	(BOutVec)	; Primary block io vectors
+    106  19e6		       6c c5 35    VGETCH     jmp	(BInVec)
+    107  19e9		       6c c9 35    VSTAT      jmp	(BStatVec)
     108  19ec							;
     109  19ec							;======================================================================
     110  19ec							; IO Service functions
@@ -3396,7 +3396,7 @@
     122  19f6		       0a		      asl
     123  19f7		       0a		      asl
     124  19f8		       aa		      tax		; Point to actual offset in the table
-    125  19f9		       ec c4 35 	      cpx	BActiveDevice	; is it already active ?
+    125  19f9		       ec cb 35 	      cpx	BActiveDevice	; is it already active ?
     126  19fc		       f0 0d		      beq	ioValidDevice	; Shortcut if this is the active device already
     127  19fe		       a9 01		      lda	#1	; Active flag
     128  1a00		       3d 81 19 	      and	DeviceIoBlocks,x	; Check if the device is active
@@ -3418,19 +3418,19 @@
     144  1a0d							; input x contains the vector to the active Device IO Block
     145  1a0d							; output a, x undefined y unchanged
     146  1a0d				   ioSetDeviceVectors
-    147  1a0d		       ec c4 35 	      cpx	BActiveDevice	; Check if already set
+    147  1a0d		       ec cb 35 	      cpx	BActiveDevice	; Check if already set
     148  1a10		       f0 1b		      beq	ioSetDevExit	; if already set then do nothing
     149  1a12
-    150  1a12		       8e c4 35 	      stx	BActiveDevice	; set the active device vector
+    150  1a12		       8e cb 35 	      stx	BActiveDevice	; set the active device vector
     151  1a15		       98		      tya
     152  1a16		       48		      pha
     153  1a17
     154  1a17		       bc 83 19 	      ldy	DeviceIoBlocks+2,x	; Get the device driver index
-    155  1a1a		       8c c5 35 	      sty	BActiveDriver	; Pointer to active Device driver
+    155  1a1a		       8c cc 35 	      sty	BActiveDriver	; Pointer to active Device driver
     156  1a1d		       a2 00		      ldx	#0	; Transfer the 6 pointers to the Vectors
     157  1a1f				   ioSetDevLoop
     158  1a1f		       b9 5b 19 	      lda	DeviceDriverBlocks+2,y
-    159  1a22		       9d be 35 	      sta	BInVec,x
+    159  1a22		       9d c5 35 	      sta	BInVec,x
     160  1a25		       e8		      inx
     161  1a26		       c8		      iny
     162  1a27		       e0 06		      cpx	#IO_VECT_LEN	; Transfer the vector length to copy
@@ -3862,7 +3862,7 @@
     306  1ce6		       a4 51		      ldy	CUROFF
     307  1ce8		       20 eb 2c 	      jsr	SkipSpaces	; Skip any spaces
     308  1ceb		       84 51		      sty	CUROFF	; Even if it fails at least remove the spaces
-    309  1ced		       b9 ea 41 	      lda	LINBUF,y	; Check for end of line
+    309  1ced		       b9 f1 41 	      lda	LINBUF,y	; Check for end of line
     310  1cf0		       f0 25		      beq	ParseComplete	; Finish token buffer and return
     311  1cf2
     312  1cf2				   ParseForNumber
@@ -3886,7 +3886,7 @@
     330  1d09		       90 db		      bcc	ParseInputLoop
     331  1d0b
     332  1d0b				   ParseKeepChar		; if it does not parse just keep it safe
-    333  1d0b		       b9 ea 41 	      lda	LINBUF,y
+    333  1d0b		       b9 f1 41 	      lda	LINBUF,y
     334  1d0e		       9d d2 1b 	      sta	TOKENBUFFER,x
     335  1d11		       e8		      inx
     336  1d12		       c8		      iny
@@ -3940,10 +3940,10 @@
     384  1d3b				   ParseLookupLoop
     385  1d3b		       b1 54		      lda	(R1),y	; Get the first character of the keyword
     386  1d3d		       29 df		      and	#%11011111	; Force Keyword to upper case
-    387  1d3f		       dd ea 41 	      cmp	LINBUF,x	; Check the input buffer
+    387  1d3f		       dd f1 41 	      cmp	LINBUF,x	; Check the input buffer
     388  1d42		       f0 07		      beq	ParseNextLetter	; If it equals then do next letter
     389  1d44		       09 20		      ora	#%00100000	; Force Keyword to lowercase
-    390  1d46		       dd ea 41 	      cmp	LINBUF,x	; Compare value to upercase
+    390  1d46		       dd f1 41 	      cmp	LINBUF,x	; Compare value to upercase
     391  1d49		       d0 34		      bne	ParseNextEntry	; Not equal then move to next entry in the keyword table
     392  1d4b
     393  1d4b				   ParseNextLetter
@@ -3953,7 +3953,7 @@
     397  1d51		       e8		      inx		; Point to next char in the input buffer
     398  1d52		       c8		      iny		; Point to the next character in the Keyword table
     399  1d53		       a9 00		      lda	#0	; Check if we are at the end of the input buffer
-    400  1d55		       dd ea 41 	      cmp	LINBUF,x	; Check if we are at the end of the input buffer
+    400  1d55		       dd f1 41 	      cmp	LINBUF,x	; Check if we are at the end of the input buffer
     401  1d58		       f0 25		      beq	ParseNextEntry	; End of buffer but no keyword, ext keyword entry
     402  1d5a		       d0 df		      bne	ParseLookupLoop	; Go back and check the next characters
     403  1d5c
@@ -4021,7 +4021,7 @@
     465  1da7		       a4 51	   ParseMoveLine ldy	CUROFF	; next byte to parse
     466  1da9		       a6 58		      ldx	R2	; where to place in the buffer
     467  1dab				   ParseMoveLoop
-    468  1dab		       b9 ea 41 	      lda	LINBUF,y	; get the next byte
+    468  1dab		       b9 f1 41 	      lda	LINBUF,y	; get the next byte
     469  1dae		       f0 07		      beq	ParseMoveDone	; if we load a zero then done
     470  1db0		       9d d2 1b 	      sta	TOKENBUFFER,x	; save the byte
     471  1db3		       c8		      iny
@@ -4054,7 +4054,7 @@
     498  1dcb		       a4 51		      ldy	CUROFF
     499  1dcd		       a9 a0		      lda	#tString
     500  1dcf		       9d d2 1b 	      sta	TOKENBUFFER,X
-    501  1dd2		       b9 ea 41 	      lda	LINBUF,y
+    501  1dd2		       b9 f1 41 	      lda	LINBUF,y
     502  1dd5		       c9 22		      cmp	#'"
     503  1dd7		       d0 1a		      bne	ParseStringInvalid
     504  1dd9		       e8		      inx
@@ -4063,7 +4063,7 @@
     507  1dde		       c8		      iny
     508  1ddf
     509  1ddf				   ParseStringLoop
-    510  1ddf		       b9 ea 41 	      lda	LINBUF,y
+    510  1ddf		       b9 f1 41 	      lda	LINBUF,y
     511  1de2		       9d d2 1b 	      sta	TOKENBUFFER,x
     512  1de5		       c9 22		      cmp	#'"
     513  1de7		       f0 04		      beq	ParseStringDone
@@ -4087,7 +4087,7 @@
     531  1df5							;
     532  1df5				   ParseNumeric
     533  1df5		       a4 51		      ldy	CUROFF
-    534  1df7		       b9 ea 41 	      lda	LINBUF,y
+    534  1df7		       b9 f1 41 	      lda	LINBUF,y
     535  1dfa		       c9 30		      cmp	#'0
     536  1dfc		       90 33		      bcc	ParseNumInvalid
     537  1dfe		       c9 3a		      cmp	#'9+1
@@ -4144,7 +4144,7 @@
     588  1e39		       bd 3f 1a 	      lda	Operators,x	; First byte of operator
     589  1e3c		       f0 28		      beq	ParseOpNotFound	; Last entry os 0,0
     590  1e3e
-    591  1e3e		       d9 ea 41 	      cmp	LINBUF,y	; Check the first byte
+    591  1e3e		       d9 f1 41 	      cmp	LINBUF,y	; Check the first byte
     592  1e41		       d0 1c		      bne	ParseOpNext
     593  1e43
     594  1e43		       c8		      iny
@@ -4152,7 +4152,7 @@
     596  1e44		       bd 40 1a 	      lda	Operators+1,x
     597  1e47		       f0 06		      beq	ParseOpFoundSingle	; Single Character op
     598  1e49
-    599  1e49		       d9 ea 41 	      cmp	LINBUF,y
+    599  1e49		       d9 f1 41 	      cmp	LINBUF,y
     600  1e4c		       d0 11		      bne	ParseOpNext
     601  1e4e
     602  1e4e				   ParseOpFound
@@ -4269,7 +4269,7 @@
     713  1e6a							; Parse for variables A-Z @, ^  x!x x[op]
     714  1e6a				   ParseForVariable
     715  1e6a		       a4 51		      ldy	CUROFF
-    716  1e6c		       b9 ea 41 	      lda	LINBUF,y
+    716  1e6c		       b9 f1 41 	      lda	LINBUF,y
     717  1e6f		       c9 5e		      cmp	#'^	; is it an exit code
     718  1e71		       d0 04		      bne	ParseVarMem
     719  1e73		       a9 9b		      lda	#tVhat	; Mark the index as 27th slot
@@ -4395,7 +4395,7 @@
     839  1efc							;
     840  1efc				   iTSTRELOP
     841  1efc		       20 b0 29 	      jsr	getILByte
-    842  1eff		       8d 7f 42 	      sta	offset
+    842  1eff		       8d 86 42 	      sta	offset
     843  1f02
     844  1f02		       a4 51		      ldy	CUROFF
     845  1f04		       b1 4f		      lda	(CURPTR),y
@@ -4425,7 +4425,7 @@
     869  1f23							;
     870  1f23				   iTSTBRANCH		; il format TSTBRANCH whereToGoIfFailed
     871  1f23		       20 b0 29 	      jsr	getILByte	; Get jump address if vector is valid
-    872  1f26		       8d 7f 42 	      sta	offset	; Mark offset for later if vector found
+    872  1f26		       8d 86 42 	      sta	offset	; Mark offset for later if vector found
     873  1f29		       a4 51		      ldy	CUROFF	; get offset of first byte of compiled value
     874  1f2b		       88		      dey		; point back to the type of branch
     875  1f2c		       b1 4f		      lda	(CURPTR),y	; get the actual instructions
@@ -4504,17 +4504,17 @@
      16  1f7a		       48		      pha
      17  1f7b		       a5 51		      lda	CUROFF
      18  1f7d		       48		      pha
-     19  1f7e		       ad 83 42 	      lda	ProgramStart
+     19  1f7e		       ad 8a 42 	      lda	ProgramStart
      20  1f81		       85 59		      sta	dpl
-     21  1f83		       ad 84 42 	      lda	ProgramStart+1
+     21  1f83		       ad 8b 42 	      lda	ProgramStart+1
      22  1f86		       85 5a		      sta	dpl+1
      23  1f88
      24  1f88				   CompileLineStart
      25  1f88		       a5 59		      lda	dpl
-     26  1f8a		       cd 85 42 	      cmp	ProgramEnd
+     26  1f8a		       cd 8c 42 	      cmp	ProgramEnd
      27  1f8d		       d0 07		      bne	CompileContinue
      28  1f8f		       a5 5a		      lda	dpl+1
-     29  1f91		       cd 86 42 	      cmp	ProgramEnd+1
+     29  1f91		       cd 8d 42 	      cmp	ProgramEnd+1
      30  1f94		       f0 3f		      beq	CompileComplete
      31  1f96
      32  1f96				   CompileContinue
@@ -4918,7 +4918,7 @@
     190  2155
     191  2155							;+
     192  2155							;====================================================
-    193  2155		       42 7b	   PrtTerm    equ	tempy
+    193  2155		       42 82	   PrtTerm    equ	tempy
     194  2155
     195  2155							; on exit Print Y has the offset to use
     196  2155							; input y =	 addr low
@@ -4934,7 +4934,7 @@
     206  215d		       c8		      iny
     207  215e		       84 51		      sty	CUROFF
     208  2160				   PrtNoInc
-    209  2160		       8d 7b 42 	      sta	PrtTerm
+    209  2160		       8d 82 42 	      sta	PrtTerm
     210  2163
     211  2163				   PrtPrgString 		; Print a terminated string from the static program space
     212  2163		       a4 51		      ldy	CUROFF
@@ -4949,13 +4949,13 @@
     221  2170
     222  2170		       86 5f	   PrtStr     stx	PrtFrom+1
     223  2172		       84 5e		      sty	PrtFrom
-    224  2174		       8d 7b 42 	      sta	PrtTerm
+    224  2174		       8d 82 42 	      sta	PrtTerm
     225  2177		       a0 00		      ldy	#0
     226  2179							;
     227  2179							; On entry here ptrfrom and prtterm point to area to print
     228  2179							;
     229  2179		       b1 5e	   PrtLoop    lda	(PrtFrom),y
-    230  217b		       cd 7b 42 	      cmp	PrtTerm
+    230  217b		       cd 82 42 	      cmp	PrtTerm
     231  217e		       f0 0b		      beq	PrtEnd
     232  2180		       c9 00		      cmp	#0	; always end if 0 is found
     233  2182		       f0 07		      beq	PrtEnd
@@ -5119,7 +5119,7 @@
     389  224b		       a5 5a		      lda	dpl+1
     390  224d		       85 5f		      sta	PrtFrom+1
     391  224f		       a9 22		      lda	#'"
-    392  2251		       8d 7b 42 	      sta	PrtTerm
+    392  2251		       8d 82 42 	      sta	PrtTerm
     393  2254		       20 79 21 	      jsr	PrtLoop
     394  2257		       a9 22		      lda	#'"
     395  2259		       20 e3 19 	      jsr	VOUTCH
@@ -5214,7 +5214,7 @@
     484  22c6		       a5 5a		      lda	dpl+1
     485  22c8		       85 5f		      sta	PrtFrom+1
     486  22ca		       a9 00		      lda	#0
-    487  22cc		       8d 7b 42 	      sta	PrtTerm
+    487  22cc		       8d 82 42 	      sta	PrtTerm
     488  22cf		       20 79 21 	      jsr	PrtLoop
     489  22d2		       88		      dey		; point back to the terminating null value
     490  22d3				   PrintKeyDone
@@ -5293,34 +5293,34 @@
       5  2326							; a,x returns or provides the low hi bytes of the managed addresses
       6  2326							; This uses the programend, to memory end as the area to manage
       7  2326							;===================================================================
-      8 U35c6					      Seg.u	TBData
-      9 U35c6							;
-     10 U35c6							;=====================================================
-     11 U35c6							;Pointers for memory Management
-     12 U35c6							;Allocated block are not chained but can be followed for all memory by the associated length
-     13 U35c6							; Mem block format is
-     14 U35c6							;	 0-1   pointer to next block for free blocks
-     15 U35c6							;	 0-1   for allocated blocks
-     16 U35c6							;	   0   type of block, blob | array bytes, ints ,string | single type byte or integer
-     17 U35c6							;	   1   refrence counter ... lol only up to 256 but it is something
-     18 U35c6							;	 2-3   length constant for exevy type of memory block
-     19 U35c6							; Memory is recombined as it is released
-     20 U35c6							; The memory manager is not interupted durring allocation
-     21 U35c6							; or freeing of memory
-     22 U35c6							;====================================================
-     23 U35c6		       00 00	   MemFreeList ds	2	; list of free blocks of memory
-     24 U35c8		       00 00	   MemR0      ds	2	; source for copy/move/Init
-     25 U35ca		       00 00	   MemR1      ds	2	; Destination for copy/move
-     26 U35cc							;=====================================================
+      8 U35cd					      Seg.u	TBData
+      9 U35cd							;
+     10 U35cd							;=====================================================
+     11 U35cd							;Pointers for memory Management
+     12 U35cd							;Allocated block are not chained but can be followed for all memory by the associated length
+     13 U35cd							; Mem block format is
+     14 U35cd							;	 0-1   pointer to next block for free blocks
+     15 U35cd							;	 0-1   for allocated blocks
+     16 U35cd							;	   0   type of block, blob | array bytes, ints ,string | single type byte or integer
+     17 U35cd							;	   1   refrence counter ... lol only up to 256 but it is something
+     18 U35cd							;	 2-3   length constant for exevy type of memory block
+     19 U35cd							; Memory is recombined as it is released
+     20 U35cd							; The memory manager is not interupted durring allocation
+     21 U35cd							; or freeing of memory
+     22 U35cd							;====================================================
+     23 U35cd		       00 00	   MemFreeList ds	2	; list of free blocks of memory
+     24 U35cf		       00 00	   MemR0      ds	2	; source for copy/move/Init
+     25 U35d1		       00 00	   MemR1      ds	2	; Destination for copy/move
+     26 U35d3							;=====================================================
      27  2326					      Seg	Code
      28  2326							;=====================================================
      29  2326				   MemInit
-     30  2326		       a9 8d		      lda	#FreeMemStart&$FF
-     31  2328		       8d 83 42 	      sta	ProgramStart
-     32  232b		       8d 85 42 	      sta	ProgramEnd
+     30  2326		       a9 94		      lda	#FreeMemStart&$FF
+     31  2328		       8d 8a 42 	      sta	ProgramStart
+     32  232b		       8d 8c 42 	      sta	ProgramEnd
      33  232e		       a9 42		      lda	#FreeMemStart>>8
-     34  2330		       8d 84 42 	      sta	ProgramStart+1
-     35  2333		       8d 86 42 	      sta	ProgramEnd+1
+     34  2330		       8d 8b 42 	      sta	ProgramStart+1
+     35  2333		       8d 8d 42 	      sta	ProgramEnd+1
      36  2336
      37  2336		       20 40 23 	      jsr	GetSizes
      38  2339		       20 4b 23 	      jsr	MemFree
@@ -5350,9 +5350,9 @@
      62  2340				  -	      sta	MemFreeList+1
      63  2340					      else
      64  2340		       a9 ff		      lda	#$ff
-     65  2342		       8d 87 42 	      sta	HighMem	;$CFFF otherwise
+     65  2342		       8d 8e 42 	      sta	HighMem	;$CFFF otherwise
      66  2345		       a9 cf		      lda	#$cf
-     67  2347		       8d 88 42 	      sta	HighMem+1
+     67  2347		       8d 8f 42 	      sta	HighMem+1
      68  234a					      endif
      69  234a		       60		      rts
      70  234b							;
@@ -5360,13 +5360,13 @@
      72  234b							;
      73  234b				   MemFree
      74  234b		       38		      sec
-     75  234c		       ad 87 42 	      lda	HighMem
-     76  234f		       ed 85 42 	      sbc	ProgramEnd
-     77  2352		       8d 8b 42 	      sta	FreeMem
+     75  234c		       ad 8e 42 	      lda	HighMem
+     76  234f		       ed 8c 42 	      sbc	ProgramEnd
+     77  2352		       8d 92 42 	      sta	FreeMem
      78  2355		       85 52		      sta	R0
-     79  2357		       ad 88 42 	      lda	HighMem+1
-     80  235a		       ed 86 42 	      sbc	ProgramEnd+1
-     81  235d		       8d 8c 42 	      sta	FreeMem+1
+     79  2357		       ad 8f 42 	      lda	HighMem+1
+     80  235a		       ed 8d 42 	      sbc	ProgramEnd+1
+     81  235d		       8d 93 42 	      sta	FreeMem+1
      82  2360		       85 53		      sta	R0+1
      83  2362		       60		      rts
      84  2363							;
@@ -5374,13 +5374,13 @@
      86  2363							;
      87  2363				   MemUsed
      88  2363		       38		      sec
-     89  2364		       ad 85 42 	      lda	ProgramEnd
-     90  2367		       ed 83 42 	      sbc	ProgramStart
-     91  236a		       8d 89 42 	      sta	UsedMem
+     89  2364		       ad 8c 42 	      lda	ProgramEnd
+     90  2367		       ed 8a 42 	      sbc	ProgramStart
+     91  236a		       8d 90 42 	      sta	UsedMem
      92  236d		       85 52		      sta	R0
-     93  236f		       ad 86 42 	      lda	ProgramEnd+1
-     94  2372		       ed 84 42 	      sbc	ProgramStart+1
-     95  2375		       8d 8a 42 	      sta	UsedMem+1
+     93  236f		       ad 8d 42 	      lda	ProgramEnd+1
+     94  2372		       ed 8b 42 	      sbc	ProgramStart+1
+     95  2375		       8d 91 42 	      sta	UsedMem+1
      96  2378		       85 53		      sta	R0+1
      97  237a							;
      98  237a		       60		      rts
@@ -5689,7 +5689,7 @@
     147  24ee							;	    RSTR 1   --- return from Function
     148  24ee							;
     149  24ee		       20 b0 29    iRSTR      jsr	getILByte	; get where to go if 0 = gosub/1=function call
-    150  24f1		       8d 7f 42 	      sta	offset
+    150  24f1		       8d 86 42 	      sta	offset
     151  24f4		       20 93 2b 	      jsr	saveIL	; for later jump if needed add extra entry to	the return stack
     152  24f7
     153  24f7		       20 ec 2b 	      jsr	popLN	; get the next item from the stack into curptr and curroff, returns call type func or stmt
@@ -5729,7 +5729,7 @@
     187  2529				   iRSTRNORETURNVALUE
     188  2529
     189  2529
-    190  2529		       ad 0e 36    iRSTRErr   lda	taskPtr	; Check if this is task zero
+    190  2529		       ad 15 36    iRSTRErr   lda	taskPtr	; Check if this is task zero
     191  252c		       f0 0a		      beq	taskZeroEnd	; this is task zero just stop with error
     192  252e		       a5 56		      lda	MQ
     193  2530		       d0 03		      bne	taskRet
@@ -5805,22 +5805,22 @@
      11  2573							; Sets the pointers to the math,IL and gosub stacks
      12  2573							; Creates the initial Context for each task slot
      13  2573				   taskSetStacks
-     14  2573		       a9 0e		      lda	#mathStack&$FF
+     14  2573		       a9 15		      lda	#mathStack&$FF
      15  2575		       85 48		      sta	MATHSTACK
      16  2577		       a9 37		      lda	#mathStack>>8
      17  2579		       85 49		      sta	MATHSTACK+1
      18  257b
-     19  257b		       a9 9e		      lda	#ilStack&$ff
+     19  257b		       a9 a5		      lda	#ilStack&$ff
      20  257d		       85 45		      sta	ILSTACK
      21  257f		       a9 38		      lda	#ilStack>>8
      22  2581		       85 46		      sta	ILSTACK+1
      23  2583
-     24  2583		       a9 86		      lda	#gosubStack&$FF
+     24  2583		       a9 8d		      lda	#gosubStack&$FF
      25  2585		       85 4b		      sta	GOSUBSTACK
      26  2587		       a9 3c		      lda	#gosubStack>>8
      27  2589		       85 4c		      sta	GOSUBSTACK+1
      28  258b
-     29  258b		       a9 06		      lda	#variableStack&$FF
+     29  258b		       a9 0d		      lda	#variableStack&$FF
      30  258d		       85 41		      sta	VARIABLES
      31  258f		       a9 3f		      lda	#variableStack>>8
      32  2591		       85 42		      sta	VARIABLES+1
@@ -5901,20 +5901,20 @@
     107  25ef		       98	   taskReset  tya		; Save Y
     108  25f0		       48		      pha
     109  25f1		       a9 01		      lda	#1
-    110  25f3		       8d 0d 37 	      sta	taskCounter	; Set number of active tasks to 1
-    111  25f6		       ac 0e 36 	      ldy	taskPtr	; Set the active task to 0 MAIN
+    110  25f3		       8d 14 37 	      sta	taskCounter	; Set number of active tasks to 1
+    111  25f6		       ac 15 36 	      ldy	taskPtr	; Set the active task to 0 MAIN
     112  25f9		       c0 00		      cpy	#0	; check if we are the main context
     113  25fb		       f0 08		      beq	taskResetCont	; if we are just continue
     114  25fd
     115  25fd		       a0 00		      ldy	#0	; else we need to switch to the main context
-    116  25ff		       8c 0e 36 	      sty	taskPtr
+    116  25ff		       8c 15 36 	      sty	taskPtr
     117  2602		       20 76 28 	      jsr	ContextLoad	; load the System Task context
     118  2605				   taskResetCont
     119  2605		       a0 19		      ldy	#CONTEXTLEN	; Start at the second task +1 account for task control byte
     120  2607
     121  2607				   taskResetLoop
     122  2607		       a9 00		      lda	#TASKINACTIVE
-    123  2609		       99 0f 36 	      sta	taskTable,y	; Ensure that the task is made inactive
+    123  2609		       99 16 36 	      sta	taskTable,y	; Ensure that the task is made inactive
     124  260c		       18		      clc
     125  260d		       98		      tya
     126  260e		       69 19		      adc	#CONTEXTLEN
@@ -5937,30 +5937,30 @@
     143  2618		       98	   iTaskSwitch tya
     144  2619		       48		      pha
     145  261a
-    146  261a		       ad 0b 37 	      lda	taskResetValue	; Always reset the counter value
-    147  261d		       8d 09 37 	      sta	taskCurrentCycles	; Update the counter with the new value
-    148  2620		       ce 0a 37 	      dec	taskCurrentCycles+1	; dec high order byte
+    146  261a		       ad 12 37 	      lda	taskResetValue	; Always reset the counter value
+    147  261d		       8d 10 37 	      sta	taskCurrentCycles	; Update the counter with the new value
+    148  2620		       ce 11 37 	      dec	taskCurrentCycles+1	; dec high order byte
     149  2623		       d0 44		      bne	iTaskSwitchDone	; Exit if not zero
     150  2625
-    151  2625		       ad 0c 37 	      lda	taskResetValue+1
-    152  2628		       8d 0a 37 	      sta	taskCurrentCycles+1
+    151  2625		       ad 13 37 	      lda	taskResetValue+1
+    152  2628		       8d 11 37 	      sta	taskCurrentCycles+1
     153  262b
     154  262b		       ad 56 19 	      lda	IRQPending	; Skip this if we are processing an irq
-    155  262e		       0d 81 42 	      ora	taskIOPending	; If set then don't switch
+    155  262e		       0d 88 42 	      ora	taskIOPending	; If set then don't switch
     156  2631		       d0 36		      bne	iTaskSwitchDone	; DO irq Higher priority than the Tasks
     157  2633
-    158  2633		       ad 0d 37    iTaskMain  lda	taskCounter	; Number of tasks
+    158  2633		       ad 14 37    iTaskMain  lda	taskCounter	; Number of tasks
     159  2636		       c9 01		      cmp	#1	; if there is only one task must be main
     160  2638		       d0 07		      bne	itasknext	; if it some other number continue to next
     161  263a
-    162  263a		       ac 0e 36 	      ldy	taskPtr	; check if we have not just ended some other task
+    162  263a		       ac 15 36 	      ldy	taskPtr	; check if we have not just ended some other task
     163  263d		       d0 02		      bne	itasknext	; 0 = main task if so then do a next anyway
     164  263f		       f0 28		      beq	iTaskSwitchDone	; Skip this if main is only task
     165  2641							;
     166  2641							; Save the current context this is moved from BASIC STMT LEVEL TO IL INSTRUCTION LEVEL
     167  2641							;
     168  2641				   itasknext
-    169  2641		       ac 0e 36 	      ldy	taskPtr
+    169  2641		       ac 15 36 	      ldy	taskPtr
     170  2644		       20 67 28 	      jsr	ContextSave	; Save the current context, y points to next context
     171  2647				   itaskLoop
     172  2647		       c0 fa		      cpy	#TASKTABLELEN	; Are we at end of task table
@@ -5970,7 +5970,7 @@
     176  264d		       f0 0d		      beq	iTaskLoadEntry	; Go Ahead and just start this As we Can back and it is always active
     177  264f
     178  264f				   iTaskNextChk
-    179  264f		       b9 0f 36 	      lda	taskTable,y	; there is always at least one entry in table
+    179  264f		       b9 16 36 	      lda	taskTable,y	; there is always at least one entry in table
     180  2652		       d0 08		      bne	iTaskLoadEntry	; get next slot if this one empty
     181  2654		       18	   iTaskNext  clc
     182  2655		       98		      tya
@@ -5979,10 +5979,10 @@
     185  2659		       4c 47 26 	      jmp	itaskLoop	; Check for busy entry
     186  265c
     187  265c		       a9 80	   iTaskLoadEntry lda	#TASKACTIVE
-    188  265e		       59 0f 36 	      eor	taskTable,y	; Check for anything waiting io
+    188  265e		       59 16 36 	      eor	taskTable,y	; Check for anything waiting io
     189  2661		       d0 f1		      bne	iTaskNext
     190  2663		       20 76 28 	      jsr	ContextLoad	; load the next context
-    191  2666		       8c 0e 36 	      sty	taskPtr	; update the task pointer
+    191  2666		       8c 15 36 	      sty	taskPtr	; update the task pointer
     192  2669
     193  2669				   iTaskSwitchDone
     194  2669		       68		      pla
@@ -6003,7 +6003,7 @@
     209  2674
     210  2674
     211  2674
-    212  2674		       ac 0e 36 	      ldy	taskPtr	; find out where we are
+    212  2674		       ac 15 36 	      ldy	taskPtr	; find out where we are
     213  2677		       20 67 28 	      jsr	ContextSave	; Save the current context
     214  267a
     215  267a							;Find the pointer to the line we need to start at
@@ -6019,7 +6019,7 @@
     225  2689		       20 f5 29 	      jsr	findLine	; Get the offset of the line to start task at
     226  268c		       f0 0b		      beq	iTaskCont
     227  268e
-    228  268e		       ac 0e 36 	      ldy	taskPtr	; Restore the original Context Error Exit
+    228  268e		       ac 15 36 	      ldy	taskPtr	; Restore the original Context Error Exit
     229  2691		       20 76 28 	      jsr	ContextLoad
     230  2694
     231  2694		       68		      pla		; pop a - exit
@@ -6031,7 +6031,7 @@
     237  269c		       90 49		      bcc	iTaskNoEmpty	; There are no more empty slots
     238  269e
     239  269e		       a9 82		      lda	#TASKRUNPENDING+TASKACTIVE	; Mark as enabled but suspended
-    240  26a0		       99 0f 36 	      sta	taskTable,y	; new task as active
+    240  26a0		       99 16 36 	      sta	taskTable,y	; new task as active
     241  26a3
     242  26a3		       a5 4f		      lda	CURPTR
     243  26a5		       48		      pha		; push a
@@ -6065,9 +6065,9 @@
     271  26ce		       48		      pha		; push a
     272  26cf
     273  26cf		       20 67 28    itaskSetSave jsr	ContextSave	; save the updated context
-    274  26d2		       ee 0d 37 	      inc	taskCounter	; Update the number of Tasks running
+    274  26d2		       ee 14 37 	      inc	taskCounter	; Update the number of Tasks running
     275  26d5
-    276  26d5		       ac 0e 36 	      ldy	taskPtr
+    276  26d5		       ac 15 36 	      ldy	taskPtr
     277  26d8		       20 76 28 	      jsr	ContextLoad	; restore the original context
     278  26db
     279  26db		       a9 00		      lda	#0	; Set the R0 upper to zero
@@ -6080,7 +6080,7 @@
     286  26e4
     287  26e4		       4c 16 07 	      jmp	pushR0nextIl	; Push R0 and continue
     288  26e7				   iTaskNoEmpty
-    289  26e7		       ac 0e 36 	      ldy	taskPtr
+    289  26e7		       ac 15 36 	      ldy	taskPtr
     290  26ea		       20 76 28 	      jsr	ContextLoad
     291  26ed
     292  26ed		       68		      pla		; pop a    -- exit
@@ -6132,7 +6132,7 @@
     338  2728		       98		      tya
     339  2729		       48		      pha
     340  272a		       20 3c 27 	      jsr	iTaskValid	; returns pointer to task entry
-    341  272d		       b9 0f 36 	      lda	taskTable,y
+    341  272d		       b9 16 36 	      lda	taskTable,y
     342  2730		       f0 05		      beq	iTaskStatExit
     343  2732		       68		      pla
     344  2733		       a8		      tay
@@ -6167,47 +6167,47 @@
     373  2754							; Kill a running task, do nothing if already stopped
     374  2754		       20 3c 27    iTaskKill  jsr	iTaskValid
     375  2757		       a9 00		      lda	#0
-    376  2759		       99 0f 36 	      sta	taskTable,y	; Fall thru to go to ntask - nexttask
+    376  2759		       99 16 36 	      sta	taskTable,y	; Fall thru to go to ntask - nexttask
     377  275c							;
     378  275c							;================================================================
     379  275c							;Skip to next task
     380  275c				   iNTask
     381  275c		       a9 01		      lda	#1
-    382  275e		       8d 09 37 	      sta	taskCurrentCycles
-    383  2761		       8d 0a 37 	      sta	taskCurrentCycles+1
+    382  275e		       8d 10 37 	      sta	taskCurrentCycles
+    383  2761		       8d 11 37 	      sta	taskCurrentCycles+1
     384  2764		       4c b1 02 	      jmp	NextIL
     385  2767							;
     386  2767							;=======================================================
     387  2767							; Wait for a task to complete
     388  2767				   iWTASK
     389  2767		       20 b0 29 	      jsr	getILByte
-    390  276a		       8d 7f 42 	      sta	offset
+    390  276a		       8d 86 42 	      sta	offset
     391  276d							;
     392  276d		       20 93 2b 	      jsr	saveIL	;in case of failure
     393  2770
     394  2770		       20 3c 27 	      jsr	iTaskValid	; returns pointer to task entry from stack, y is offset
-    395  2773		       b9 0f 36 	      lda	taskTable,y
+    395  2773		       b9 16 36 	      lda	taskTable,y
     396  2776		       d0 03		      bne	iWTASKWAIT
     397  2778				   iWTASKEXITED
     398  2778		       4c b1 02 	      jmp	NextIL
     399  277b				   iWTASKWAIT
     400  277b		       20 a9 2b 	      jsr	pushR0	; Push R0 back onto the stack
     401  277e		       a9 01		      lda	#1
-    402  2780		       8d 09 37 	      sta	taskCurrentCycles	; Give up the cycles
-    403  2783		       8d 0a 37 	      sta	taskCurrentCycles+1
+    402  2780		       8d 10 37 	      sta	taskCurrentCycles	; Give up the cycles
+    403  2783		       8d 11 37 	      sta	taskCurrentCycles+1
     404  2786		       20 9e 2b 	      jsr	restoreIL
     405  2789		       4c d7 0b 	      jmp	tstBranch
     406  278c							;
     407  278c							;=======================================================
     408  278c							; Set task io lock
-    409  278c		       ee 81 42    iStartIO   inc	taskIOPending
+    409  278c		       ee 88 42    iStartIO   inc	taskIOPending
     410  278f		       4c b1 02 	      jmp	NextIL
     411  2792							;
     412  2792							;=======================================================
     413  2792							; Release the io lock
-    414  2792		       ad 81 42    iEndIO     lda	taskIOPending
+    414  2792		       ad 88 42    iEndIO     lda	taskIOPending
     415  2795		       f0 03		      beq	iEndIOExit
-    416  2797		       ce 81 42 	      dec	taskIOPending
+    416  2797		       ce 88 42 	      dec	taskIOPending
     417  279a		       4c b1 02    iEndIOExit jmp	NextIL
     418  279d							;
     419  279d							;===============================================================
@@ -6215,23 +6215,23 @@
     421  279d				   iTASKPID
     422  279d		       a9 00		      lda	#0
     423  279f		       85 53		      sta	R0+1
-    424  27a1		       ad 0e 36 	      lda	taskPtr
+    424  27a1		       ad 15 36 	      lda	taskPtr
     425  27a4		       85 52		      sta	R0
     426  27a6		       4c 16 07 	      jmp	pushR0nextIl
     427  27a9							;
     428  27a9							;================================================================
     429  27a9							; Terminate a task
-    430  27a9		       ac 0e 36    iETask     ldy	taskPtr
+    430  27a9		       ac 15 36    iETask     ldy	taskPtr
     431  27ac		       c0 00		      cpy	#0
     432  27ae		       d0 03		      bne	iETaskCont
     433  27b0		       4c 02 06 	      jmp	iFIN	; if the main task does a ETASK then stop
     434  27b3				   iETaskCont
     435  27b3		       a9 00		      lda	#TASKINACTIVE
-    436  27b5		       99 0f 36 	      sta	taskTable,y	; mark entry as free
-    437  27b8		       ce 0d 37 	      dec	taskCounter	; reduce the number of active tasks
+    436  27b5		       99 16 36 	      sta	taskTable,y	; mark entry as free
+    437  27b8		       ce 14 37 	      dec	taskCounter	; reduce the number of active tasks
     438  27bb		       a9 01		      lda	#1
-    439  27bd		       8d 09 37 	      sta	taskCurrentCycles	; Make it 1 as rtn will dec and check
-    440  27c0		       8d 0a 37 	      sta	taskCurrentCycles+1
+    439  27bd		       8d 10 37 	      sta	taskCurrentCycles	; Make it 1 as rtn will dec and check
+    440  27c0		       8d 11 37 	      sta	taskCurrentCycles+1
     441  27c3		       20 54 28 	      jsr	TaskSetExitCode
     442  27c6				   iETaskExit
     443  27c6		       4c b1 02 	      jmp	NextIL
@@ -6300,14 +6300,14 @@
     506  281c				   iSLICE
     507  281c		       20 3b 2c 	      jsr	popR0
     508  281f		       a5 52		      lda	R0
-    509  2821		       8d 0b 37 	      sta	taskResetValue
+    509  2821		       8d 12 37 	      sta	taskResetValue
     510  2824		       a5 53		      lda	R0+1
-    511  2826		       8d 0c 37 	      sta	taskResetValue+1
+    511  2826		       8d 13 37 	      sta	taskResetValue+1
     512  2829		       d0 0b		      bne	iSliceSet
-    513  282b		       ee 0c 37 	      inc	taskResetValue+1	; must be at least 1 high counter
+    513  282b		       ee 13 37 	      inc	taskResetValue+1	; must be at least 1 high counter
     514  282e		       a9 01		      lda	#1
-    515  2830		       8d 09 37 	      sta	taskCurrentCycles
-    516  2833		       8d 0a 37 	      sta	taskCurrentCycles+1
+    515  2830		       8d 10 37 	      sta	taskCurrentCycles
+    516  2833		       8d 11 37 	      sta	taskCurrentCycles+1
     517  2836				   iSliceSet
     518  2836		       4c b1 02 	      jmp	NextIL
     519  2839							;================================================================
@@ -6317,12 +6317,12 @@
     523  2839							;	     c clear if not found
     524  2839							;================================================================
     525  2839							;
-    526  2839		       ad 0d 37    TaskEmpty  lda	taskCounter
+    526  2839		       ad 14 37    TaskEmpty  lda	taskCounter
     527  283c		       c9 0a		      cmp	#TASKCOUNT
     528  283e		       b0 10		      bcs	TaskNoSlot
     529  2840		       a0 19		      ldy	#CONTEXTLEN	;The first slot is always the main line SKIP
     530  2842				   TaskLoop
-    531  2842		       b9 0f 36 	      lda	taskTable,y
+    531  2842		       b9 16 36 	      lda	taskTable,y
     532  2845		       f0 0b		      beq	TaskEmptyFnd
     533  2847		       98		      tya
     534  2848		       18		      clc
@@ -6362,7 +6362,7 @@
     568  2867		       a2 00	   ContextSave ldx	#0
     569  2869		       c8		      iny		;inc past the task flags
     570  286a		       b5 41	   ContextSvLoop lda	CONTEXT,x
-    571  286c		       99 0f 36 	      sta	taskTable,y
+    571  286c		       99 16 36 	      sta	taskTable,y
     572  286f		       c8		      iny
     573  2870		       e8		      inx
     574  2871		       e0 18		      cpx	#[CONTEXTLEN-1]
@@ -6377,7 +6377,7 @@
     583  2877		       48		      pha
     584  2878		       a2 00		      ldx	#0
     585  287a		       c8		      iny		;inc past the task flags
-    586  287b		       b9 0f 36    ContextLDLoop lda	taskTable,y
+    586  287b		       b9 16 36    ContextLDLoop lda	taskTable,y
     587  287e		       95 41		      sta	CONTEXT,x
     588  2880		       c8		      iny
     589  2881		       e8		      inx
@@ -6470,11 +6470,11 @@
      79  28c6		       a5 52		      lda	R0
      80  28c8		       d0 10		      bne	iIPCIO_No_Halt
      81  28ca		       a9 01		      lda	#1
-     82  28cc		       8d 09 37 	      sta	taskCurrentCycles	; force a task switch
+     82  28cc		       8d 10 37 	      sta	taskCurrentCycles	; force a task switch
      83  28cf		       a9 01		      lda	#TASKWAITIPC
-     84  28d1		       ac 0e 36 	      ldy	taskPtr
-     85  28d4		       19 0f 36 	      ora	taskTable,y
-     86  28d7		       99 0f 36 	      sta	taskTable,y
+     84  28d1		       ac 15 36 	      ldy	taskPtr
+     85  28d4		       19 16 36 	      ora	taskTable,y
+     86  28d7		       99 16 36 	      sta	taskTable,y
      87  28da
      88  28da				   iIPCIO_No_Halt
      89  28da		       68		      pla
@@ -6535,7 +6535,7 @@
     144  2915		       91 52		      sta	(R0),y	; Set the entry type
     145  2917
     146  2917		       88		      dey
-    147  2918		       ad 0e 36 	      lda	taskPtr	; Store the PID into queue
+    147  2918		       ad 15 36 	      lda	taskPtr	; Store the PID into queue
     148  291b		       91 52		      sta	(R0),y
     149  291d		       20 53 2c 	      jsr	popR1	; Get the actual message value
     150  2920		       20 a1 29 	      jsr	ipc_pushR1	; Store Message value into queue
@@ -6604,7 +6604,7 @@
     213  296d							;  context/index/pid
     214  296d				   ipc_getcontext
     215  296d		       18		      clc		; Get pointer to Task context
-    216  296e		       a9 0f		      lda	#taskTable&$FF	; change ptr to address
+    216  296e		       a9 16		      lda	#taskTable&$FF	; change ptr to address
     217  2970		       65 54		      adc	R1
     218  2972		       85 56		      sta	MQ
     219  2974		       a9 36		      lda	#taskTable>>8
@@ -6787,19 +6787,19 @@
     111  29f5							;
     112  29f5
     113  29f5				   findLine
-    114  29f5		       ad 83 42 	      lda	ProgramStart	;Start of program -> CURPTR
+    114  29f5		       ad 8a 42 	      lda	ProgramStart	;Start of program -> CURPTR
     115  29f8		       85 4f		      sta	CURPTR
-    116  29fa		       ad 84 42 	      lda	ProgramStart+1
+    116  29fa		       ad 8b 42 	      lda	ProgramStart+1
     117  29fd		       85 50		      sta	CURPTR+1
     118  29ff							;
     119  29ff							; At end of code?
     120  29ff							;
     121  29ff				   iXFER1
     122  29ff		       a5 4f		      lda	CURPTR	; chk CURPTR = END PROGRAM
-    123  2a01		       cd 85 42 	      cmp	ProgramEnd	; at end of program then stop run
+    123  2a01		       cd 8c 42 	      cmp	ProgramEnd	; at end of program then stop run
     124  2a04		       d0 0b		      bne	xfer2	; not end
     125  2a06		       a5 50		      lda	CURPTR+1
-    126  2a08		       cd 86 42 	      cmp	ProgramEnd+1
+    126  2a08		       cd 8d 42 	      cmp	ProgramEnd+1
     127  2a0b		       d0 04		      bne	xfer2	;Not at end
     128  2a0d							;
     129  2a0d							; Line not found and the end of the program was
@@ -6875,10 +6875,10 @@
     199  2a4e							; if they are equal, Z clear if not.
     200  2a4e							;
     201  2a4e		       a5 4f	   AtEnd      lda	CURPTR
-    202  2a50		       cd 85 42 	      cmp	ProgramEnd
+    202  2a50		       cd 8c 42 	      cmp	ProgramEnd
     203  2a53		       d0 05		      bne	atendexit
     204  2a55		       a5 50		      lda	CURPTR+1
-    205  2a57		       cd 86 42 	      cmp	ProgramEnd+1
+    205  2a57		       cd 8d 42 	      cmp	ProgramEnd+1
     206  2a5a		       60	   atendexit  rts
     207  2a5b							;
     208  2a5b
@@ -7000,12 +7000,12 @@
     324  2ac6		       20 15 2b    GetLine    jsr	ReadPrompt
     325  2ac9		       e0 00		      cpx	#0
     326  2acb		       f0 14		      beq	GetLineRetry
-    327  2acd		       ae 0e 36 	      ldx	taskPtr
-    328  2ad0		       bd 0f 36 	      lda	taskTable,x
+    327  2acd		       ae 15 36 	      ldx	taskPtr
+    328  2ad0		       bd 16 36 	      lda	taskTable,x
     329  2ad3		       29 40		      and	#TASKWAITIO	;Task Active and waiting for IO
     330  2ad5		       d0 3d		      bne	taskWaitingIO
     331  2ad7		       09 40		      ora	#TASKWAITIO	;Mark Task as waiting for IO
-    332  2ad9		       9d 0f 36 	      sta	taskTable,x	;Mark the state for task as waiting io
+    332  2ad9		       9d 16 36 	      sta	taskTable,x	;Mark the state for task as waiting io
     333  2adc		       ce 14 2b 	      dec	taskWaitingIO	;Start polling the input and make task wait
     334  2adf		       f0 33		      beq	taskWaitingIO	;Get out of here and wait for io to complete
     335  2ae1
@@ -7022,7 +7022,7 @@
     346  2ae6							;
     347  2ae6		       a0 00	   ReadComplete ldy	#0
     348  2ae8		       84 51		      sty	CUROFF
-    349  2aea		       a2 ea		      ldx	#LINBUF&$ff
+    349  2aea		       a2 f1		      ldx	#LINBUF&$ff
     350  2aec		       86 4f		      stx	CURPTR
     351  2aee		       a2 41		      ldx	#LINBUF>>8
     352  2af0		       86 50		      stx	CURPTR+1
@@ -7037,16 +7037,16 @@
     361  2af8		       b1 4f		      lda	(CURPTR),y
     362  2afa		       d0 10		      bne	GetLineDone	;We have data then exit
     363  2afc		       20 18 2b 	      jsr	ReadPromptRetry
-    364  2aff		       ae 0e 36 	      ldx	taskPtr	;if this task is waiting for IO
-    365  2b02		       bd 0f 36 	      lda	taskTable,x	;then get out, wait for line to
+    364  2aff		       ae 15 36 	      ldx	taskPtr	;if this task is waiting for IO
+    365  2b02		       bd 16 36 	      lda	taskTable,x	;then get out, wait for line to
     366  2b05		       29 40		      and	#TASKWAITIO	;Complete again
     367  2b07		       d0 0b		      bne	taskWaitingIO
     368  2b09		       4c e1 2a 	      jmp	GetLineRetry	;If the IO is wait then jump to start
     369  2b0c
     370  2b0c				   GetLineDone
-    371  2b0c		       ae 0e 36 	      ldx	taskPtr
+    371  2b0c		       ae 15 36 	      ldx	taskPtr
     372  2b0f		       a9 80		      lda	#TASKACTIVE
-    373  2b11		       9d 0f 36 	      sta	taskTable,x	;IO is complete
+    373  2b11		       9d 16 36 	      sta	taskTable,x	;IO is complete
     374  2b14
     375  2b14				   taskWaitingIO
     376  2b14		       60		      rts
@@ -7059,13 +7059,13 @@
     383  2b15							; On exit
     384  2b15							;	    The readbuffer index is reset to 0
     385  2b15							;
-    386  2b15		       8d 71 42    ReadPrompt sta	promptChar
+    386  2b15		       8d 78 42    ReadPrompt sta	promptChar
     387  2b18
     388  2b18							;
     389  2b18							; Prompt
     390  2b18							;
     391  2b18
-    392  2b18		       ad 71 42    ReadPromptRetry lda	promptChar
+    392  2b18		       ad 78 42    ReadPromptRetry lda	promptChar
     393  2b1b		       09 00		      ora	#0	;any prompt?
     394  2b1d		       f0 08		      beq	getlinenp
     395  2b1f		       20 e3 19 	      jsr	VOUTCH
@@ -7073,7 +7073,7 @@
     397  2b24		       20 e3 19 	      jsr	VOUTCH	;Space after prompt
     398  2b27							;
     399  2b27		       a2 00	   getlinenp  ldx	#0	;offset into LINBUF
-    400  2b29		       8e 6e 42 	      stx	getlinx
+    400  2b29		       8e 75 42 	      stx	getlinx
     401  2b2c		       60		      rts
     402  2b2d							;
     403  2b2d							;===============================================================
@@ -7085,7 +7085,7 @@
     409  2b2d							;		       c set if it was a complete line
     410  2b2d
     411  2b2d				   ReadLine
-    412  2b2d		       8d 70 42 	      sta	inputNoWait
+    412  2b2d		       8d 77 42 	      sta	inputNoWait
     413  2b30		       c9 00		      cmp	#0
     414  2b32		       f0 05		      beq	getline1
     415  2b34		       20 0f f0 	      jsr	ISCHAR	; if there is no character just get out
@@ -7100,19 +7100,19 @@
     424  2b43		       f0 15		      beq	getlind	;end of line
     425  2b45		       c9 08		      cmp	#BS	;backspace?
     426  2b47		       f0 1d		      beq	getlinebs
-    427  2b49		       ae 6e 42 	      ldx	getlinx
-    428  2b4c		       9d ea 41 	      sta	LINBUF,x
+    427  2b49		       ae 75 42 	      ldx	getlinx
+    428  2b4c		       9d f1 41 	      sta	LINBUF,x
     429  2b4f		       e8		      inx
-    430  2b50		       8e 6e 42 	      stx	getlinx
-    431  2b53		       ad 70 42 	      lda	inputNoWait
+    430  2b50		       8e 75 42 	      stx	getlinx
+    431  2b53		       ad 77 42 	      lda	inputNoWait
     432  2b56		       f0 e1		      beq	getline1
     433  2b58		       d0 0a		      bne	GetLineNoWait
     434  2b5a							;
     435  2b5a							; CR was hit
     436  2b5a							;
     437  2b5a		       a9 00	   getlind    lda	#0	; set the end pf buffer
-    438  2b5c		       ae 6e 42 	      ldx	getlinx
-    439  2b5f		       9d ea 41 	      sta	LINBUF,x
+    438  2b5c		       ae 75 42 	      ldx	getlinx
+    439  2b5f		       9d f1 41 	      sta	LINBUF,x
     440  2b62
     441  2b62		       38		      sec		; Carry set then cr received
     442  2b63		       60		      rts
@@ -7123,10 +7123,10 @@
     447  2b66							;
     448  2b66							; Backspace was hit
     449  2b66							;
-    450  2b66		       ae 6e 42    getlinebs  ldx	getlinx
+    450  2b66		       ae 75 42    getlinebs  ldx	getlinx
     451  2b69		       f0 0e		      beq	getlineEOL	;at start of line
     452  2b6b		       ca		      dex
-    453  2b6c		       8e 6e 42 	      stx	getlinx
+    453  2b6c		       8e 75 42 	      stx	getlinx
     454  2b6f		       20 32 21    getlinepbs jsr	puts
       0  2b72					      db	27,"[K",0
       1  2b72		       1b 5b 4b 00	      .byte.b	27,"[K",0
@@ -7145,7 +7145,7 @@
     468  2b80							;
     469  2b80				   getLineLength
     470  2b80		       a2 00		      ldx	#0	;size
-    471  2b82		       b9 ea 41    getLineL2  lda	LINBUF,y
+    471  2b82		       b9 f1 41    getLineL2  lda	LINBUF,y
     472  2b85		       f0 04		      beq	getLineL3
     473  2b87		       c8		      iny
     474  2b88		       e8		      inx
@@ -7154,7 +7154,7 @@
     477  2b8c		       e8		      inx		;line number LSB
     478  2b8d		       e8		      inx		;MSB
     479  2b8e		       e8		      inx		;change: count new leading line length
-    480  2b8f		       8e 80 42 	      stx	lineLength
+    480  2b8f		       8e 87 42 	      stx	lineLength
     481  2b92		       60		      rts
     482  2b93							;
     483  2b93							;=====================================================
@@ -7185,24 +7185,24 @@
     508  2b93							; so it can't be called more than once.
     509  2b93							;
     510  2b93		       a5 43	   saveIL     lda	ILPC
-    511  2b95		       8d 7c 42 	      sta	tempIL
+    511  2b95		       8d 83 42 	      sta	tempIL
     512  2b98		       a5 44		      lda	ILPC+1
-    513  2b9a		       8d 7d 42 	      sta	tempIL+1
+    513  2b9a		       8d 84 42 	      sta	tempIL+1
     514  2b9d		       60		      rts
     515  2b9e							;
     516  2b9e							;=====================================================
     517  2b9e							; This restores ILPC.
     518  2b9e							;
-    519  2b9e		       ad 7c 42    restoreIL  lda	tempIL
+    519  2b9e		       ad 83 42    restoreIL  lda	tempIL
     520  2ba1		       85 43		      sta	ILPC
-    521  2ba3		       ad 7d 42 	      lda	tempIL+1
+    521  2ba3		       ad 84 42 	      lda	tempIL+1
     522  2ba6		       85 44		      sta	ILPC+1
     523  2ba8		       60		      rts
     524  2ba9							;
     525  2ba9							;=====================================================
     526  2ba9							; This pushes R0 onto the stack.
     527  2ba9							;
-    528  2ba9		       8c 77 42    pushR0     sty	rtemp1
+    528  2ba9		       8c 7e 42    pushR0     sty	rtemp1
     529  2bac		       a4 4a		      ldy	MATHSTACKPTR
     530  2bae		       c0 28		      cpy	#MATHSTACKSIZE<<1
     531  2bb0		       b0 38		      bcs	pusherr
@@ -7213,7 +7213,7 @@
     536  2bb9		       91 48		      sta	(MATHSTACK),y
     537  2bbb		       c8		      iny
     538  2bbc		       84 4a		      sty	MATHSTACKPTR
-    539  2bbe		       ac 77 42 	      ldy	rtemp1
+    539  2bbe		       ac 7e 42 	      ldy	rtemp1
     540  2bc1		       18		      clc
     541  2bc2		       60		      rts
     542  2bc3
@@ -7222,8 +7222,8 @@
     545  2bc3							; and CUROFF. Also marks entry type as 1 = GOSUB
     546  2bc3
     547  2bc3				   pushLN
-    548  2bc3		       8d 78 42 	      STA	rtemp1+1	; Store type of push being done
-    549  2bc6		       8c 77 42 	      sty	rtemp1
+    548  2bc3		       8d 7f 42 	      STA	rtemp1+1	; Store type of push being done
+    549  2bc6		       8c 7e 42 	      sty	rtemp1
     550  2bc9		       a5 4e		      lda	MESSAGEPTR	; stack and msg Q grow together see if they cross!
     551  2bcb		       c5 4d		      cmp	GOSUBSTACKPTR
     552  2bcd		       90 1b		      bcc	pusherr	; No error
@@ -7237,12 +7237,12 @@
     560  2bd9		       e0 03		      cpx	#3	; 4 bytes per entry on the stack
     561  2bdb		       d0 f6		      bne	pushLoop	; Jump if not done for next byte
     562  2bdd
-    563  2bdd		       ad 78 42    pushDone   lda	rtemp1+1	; Type of stack entry
+    563  2bdd		       ad 7f 42    pushDone   lda	rtemp1+1	; Type of stack entry
     564  2be0		       91 4b		      sta	(GOSUBSTACK),y	; Store Type of stack entry
     565  2be2		       c8		      iny		; Next entry
     566  2be3
     567  2be3		       84 4d		      sty	GOSUBSTACKPTR	; Save the new stack pointer
-    568  2be5		       ac 77 42 	      ldy	rtemp1
+    568  2be5		       ac 7e 42 	      ldy	rtemp1
     569  2be8		       18		      clc
     570  2be9		       60		      rts
     571  2bea				   pusherr
@@ -7256,7 +7256,7 @@
     579  2bec							; until it finds the next return. Allowing
     580  2bec							; a return from within a for/next
     581  2bec							; on exit a contains the type of return from, gosub_rtn, gosub_rtn_value....
-    582  2bec		       8c 77 42    popLN      sty	rtemp1
+    582  2bec		       8c 7e 42    popLN      sty	rtemp1
     583  2bef		       a4 4d		      ldy	GOSUBSTACKPTR	; Get the Gosub/for stack pointer
     584  2bf1		       a2 03		      ldx	#3	; each stack entry is 3 bytes
     585  2bf3
@@ -7266,7 +7266,7 @@
     589  2bf7
     590  2bf7		       88		      dey		; Position to read entry type
     591  2bf8		       b1 4b		      lda	(GOSUBSTACK),y	; get the stack entry type
-    592  2bfa		       8d 78 42 	      sta	rtemp1+1	; Save to be returned
+    592  2bfa		       8d 7f 42 	      sta	rtemp1+1	; Save to be returned
     593  2bfd		       c9 01		      cmp	#GOSUB_RTN	; Type is a gosub entry
     594  2bff		       f0 04		      beq	popLoop	; Restore the line
     595  2c01		       c9 81		      cmp	#GOSUB_RTN_VALUE	; Also restore the line
@@ -7282,8 +7282,8 @@
     605  2c0f
     606  2c0f
     607  2c0f		       84 4d	   PopDone    sty	GOSUBSTACKPTR
-    608  2c11		       ac 77 42 	      ldy	rtemp1
-    609  2c14		       ad 78 42 	      lda	rtemp1+1	; get the type of return
+    608  2c11		       ac 7e 42 	      ldy	rtemp1
+    609  2c14		       ad 7f 42 	      lda	rtemp1+1	; get the type of return
     610  2c17		       18		      clc
     611  2c18		       60		      rts
     612  2c19
@@ -7299,7 +7299,7 @@
     622  2c21							;=====================================================
     623  2c21							; This pushes R1 onto the stack
     624  2c21							;
-    625  2c21		       8c 77 42    pushR1     sty	rtemp1
+    625  2c21		       8c 7e 42    pushR1     sty	rtemp1
     626  2c24		       a4 4a		      ldy	MATHSTACKPTR
     627  2c26		       c0 28		      cpy	#MATHSTACKSIZE<<1
     628  2c28		       b0 ef		      bcs	poperr
@@ -7310,14 +7310,14 @@
     633  2c31		       91 48		      sta	(MATHSTACK),y
     634  2c33		       c8		      iny
     635  2c34		       84 4a		      sty	MATHSTACKPTR
-    636  2c36		       ac 77 42 	      ldy	rtemp1
+    636  2c36		       ac 7e 42 	      ldy	rtemp1
     637  2c39		       18		      clc
     638  2c3a		       60		      rts
     639  2c3b							;
     640  2c3b							;=====================================================
     641  2c3b							; This pops Top Of Stack and places it in R0.
     642  2c3b							;
-    643  2c3b		       8c 77 42    popR0      sty	rtemp1
+    643  2c3b		       8c 7e 42    popR0      sty	rtemp1
     644  2c3e		       a4 4a		      ldy	MATHSTACKPTR
     645  2c40		       f0 d7		      beq	poperr
     646  2c42		       88		      dey
@@ -7327,7 +7327,7 @@
     650  2c48		       b1 48		      lda	(MATHSTACK),y
     651  2c4a		       85 52		      sta	R0
     652  2c4c		       84 4a		      sty	MATHSTACKPTR
-    653  2c4e		       ac 77 42 	      ldy	rtemp1
+    653  2c4e		       ac 7e 42 	      ldy	rtemp1
     654  2c51		       18		      clc
     655  2c52		       60		      rts
     656  2c53
@@ -7335,7 +7335,7 @@
     658  2c53							;=====================================================
     659  2c53							; This pops TOS and places it in R1.
     660  2c53							;
-    661  2c53		       8c 77 42    popR1      sty	rtemp1
+    661  2c53		       8c 7e 42    popR1      sty	rtemp1
     662  2c56		       a4 4a		      ldy	MATHSTACKPTR
     663  2c58		       f0 bf		      beq	poperr
     664  2c5a		       88		      dey
@@ -7345,13 +7345,13 @@
     668  2c60		       b1 48		      lda	(MATHSTACK),y
     669  2c62		       85 54		      sta	R1
     670  2c64		       84 4a		      sty	MATHSTACKPTR
-    671  2c66		       ac 77 42 	      ldy	rtemp1
+    671  2c66		       ac 7e 42 	      ldy	rtemp1
     672  2c69		       60		      rts
     673  2c6a							;
     674  2c6a							;=====================================================
     675  2c6a							; This pops TOS and places it in MQ.
     676  2c6a							;
-    677  2c6a		       8c 77 42    popMQ      sty	rtemp1
+    677  2c6a		       8c 7e 42    popMQ      sty	rtemp1
     678  2c6d		       a4 4a		      ldy	MATHSTACKPTR
     679  2c6f		       f0 a8		      beq	poperr
     680  2c71		       88		      dey
@@ -7361,7 +7361,7 @@
     684  2c77		       b1 48		      lda	(MATHSTACK),y
     685  2c79		       85 56		      sta	MQ
     686  2c7b		       84 4a		      sty	MATHSTACKPTR
-    687  2c7d		       ac 77 42 	      ldy	rtemp1
+    687  2c7d		       ac 7e 42 	      ldy	rtemp1
     688  2c80		       60		      rts
     689  2c81							;
     690  2c81							;=====================================================
@@ -7374,10 +7374,10 @@
     697  2c81							; will be non-zero.
     698  2c81							;
     699  2c81		       a9 00	   SaveSigns  lda	#0
-    700  2c83		       8d 76 42 	      sta	sign	;assume positive
+    700  2c83		       8d 7d 42 	      sta	sign	;assume positive
     701  2c86		       a5 53		      lda	R0+1	;MSB
     702  2c88		       10 13		      bpl	SaveSigns1
-    703  2c8a		       ee 76 42 	      inc	sign	;it's negative
+    703  2c8a		       ee 7d 42 	      inc	sign	;it's negative
     704  2c8d		       49 ff		      eor	#$ff	;flip bits
     705  2c8f		       85 53		      sta	R0+1
     706  2c91		       a5 52		      lda	R0
@@ -7389,9 +7389,9 @@
     712  2c9d		       a5 55	   SaveSigns1 lda	R1+1
     713  2c9f		       10 1a		      bpl	SaveSigns2
     714  2ca1		       48		      pha
-    715  2ca2		       ad 76 42 	      lda	sign
+    715  2ca2		       ad 7d 42 	      lda	sign
     716  2ca5		       49 01		      eor	#1
-    717  2ca7		       8d 76 42 	      sta	sign
+    717  2ca7		       8d 7d 42 	      sta	sign
     718  2caa		       68		      pla
     719  2cab		       49 ff		      eor	#$ff	;flip bits
     720  2cad		       85 55		      sta	R1+1
@@ -7408,7 +7408,7 @@
     731  2cbc							; both R0 and R1 to negative if set.
     732  2cbc							;
     733  2cbc				   RestoreSigns
-    734  2cbc		       ad 76 42 	      lda	sign
+    734  2cbc		       ad 7d 42 	      lda	sign
     735  2cbf		       f0 28		      beq	restoresigns2
     736  2cc1							;
     737  2cc1		       a5 52		      lda	R0
@@ -7589,7 +7589,7 @@
     907  2e2f		       d0 08		      bne	ILBadRange
     908  2e31
     909  2e31		       a5 43		      lda	ILPC
-    910  2e33		       c9 bb		      cmp	#ILEND&$ff
+    910  2e33		       c9 c2		      cmp	#ILEND&$ff
     911  2e35		       b0 02		      bcs	ILBadRange
     912  2e37
     913  2e37		       18	   ILGoodRange clc
@@ -7605,18 +7605,18 @@
     923  2e3b				   SetOutConsole
     924  2e3b		       48		      pha
     925  2e3c		       a9 0c		      lda	#OUTCH&$ff
-    926  2e3e		       8d c0 35 	      sta	BOutVec
+    926  2e3e		       8d c7 35 	      sta	BOutVec
     927  2e41		       a9 f0		      lda	#OUTCH>>8
-    928  2e43		       8d c1 35 	      sta	BOutVec+1
+    928  2e43		       8d c8 35 	      sta	BOutVec+1
     929  2e46		       68		      pla
     930  2e47		       60		      rts
     931  2e48
     932  2e48				   SetInConsole
     933  2e48		       48		      pha
     934  2e49		       a9 09		      lda	#GETCH&$ff
-    935  2e4b		       8d be 35 	      sta	BInVec
+    935  2e4b		       8d c5 35 	      sta	BInVec
     936  2e4e		       a9 f0		      lda	#GETCH>>8
-    937  2e50		       8d bf 35 	      sta	BInVec+1
+    937  2e50		       8d c6 35 	      sta	BInVec+1
     938  2e53		       68		      pla
     939  2e54		       60		      rts
     940  2e55
@@ -7664,36 +7664,36 @@
     981  2e85		       00 00	   DebugIOSave ds	2
     982  2e87		       00 00	   DebugInSave ds	2
     983  2e89				   SetOutDebug
-    984  2e89		       ad c0 35 	      lda	BOutVec
+    984  2e89		       ad c7 35 	      lda	BOutVec
     985  2e8c		       8d 85 2e 	      sta	DebugIOSave
-    986  2e8f		       ad c1 35 	      lda	BOutVec+1
+    986  2e8f		       ad c8 35 	      lda	BOutVec+1
     987  2e92		       8d 86 2e 	      sta	DebugIOSave+1
     988  2e95		       a9 1d		      lda	#OUTDEBUG&$ff	; Put the Debug output
-    989  2e97		       8d c0 35 	      sta	BOutVec
+    989  2e97		       8d c7 35 	      sta	BOutVec
     990  2e9a		       a9 2f		      lda	#OUTDEBUG>>8
-    991  2e9c		       8d c1 35 	      sta	BOutVec+1
+    991  2e9c		       8d c8 35 	      sta	BOutVec+1
     992  2e9f		       60		      rts
     993  2ea0				   SetInDebug
-    994  2ea0		       ad be 35 	      lda	BInVec
+    994  2ea0		       ad c5 35 	      lda	BInVec
     995  2ea3		       8d 87 2e 	      sta	DebugInSave
-    996  2ea6		       ad bf 35 	      lda	BInVec+1
+    996  2ea6		       ad c6 35 	      lda	BInVec+1
     997  2ea9		       8d 88 2e 	      sta	DebugInSave+1
     998  2eac		       a9 21		      lda	#INDEBUG&$ff
-    999  2eae		       8d be 35 	      sta	BInVec
+    999  2eae		       8d c5 35 	      sta	BInVec
    1000  2eb1		       a9 2f		      lda	#INDEBUG>>8
-   1001  2eb3		       8d bf 35 	      sta	BInVec+1
+   1001  2eb3		       8d c6 35 	      sta	BInVec+1
    1002  2eb6		       60		      rts
    1003  2eb7				   SetOutDebugEnd
    1004  2eb7		       ad 85 2e 	      lda	DebugIOSave
-   1005  2eba		       8d c0 35 	      sta	BOutVec
+   1005  2eba		       8d c7 35 	      sta	BOutVec
    1006  2ebd		       ad 86 2e 	      lda	DebugIOSave+1
-   1007  2ec0		       8d c1 35 	      sta	BOutVec+1
+   1007  2ec0		       8d c8 35 	      sta	BOutVec+1
    1008  2ec3		       60		      rts
    1009  2ec4				   SetInDebugEnd
    1010  2ec4		       ad 87 2e 	      lda	DebugInSave
-   1011  2ec7		       8d be 35 	      sta	BInVec
+   1011  2ec7		       8d c5 35 	      sta	BInVec
    1012  2eca		       ad 88 2e 	      lda	DebugInSave+1
-   1013  2ecd		       8d bf 35 	      sta	BInVec+1
+   1013  2ecd		       8d c6 35 	      sta	BInVec+1
    1014  2ed0		       60		      rts
    1015  2ed1							;
    1016  2ed1							;====================================================
@@ -7887,11 +7887,11 @@
      10  2f8e							;=====================================================
      11  2f8e							;=====================================================
      12  2f8e
-     13 U35cc					      seg.u	TBData
-     14 U35cc		       00	   diskBufLength ds	1
-     15 U35cd		       00	   diskBufOffset ds	1
-     16 U35ce		       00 00 00 00*DiskFileName ds	64
-     17 U360e
+     13 U35d3					      seg.u	TBData
+     14 U35d3		       00	   diskBufLength ds	1
+     15 U35d4		       00	   diskBufOffset ds	1
+     16 U35d5		       00 00 00 00*DiskFileName ds	64
+     17 U3615
      18  2f8e					      SEG	Code
      19  2f8e
      20  2f8e							;
@@ -7915,8 +7915,8 @@
      38  2f9d							; cause the file to be read.
      39  2f9d							;
      40  2f9d		       a9 00	   Ropenok    lda	#0
-     41  2f9f		       8d cd 35 	      sta	diskBufOffset
-     42  2fa2		       8d cc 35 	      sta	diskBufLength
+     41  2f9f		       8d d4 35 	      sta	diskBufOffset
+     42  2fa2		       8d d3 35 	      sta	diskBufLength
      43  2fa5		       4c b1 02 	      jmp	NextIL
      44  2fa8					      endif
      45  2fa8
@@ -7935,7 +7935,7 @@
      58  2fb6		       a5 50		      lda	CURPTR+1
      59  2fb8		       69 00		      adc	#0
      60  2fba		       85 53		      sta	R0+1
-     61  2fbc		       a9 ce		      lda	#DiskFileName&$ff
+     61  2fbc		       a9 d5		      lda	#DiskFileName&$ff
      62  2fbe		       85 54		      sta	R1
      63  2fc0		       a9 35		      lda	#DiskFileName>>8
      64  2fc2		       85 55		      sta	R1+1
@@ -7945,7 +7945,7 @@
      68  2fca		       65 51		      adc	CUROFF	; add the current offset
      69  2fcc		       85 51		      sta	CUROFF	; Update the buffer pointer after complete
      70  2fce				   ResetFileName
-     71  2fce		       a0 ce		      ldy	#DiskFileName&$ff
+     71  2fce		       a0 d5		      ldy	#DiskFileName&$ff
      72  2fd0		       a2 35		      ldx	#DiskFileName>>8
      73  2fd2		       18		      clc
      74  2fd3		       60		      rts
@@ -8009,36 +8009,36 @@
     132  3011							;
     133  3011				   iDGETLINE
     134  3011					      if	XKIM || CTMON65
-    135  3011		       a2 ea		      ldx	#LINBUF&$ff
+    135  3011		       a2 f1		      ldx	#LINBUF&$ff
     136  3013		       86 4f		      stx	CURPTR
     137  3015		       a2 41		      ldx	#LINBUF>>8
     138  3017		       86 50		      stx	CURPTR+1
     139  3019							;
     140  3019		       a2 00		      ldx	#0	;offset
-    141  301b		       8e 6e 42    iDgetLoop  stx	getlinx
+    141  301b		       8e 75 42    iDgetLoop  stx	getlinx
     142  301e		       20 89 30 	      jsr	getNextFileByte
     143  3021		       b0 16		      bcs	iGetEOF
     144  3023		       c9 0d		      cmp	#CR
     145  3025		       f0 0d		      beq	iGetEOL
     146  3027		       c9 0a		      cmp	#LF
     147  3029		       f0 09		      beq	iGetEOL
-    148  302b		       ae 6e 42 	      ldx	getlinx
-    149  302e		       9d ea 41 	      sta	LINBUF,x
+    148  302b		       ae 75 42 	      ldx	getlinx
+    149  302e		       9d f1 41 	      sta	LINBUF,x
     150  3031		       e8		      inx
     151  3032		       d0 e7		      bne	iDgetLoop
     152  3034							;
     153  3034							; Handle end of line.	If the line has nothing, loop
     154  3034							; back and get another line.
     155  3034							;
-    156  3034		       ae 6e 42    iGetEOL    ldx	getlinx	;blank line?
+    156  3034		       ae 75 42    iGetEOL    ldx	getlinx	;blank line?
     157  3037		       f0 e2		      beq	iDgetLoop	;yes, ignore it
     158  3039							;
     159  3039							; This can fall through when there is a line, or
     160  3039							; called directly when EOF is encountered.
     161  3039							;
-    162  3039		       ae 6e 42    iGetEOF    ldx	getlinx
+    162  3039		       ae 75 42    iGetEOF    ldx	getlinx
     163  303c		       a9 00		      lda	#0
-    164  303e		       9d ea 41 	      sta	LINBUF,x
+    164  303e		       9d f1 41 	      sta	LINBUF,x
     165  3041		       a0 00		      ldy	#0
     166  3043		       20 eb 2c 	      jsr	SkipSpaces
     167  3046		       20 d5 1c 	      jsr	ParseInputLine
@@ -8062,7 +8062,7 @@
     185  305b							; Get/Display each entry
     186  305b							;
     187  305b		       a2 35	   DiskDirLoop ldx	#DiskFileName>>8	;pointer to buffer
-    188  305d		       a0 ce		      ldy	#DiskFileName&$ff
+    188  305d		       a0 d5		      ldy	#DiskFileName&$ff
     189  305f		       20 33 f0 	      jsr	DiskDirNext	;get next entry
     190  3062		       b0 16		      bcs	DiskDirEnd	;carry = end of list
     191  3064		       20 32 21 	      jsr	puts
@@ -8070,7 +8070,7 @@
       1  3067		       20 20 20 00	      .byte.b	"   ",0
     193  306b							; Print the line to the console
     194  306b		       a2 35		      ldx	#DiskFileName>>8	;pointer to buffer
-    195  306d		       a0 ce		      ldy	#DiskFileName&$ff
+    195  306d		       a0 d5		      ldy	#DiskFileName&$ff
     196  306f		       a5 00		      lda	0
     197  3071		       20 70 21 	      jsr	PrtStr	;else print name
     198  3074		       20 18 f0 	      jsr	crlf
@@ -8106,8 +8106,8 @@
     228  3089							;
     229  3089				   getNextFileByte
     230  3089					      if	XKIM || CTMON65
-    231  3089		       ae cd 35 	      ldx	diskBufOffset
-    232  308c		       ec cc 35 	      cpx	diskBufLength
+    231  3089		       ae d4 35 	      ldx	diskBufOffset
+    232  308c		       ec d3 35 	      cpx	diskBufLength
     233  308f		       d0 14		      bne	hasdata	;branch if still data
     234  3091							;
     235  3091							; There is no data left in the buffer, so read a
@@ -8121,20 +8121,20 @@
     243  309c							;
     244  309c							; A contains the number of bytes actually read.
     245  309c							;
-    246  309c		       8d cc 35 	      sta	diskBufLength	;save length
+    246  309c		       8d d3 35 	      sta	diskBufLength	;save length
     247  309f		       c9 00		      cmp	#0	;shouldn't happen
     248  30a1		       f0 0b		      beq	getNextEof
     249  30a3							;
     250  30a3		       a2 00		      ldx	#0
     251  30a5		       bd 0a df    hasdata    lda	buffer,x
     252  30a8		       e8		      inx
-    253  30a9		       8e cd 35 	      stx	diskBufOffset
+    253  30a9		       8e d4 35 	      stx	diskBufOffset
     254  30ac		       18		      clc
     255  30ad		       60		      rts
     256  30ae							;
     257  30ae		       a9 00	   getNextEof lda	#0
-    258  30b0		       8d cd 35 	      sta	diskBufOffset
-    259  30b3		       8d cc 35 	      sta	diskBufLength
+    258  30b0		       8d d4 35 	      sta	diskBufOffset
+    259  30b3		       8d d3 35 	      sta	diskBufLength
     260  30b6		       38		      sec
     261  30b7		       60		      rts
     262  30b8							;
@@ -8142,9 +8142,9 @@
     264  30b8							; Set output vector to the disk output function
     265  30b8							;
     266  30b8		       a9 c3	   SetOutDisk lda	#DOUT&$ff
-    267  30ba		       8d c0 35 	      sta	BOutVec
+    267  30ba		       8d c7 35 	      sta	BOutVec
     268  30bd		       a9 30		      lda	#DOUT/256
-    269  30bf		       8d c1 35 	      sta	BOutVec+1
+    269  30bf		       8d c8 35 	      sta	BOutVec+1
     270  30c2		       60		      rts
     271  30c3							;
     272  30c3							;=====================================================
@@ -8152,30 +8152,30 @@
     274  30c3							; output:
     275  30c3							;	    C flag clear if no error
     276  30c3							;
-    277  30c3		       8e ce 35    DOUT       stx	DiskFileName	; Save the x value, fulename not used
-    278  30c6		       8c cf 35 	      sty	DiskFileName+1	; Save the y value  filename not actually used
+    277  30c3		       8e d5 35    DOUT       stx	DiskFileName	; Save the x value, fulename not used
+    278  30c6		       8c d6 35 	      sty	DiskFileName+1	; Save the y value  filename not actually used
     279  30c9		       8d 0a df 	      sta	buffer	; Store the byte to send into the buffer
     280  30cc		       a9 01		      lda	#1	; set number of bytes to send to 1
     281  30ce		       a0 0a		      ldy	#buffer&$ff	; Load the low order address of buffer to y
     282  30d0		       a2 df		      ldx	#buffer>>8	; Load the high order address of buffer to x
     283  30d2		       20 3f f0 	      jsr	DiskWrite	; Place the character to disk if a file is open
-    284  30d5		       ae ce 35 	      ldx	DiskFileName	; Restore the x value that was saved
-    285  30d8		       ac cf 35 	      ldy	DiskFileName+1	; Restore the y value saved
+    284  30d5		       ae d5 35 	      ldx	DiskFileName	; Restore the x value that was saved
+    285  30d8		       ac d6 35 	      ldy	DiskFileName+1	; Restore the y value saved
     286  30db		       60		      rts
     287  30dc							;=======================================================
     288  30dc							; output:
     289  30dc							;	  c flag is clear if no error, a contains bytes read
     290  30dc							;	  c flag set Reached eof, a undefined
     291  30dc							;
-    292  30dc		       8e ce 35    DIN	      stx	DiskFileName	; Save the x value, filename not used just storage
-    293  30df		       8c cf 35 	      sty	DiskFileName+1	; Save the y value  filename not actually used
+    292  30dc		       8e d5 35    DIN	      stx	DiskFileName	; Save the x value, filename not used just storage
+    293  30df		       8c d6 35 	      sty	DiskFileName+1	; Save the y value  filename not actually used
     294  30e2		       a9 01		      lda	#1	; set number of bytes to read to 1
     295  30e4		       a0 0a		      ldy	#buffer&$ff	; Load the low order address of buffer to y
     296  30e6		       a2 df		      ldx	#buffer>>8	; Load the high order address of buffer to x
     297  30e8		       20 3c f0 	      jsr	DiskRead
     298  30eb		       ad 0a df 	      lda	buffer	; Get the byte just read
-    299  30ee		       ae ce 35 	      ldx	DiskFileName
-    300  30f1		       ac cf 35 	      ldy	DiskFileName+1
+    299  30ee		       ae d5 35 	      ldx	DiskFileName
+    300  30f1		       ac d6 35 	      ldy	DiskFileName+1
     301  30f4		       60		      rts
     302  30f5
     303  30f5							;========================================================
@@ -8775,9 +8775,9 @@
       0  3104					      dw	ekGoto
       1  3104		       de 31		      .word.w	ekGoto
       0  3106					      dw	ekGosub
-      1  3106		       62 35		      .word.w	ekGosub
+      1  3106		       69 35		      .word.w	ekGosub
       0  3108					      dw	ekReturn
-      1  3108		       70 35		      .word.w	ekReturn
+      1  3108		       77 35		      .word.w	ekReturn
       0  310a					      dw	ekRem
       1  310a		       f2 31		      .word.w	ekRem
       0  310c					      dw	ekPrint	; should be entry for print
@@ -8879,7 +8879,7 @@
       0  3166					      dw	ekCall
       1  3166		       e8 34		      .word.w	ekCall
       0  3168					      dw	ekGofn
-      1  3168		       69 35		      .word.w	ekGofn
+      1  3168		       70 35		      .word.w	ekGofn
       0  316a					      dw	ekPid
       1  316a		       e6 34		      .word.w	ekPid
       0  316c					      dw	ekAddr
@@ -8973,7 +8973,7 @@
       0  3185					      db	28
       1  3185		       1c		      .byte.b	28
       0  3186					      dw	FactVarPtrNoTst
-      1  3186		       31 35		      .word.w	FactVarPtrNoTst
+      1  3186		       2f 35		      .word.w	FactVarPtrNoTst
     119  3188
     120  3188				   LETINDEX_ALL
       0  3188					      TSTB	ERRMissingEquals,oEqual	; (This line originally omitted)
@@ -9084,7 +9084,7 @@
       0  31b7					      db	28
       1  31b7		       1c		      .byte.b	28
       0  31b8					      dw	FactVarPtrNoTst
-      1  31b8		       31 35		      .word.w	FactVarPtrNoTst
+      1  31b8		       2f 35		      .word.w	FactVarPtrNoTst
     154  31ba							;	  TSTB	     eDoInc,oBang		    ; Allow to inc or dec other tasks variables
     155  31ba							;	  IND					    ; we just got a pid
     156  31ba							;	  TSTVT      ERRVEC2			    ; if it is not another variabe then error, Call test var. task
@@ -9117,7 +9117,7 @@
       0  31c4					      db	28
       1  31c4		       1c		      .byte.b	28
       0  31c5					      dw	FactVarPtrNoTst
-      1  31c5		       31 35		      .word.w	FactVarPtrNoTst
+      1  31c5		       2f 35		      .word.w	FactVarPtrNoTst
     167  31c7							;	  TSTB	     eDoDec,oBang		    ; Allow to inc or dec other tasks variables
     168  31c7							;	  IND					    ; we just got a pid
     169  31c7							;	  TSTVT      ERRVEC2			    ; if it is not another variabe then error, Call test var. task
@@ -9919,7 +9919,7 @@
       0  330a					      db	28
       1  330a		       1c		      .byte.b	28
       0  330b					      dw	FactVarPtrNoTst
-      1  330b		       31 35		      .word.w	FactVarPtrNoTst
+      1  330b		       2f 35		      .word.w	FactVarPtrNoTst
     443  330d							;	  TSTB	     S10ACONT,oBang	      ; Print from another task
     444  330d							;	  IND
     445  330d							;	  TSTVT      UNKNOWN
@@ -10730,7 +10730,7 @@
       0  343a					      db	28
       1  343a		       1c		      .byte.b	28
       0  343b					      dw	FactVarPtrNoTst
-      1  343b		       31 35		      .word.w	FactVarPtrNoTst
+      1  343b		       2f 35		      .word.w	FactVarPtrNoTst
       0  343d					      TSTB	UNKNOWNVEC,oRightBracket
       0  343d					      db	101
       1  343d		       65		      .byte.b	101
@@ -11309,7 +11309,7 @@
       0  3516					      db	97
       1  3516		       61		      .byte.b	97
       0  3517					      db	(FactFNParm-*)-1
-      1  3517		       0a		      .byte.b	(FactFNParm-*)-1
+      1  3517		       08		      .byte.b	(FactFNParm-*)-1
       0  3518					      dw	R2
       1  3518		       58 00		      .word.w	R2
       0  351a					      db	GOSUB_RTN_VALUE
@@ -11318,509 +11318,528 @@
       0  351b					      db	28
       1  351b		       1c		      .byte.b	28
       0  351c					      dw	FactVarPTR
-      1  351c		       31 35		      .word.w	FactVarPTR
-      0  351e					      CALL	FactVariableValue
-      0  351e					      db	28
-      1  351e		       1c		      .byte.b	28
-      0  351f					      dw	FactVariableValue
-      1  351f		       5a 35		      .word.w	FactVariableValue
-      0  3521					      RTN
-      0  3521					      db	25
-      1  3521		       19		      .byte.b	25
-    966  3522
-    967  3522				   FactFNParm
-      0  3522					      TSTB	FactExpectedOpeningBracket,oLeftSQBracket
-      0  3522					      db	101
-      1  3522		       65		      .byte.b	101
-      0  3523					      db	(FactExpectedOpeningBracket-*)-1
-      1  3523		       3b		      .byte.b	(FactExpectedOpeningBracket-*)-1
-      0  3524					      db	oLeftSQBracket
-      1  3524		       e4		      .byte.b	oLeftSQBracket
-      0  3525					      CALL	EXPR
-      0  3525					      db	28
-      1  3525		       1c		      .byte.b	28
-      0  3526					      dw	EXPR
-      1  3526		       92 33		      .word.w	EXPR
-      0  3528					      TSTB	FactMissingRightBracket,oRightSQBracket
-      0  3528					      db	101
-      1  3528		       65		      .byte.b	101
-      0  3529					      db	(FactMissingRightBracket-*)-1
-      1  3529		       32		      .byte.b	(FactMissingRightBracket-*)-1
-      0  352a					      db	oRightSQBracket
-      1  352a		       e5		      .byte.b	oRightSQBracket
-      0  352b					      SUBSCRIPT	GOSUB_RTN_VALUE
-      0  352b					      db	64
-      1  352b		       40		      .byte.b	64
-      0  352c					      db	GOSUB_RTN_VALUE
-      1  352c		       81		      .byte.b	GOSUB_RTN_VALUE
-      0  352d					      SETR2	tInteger
-      0  352d					      db	94
-      1  352d		       5e		      .byte.b	94
-      0  352e					      db	tInteger
-      1  352e		       a4		      .byte.b	tInteger
-      0  352f					      IND
-      0  352f					      db	20
-      1  352f		       14		      .byte.b	20
-      0  3530					      RTN
-      0  3530					      db	25
-      1  3530		       19		      .byte.b	25
-    975  3531
-    976  3531				   FactVarPTR
-    977  3531				   FactVarPtrNoTst
-      0  3531					      TSTB	F2CLocalTask,oBang
-      0  3531					      db	101
-      1  3531		       65		      .byte.b	101
-      0  3532					      db	(F2CLocalTask-*)-1
-      1  3532		       04		      .byte.b	(F2CLocalTask-*)-1
-      0  3533					      db	oBang
-      1  3533		       e8		      .byte.b	oBang
-      0  3534					      IND		; we just got a pid
-      0  3534					      db	20
-      1  3534		       14		      .byte.b	20
-      0  3535					      TSTVT	UNKNOWNID	; if it is not another variable then error, Call test var. task
-      0  3535					      db	93
-      1  3535		       5d		      .byte.b	93
-      0  3536					      db	(UNKNOWNID-*)-1
-      1  3536		       83		      .byte.b	(UNKNOWNID-*)-1
-    981  3537
-    982  3537				   F2CLocalTask
-      0  3537					      SETR2	tInteger	; Sets the default type to integer
-      0  3537					      db	94
-      1  3537		       5e		      .byte.b	94
-      0  3538					      db	tInteger
-      1  3538		       a4		      .byte.b	tInteger
-      0  3539					      TSTB	F2INTEGER,oDollar	; Check if this will be a byte array @$[index] or a..z$[index] use a byte array
-      0  3539					      db	101
-      1  3539		       65		      .byte.b	101
-      0  353a					      db	(F2INTEGER-*)-1
-      1  353a		       11		      .byte.b	(F2INTEGER-*)-1
-      0  353b					      db	oDollar
-      1  353b		       e7		      .byte.b	oDollar
-      0  353c					      SETR2	tByte
-      0  353c					      db	94
-      1  353c		       5e		      .byte.b	94
-      0  353d					      db	tByte
-      1  353d		       a2		      .byte.b	tByte
-      0  353e					      TSTB	F2PTRLOADED,oLeftSQBracket
-      0  353e					      db	101
-      1  353e		       65		      .byte.b	101
-      0  353f					      db	(F2PTRLOADED-*)-1
-      1  353f		       19		      .byte.b	(F2PTRLOADED-*)-1
-      0  3540					      db	oLeftSQBracket
-      1  3540		       e4		      .byte.b	oLeftSQBracket
-      0  3541					      CALL	EXPR
-      0  3541					      db	28
-      1  3541		       1c		      .byte.b	28
-      0  3542					      dw	EXPR
-      1  3542		       92 33		      .word.w	EXPR
-      0  3544					      TSTB	FactMissingRightBracket,oRightSQBracket
-      0  3544					      db	101
-      1  3544		       65		      .byte.b	101
-      0  3545					      db	(FactMissingRightBracket-*)-1
-      1  3545		       16		      .byte.b	(FactMissingRightBracket-*)-1
-      0  3546					      db	oRightSQBracket
-      1  3546		       e5		      .byte.b	oRightSQBracket
-      0  3547					      SUBSCRIPT	tByte	; Byte type array
-      0  3547					      db	64
-      1  3547		       40		      .byte.b	64
+      1  351c		       2f 35		      .word.w	FactVarPTR
+    964  351e							;	  CALL	      FactVariableValue
+      0  351e					      IND		; get the variable value
+      0  351e					      db	20
+      1  351e		       14		      .byte.b	20
+      0  351f					      RTN
+      0  351f					      db	25
+      1  351f		       19		      .byte.b	25
+    967  3520
+    968  3520				   FactFNParm
+      0  3520					      TSTB	FactExpectedOpeningBracket,oLeftSQBracket
+      0  3520					      db	101
+      1  3520		       65		      .byte.b	101
+      0  3521					      db	(FactExpectedOpeningBracket-*)-1
+      1  3521		       44		      .byte.b	(FactExpectedOpeningBracket-*)-1
+      0  3522					      db	oLeftSQBracket
+      1  3522		       e4		      .byte.b	oLeftSQBracket
+      0  3523					      CALL	EXPR
+      0  3523					      db	28
+      1  3523		       1c		      .byte.b	28
+      0  3524					      dw	EXPR
+      1  3524		       92 33		      .word.w	EXPR
+      0  3526					      TSTB	FactMissingRightBracket,oRightSQBracket
+      0  3526					      db	101
+      1  3526		       65		      .byte.b	101
+      0  3527					      db	(FactMissingRightBracket-*)-1
+      1  3527		       3b		      .byte.b	(FactMissingRightBracket-*)-1
+      0  3528					      db	oRightSQBracket
+      1  3528		       e5		      .byte.b	oRightSQBracket
+      0  3529					      SUBSCRIPT	GOSUB_RTN_VALUE
+      0  3529					      db	64
+      1  3529		       40		      .byte.b	64
+      0  352a					      db	GOSUB_RTN_VALUE
+      1  352a		       81		      .byte.b	GOSUB_RTN_VALUE
+      0  352b					      SETR2	tInteger
+      0  352b					      db	94
+      1  352b		       5e		      .byte.b	94
+      0  352c					      db	tInteger
+      1  352c		       a4		      .byte.b	tInteger
+      0  352d					      IND
+      0  352d					      db	20
+      1  352d		       14		      .byte.b	20
+      0  352e					      RTN
+      0  352e					      db	25
+      1  352e		       19		      .byte.b	25
+    976  352f
+    977  352f				   FactVarPTR
+    978  352f				   FactVarPtrNoTst
+      0  352f					      TSTB	F2CLocalTask,oBang
+      0  352f					      db	101
+      1  352f		       65		      .byte.b	101
+      0  3530					      db	(F2CLocalTask-*)-1
+      1  3530		       04		      .byte.b	(F2CLocalTask-*)-1
+      0  3531					      db	oBang
+      1  3531		       e8		      .byte.b	oBang
+      0  3532					      IND		; we just got a pid
+      0  3532					      db	20
+      1  3532		       14		      .byte.b	20
+      0  3533					      TSTVT	UNKNOWNID	; if it is not another variable then error, Call test var. task
+      0  3533					      db	93
+      1  3533		       5d		      .byte.b	93
+      0  3534					      db	(UNKNOWNID-*)-1
+      1  3534		       85		      .byte.b	(UNKNOWNID-*)-1
+    982  3535
+    983  3535				   F2CLocalTask
+      0  3535					      SETR2	tInteger	; Sets the default type to integer
+      0  3535					      db	94
+      1  3535		       5e		      .byte.b	94
+      0  3536					      db	tInteger
+      1  3536		       a4		      .byte.b	tInteger
+      0  3537					      TSTB	F2INTEGER,oDollar	; Check if this will be a byte array @$[index] or a..z$[index] use a byte array
+      0  3537					      db	101
+      1  3537		       65		      .byte.b	101
+      0  3538					      db	(F2INTEGER-*)-1
+      1  3538		       11		      .byte.b	(F2INTEGER-*)-1
+      0  3539					      db	oDollar
+      1  3539		       e7		      .byte.b	oDollar
+      0  353a					      SETR2	tByte
+      0  353a					      db	94
+      1  353a		       5e		      .byte.b	94
+      0  353b					      db	tByte
+      1  353b		       a2		      .byte.b	tByte
+      0  353c					      TSTB	F2PTRLOADED,oLeftSQBracket
+      0  353c					      db	101
+      1  353c		       65		      .byte.b	101
+      0  353d					      db	(F2PTRLOADED-*)-1
+      1  353d		       22		      .byte.b	(F2PTRLOADED-*)-1
+      0  353e					      db	oLeftSQBracket
+      1  353e		       e4		      .byte.b	oLeftSQBracket
+      0  353f					      CALL	EXPR
+      0  353f					      db	28
+      1  353f		       1c		      .byte.b	28
+      0  3540					      dw	EXPR
+      1  3540		       92 33		      .word.w	EXPR
+      0  3542					      TSTB	FactMissingRightBracket,oRightSQBracket
+      0  3542					      db	101
+      1  3542		       65		      .byte.b	101
+      0  3543					      db	(FactMissingRightBracket-*)-1
+      1  3543		       1f		      .byte.b	(FactMissingRightBracket-*)-1
+      0  3544					      db	oRightSQBracket
+      1  3544		       e5		      .byte.b	oRightSQBracket
+      0  3545					      SUBSCRIPT	tByte	; Byte type array
+      0  3545					      db	64
+      1  3545		       40		      .byte.b	64
+      0  3546					      db	tByte
+      1  3546		       a2		      .byte.b	tByte
+      0  3547					      SETR2	tByte	; Set byte data type
+      0  3547					      db	94
+      1  3547		       5e		      .byte.b	94
       0  3548					      db	tByte
       1  3548		       a2		      .byte.b	tByte
-      0  3549					      SETR2	tByte	; Set byte data type
-      0  3549					      db	94
-      1  3549		       5e		      .byte.b	94
-      0  354a					      db	tByte
-      1  354a		       a2		      .byte.b	tByte
-      0  354b					      RTN
-      0  354b					      db	25
-      1  354b		       19		      .byte.b	25
-    992  354c
-    993  354c				   F2INTEGER
-      0  354c					      TSTB	F2PTRLOADED,oLeftSQBracket
-      0  354c					      db	101
-      1  354c		       65		      .byte.b	101
-      0  354d					      db	(F2PTRLOADED-*)-1
-      1  354d		       0b		      .byte.b	(F2PTRLOADED-*)-1
-      0  354e					      db	oLeftSQBracket
-      1  354e		       e4		      .byte.b	oLeftSQBracket
-      0  354f					      CALL	EXPR
-      0  354f					      db	28
-      1  354f		       1c		      .byte.b	28
-      0  3550					      dw	EXPR
-      1  3550		       92 33		      .word.w	EXPR
-      0  3552					      TSTB	FactMissingRightBracket,oRightSQBracket
-      0  3552					      db	101
-      1  3552		       65		      .byte.b	101
-      0  3553					      db	(FactMissingRightBracket-*)-1
-      1  3553		       08		      .byte.b	(FactMissingRightBracket-*)-1
-      0  3554					      db	oRightSQBracket
-      1  3554		       e5		      .byte.b	oRightSQBracket
-      0  3555					      SUBSCRIPT	tInteger	; Integer type array
-      0  3555					      db	64
-      1  3555		       40		      .byte.b	64
+      0  3549					      RTN
+      0  3549					      db	25
+      1  3549		       19		      .byte.b	25
+    993  354a
+    994  354a				   F2INTEGER
+      0  354a					      TSTB	F2PTRLOADED,oLeftSQBracket
+      0  354a					      db	101
+      1  354a		       65		      .byte.b	101
+      0  354b					      db	(F2PTRLOADED-*)-1
+      1  354b		       14		      .byte.b	(F2PTRLOADED-*)-1
+      0  354c					      db	oLeftSQBracket
+      1  354c		       e4		      .byte.b	oLeftSQBracket
+      0  354d					      CALL	EXPR
+      0  354d					      db	28
+      1  354d		       1c		      .byte.b	28
+      0  354e					      dw	EXPR
+      1  354e		       92 33		      .word.w	EXPR
+      0  3550					      TSTB	FactMissingRightBracket,oRightSQBracket
+      0  3550					      db	101
+      1  3550		       65		      .byte.b	101
+      0  3551					      db	(FactMissingRightBracket-*)-1
+      1  3551		       11		      .byte.b	(FactMissingRightBracket-*)-1
+      0  3552					      db	oRightSQBracket
+      1  3552		       e5		      .byte.b	oRightSQBracket
+      0  3553					      SUBSCRIPT	tInteger	; Integer type array
+      0  3553					      db	64
+      1  3553		       40		      .byte.b	64
+      0  3554					      db	tInteger
+      1  3554		       a4		      .byte.b	tInteger
+      0  3555					      SETR2	tInteger	; Set word datatype
+      0  3555					      db	94
+      1  3555		       5e		      .byte.b	94
       0  3556					      db	tInteger
       1  3556		       a4		      .byte.b	tInteger
-      0  3557					      SETR2	tInteger	; Set word datatype
-      0  3557					      db	94
-      1  3557		       5e		      .byte.b	94
-      0  3558					      db	tInteger
-      1  3558		       a4		      .byte.b	tInteger
-    999  3559				   F2PTRLOADED
-      0  3559					      RTN
-      0  3559					      db	25
-      1  3559		       19		      .byte.b	25
-   1001  355a
-   1002  355a				   FactVariableValue
-      0  355a					      IND		; YES, GET THE VALUE as word
+      0  3557					      TSTB	F2PTRLOADED,oBang	; for a word it can be fillowed by a! as ref to other task variables
+      0  3557					      db	101
+      1  3557		       65		      .byte.b	101
+      0  3558					      db	(F2PTRLOADED-*)-1
+      1  3558		       07		      .byte.b	(F2PTRLOADED-*)-1
+      0  3559					      db	oBang
+      1  3559		       e8		      .byte.b	oBang
+      0  355a					      IND		; Get the value of the task context to access
       0  355a					      db	20
       1  355a		       14		      .byte.b	20
-      0  355b					      RTN
-      0  355b					      db	25
-      1  355b		       19		      .byte.b	25
-   1005  355c
-   1006  355c				   FactMissingRightBracket
-      0  355c					      IJMP	ReturnExpectBracket
-      0  355c					      db	29
-      1  355c		       1d		      .byte.b	29
-      0  355d					      dw	ReturnExpectBracket
-      1  355d		       90 35		      .word.w	ReturnExpectBracket
-   1008  355f				   FactExpectedOpeningBracket
-      0  355f					      ERRMSG	ERR_EXPECTED_OPENING_BRACKET
-      0  355f					      db	13
-      1  355f		       0d		      .byte.b	13
-      0  3560					      dw	ERR_EXPECTED_OPENING_BRACKET
-      1  3560		       1a 00		      .word.w	ERR_EXPECTED_OPENING_BRACKET
-   1010  3562							;===============================================================================================================================
-   1011  3562							;========================= Gosub and function interface ========================================================================
-   1012  3562							; Process gosub 1000(Parm1, ...) no return value
-   1013  3562							;
-   1014  3562				   ekGosub
-      0  3562					      CALL	GOSUBSTATEMENT	; Do the gosub
-      0  3562					      db	28
-      1  3562		       1c		      .byte.b	28
-      0  3563					      dw	GOSUBSTATEMENT
-      1  3563		       94 35		      .word.w	GOSUBSTATEMENT
-      0  3565					      DONE		; ERROR IF CR NOT NEXT
-      0  3565					      db	1
-      1  3565		       01		      .byte.b	1
-      0  3566					      SAV	GOSUB_RTN	; SAVE RETURN LINE
-      0  3566					      db	8
-      1  3566		       08		      .byte.b	8
-      0  3567					      db	GOSUB_RTN
-      1  3567		       01		      .byte.b	GOSUB_RTN
-      0  3568					      FASTXFER		; AND JUMP to sub rtn
-      0  3568					      db	107
-      1  3568		       6b		      .byte.b	107
-   1019  3569							;
-   1020  3569							; End of gosub processing
-   1021  3569							;===========================================================================
-   1022  3569							; Same as gosub but expects a return value
-   1023  3569							;   FN 1000(parm1, ....)  Expects an integer to be returned
-   1024  3569							;
-   1025  3569				   ekGofn
-      0  3569					      Call	GOSUBSTATEMENT
+      0  355b					      TSTVT	UNKNOWNID	; if it is not another variable name then it is a halt error
+      0  355b					      db	93
+      1  355b		       5d		      .byte.b	93
+      0  355c					      db	(UNKNOWNID-*)-1
+      1  355c		       5d		      .byte.b	(UNKNOWNID-*)-1
+      0  355d					      IJMP	FactVarPTR	; Process the value on the other side
+      0  355d					      db	29
+      1  355d		       1d		      .byte.b	29
+      0  355e					      dw	FactVarPTR
+      1  355e		       2f 35		      .word.w	FactVarPTR
+   1004  3560				   F2PTRLOADED
+      0  3560					      RTN
+      0  3560					      db	25
+      1  3560		       19		      .byte.b	25
+   1006  3561
+   1007  3561				   FactVariableValue
+      0  3561					      IND		; YES, GET THE VALUE as word
+      0  3561					      db	20
+      1  3561		       14		      .byte.b	20
+      0  3562					      RTN
+      0  3562					      db	25
+      1  3562		       19		      .byte.b	25
+   1010  3563
+   1011  3563				   FactMissingRightBracket
+      0  3563					      IJMP	ReturnExpectBracket
+      0  3563					      db	29
+      1  3563		       1d		      .byte.b	29
+      0  3564					      dw	ReturnExpectBracket
+      1  3564		       97 35		      .word.w	ReturnExpectBracket
+   1013  3566				   FactExpectedOpeningBracket
+      0  3566					      ERRMSG	ERR_EXPECTED_OPENING_BRACKET
+      0  3566					      db	13
+      1  3566		       0d		      .byte.b	13
+      0  3567					      dw	ERR_EXPECTED_OPENING_BRACKET
+      1  3567		       1a 00		      .word.w	ERR_EXPECTED_OPENING_BRACKET
+   1015  3569							;===============================================================================================================================
+   1016  3569							;========================= Gosub and function interface ========================================================================
+   1017  3569							; Process gosub 1000(Parm1, ...) no return value
+   1018  3569							;
+   1019  3569				   ekGosub
+      0  3569					      CALL	GOSUBSTATEMENT	; Do the gosub
       0  3569					      db	28
       1  3569		       1c		      .byte.b	28
       0  356a					      dw	GOSUBSTATEMENT
-      1  356a		       94 35		      .word.w	GOSUBSTATEMENT
-      0  356c					      SAV	GOSUB_RTN_VALUE	;SAVE RETURN LINE
-      0  356c					      db	8
-      1  356c		       08		      .byte.b	8
-      0  356d					      db	GOSUB_RTN_VALUE
-      1  356d		       81		      .byte.b	GOSUB_RTN_VALUE
-      0  356e					      FASTXFER
-      0  356e					      db	107
-      1  356e		       6b		      .byte.b	107
-   1029  356f
-   1030  356f				   GOFNRet
-      0  356f					      RTN
-      0  356f					      db	25
-      1  356f		       19		      .byte.b	25
-   1032  3570							;===============================================================================================================================
-   1033  3570							; Return from a gosub
-   1034  3570							;
-   1035  3570				   ekReturn
-      0  3570					      TSTB	S2NoReturnValue,oLeftBracket	; Check if we will return some value
-      0  3570					      db	101
-      1  3570		       65		      .byte.b	101
-      0  3571					      db	(S2NoReturnValue-*)-1
-      1  3571		       11		      .byte.b	(S2NoReturnValue-*)-1
-      0  3572					      db	oLeftBracket
-      1  3572		       e0		      .byte.b	oLeftBracket
-      0  3573					      CALL	EXPR
-      0  3573					      db	28
-      1  3573		       1c		      .byte.b	28
-      0  3574					      dw	EXPR
-      1  3574		       92 33		      .word.w	EXPR
-      0  3576					      TSTB	ReturnExpectBracket,oRightBracket	; Now a value is on the stack
-      0  3576					      db	101
-      1  3576		       65		      .byte.b	101
-      0  3577					      db	(ReturnExpectBracket-*)-1
-      1  3577		       18		      .byte.b	(ReturnExpectBracket-*)-1
-      0  3578					      db	oRightBracket
-      1  3578		       e1		      .byte.b	oRightBracket
-      0  3579					      DONE
-      0  3579					      db	1
-      1  3579		       01		      .byte.b	1
-      0  357a					      RSTR	S2RetFunc,1	; decides if call was a func or statement, branch on func, return value
-      0  357a					      db	9
-      1  357a		       09		      .byte.b	9
-      0  357b					      db	(S2RetFunc-*)-1
-      1  357b		       11		      .byte.b	(S2RetFunc-*)-1
-      0  357c					      db	1
-      1  357c		       01		      .byte.b	1
-      0  357d					      NXT	CO	; SEQUENCE TO NEXT STATEMENT
-      0  357d					      db	6
-      1  357d		       06		      .byte.b	6
-      0  357e					      dw	CO
-      1  357e		       76 31		      .word.w	CO
-      0  3580					      IJMP	STMT	; Process the new statement
-      0  3580					      db	29
-      1  3580		       1d		      .byte.b	29
-      0  3581					      dw	STMT
-      1  3581		       7e 31		      .word.w	STMT
-   1043  3583
-   1044  3583				   S2NoReturnValue
-      0  3583					      DONE
+      1  356a		       9b 35		      .word.w	GOSUBSTATEMENT
+      0  356c					      DONE		; ERROR IF CR NOT NEXT
+      0  356c					      db	1
+      1  356c		       01		      .byte.b	1
+      0  356d					      SAV	GOSUB_RTN	; SAVE RETURN LINE
+      0  356d					      db	8
+      1  356d		       08		      .byte.b	8
+      0  356e					      db	GOSUB_RTN
+      1  356e		       01		      .byte.b	GOSUB_RTN
+      0  356f					      FASTXFER		; AND JUMP to sub rtn
+      0  356f					      db	107
+      1  356f		       6b		      .byte.b	107
+   1024  3570							;
+   1025  3570							; End of gosub processing
+   1026  3570							;===========================================================================
+   1027  3570							; Same as gosub but expects a return value
+   1028  3570							;   FN 1000(parm1, ....)  Expects an integer to be returned
+   1029  3570							;
+   1030  3570				   ekGofn
+      0  3570					      Call	GOSUBSTATEMENT
+      0  3570					      db	28
+      1  3570		       1c		      .byte.b	28
+      0  3571					      dw	GOSUBSTATEMENT
+      1  3571		       9b 35		      .word.w	GOSUBSTATEMENT
+      0  3573					      SAV	GOSUB_RTN_VALUE	;SAVE RETURN LINE
+      0  3573					      db	8
+      1  3573		       08		      .byte.b	8
+      0  3574					      db	GOSUB_RTN_VALUE
+      1  3574		       81		      .byte.b	GOSUB_RTN_VALUE
+      0  3575					      FASTXFER
+      0  3575					      db	107
+      1  3575		       6b		      .byte.b	107
+   1034  3576
+   1035  3576				   GOFNRet
+      0  3576					      RTN
+      0  3576					      db	25
+      1  3576		       19		      .byte.b	25
+   1037  3577							;===============================================================================================================================
+   1038  3577							; Return from a gosub
+   1039  3577							;
+   1040  3577				   ekReturn
+      0  3577					      TSTB	S2NoReturnValue,oLeftBracket	; Check if we will return some value
+      0  3577					      db	101
+      1  3577		       65		      .byte.b	101
+      0  3578					      db	(S2NoReturnValue-*)-1
+      1  3578		       11		      .byte.b	(S2NoReturnValue-*)-1
+      0  3579					      db	oLeftBracket
+      1  3579		       e0		      .byte.b	oLeftBracket
+      0  357a					      CALL	EXPR
+      0  357a					      db	28
+      1  357a		       1c		      .byte.b	28
+      0  357b					      dw	EXPR
+      1  357b		       92 33		      .word.w	EXPR
+      0  357d					      TSTB	ReturnExpectBracket,oRightBracket	; Now a value is on the stack
+      0  357d					      db	101
+      1  357d		       65		      .byte.b	101
+      0  357e					      db	(ReturnExpectBracket-*)-1
+      1  357e		       18		      .byte.b	(ReturnExpectBracket-*)-1
+      0  357f					      db	oRightBracket
+      1  357f		       e1		      .byte.b	oRightBracket
+      0  3580					      DONE
+      0  3580					      db	1
+      1  3580		       01		      .byte.b	1
+      0  3581					      RSTR	S2RetFunc,1	; decides if call was a func or statement, branch on func, return value
+      0  3581					      db	9
+      1  3581		       09		      .byte.b	9
+      0  3582					      db	(S2RetFunc-*)-1
+      1  3582		       11		      .byte.b	(S2RetFunc-*)-1
       0  3583					      db	1
       1  3583		       01		      .byte.b	1
-      0  3584					      RSTR	S2RetFunc,0	; decides if call was a func or statement, branch on func, no return value
-      0  3584					      db	9
-      1  3584		       09		      .byte.b	9
-      0  3585					      db	(S2RetFunc-*)-1
-      1  3585		       07		      .byte.b	(S2RetFunc-*)-1
-      0  3586					      db	0
-      1  3586		       00		      .byte.b	0
-      0  3587					      NXT	CO	; SEQUENCE TO NEXT STATEMENT
-      0  3587					      db	6
-      1  3587		       06		      .byte.b	6
-      0  3588					      dw	CO
-      1  3588		       76 31		      .word.w	CO
-      0  358a					      IJMP	STMT	; Process the new statement
-      0  358a					      db	29
-      1  358a		       1d		      .byte.b	29
-      0  358b					      dw	STMT
-      1  358b		       7e 31		      .word.w	STMT
-   1049  358d
-   1050  358d				   S2RetFunc
-      0  358d					      IJMP	GOFNRet	; Back into the Function
-      0  358d					      db	29
-      1  358d		       1d		      .byte.b	29
-      0  358e					      dw	GOFNRet
-      1  358e		       6f 35		      .word.w	GOFNRet
-   1052  3590
-   1053  3590				   ReturnExpectBracket
-      0  3590					      ENDIO
-      0  3590					      db	71
-      1  3590		       47		      .byte.b	71
-      0  3591					      ERRMSG	ERR_CLOSINGBRACKET
-      0  3591					      db	13
-      1  3591		       0d		      .byte.b	13
-      0  3592					      dw	ERR_CLOSINGBRACKET
-      1  3592		       17 00		      .word.w	ERR_CLOSINGBRACKET
-   1056  3594							;
-   1057  3594							; End of return from gosub
-   1058  3594							;=============================================================
-   1059  3594							; Gosub can be both a Function and a Subroutine
-   1060  3594				   GOSUBSTATEMENT
-      0  3594					      TSTBRANCH	GOSUBCOMPILED	; if the two bytes after gosub are not zero then direct transfer
-      0  3594					      db	106
-      1  3594		       6a		      .byte.b	106
-      0  3595					      db	(GOSUBCOMPILED-*)-1
-      1  3595		       0a		      .byte.b	(GOSUBCOMPILED-*)-1
-      0  3596					      CALL	EXPR	; GET DESTINATION
-      0  3596					      db	28
-      1  3596		       1c		      .byte.b	28
-      0  3597					      dw	EXPR
-      1  3597		       92 33		      .word.w	EXPR
-      0  3599					      CALL	GOSUBCONT
-      0  3599					      db	28
-      1  3599		       1c		      .byte.b	28
-      0  359a					      dw	GOSUBCONT
-      1  359a		       a7 35		      .word.w	GOSUBCONT
-      0  359c					      lit	0	; mark as lookup on stack
-      0  359c					      db	27
-      1  359c		       1b		      .byte.b	27
-      0  359d					      dw	0
-      1  359d		       00 00		      .word.w	0
-      0  359f					      RTN
-      0  359f					      db	25
-      1  359f		       19		      .byte.b	25
-   1066  35a0
-   1067  35a0				   GOSUBCOMPILED
+      0  3584					      NXT	CO	; SEQUENCE TO NEXT STATEMENT
+      0  3584					      db	6
+      1  3584		       06		      .byte.b	6
+      0  3585					      dw	CO
+      1  3585		       76 31		      .word.w	CO
+      0  3587					      IJMP	STMT	; Process the new statement
+      0  3587					      db	29
+      1  3587		       1d		      .byte.b	29
+      0  3588					      dw	STMT
+      1  3588		       7e 31		      .word.w	STMT
+   1048  358a
+   1049  358a				   S2NoReturnValue
+      0  358a					      DONE
+      0  358a					      db	1
+      1  358a		       01		      .byte.b	1
+      0  358b					      RSTR	S2RetFunc,0	; decides if call was a func or statement, branch on func, no return value
+      0  358b					      db	9
+      1  358b		       09		      .byte.b	9
+      0  358c					      db	(S2RetFunc-*)-1
+      1  358c		       07		      .byte.b	(S2RetFunc-*)-1
+      0  358d					      db	0
+      1  358d		       00		      .byte.b	0
+      0  358e					      NXT	CO	; SEQUENCE TO NEXT STATEMENT
+      0  358e					      db	6
+      1  358e		       06		      .byte.b	6
+      0  358f					      dw	CO
+      1  358f		       76 31		      .word.w	CO
+      0  3591					      IJMP	STMT	; Process the new statement
+      0  3591					      db	29
+      1  3591		       1d		      .byte.b	29
+      0  3592					      dw	STMT
+      1  3592		       7e 31		      .word.w	STMT
+   1054  3594
+   1055  3594				   S2RetFunc
+      0  3594					      IJMP	GOFNRet	; Back into the Function
+      0  3594					      db	29
+      1  3594		       1d		      .byte.b	29
+      0  3595					      dw	GOFNRet
+      1  3595		       76 35		      .word.w	GOFNRet
+   1057  3597
+   1058  3597				   ReturnExpectBracket
+      0  3597					      ENDIO
+      0  3597					      db	71
+      1  3597		       47		      .byte.b	71
+      0  3598					      ERRMSG	ERR_CLOSINGBRACKET
+      0  3598					      db	13
+      1  3598		       0d		      .byte.b	13
+      0  3599					      dw	ERR_CLOSINGBRACKET
+      1  3599		       17 00		      .word.w	ERR_CLOSINGBRACKET
+   1061  359b							;
+   1062  359b							; End of return from gosub
+   1063  359b							;=============================================================
+   1064  359b							; Gosub can be both a Function and a Subroutine
+   1065  359b				   GOSUBSTATEMENT
+      0  359b					      TSTBRANCH	GOSUBCOMPILED	; if the two bytes after gosub are not zero then direct transfer
+      0  359b					      db	106
+      1  359b		       6a		      .byte.b	106
+      0  359c					      db	(GOSUBCOMPILED-*)-1
+      1  359c		       0a		      .byte.b	(GOSUBCOMPILED-*)-1
+      0  359d					      CALL	EXPR	; GET DESTINATION
+      0  359d					      db	28
+      1  359d		       1c		      .byte.b	28
+      0  359e					      dw	EXPR
+      1  359e		       92 33		      .word.w	EXPR
       0  35a0					      CALL	GOSUBCONT
       0  35a0					      db	28
       1  35a0		       1c		      .byte.b	28
       0  35a1					      dw	GOSUBCONT
-      1  35a1		       a7 35		      .word.w	GOSUBCONT
-      0  35a3					      lit	1	;mark as compiled on stack
+      1  35a1		       ae 35		      .word.w	GOSUBCONT
+      0  35a3					      lit	0	; mark as lookup on stack
       0  35a3					      db	27
       1  35a3		       1b		      .byte.b	27
-      0  35a4					      dw	1
-      1  35a4		       01 00		      .word.w	1
+      0  35a4					      dw	0
+      1  35a4		       00 00		      .word.w	0
       0  35a6					      RTN
       0  35a6					      db	25
       1  35a6		       19		      .byte.b	25
    1071  35a7
-   1072  35a7				   GOSUBCONT
-      0  35a7					      TSTB	GOSUBDONE,oLeftBracket	;Check if any Parameters If not bracket get out
-      0  35a7					      db	101
-      1  35a7		       65		      .byte.b	101
-      0  35a8					      db	(GOSUBDONE-*)-1
-      1  35a8		       11		      .byte.b	(GOSUBDONE-*)-1
-      0  35a9					      db	oLeftBracket
-      1  35a9		       e0		      .byte.b	oLeftBracket
-      0  35aa					      STK2TMP		;Transfer stack top to temp, temp gets line to goto
-      0  35aa					      db	95
-      1  35aa		       5f		      .byte.b	95
-      0  35ab					      PUSHMATHSTACK		;Record stack frame for return
-      0  35ab					      db	84
-      1  35ab		       54		      .byte.b	84
-   1076  35ac				   GOSUBLOOP
-      0  35ac					      CALL	EXPR	; Allows what ever fits onto stack
-      0  35ac					      db	28
-      1  35ac		       1c		      .byte.b	28
-      0  35ad					      dw	EXPR
-      1  35ad		       92 33		      .word.w	EXPR
-      0  35af					      INCPARMCOUNT
-      0  35af					      db	88
-      1  35af		       58		      .byte.b	88
-      0  35b0					      TSTB	GOSUBParmDONE,oComma
-      0  35b0					      db	101
-      1  35b0		       65		      .byte.b	101
-      0  35b1					      db	(GOSUBParmDONE-*)-1
-      1  35b1		       04		      .byte.b	(GOSUBParmDONE-*)-1
-      0  35b2					      db	oComma
-      1  35b2		       e2		      .byte.b	oComma
-      0  35b3					      IJMP	GOSUBLOOP
-      0  35b3					      db	29
-      1  35b3		       1d		      .byte.b	29
-      0  35b4					      dw	GOSUBLOOP
-      1  35b4		       ac 35		      .word.w	GOSUBLOOP
-   1081  35b6				   GOSUBParmDONE
-      0  35b6					      TSTB	ReturnExpectBracket,oRightBracket
-      0  35b6					      db	101
-      1  35b6		       65		      .byte.b	101
-      0  35b7					      db	(ReturnExpectBracket-*)-1
-      1  35b7		       d8		      .byte.b	(ReturnExpectBracket-*)-1
-      0  35b8					      db	oRightBracket
-      1  35b8		       e1		      .byte.b	oRightBracket
-      0  35b9					      TMP2STK		; Restore line to goto
-      0  35b9					      db	96
-      1  35b9		       60		      .byte.b	96
-   1084  35ba				   GOSUBDONE
-      0  35ba					      RTN
-      0  35ba					      db	25
-      1  35ba		       19		      .byte.b	25
-   1086  35bb
-   1087  35bb		       35 bb	   ILEND      equ	*
+   1072  35a7				   GOSUBCOMPILED
+      0  35a7					      CALL	GOSUBCONT
+      0  35a7					      db	28
+      1  35a7		       1c		      .byte.b	28
+      0  35a8					      dw	GOSUBCONT
+      1  35a8		       ae 35		      .word.w	GOSUBCONT
+      0  35aa					      lit	1	;mark as compiled on stack
+      0  35aa					      db	27
+      1  35aa		       1b		      .byte.b	27
+      0  35ab					      dw	1
+      1  35ab		       01 00		      .word.w	1
+      0  35ad					      RTN
+      0  35ad					      db	25
+      1  35ad		       19		      .byte.b	25
+   1076  35ae
+   1077  35ae				   GOSUBCONT
+      0  35ae					      TSTB	GOSUBDONE,oLeftBracket	;Check if any Parameters If not bracket get out
+      0  35ae					      db	101
+      1  35ae		       65		      .byte.b	101
+      0  35af					      db	(GOSUBDONE-*)-1
+      1  35af		       11		      .byte.b	(GOSUBDONE-*)-1
+      0  35b0					      db	oLeftBracket
+      1  35b0		       e0		      .byte.b	oLeftBracket
+      0  35b1					      STK2TMP		;Transfer stack top to temp, temp gets line to goto
+      0  35b1					      db	95
+      1  35b1		       5f		      .byte.b	95
+      0  35b2					      PUSHMATHSTACK		;Record stack frame for return
+      0  35b2					      db	84
+      1  35b2		       54		      .byte.b	84
+   1081  35b3				   GOSUBLOOP
+      0  35b3					      CALL	EXPR	; Allows what ever fits onto stack
+      0  35b3					      db	28
+      1  35b3		       1c		      .byte.b	28
+      0  35b4					      dw	EXPR
+      1  35b4		       92 33		      .word.w	EXPR
+      0  35b6					      INCPARMCOUNT
+      0  35b6					      db	88
+      1  35b6		       58		      .byte.b	88
+      0  35b7					      TSTB	GOSUBParmDONE,oComma
+      0  35b7					      db	101
+      1  35b7		       65		      .byte.b	101
+      0  35b8					      db	(GOSUBParmDONE-*)-1
+      1  35b8		       04		      .byte.b	(GOSUBParmDONE-*)-1
+      0  35b9					      db	oComma
+      1  35b9		       e2		      .byte.b	oComma
+      0  35ba					      IJMP	GOSUBLOOP
+      0  35ba					      db	29
+      1  35ba		       1d		      .byte.b	29
+      0  35bb					      dw	GOSUBLOOP
+      1  35bb		       b3 35		      .word.w	GOSUBLOOP
+   1086  35bd				   GOSUBParmDONE
+      0  35bd					      TSTB	ReturnExpectBracket,oRightBracket
+      0  35bd					      db	101
+      1  35bd		       65		      .byte.b	101
+      0  35be					      db	(ReturnExpectBracket-*)-1
+      1  35be		       d8		      .byte.b	(ReturnExpectBracket-*)-1
+      0  35bf					      db	oRightBracket
+      1  35bf		       e1		      .byte.b	oRightBracket
+      0  35c0					      TMP2STK		; Restore line to goto
+      0  35c0					      db	96
+      1  35c0		       60		      .byte.b	96
+   1089  35c1				   GOSUBDONE
+      0  35c1					      RTN
+      0  35c1					      db	25
+      1  35c1		       19		      .byte.b	25
+   1091  35c2
+   1092  35c2		       35 c2	   ILEND      equ	*
 ------- FILE mytb.asm
-   2490  35bb		       35 bb	   PROGEND    equ	*
-   2491  35bb
-   2492  35bb
-   2493  35bb							;=====================================================
-   2494  35bb							; Define start of non page zero data
-   2495 U360e					      seg.u	TBData
-   2496 U360e
-   2497 U360e							;=====================================================
-   2498 U360e							; These are storage items not in page zero.
-   2499 U360e							;==================================================================================================
-   2500 U360e							; Task Management information
-   2501 U360e							; Tasks may be created by the Task <expr>,<expr>,[<expr>]   Slot number, Cycles per switch command
-   2502 U360e							; Tasks are ended by the Endtask command   This with clear the entry from the task table
-   2503 U360e							; Task switchs happen at the beginning of the next Basic command line
-   2504 U360e							; It will not happen during an input or output operations
-   2505 U360e							; Task switches otherwise are prememtive, The cycle count defaults to 100.
-   2506 U360e							; Task Zero is always the root task, main line program
-   2507 U360e							;
-   2508 U360e							; Layout is repeated for each configured task
-   2509 U360e							; Task Table Byte   use masks follow
-   2510 U360e		       00 00	   TASKINACTIVE equ	%00000000	; Task is inactive
-   2511 U360e		       00 80	   TASKACTIVE equ	%10000000	; Active task
-   2512 U360e		       00 40	   TASKWAITIO equ	%01000000	; Task is waiting for io
-   2513 U360e		       00 01	   TASKWAITIPC equ	%00000001	; Task is waiting for message
-   2514 U360e		       00 02	   TASKRUNPENDING equ	%00000010	; Task Is initialized but suspended
-   2515 U360e
-   2516 U360e		       00	   taskPtr    ds	1	; Current offset into task table CONTEXTLEN modulo entry
-   2517 U360f		       00 00 00 00*taskTable  ds	[TASKCOUNT * CONTEXTLEN]	; Task Table Offset and pointer to Basic code, active flag
-   2518 U360f		       37 09	   TASKTABLEEND equ	*	; End of task table
-   2519 U360f		       00 fa	   TASKTABLELEN equ	[TASKTABLEEND-taskTable]	; actual length of the task table
-   2520 U3709
-   2521 U3709							;Task Cycle Counter and reset count
-   2522 U3709		       00 00	   taskCurrentCycles ds	2
-   2523 U370b		       00 00	   taskResetValue ds	2
-   2524 U370d		       00	   taskCounter ds	1	; Count of active tasks
-   2525 U370e
-   2526 U370e							;
-   2527 U370e							; Math stack and IL call and Gosub/For-next return stack definitions
-   2528 U370e							;
-   2529 U370e		       37 0e	   STACKSTART equ	*
-   2530 U370e		       00 00 00 00*mathStack  ds	[MATHSTACKSIZE * 2 * TASKCOUNT]	; Stack used for math expressions
-   2531 U389e		       00 00 00 00*ilStack    ds	[ILSTACKSIZE * 2 * TASKCOUNT]	; stack used by the IL for calls and returns
-   2532 U3c86		       00 00 00 00*gosubStack ds	[GOSUBSTACKSIZE * 4 * TASKCOUNT]	; stack size for gosub stacks
-   2533 U3f06		       00 00 00 00*variableStack ds	[VARIABLESSIZE * 2 * TASKCOUNT]	; Stack of variables, 26 A-Z-task exit code,taskio block stdin,stdout,stdstat,iostatus
-   2534 U3f06		       00 48	   TASKEXITCODE equ	[[VARIABLESSIZE * 2] - 2]	; Offset to exit code location
-   2535 U3f06		       41 ea	   STACKEND   equ	*
-   2536 U3f06		       0a dc	   STACKLEN   equ	STACKEND-STACKSTART	; total space used for stacks
-   2537 U41ea							;
-   2538 U41ea							;
-   2539 U41ea		       00 00 00 00*LINBUF     ds	BUFFER_SIZE
-   2540 U426e		       00	   getlinx    ds	1	;temp for x during GetLine functions
-   2541 U426f		       00	   printtx    ds	1	;temp X for print funcs
-   2542 U4270		       00	   inputNoWait ds	1	;Wait no wait for line buff input
-   2543 U4271		       00	   promptChar ds	1	;the character to use for a prompt
-   2544 U4272		       00	   diddigit   ds	1	;for leading zero suppression
-   2545 U4273		       00	   putsy      ds	1
-   2546 U4274		       00 00	   errGoto    ds	2	;where to set ILPC on err
-   2547 U4276		       00	   sign       ds	1	;0 = positive, else negative
-   2548 U4277		       00 00	   rtemp1     ds	2	;Temp for x and y
-   2549 U4279		       00 00	   random     ds	2
-   2550 U427b		       00	   tempy      ds	1	;temp y storage
-   2551 U427c
-   2552 U427c
-   2553 U427c							; Moved from page zero as one clock cycle diff gives more space on page zero
-   2554 U427c		       00 00	   tempIL     ds	2	;Temp IL programcounter storage
-   2555 U427e		       00	   tempIlY    ds	1	;Temp IL Y register storage
-   2556 U427f		       00	   offset     ds	1	;IL Offset to next inst when test fails
-   2557 U4280		       00	   lineLength ds	1	;Length of current line
-   2558 U4281
-   2559 U4281		       00	   taskIOPending ds	1	; 1 = pending Set when a task wants to read keyboard/ write to screen
-   2560 U4282		       00	   taskRDPending ds	1	; 1 = background read is pending
-   2561 U4283
-   2562 U4283				  -	      if	XKIM
-   2563 U4283				  -buffer     ds	BUFFER_SIZE
-   2564 U4283					      endif
-   2565 U4283							;
-   2566 U4283							; PROGRAMEND is the end of the user's BASIC program.
-   2567 U4283							; More precisely, it is one byte past the end.  Or,
-   2568 U4283							; it's where the next line added to the end will be
-   2569 U4283							; placed.
-   2570 U4283							;
-   2571 U4283		       00 00	   ProgramStart ds	2	; Start Of usable memory
-   2572 U4285		       00 00	   ProgramEnd ds	2	; End of users basic program, Next free byte after end
-   2573 U4287		       00 00	   HighMem    ds	2	; highest location
-   2574 U4289		       00 00	   UsedMem    ds	2	; size of user program
-   2575 U428b		       00 00	   FreeMem    ds	2	; amount of free memory
-   2576 U428d							;
-   2577 U428d							;=====================================================
-   2578 U428d							; This is the start of the user's BASIC program space.
-   2579 U428d							;
-   2580 U428d							; PERSONAL GOAL: This should be no larger than $0DFF.
-   2581 U428d							;		  0200-05FF = 1K
-   2582 U428d							;		  0200-09FF = 2K
-   2583 U428d							;		  0200-0DFF = 3K
-   2584 U428d							;		  0200-11FF = 4K
-   2585 U428d							;		  0200-13FF = 4.5K
-   2586 U428d							;
-   2587 U428d				  -	      if	FIXED
-   2588 U428d				  -	      org	$2000
-   2589 U428d					      endif
-   2590 U428d
-   2591 U428d		       42 8d	   FreeMemStart equ	*
-   2592 U428d							;/*
-   2593 U428d							;  if	  CTMON65 || XKIM
-   2594 U428d							;	  SEG Code
-   2595 U428d							;	  org	  AutoRun
-   2596 U428d							;	  dw	  TBasicCold
-   2597 U428d							;  endif
-   2598 U428d							;*/
-   2599 U428d					      end
+   2490  35c2		       35 c2	   PROGEND    equ	*
+   2491  35c2
+   2492  35c2
+   2493  35c2							;=====================================================
+   2494  35c2							; Define start of non page zero data
+   2495 U3615					      seg.u	TBData
+   2496 U3615
+   2497 U3615							;=====================================================
+   2498 U3615							; These are storage items not in page zero.
+   2499 U3615							;==================================================================================================
+   2500 U3615							; Task Management information
+   2501 U3615							; Tasks may be created by the Task <expr>,<expr>,[<expr>]   Slot number, Cycles per switch command
+   2502 U3615							; Tasks are ended by the Endtask command   This with clear the entry from the task table
+   2503 U3615							; Task switchs happen at the beginning of the next Basic command line
+   2504 U3615							; It will not happen during an input or output operations
+   2505 U3615							; Task switches otherwise are prememtive, The cycle count defaults to 100.
+   2506 U3615							; Task Zero is always the root task, main line program
+   2507 U3615							;
+   2508 U3615							; Layout is repeated for each configured task
+   2509 U3615							; Task Table Byte   use masks follow
+   2510 U3615		       00 00	   TASKINACTIVE equ	%00000000	; Task is inactive
+   2511 U3615		       00 80	   TASKACTIVE equ	%10000000	; Active task
+   2512 U3615		       00 40	   TASKWAITIO equ	%01000000	; Task is waiting for io
+   2513 U3615		       00 01	   TASKWAITIPC equ	%00000001	; Task is waiting for message
+   2514 U3615		       00 02	   TASKRUNPENDING equ	%00000010	; Task Is initialized but suspended
+   2515 U3615
+   2516 U3615		       00	   taskPtr    ds	1	; Current offset into task table CONTEXTLEN modulo entry
+   2517 U3616		       00 00 00 00*taskTable  ds	[TASKCOUNT * CONTEXTLEN]	; Task Table Offset and pointer to Basic code, active flag
+   2518 U3616		       37 10	   TASKTABLEEND equ	*	; End of task table
+   2519 U3616		       00 fa	   TASKTABLELEN equ	[TASKTABLEEND-taskTable]	; actual length of the task table
+   2520 U3710
+   2521 U3710							;Task Cycle Counter and reset count
+   2522 U3710		       00 00	   taskCurrentCycles ds	2
+   2523 U3712		       00 00	   taskResetValue ds	2
+   2524 U3714		       00	   taskCounter ds	1	; Count of active tasks
+   2525 U3715
+   2526 U3715							;
+   2527 U3715							; Math stack and IL call and Gosub/For-next return stack definitions
+   2528 U3715							;
+   2529 U3715		       37 15	   STACKSTART equ	*
+   2530 U3715		       00 00 00 00*mathStack  ds	[MATHSTACKSIZE * 2 * TASKCOUNT]	; Stack used for math expressions
+   2531 U38a5		       00 00 00 00*ilStack    ds	[ILSTACKSIZE * 2 * TASKCOUNT]	; stack used by the IL for calls and returns
+   2532 U3c8d		       00 00 00 00*gosubStack ds	[GOSUBSTACKSIZE * 4 * TASKCOUNT]	; stack size for gosub stacks
+   2533 U3f0d		       00 00 00 00*variableStack ds	[VARIABLESSIZE * 2 * TASKCOUNT]	; Stack of variables, 26 A-Z-task exit code,taskio block stdin,stdout,stdstat,iostatus
+   2534 U3f0d		       00 48	   TASKEXITCODE equ	[[VARIABLESSIZE * 2] - 2]	; Offset to exit code location
+   2535 U3f0d		       41 f1	   STACKEND   equ	*
+   2536 U3f0d		       0a dc	   STACKLEN   equ	STACKEND-STACKSTART	; total space used for stacks
+   2537 U41f1							;
+   2538 U41f1							;
+   2539 U41f1		       00 00 00 00*LINBUF     ds	BUFFER_SIZE
+   2540 U4275		       00	   getlinx    ds	1	;temp for x during GetLine functions
+   2541 U4276		       00	   printtx    ds	1	;temp X for print funcs
+   2542 U4277		       00	   inputNoWait ds	1	;Wait no wait for line buff input
+   2543 U4278		       00	   promptChar ds	1	;the character to use for a prompt
+   2544 U4279		       00	   diddigit   ds	1	;for leading zero suppression
+   2545 U427a		       00	   putsy      ds	1
+   2546 U427b		       00 00	   errGoto    ds	2	;where to set ILPC on err
+   2547 U427d		       00	   sign       ds	1	;0 = positive, else negative
+   2548 U427e		       00 00	   rtemp1     ds	2	;Temp for x and y
+   2549 U4280		       00 00	   random     ds	2
+   2550 U4282		       00	   tempy      ds	1	;temp y storage
+   2551 U4283
+   2552 U4283
+   2553 U4283							; Moved from page zero as one clock cycle diff gives more space on page zero
+   2554 U4283		       00 00	   tempIL     ds	2	;Temp IL programcounter storage
+   2555 U4285		       00	   tempIlY    ds	1	;Temp IL Y register storage
+   2556 U4286		       00	   offset     ds	1	;IL Offset to next inst when test fails
+   2557 U4287		       00	   lineLength ds	1	;Length of current line
+   2558 U4288
+   2559 U4288		       00	   taskIOPending ds	1	; 1 = pending Set when a task wants to read keyboard/ write to screen
+   2560 U4289		       00	   taskRDPending ds	1	; 1 = background read is pending
+   2561 U428a
+   2562 U428a				  -	      if	XKIM
+   2563 U428a				  -buffer     ds	BUFFER_SIZE
+   2564 U428a					      endif
+   2565 U428a							;
+   2566 U428a							; PROGRAMEND is the end of the user's BASIC program.
+   2567 U428a							; More precisely, it is one byte past the end.  Or,
+   2568 U428a							; it's where the next line added to the end will be
+   2569 U428a							; placed.
+   2570 U428a							;
+   2571 U428a		       00 00	   ProgramStart ds	2	; Start Of usable memory
+   2572 U428c		       00 00	   ProgramEnd ds	2	; End of users basic program, Next free byte after end
+   2573 U428e		       00 00	   HighMem    ds	2	; highest location
+   2574 U4290		       00 00	   UsedMem    ds	2	; size of user program
+   2575 U4292		       00 00	   FreeMem    ds	2	; amount of free memory
+   2576 U4294							;
+   2577 U4294							;=====================================================
+   2578 U4294							; This is the start of the user's BASIC program space.
+   2579 U4294							;
+   2580 U4294							; PERSONAL GOAL: This should be no larger than $0DFF.
+   2581 U4294							;		  0200-05FF = 1K
+   2582 U4294							;		  0200-09FF = 2K
+   2583 U4294							;		  0200-0DFF = 3K
+   2584 U4294							;		  0200-11FF = 4K
+   2585 U4294							;		  0200-13FF = 4.5K
+   2586 U4294							;
+   2587 U4294				  -	      if	FIXED
+   2588 U4294				  -	      org	$2000
+   2589 U4294					      endif
+   2590 U4294
+   2591 U4294		       42 94	   FreeMemStart equ	*
+   2592 U4294							;/*
+   2593 U4294							;  if	  CTMON65 || XKIM
+   2594 U4294							;	  SEG Code
+   2595 U4294							;	  org	  AutoRun
+   2596 U4294							;	  dw	  TBasicCold
+   2597 U4294							;  endif
+   2598 U4294							;*/
+   2599 U4294					      end

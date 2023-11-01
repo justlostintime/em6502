@@ -1,0 +1,13 @@
+10 rem test array value in calculation and task variable access 
+20 rem functions
+
+30 @[0] = task(1000)
+40 taskw(@[0])
+45 d = 45 : print "d=";d
+47 @[1] = 78 : f = @[1] : print @[1],f,
+50 print "task done"
+55 b = @[0]!^
+56 c = @[0]
+60 print "task returned : ";@[0],b,c,c!^
+70 end
+1000 return(2222)
