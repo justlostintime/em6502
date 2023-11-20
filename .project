@@ -1,17 +1,17 @@
 # Gambas Project File 3.0
 Title=6502/65C02 CPU Emulation
 Startup=CliInterface
-Version=1.2.6
+Version=1.2.7
 Component=gb.args
 Component=gb.image
 Component=gb.gui
 Component=gb.form
 Component=gb.desktop
 Component=gb.eval
-Component=gb.eval.highlight
 Component=gb.form.dialog
 Component=gb.util
 Component=gb.pcre
+Component=gb.highlight
 Component=gb.form.editor
 Component=gb.form.htmlview
 Component=gb.settings
