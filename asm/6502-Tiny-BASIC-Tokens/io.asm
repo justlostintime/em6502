@@ -24,7 +24,7 @@ BInVec          ds      2         ; This is used by fuction to vector to current
 BOutVec         ds      2         ; This is used by functions to vector to the current output rtn
 BStatVec        ds      2         ; This is used by inteface to read write status/config information
 BActiveDevice   db      1         ; the index of the current device block
-BActiveDriver   db      1         ; Index of the device drive block
+BActiveDriver   db      1         ; Index of the device driver block
 
 ;============================================================================================
                 Seg     Code
@@ -88,16 +88,29 @@ DeviceIoBlocks
 ;
                 Seg     Code
 ;======================================================================
-; This is the Basic IRQ handler, works with task manager
+; This is the Basic IRQ handler, works with task manager, assumes timer interupt
 ;
 ServiceIrq      pha
+                txa
+                pha
+                ldx     #0
+ServiceLoop
+                inc     timercounter,x
+                bne     ServiceCont
+                inx
+                cpx     #4
+                bne     ServiceLoop
+ServiceCont
                 lda     IRQStatus
-                BEQ     RetIrq
+                beq     RetIrq
                 lda     IRQPending
                 bne     RetIrq
                 lda     #1
                 sta     IRQPending
-RetIrq          pla
+RetIrq          
+                pla
+                tax
+                pla
                 rti
 ;======================================================================
 ; Jump to the output/input function in BOutVec/BInVec
@@ -197,14 +210,14 @@ SerialIn
 SerialOut
 
 SerialStatus
-
+           rts
 ;
 ;======================================================================
 ; Date/Time clock interface
 ClockRead
 
 ClockWrite
-
+          rts
 ;
 ;======================================================================
 ;
@@ -213,5 +226,5 @@ TimerStart
 TimerStop
 
 TimerStatus
-
+         rts
 

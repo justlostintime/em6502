@@ -556,3 +556,25 @@
     db 113
     db {1}      ; direction  0 = left 1 = right
   endm
+  
+; set of timer macros
+  Macro TimerSet
+    db 114,1
+    db {1}     ; value 9 = 1 second, 1-5 = value * 10ms 6 = 10ms, 7=250ms, 8=500ms
+  endm
+  
+  Macro TimerStop
+    db 114,0,0
+  endm
+  
+  Macro TimerValueLow
+    db 114,2,0
+  endm
+  
+  Macro TimerValueHigh
+    db 114,3,0
+  endm
+  
+  Macro Timer
+    db 114
+  endm

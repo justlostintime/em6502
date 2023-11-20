@@ -5,17 +5,19 @@
 '  GNU GENERAL Public LICENSE
 '  Version 3, 29 June 2007
 '  See project license file.
-
 'Fast Unsafe
 Public Instructions As New Collection(gb.ignorecase)
 CurrentIndex As Integer = 0
 Enum opAddressing, opName, opAssembler, opOpc, opBytes, opCycles
+
 AddressModes As Collection = ["accumulator": True, "zeropage": True, "zeropage,X": True, "absolute": True, "absolute,X": True,
   "absolute,Y": True, "(indirect,X)": True, "(indirect),Y": True, "relative": True, "implied": True,
-  "zeropage,Y": True, "immediate": True, "indirect": True, "(zeropage)": True]
+  "zeropage,Y": True, "immediate": True, "indirect": True, "(zeropage)": True, "zeropage,relative": True]
+
 ShortAddressMode As Collection = ["accumulator": "A", "zeropage": "zp", "zeropage,X": "zp,X", "absolute": "abs", "absolute,X": "abs,X",
   "absolute,Y": "abs,Y", "(indirect,X)": "(ind,X)", "(indirect),Y": "(ind),Y", "relative": "rel", "implied": "imp",
-  "zeropage,Y": "zp,Y", "immediate": "#", "indirect": "ind", "(zeropage)": "(zp)"]
+  "zeropage,Y": "zp,Y", "immediate": "#imm", "indirect": "ind", "(zeropage)": "(zp)", "zeropage,relative": "zp,rel"]
+
 Source As String[]
 Property Read version As String Use $version
 Public InstructionCycles As New Integer[256]
@@ -26,7 +28,7 @@ Public cc As New Integer[256]
 Public SymbolsByName As New Collection                  ' (gb.ignoreCase)
 Public SymbolsByAddress As New Collection(gb.ignoreCase)
 
-Public Sub _init()
+Public Sub init_tables()
 
   $Version = "1.0.1"
   source = Split(File.Load("6502.inst"), "\n", "", True, True)
@@ -40,14 +42,22 @@ Public Sub _init()
     Dim DefInst As String[] = Split(source[CurrentIndex], " ", "", True, True)
     If DefInst.count = 2 And If DefInst[0] == "inst" Then
       Inc CurrentIndex
-      ProcessInstruction()              'DefInst[1])
+      Try ProcessInstruction()              'DefInst[1])
+      If Error Then
+        Error ("Invalid OP Code definition at line") & " " & CurrentIndex & " In file " & source[CurrentIndex]
+        While Not (Left(Trim(source[CurrentIndex]), 4) == "inst")
+          If CurrentIndex > Source.Max Then Break
+          Inc CurrentIndex
+        Wend
+      Endif
     Else
-      Error.Raise(("Invalid OP Code definition at line") & " " & CurrentIndex & " In file " & source[CurrentIndex])
+      Error ("Ignoring Invalid OP Code definition at line") & " " & CurrentIndex & " In file " & source[CurrentIndex]
+      Inc CurrentIndex
     Endif
   Wend
 
 Catch
-  Print ("Dissasembler load mnonics:");; Error.text, Error.where;; source[CurrentIndex]
+  Print ("Dissasembler load mnemonics:");; Error.text, Error.where;; source[CurrentIndex]
 
 End
 
@@ -60,7 +70,7 @@ End
 
 'Init all tables such that invalid values always become a nop
 ' Process the file being read which defines all the valid 6502 and 65c02 Instructions
-Fast Unsafe Sub ProcessInstruction()
+Public Sub ProcessInstruction()
 
   Dim Description As String
 
@@ -90,9 +100,10 @@ Fast Unsafe Sub ProcessInstruction()
 End
 
 'making this Fast crashes the system
-Sub AddOpCode(opCode As String, sopName As String, Addressing As String, Assembler As String, Bytes As Integer, cycles As Integer, Description As String)
+Public Sub AddOpCode(opCode As String, sopName As String, Addressing As String, Assembler As String, Bytes As Integer, cycles As Integer, Description As String)
 
   assembler = Replace(assembler, "oper", "&1")
+  assembler = Replace(assembler, "oper1", "&2")
   Dim opNum As Byte = Eval("&h" & opCode)
   Dim myOpc As New InstDef(opNum, sopName, Addressing, Assembler, bytes, cycles, description)
   Instructions[opnum] = myOpc
@@ -103,7 +114,9 @@ Sub AddOpCode(opCode As String, sopName As String, Addressing As String, Assembl
 
 End
 
+'' returns the string representation of the instruction
 Fast Unsafe Public Sub Inst(TheCpu As Cpu6502, address As Long, Optional LongNames As Boolean = False) As String
+  'Public Sub Inst(TheCpu As Cpu6502, address As Long, Optional LongNames As Boolean = False) As String
 
   Dim result As String = ""
   Dim bInst As Byte[] = TheCpu.ReadBytes(address, 1)
@@ -111,7 +124,7 @@ Fast Unsafe Public Sub Inst(TheCpu As Cpu6502, address As Long, Optional LongNam
   Dim InstData As Instdef = Instructions[InstNum]
 
   Dim TxtBranch As String = ""
-  Dim num As String
+  Dim num, num1 As String = ""
 
   If InstData = Null Then
     Return Hex(address, 4) & " " & ("Unknow Instruction") & " [" & Hex(instNum, 2) & "]"
@@ -122,22 +135,30 @@ Fast Unsafe Public Sub Inst(TheCpu As Cpu6502, address As Long, Optional LongNam
     result &= InstData.name & " "
     If InstInfo.count = 2 Then
       txtBranch = Hex(InstInfo[1], 2) & Hex(InstInfo[0], 2)
-
       num = GetSymAsName(txtBranch)
     Else
-      If InstData.Addressing == "relative" Then
-
-        Num = GetSymAsName(Hex(CalcBranch(Address, InstInfo[0]), 4))
-      Else If InstData.addressing = "zeropage" Then
+      Dim valindex As Integer = 0
+      If InstData.Addressing == "zeropage,relative" Then
+        Inc valindex
+        num1 = GetSymAsName("00" & Hex(InstInfo[0], 2))
+      Endif
+      If Right(InstData.Addressing, 8) == "relative" Then
+        Num = GetSymAsName(Hex(CalcBranch(Address, InstInfo[valindex]), 4))
+      Else If InstData.addressing == "zeropage" Then
         num = GetSymAsName("00" & Hex(InstInfo[0], 2))
       Else
         num = "$" & Hex(InstInfo[0], 2)
       Endif
     Endif
-    result &= Subst(InstData.assembler, num)
+    If num1.len > 0 Then
+      result &= Subst(InstData.assembler, num1, num)
+    Else
+      result &= Subst(InstData.assembler, num)
+    Endif
   Else
     result = InstData.Name
   Endif
+
   Dim TxtAddress As String = Hex(address, 4)
   If SymbolsByAddress.Exist(TxtAddress) Then
     TxtAddress = TxtAddress & " " & SymbolsByAddress[txtaddress]
@@ -151,6 +172,7 @@ Fast Unsafe Public Sub Inst(TheCpu As Cpu6502, address As Long, Optional LongNam
 End
 
 Fast Unsafe Sub GetSymAsName(addr As String) As String
+  'Public Sub GetSymAsName(addr As String) As String
 
   If SymbolsByAddress.Exist(addr) Then
     Return SymbolsByAddress[addr] & "[$" & (addr) & "]"
@@ -160,6 +182,7 @@ Fast Unsafe Sub GetSymAsName(addr As String) As String
 End
 
 Fast Unsafe Sub CalcBranch(pc As Long, jmp As Byte) As Long
+  'Public Sub CalcBranch(pc As Long, jmp As Byte) As Long
 
   If BTst(jmp, 7) Then
     Dim offset As Byte = &100 - jmp
@@ -185,7 +208,7 @@ Public Sub InstMatrix()
 
   For i = 0 To 255
     If Instructions.Exist(i) Then
-      Table_cc[cc[i]][aaa[i], AddrMode[i]] = "$" & Left(Hex(i, 2) & " " & Instructions[i].name & " " & ShortAddressMode[Instructions[i].addressing] & Space(15), 16)
+      Table_cc[cc[i]][aaa[i], AddrMode[i]] = "$" & Left(Hex(i, 2) & " " & Left(Instructions[i].name & "   ", 5) & ShortAddressMode[Instructions[i].addressing] & Space(15), 16)
     Else
       Dim icc As Integer = (i And &h0003)
       Dim iaaa As Integer = (i Shr 5)
@@ -206,6 +229,29 @@ Public Sub InstMatrix()
       Next
       Print
     Next
+    Print
+  Next
+
+End
+
+Public Sub PrintOpCodeTable() ' print a linear list of opcodes by opcode value
+
+  Dim i, j As Integer
+  Dim p As Integer
+
+  For p = 0 To 1
+    For i = 0 To 15
+      For j = P * 8 To (P * 8) + 7
+        Dim opcode As InstDef = instructions[i + (j * 16)]
+        If opcode Then
+          Print "$" & Left(Hex(opcode.opc, 2) & " " & Left(opcode.name & "   ", 5) & ShortAddressMode[opcode.addressing] & Space(15), 16);
+        Else
+          Print "$" & Left(Hex(i + (j * 16), 2) & " " & Space(15), 16);
+        Endif
+      Next
+      Print
+    Next
+
     Print
   Next
 

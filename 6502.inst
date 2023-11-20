@@ -1,4 +1,4 @@
-#6502 Instructions in Detail
+#6502/65C02 Instructions in Detail
 
 inst ADC
 'Add Memory to Accumulator with Carry
@@ -700,3 +700,184 @@ inst TYA
 '+ + - - - -
 #addressing assembler opc bytes cycles
 implied TYA 98 1 2
+
+# Everything below here only appies to wdc version of 65c02
+
+inst BBR0
+' Branch on bit in zero page set to zero
+#addressing assembler opc bytes cycles
+zeropage,relative BBR0 oper,oper1 0F 3 5
+
+inst BBR1
+' Branch on bit in zero page set to zero
+#addressing assembler opc bytes cycles
+zeropage,relative BBR1 oper,oper1 1F 3 5
+
+inst BBR2
+' Branch on bit in zero page set to zero
+#addressing assembler opc bytes cycles
+zeropage,relative BBR2 oper,oper1 2F 3 5
+
+inst BBR3
+' Branch on bit in zero page set to zero
+#addressing assembler opc bytes cycles
+zeropage,relative BBR3 oper,oper1 3F 3 5
+
+inst BBR4
+' Branch on bit in zero page set to zero
+#addressing assembler opc bytes cycles
+zeropage,relative BBR4 oper,oper1 4F 3 5
+
+inst BBR5
+' Branch on bit in zero page set to zero
+#addressing assembler opc bytes cycles
+zeropage,relative BBR5 oper,oper1 5F 3 5
+
+inst BBR6
+' Branch on bit in zero page set to zero
+#addressing assembler opc bytes cycles
+zeropage,relative BBR6 oper,oper1 6F 3 5
+
+inst BBR7
+' Branch on bit in zero page set to zero
+#addressing assembler opc bytes cycles
+zeropage,relative BBR7 oper,oper1 7F 3 5
+
+
+inst BBS0
+' Branch on bit in zero page set to 1
+#addressing assembler opc bytes cycles
+zeropage,relative BBS0 oper,oper1 8F 3 5
+
+inst BBS1
+' Branch on bit in zero page set to 1
+#addressing assembler opc bytes cycles
+zeropage,relative BBS1 oper,oper1 9F 3 5
+
+inst BBS2
+' Branch on bit in zero page set to 1
+#addressing assembler opc bytes cycles
+zeropage,relative BBS2 oper,oper1 AF 3 5
+
+inst BBS3
+' Branch on bit in zero page set to 1
+#addressing assembler opc bytes cycles
+zeropage,relative BBS3 oper,oper1 BF 3 5
+
+inst BBS4
+' Branch on bit in zero page set to 1
+#addressing assembler opc bytes cycles
+zeropage,relative BBS4 oper,oper1 CF 3 5
+
+inst BBS5
+' Branch on bit in zero page set to 1
+#addressing assembler opc bytes cycles
+zeropage,relative BBS5 oper,oper1 DF 3 5
+
+inst BBS6
+' Branch on bit in zero page set to 1
+#addressing assembler opc bytes cycles
+zeropage,relative BBS6 oper,oper1 EF 3 5
+
+inst BBS7
+' Branch on bit in zero page set to 1
+#addressing assembler opc bytes cycles
+zeropage,relative BBS7 oper,oper1 FF 3 5
+
+
+inst RMB0
+' reset page zero bit
+zeropage RMB0 oper 07 2 5
+
+inst RMB1
+' reset page zero bit
+zeropage RMB1 oper 17 2 5
+
+inst RMB2
+' reset page zero bit
+zeropage RMB2 oper 27 2 5
+
+inst RMB3
+' reset page zero bit
+zeropage RMB3 oper 37 2 5
+
+inst RMB4
+' reset page zero bit
+zeropage RMB4 oper 47 2 5
+
+inst RMB5
+' reset page zero bit
+zeropage RMB5 oper 57 2 5
+
+inst RMB6
+' reset page zero bit
+zeropage RMB6 oper 67 2 5
+
+inst RMB7
+' reset page zero bit
+zeropage RMB7 oper 77 2 5
+
+
+inst SMB0
+' Set page zero bit to 1
+zeropage SMB0 oper 87 2 5
+
+inst SMB1
+' Set page zero bit to 1
+zeropage SMB1 oper 97 2 5
+
+inst SMB2
+' Set page zero bit to 1
+zeropage SMB2 oper A7 2 5
+
+inst SMB3
+' Set page zero bit to 1
+zeropage SMB3 oper B7 2 5
+
+inst SMB4
+' Set page zero bit to 1
+zeropage SMB4 oper C7 2 5
+
+inst SMB5
+' Set page zero bit to 1
+zeropage SMB5 oper D7 2 5
+
+inst SMB6
+' Set page zero bit to 1
+zeropage SMB6 oper E7 2 5
+
+inst SMB7
+' Set page zero bit to 1
+zeropage SMB7 oper F7 2 5
+
+inst STP
+' Stops the clock input and halts the cpu until a reset happens
+implied STP DB 1 3
+
+
+inst WAI
+' Halt cpu to low power mode and wait for ant type of interupt to occur
+implied WAI CB 1 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

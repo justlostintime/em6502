@@ -122,11 +122,12 @@ ILTEXTTABLE:
   db    111,23,"iCopyBlock          ",0
   db    112,23,"iCmpBlock           ",0
   db    113,23,"iShift              ",0
+  db    114,23,"iTimer              ",0
   db    $FF,23,"0                   ",0
 
  ; Search for the il instruction and print the correct text for it
  ; on entry a contains the ip instruction to print
- 
+
                 seg.u  TBData
 R0TempIL        ds    2
 ILSTA           ds    1
@@ -175,10 +176,10 @@ PrintILFound    iny                    ; point to length of instruction
                 lda     #0             ; Termination byte of string
                 jsr     PrtStr         ; print the string
                 jmp     PrintILDone
-                
+
 PrintILNotFound lda     ILSTA
                 jsr     HexToOut
-                
+
 PrintILDone     lda     R0TempIL
                 sta     R0
                 lda     R0TempIL+1

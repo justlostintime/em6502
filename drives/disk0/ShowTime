@@ -31,7 +31,7 @@
 300 ? " "; : gosub 500(5)                             : rem Read hours 2 bcd digits
 320 ? ":"; : gosub 500(6)                             : rem Read minutes 2 bcd digits
 340 ? ":"; : gosub 500(7)                             : rem Read Seconds 2 bcd digits
-360 ? 27$;"[10;40H";: gosub 600(8)                     : rem read day of week 2 bcd digits
+360 ? 27$;"[10;40H";: gosub 600(8)                    : rem read day of week 2 bcd digits
 380 ?
 390 return
 
@@ -78,7 +78,7 @@
 
 2000 rem request and read the message from PIA 1000(length, buffer address, Command)
 2010 print "Command ";$#[2];" Length ";#[0];" Buffer address = ";$addr(@$[#[1]])
-2010 poke(57360,#[2])                                   : rem send command 
+2010 poke(57360,#[2])                                   : rem send command
 2020 s = #[0] : p = 0                                   : rem message is #[0] bytes
 2030 if p < s @$[p+#[1]] = peek(57360) : inc p : goto . : rem read bytes from the interface
 2040 return

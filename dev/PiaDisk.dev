@@ -510,7 +510,7 @@ Sub DiskCmdProcess()
 
 
     Case PC_SET_CLOCK
-       'print "PIA Set Real time clock date and time BCD format";;
+      'print "PIA Set Real time clock date and time BCD format";;
        dim imonth as integer =  frombcd(inputbuffer.pop())
        dim iday as integer =  frombcd(inputbuffer.pop())
        dim theyear as integer = (frombcd(inputbuffer.pop()) * 100 )+ frombcd(inputbuffer.pop())

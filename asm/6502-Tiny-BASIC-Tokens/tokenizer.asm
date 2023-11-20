@@ -189,8 +189,9 @@ kGofn        equ     kCall+1
 kPid         equ     kGofn+1
 kAddr        equ     kPid+1
 kCmpMem      equ     kAddr+1
+kTimer       equ     kCmpMem+1
 ;
-kFuncCount   equ     ((kCmpMem - kBeginFunc) + 1)
+kFuncCount   equ     ((kTimer - kBeginFunc) + 1)
 
 ;
 ; Keyword table contains 54 keywords
@@ -268,6 +269,7 @@ KeyWordTable:
              db     kPid,"piD"
              db     kAddr,"addR"
              db     kCmpMem, "cmpmeM"
+             db     kTimer,"timeR"
              db     0,0
 
 KeyWordTableEnd      equ      *

@@ -14,6 +14,8 @@ Public Sub main()
   Dim bVersion, bAbout, bDevMode, bPrintInstMatrix, bStartSingleStep, bVerbose, blistcomputers As Boolean
   Dim sComputerName As String
 
+  Disassembler.init_tables()
+
   Dim sDummy As String = Settings["Init", "Done"]
 
   System.IgnoreOverflow = True
@@ -47,6 +49,17 @@ Public Sub main()
     Quit 0
   Endif
 
+  If bVersion Then
+    Print Application.name;; Application.Version
+    Quit 0
+  Else If bAbout Then
+    Print Application.name;; Application.Version; "\n"; AppDescription
+    Quit 0
+  Else If bPrintInstMatrix Then
+    PrintMatrix()
+    Quit 0
+  Endif
+
   With FMAIN
 
     If bVerbose Then .Verbose = True
@@ -63,13 +76,7 @@ Public Sub main()
 
   CreateDefaults()
 
-  If bVersion Then
-    Print Application.name;; Application.Version
-  Else If bAbout Then
-    Print Application.name;; Application.Version; "\n"; AppDescription
-  Else If bPrintInstMatrix Then
-    PrintMatrix()
-  Else If sComputerName <> "" Then
+  If sComputerName <> "" Then
     RunComputer(sComputerName)
     If FMain.Verbose Then Error("End of Emulator session")                                                     'halt when we get here
   Else
@@ -110,10 +117,11 @@ End
 
 Public Sub PrintMatrix()
 
-  With FMAIN
-    .MyComputer = New Computer As "the_computer"
-    Disassembler.InstMatrix()
-  End With
+  'With FMAIN
+  '   .MyComputer = New Computer As "the_computer"
+  Disassembler.InstMatrix()
+  Disassembler.PrintOpCodeTable()
+  ' End With
 
 End
 

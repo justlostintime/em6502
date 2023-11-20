@@ -45,6 +45,9 @@ input            processor 6502
 ;               * Add concurrency features
 ;               * Add Compile at runtime for gosub and goto addresses
 ;
+; 10/31/2023 v0.5 Justlostintime@gmail.com
+;               * Inline in il some var load value instead of calling
+;
 ; www.corshamtech.com
 ; bob@corshamtech.com
 ; JustLostInTime@gmail.com
@@ -1014,11 +1017,15 @@ iErrComplete:
 ; the program is in.
 ;
 ResetIL         lda     #0
+                sta     CURPTR
+                sta     CUROFF
                 sta     ILSTACKPTR
                 lda     errGoto
                 sta     ILPC
                 lda     errGoto+1
                 sta     ILPC+1
+                ldx     #$FF                  ; make sure the stack pointer is reset
+                txs
                 jmp     NextIL
 
 ;
@@ -1175,7 +1182,9 @@ skip            dex
 ;
 ; Indicate divide-by-zero error
 ;
-divby0          ldx     #ERR_DIVIDE_ZERO
+divby0          pla                            ; remove the reyurn from the stack
+                pla
+                ldx     #ERR_DIVIDE_ZERO       ; do the error
                 lda     #0
                 jmp     iErr2
 ;
@@ -2347,6 +2356,7 @@ iLogAnd
                 and     R1+1
                 sta     R0+1
                 jmp     pushR0nextIl
+
 iLogOr
                 jsr     popR0
                 jsr     popR1
@@ -2558,6 +2568,7 @@ lineLength              ds      1       ;Length of current line
 
 taskIOPending           ds      1       ; 1 = pending Set when a task wants to read keyboard/ write to screen
 taskRDPending           ds      1       ; 1 = background read is pending
+timercounter            ds      4       ; if timer is running then this is continuously incremented
 
         if      XKIM
 buffer          ds      BUFFER_SIZE

@@ -12,6 +12,7 @@ TermCtlNew As TerminalSettings
 
 Public Sub main()
 
+  wait 1.0
   File.in.term.echo = False
 
   TermCtlOld = File.In.Term.GetAttr()
@@ -26,7 +27,6 @@ Public Sub main()
 
     Wait 0.01
     KeyboardInput = getchar()
-    'Print "keypress = "; KeyboardInput
     If KeyboardInput <> -1 Then
       Write #File.out, Chr(KeyboardInput), 1
       Flush #File.out

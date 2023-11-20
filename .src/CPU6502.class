@@ -303,14 +303,14 @@ Public Sub Run()
       If $InteruptPending Then
         $InteruptPending = False
         If $ResetPending Then
-          Reset()
           CycleCount += 9
+          Reset()
         Else If $NMIPending Then
+          CycleCount += 5
           NMI()
-          CycleCount += 5
         Else If $IRQPending Then
-          IRQ()
           CycleCount += 5
+          IRQ()
         Endif
       Endif
     Endif
@@ -403,7 +403,7 @@ Public Sub Run()
 End
 
 '' Create an event with all the information needed to display the next Instruction with status
-sub StepInfo()
+Sub StepInfo()
 
   LastTraceInstruction = Left(Disassembler.Inst(Me, pc) & Space(40), 40) & "->[" & SRText() & "] " & Hex(ac, 2) & " " & Hex(X, 2) & " " & Hex(Y, 2) & " " & "1" & Hex(sp, 2)
   Raise NextInst(LastTraceInstruction)
@@ -847,6 +847,7 @@ Public Sub interupt(sVector As Long)
   pc = DataBus
   Inc AddressBus
   ReadByte()
+  If $cpu65c02 Then SR = BClr(SR, 3)                  'clear the decimal flag
   PC = (PC Or (CInt(DataBus) Shl 8))
 
 End
@@ -865,15 +866,16 @@ Public Sub IRQ()
   $IRQPending = False
   If BTst(sr, 2) Then Return                                   ' Ignore this if the irq is disabled
 
-  SR = BClr(sr, 4)                                             ' Clear the break bit, this is an irq
+  SR = BClr(sr, 4)                                                      ' Clear the break bit, this is an irq
   interupt(&h0FFFE)
-  SR = BSet(sr, 2)                                             ' Disable the IRQ, restored upon irq return
+  SR = BSet(sr, 2)                                                     ' Disable the IRQ, restored upon irq return
 
 End
 
 Public Sub BRK()
 
-  sr = BSet(sr, 4)                                             ' set the break flag
+  Inc PC                                                               ' Skip the extra byte used to identify the brk type
+  sr = BSet(sr, 4)                                              ' set the break flag
   interupt(&H0FFFE)
   SR = BSet(sr, 2)                                             ' disable the IRQ
   SR = BClr(SR, 4)                                             ' This flag is never really stored disabled for testing
@@ -1145,6 +1147,7 @@ End
 ' Gambas module file
 
 '****************************************************************************************************************
+'Public ongoto_vector_table As Label[] = [Grp0Case00]
 '***************************************************************************************************************
 
 Public Sub Group0(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
@@ -1158,10 +1161,11 @@ Public Sub Group0(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
     On addressmode Goto Grp0Case00, Grp0Case01, Grp0Case02, Grp0Case03, Grp0Case04, Grp0Case05, Grp0Case06, Grp0Case07
     Return
 
-  Grp0Case00: 'brk
-    Inc .pc            ' allow for extra byte to identify type of break
-    .push(.pc Shr 8)
-    .push(.pc And &h000FF)
+  Grp0Case00: 'brk for 65C02 must clear the decimal mode as well
+    ' Inc .pc            ' allow for extra byte to identify type of break
+    '.push(.pc Shr 8)
+    '.push(.pc And &h000FF)
+    'If $cpu65c02 Then BSet(.sr, 3)clear the decimal flag
     .brk()
     Return
 
@@ -1561,7 +1565,7 @@ End
 
 '****************************************************************************************************************
 '***************************************************************************************************************
-Public Sub Group1 (TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
+Public Sub Group1(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
 
   With TheCpu
     On aaa Goto Grp1Case0, Grp1Case1, Grp1Case2, Grp1Case3, Grp1Case4, Grp1Case5, Grp1Case6, Grp1Case7

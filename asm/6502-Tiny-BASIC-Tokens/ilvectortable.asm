@@ -131,8 +131,8 @@ ILTBL2:
       dw  iCopyBlock    ;111      Copy a block or memory from one location to another 16 bit length
       dw  iCmpBlock     ;112      Compare to parts of memory
       dw  iShift        ;113      Shift left 0 or right 1
-
-      dw  iBadOP        ;114      Invalid IL op code
+      dw  iTimer        ;114      Start/Stop/Set timer and enable disable system irq
+      
       dw  iBadOP        ;115      Invalid IL op code
       dw  iBadOP        ;116      Invalid IL op code
       dw  iBadOP        ;117      Invalid IL op code

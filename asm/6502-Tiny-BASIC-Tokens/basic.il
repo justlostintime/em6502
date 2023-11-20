@@ -70,6 +70,7 @@ BasicFuncs:     db    kBeginFunc,kFuncCount
                 dw    ekPid
                 dw    ekAddr
                 dw    ekCmpMem
+                dw    eKTimer
 ;====================================================
 ; file constants
 OPEN_APPEND     equ    0             ; append to file
@@ -438,20 +439,19 @@ S10:
         PRS
         TSTB        S10Z,oSemiColon         ;Must follow the prompt
 S10A:
-        TSTV       UNKNOWN                  ; GET VAR ADDRESS (Originally CALL VAR = nonexist)
+        TSTB       InNoString,oDollar       ; Check if we are reading characters
+        TSTV       UNKNOWN 
         CALL       FactVarPtrNoTst
-;        TSTB       S10ACONT,oBang           ; Print from another task
-;        IND
-;        TSTVT      UNKNOWN
-
-S10ACONT:
-        TSTB       S10A1,oDollar
         INSTR                               ;Move character From tty to AESTK
         SETR2      tByte
         IJMP       S10A2
-S10A1:
+
+InNoString:
+        TSTV       UNKNOWN                  ; GET VAR ADDRESS (Originally CALL VAR = nonexist)
+        CALL       FactVarPtrNoTst
         INNUM                               ;MOVE NUMBER FROM TTY TO AESTK
         SETR2      tInteger
+
 S10A2:
         STORE                               ;STORE IT
         TSTB        S11,oComma              ;IS THERE MORE?
@@ -787,6 +787,24 @@ ekCmpMem:
         TSTB        UNKNOWNVEC,oRightBracket               ; closing bracket
         CMPMEM                                             ; Compare the memory
         RTN
+;
+;===============================================================================
+; Set/stop/return timer values
+;value 9 = 1 second, 1-5 = value * 10ms 6 = 10ms, 7=250ms, 8=500ms
+;cmd   0 =
+eKTimer:
+        TSTB        UNKNOWNVEC,oLeftBracket                ; opening bracket
+        CALL        EXPR                                   ; purpose 0-4
+        TSTB        eKTimerZero,oComma                     ; Must have a comma if more than one value
+        CALL        EXPR                                   ; only used by set parameters
+        iJMP        eKTimerOut                             ; get out
+eKTimerZero:
+        lit         0                                      ; no second parameter
+eKTimerOut:
+        TSTB        UNKNOWNVEC,oRightBracket               ; closing bracket
+        Timer
+        RTN
+
 ;====================================================================================
 ; peek(mem address) return the value of a byte in memory
 ; @[offset] return a word value from offset -- see tstv
@@ -975,7 +993,7 @@ FactFNParm:
         RTN
 
 FactVarPTR:
-FactVarPtrNoTst
+FactVarPtrNoTst:
         TSTB        F2CLocalTask,oBang
         IND                                       ; we just got a pid
         TSTVT       UNKNOWNID                     ; if it is not another variable then error, Call test var. task
