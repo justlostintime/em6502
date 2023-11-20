@@ -440,7 +440,7 @@ S10:
         TSTB        S10Z,oSemiColon         ;Must follow the prompt
 S10A:
         TSTB       InNoString,oDollar       ; Check if we are reading characters
-        TSTV       UNKNOWN 
+        TSTV       UNKNOWN
         CALL       FactVarPtrNoTst
         INSTR                               ;Move character From tty to AESTK
         SETR2      tByte
@@ -612,7 +612,35 @@ ekNot:
 ;=========================================================
 ;Look for logical operators, but does get first part of expression
 EXPRLOGS:
-        Call       EXPRCMP
+        Call       EXPR2               ; get the left first expression
+        TSTRELOP   EXPSHIFT            ; Exit level if no rel ops found
+;        TSTB       iR0,oEqual 
+;        LIT        2               ;=
+;        IJMP       iRFound
+;iR0:
+;        TSTB        iR1,oLessEqual
+;        LIT         3               ;<=
+;        IJMP       iRFound
+;iR1:
+;        TSTB       iR3,oNotEqual
+;        LIT        5                ;<>
+;	      IJMP       iRFound
+;iR3:
+;        TSTB       iR4,oLess
+;        LIT        1               ;<
+;	      IJMP       iRFound
+;iR4:
+;        TST        iR5,oGreaterEqual
+;        LIT        6               ;>=
+;	      IJMP       iRFound
+;iR5:
+;        TSTB       iRDone,oGreater
+;        LIT        4               ;>
+iRFound:
+        Call       EXPR2              ; EXPR; get the right side of the expression
+        CMPR                          ; Push the value of the true false onto the stack
+        RTN
+
 ;=========================================================
 ;Look for shift left and shift right level
 EXPSHIFT:
@@ -636,50 +664,16 @@ ekAnd:
         LOGAND
         RTN
 ekOr:
-        Call      EXPR
+        Call       EXPR
         LOGOR
         RTN
 ekXor:
-        Call    EXPR
+        Call       EXPR
         LOGXOR
 iLOGExit:
         RTN
-;========================================================================
-; Process relational operators
-;
-EXPRCMP:
-        Call       EXPR2           ; get the left first expression
-        TSTRELOP   iRDone          ; Exit level if no rel ops found
-;        TSTB       iR0,oEqual
-;        LIT        2               ;=
-;        IJMP       iRFound
-;iR0:
-;        TSTB        iR1,oLessEqual
-;        LIT         3               ;<=
-;        IJMP       iRFound
-;iR1:
-;        TSTB       iR3,oNotEqual
-;        LIT        5                ;<>
-;	      IJMP       iRFound
-;iR3:
-;        TSTB       iR4,oLess
-;        LIT        1               ;<
-;	      IJMP       iRFound
-;iR4:
-;        TST        iR5,oGreaterEqual
-;        LIT        6               ;>=
-;	      IJMP       iRFound
-;iR5:
-;        TSTB       iRDone,oGreater
-;        LIT        4               ;>
-iRFound:
-        Call       EXPR               ; get the right side of the expression
-        CMPR                          ; Push the value of the true false onto the stack
-        RTN
 
-iRDone:
-        RTN
-
+; get the right part of an expression
 EXPR2:
         TSTB       E0,oMinus          ; Look for leading - to negate term
         CALL       TERM               ; Get value to negate FOR UNARY -.
