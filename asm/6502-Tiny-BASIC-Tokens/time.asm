@@ -11,6 +11,9 @@ cTimerStart     equ 1
 cTimerLow       equ 2
 cTimerHigh      equ 4
 
+; returns      $82 ack    dec(130)
+;              $83 Failed dec(131)
+
 ; il interface to the timer
 
 iTimer
@@ -24,25 +27,24 @@ iTimer
       jmp     pushR0nextIl
 
 ; Actual system interface to the timer
-; x is value 9 = 1 second, 1-5 = value * 10ms 6 = 100ms, 7=250ms, 8=500ms
+; x is value 9 = 1 second, 1-5 = value * 10ms 6 = 100ms, 7=250ms, 8=500ms, 0 = stop timer
 ; a is 0,1,2,4
 iTimerif
+
       cmp  #cTimerLow                ; Do they want the low byte
       bcs  iTimerValue               ; Just get the value we need
-      pha                            ; Save the command we will use
+      sei                            ; Disable the interupts
+      pha                            ; save the command
       lda  #cTimerControl            ; Load the timer control command
       sta  timerinterface            ; Write it to the timer port
+      txa                            ; get value to write, if cmd = 0 stop then x is init to zero
+      sta  timerinterface            ; write it to the port the timeout value
       pla                            ; Get the actual command back
-      sta  timerinterface            ; write it to the port
-      cmp  #cTimerStart              ; if the command was start timer then write value
-      beq  iTimerParm                ; if not then get ack/nak and continue
-      sei                            ; Disable the interupts
-      jmp  iTimerAck                 ; get ack and exit
+      cmp  #cTimerStop               ; if the command was stop timer just get out
+      beq  iTimerAck                 ; if not then get ack/nak and continue
 
-iTimerParm
-      stx  timerinterface            ; Write the program value otherwise
       lda  #0                        ; Clear the counter
-      sta  timercounter 
+      sta  timercounter
       sta  timercounter+1
       sta  timercounter+2
       sta  timercounter+3
@@ -51,14 +53,14 @@ iTimerParm
 iTimerAck
       lda  timerinterface            ; get the ack nak
       ldx  #0                        ; the ack value is single byte so pad with x
-      rts
+      rts                            ; Get out of here
 
 iTimerValue                          ; get the value from the offsets provided
-      php
-      sei
+      php                            ; Save the flags so we can restore irq setting later
+      sei                            ; turn off the interupts
       tax                            ; the control is also the value
       lda  [timercounter-2],x        ; get the high byte of value
-      pha
+      pha                            ; Save the value for x set
       lda  [timercounter-1],x        ; get the low part of value
       tax
       pla

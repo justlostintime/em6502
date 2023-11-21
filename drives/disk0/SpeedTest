@@ -1,12 +1,14 @@
-100 print" test each of the types of function and task calls 2000 times"
+100 print " Test each of the types of function and task calls 2000 times"
+105 print " Timer ticks are 100ms each, slow if timing a modern computer"
+
 110  n = timer(1,6)            :rem start the timer, 100ms  ticks
-130  b=0:a=0
+130  b=0
 140  inc b : if b < 2000 goto 140
 145  g = timer(2,0)
 150  print "Total Time for goto using line number :";fn1000(g);".";i
 
 160  b=0
-165  n = timer(1,6)
+165  n = timer(1,6)           : rem restart and reset timer counter
 170  inc b : if b < 2000 goto .
 175  z = timer(2,0)
 180  print "Total Time for goto using .           :";fn1000(z);".";i
@@ -15,7 +17,7 @@
 195  n = timer(1,6)
 200  inc b: if b < 2000 goto c
 205  z = timer(2,0)
-210  print "Total Time for goto using Variable    :";fn1000(z)
+210  print "Total Time for goto using Variable    :";fn1000(z);".";i
 
 215  print "Begin gosub and fn test, adjusted times for goto loop"
 220  b=0
@@ -74,16 +76,15 @@
 830 Rem Test to call a sub that return a value
 840 return(1000)
 
-
 850 Rem Test task entry point
 860 inc a
-865 ?#[0];
 867 inc a : if a < 30 goto .
 870 return(#[0])
 880 print "Task exit error"
 890 end
 
 1000 rem Time to seconds
-1010 h= #[0] / 100
-1015 i= #[0] - h*100
+1005 print "(";#[0];")";
+1010 h= #[0] / 10
+1015 i= #[0] % 10
 1020 return(h)

@@ -81,7 +81,7 @@ Public Sub _New(Start As Long, Length As Long, DiskDriveLocation As String)
   Debug "PiaDisk Port Defined at : "; Hex(Start, 6); " For length("; length; ")"; Hex(length);; "Disk Drive location:"; $DiskDriveLocation
 
 catch
-  error "PIA DISK _new Error:";error.text;" #";error.where
+  error "PIA DISK _new Error:";error.text;" #";error.where;"\r"
 
 End
 ' * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -109,7 +109,7 @@ Public Sub _get(Address As Long) As Byte
         'print "Pia Reg a Request Data, reply with data";;hex(OutputBuffer.last)
         Return OutPutBuffer.pop()
       ELSE
-        Error "Pia Invalid data read request "
+        Error "Pia Invalid data read request ";"\r"
         return 0
       Endif
 
@@ -124,27 +124,27 @@ Public Sub _get(Address As Long) As Byte
       Endif
 
     Case PiaDdrA
-      Print "PIA DDR message port a  query"
+      Print "PIA DDR message port a  query\r"
       Return
     Case PIADDRB
-      Print "PIA DDR message port b query"
+      Print "PIA DDR message port b query\r"
       Return
     Case PIACTLA
-      Print "PIA Ctrl message port a query"
+      Print "PIA Ctrl message port a query\r"
       Return
     Case Piactlb
-      Print "PIA Ctrl message port b query"
+      Print "PIA Ctrl message port b query\r"
       Return
 
     Case Else
-      Print "Parallel: Read Request Unknow port Address=$"; Hex(address, 4);;"Expected";;hex(PIABASE,4)
+      Print "Parallel: Read Request Unknow port Address=$"; Hex(address, 4);;"Expected";;hex(PIABASE,4);"\r"
 
   End Select
 
   Return 0
 
 Catch
-  error "PIA DISK _get Error:";error.text,error.where
+  error "PIA DISK _get Error:";error.text,error.where;"\r"
 
 End
 
@@ -187,7 +187,7 @@ Sub CompleteMsg() As Boolean
         dim len as integer
         len = (len or InputBuffer[InputBuffer.Max - 1])+2
         If InputBuffer.count >= len Then
-         'error "Pia Write Bytes Block Recieved request len = ";InputBuffer[InputBuffer.Max - 1] ; " Buffer len = ";InputBuffer.count
+         'error "Pia Write Bytes Block Recieved request len = ";InputBuffer[InputBuffer.Max - 1] ; " Buffer len = ";InputBuffer.count;"\r"
           Return True
         Endif
       Endif
@@ -199,13 +199,13 @@ Sub CompleteMsg() As Boolean
       endif
 
     Case Else
-      print "Pia Waiting for unknown command : ";hex(InputBuffer.last);" Buffer len = ";InputBuffer.count
+      print "Pia Waiting for unknown command : ";hex(InputBuffer.last);" Buffer len = ";InputBuffer.count;"\r"
 
   End Select
   Return False
 
 Catch
-  error "PIA DISK Complete Message Error:";error.text,error.where
+  error "PIA DISK Complete Message Error:";error.text,error.where;"\r"
 
 End
 
@@ -220,20 +220,20 @@ Public Sub _put(value As Byte, address as long)
       Return
 
     Case PiaRegb
-      Print "PIA Data message port b $"; Hex(value, 2)
+      Print "PIA Data message port b $"; Hex(value, 2);"\r"
       Return
 
     Case PiaDdrA
-      Print "PIA DDR message port a $"; Hex(value, 2)
+      Print "PIA DDR message port a $"; Hex(value, 2);"\r"
       Return
     Case PIADDRB
-      Print "PIA DDR message port b $"; Hex(value, 2)
+      Print "PIA DDR message port b $"; Hex(value, 2);"\r"
       Return
     Case PIACTLA
-      Print "PIA Ctrl message port a $"; Hex(value, 2)
+      Print "PIA Ctrl message port a $"; Hex(value, 2);"r"
       Return
     Case Piactlb
-      Print "PIA Ctrl message port b $"; Hex(value, 2)
+      Print "PIA Ctrl message port b $"; Hex(value, 2);"r"
       Return
 
   End Select
@@ -241,7 +241,7 @@ Public Sub _put(value As Byte, address as long)
  ' Print "Parallel: Write Request Address=$"; Hex(address, 4);; "With Data=$"; Hex(value, 2)
 
 Catch
-  error "PIA DISK _put Error:";error.text,error.where
+  error "PIA DISK _put Error:";error.text,error.where;"\r"
 
 End
 
@@ -251,7 +251,7 @@ Public Sub _InRange(Address As Long) As Boolean
   Return False
 
 Catch
-  error "PIA DISK In Range Error:";error.text,error.where
+  error "PIA DISK In Range Error:";error.text,error.where;"\r"
 
 End
 
@@ -417,7 +417,7 @@ Sub DiskCmdProcess()
       If ToRead < len Then len = toread
       Try fileReadBuf.Read(CurrentFile, 0, len)
       If Error Then
-        Error "PiaDisk read error : "; Error.text, error.where
+        Error "PiaDisk read error : "; Error.text, error.where;"\r"
         OutPutBuffer.add(PR_NAK, 0)
         Return
       Endif
@@ -458,16 +458,16 @@ Sub DiskCmdProcess()
         Inc Count
       Wend
 
-      'error "Pia Write length provided = ";WriteLen;", and Length recieved = ";count
+      'error "Pia Write length provided = ";WriteLen;", and Length recieved = ";count;"\r"
 
       if Writebuffer.length > 0 and if WriteLen >= count then
         try WriteBuffer.Write(CurrentFile)
          If Error Then
-          Error "Pia error write to disk : ";error.text,error.where
-          error "Write buffer length = ";WriteBuffer.length
+          Error "Pia error write to disk : ";error.text,error.where;"\r"
+          error "Write buffer length = ";WriteBuffer.length;"\r"
           for i as integer = 0 to Writebuffer.length ' dump the content if error
-            try error hex(WriteBuffer[i])
-            if error then print '?'
+            try error hex(WriteBuffer[i]);"\r"
+            if error then print '?';"\r"
           next
           OutputBuffer.add(PR_NAK, 0)                   ' Nak each block of error data
           OutputBuffer.add(ERR_WRITE_ERROR,0)
@@ -559,12 +559,12 @@ Sub DiskCmdProcess()
        endif
 
    Case Else
-     Error "Pia Unknown/Unsupported command ";hex(InputBuffer.last);" buffer len = ";InputBuffer.count
+     Error "Pia Unknown/Unsupported command ";hex(InputBuffer.last);" buffer len = ";InputBuffer.count;"\r"
 
   End Select
 
 Catch
-  error "PIA DISK Disk Command Process Error:";error.text,error.where
+  error "PIA DISK Disk Command Process Error:";error.text,error.where;"\r"
   outputbuffer.add(PR_NAK,0)
 
 End
@@ -577,7 +577,7 @@ public sub piainterupts_timer()
   $TheCpu.InteruptPending = true
 
 Catch
-  error "PIA DISK pia interupts timer Error:";error.text,error.where
+  error "PIA DISK pia interupts timer Error:";error.text,error.where;"\r"
 
 end
 
@@ -594,7 +594,7 @@ Sub GetFileName() As String
   return filename
 
 Catch
-  error "PIA DISK Get File Name Error:";error.text,error.where
+  error "PIA DISK Get File Name Error:";error.text,error.where;"\r"
 
 End
 
@@ -605,7 +605,7 @@ result = (value shr 4) * 10
 result += value and &h0f
 return result
 Catch
-  error "PIA DISK from bcd Error:";error.text,error.where
+  error "PIA DISK from bcd Error:";error.text,error.where;"\r"
 end
 
 sub bcd(value as byte) as byte
@@ -629,7 +629,7 @@ sub bcd(value as byte) as byte
   'print "Return BCD = ";hex(result)
   return result
 Catch
-  error "PIA DISK BCD Error:";error.text,error.where
+  error "PIA DISK BCD Error:";error.text,error.where;"\r"
 end
 
 Public sub Halt()
