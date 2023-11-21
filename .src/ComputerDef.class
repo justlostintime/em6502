@@ -76,7 +76,7 @@ Public Sub Save(Optional Directory As String = "")
 
 End
 
-Public Sub Merge(Name As String, Optional Directory As String = FMain.AsmDeviceDirectory)
+Public Sub Merge(Name As String, Optional Directory As String = FMain.AsmComputerDefinitions)
 
 
 
@@ -87,7 +87,7 @@ Public Sub _new(Optional Directory As String = "", ComputerName As String = "")
 
   If ComputerName <> "" Then
     If directory = "" Then
-      Directory = FMain.AsmDeviceDirectory
+      Directory = FMain.AsmComputerDefinitions
     Endif
     Load(Directory, ComputerName)
     Return

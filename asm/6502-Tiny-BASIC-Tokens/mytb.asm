@@ -48,6 +48,9 @@ input            processor 6502
 ; 10/31/2023 v0.5 Justlostintime@gmail.com
 ;               * Inline in il some var load value instead of calling
 ;
+; 11/20/2023 v1.1.3 Justlostintime@gmail.com
+;               * Many improvment, bug fixes
+;
 ; www.corshamtech.com
 ; bob@corshamtech.com
 ; JustLostInTime@gmail.com
@@ -327,7 +330,7 @@ cold2           jsr     SetOutConsole
                 jsr     SetInConsole
                 jsr     puts
                 db      CR,LF
-                db      "Concurrent Tiny BASIC v1.1.20  IRQs/Tasks/Tokens"
+                db      "Concurrent Tiny BASIC v1.1.30  IRQs/Tasks/Tokens"
                 db      CR,LF,0
 ;
                 jsr     MemInit                     ;setup the free space available

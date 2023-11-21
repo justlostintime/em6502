@@ -24,7 +24,7 @@ iTimer
       jmp     pushR0nextIl
 
 ; Actual system interface to the timer
-; x is value 9 = 1 second, 1-5 = value * 10ms 6 = 10ms, 7=250ms, 8=500ms
+; x is value 9 = 1 second, 1-5 = value * 10ms 6 = 100ms, 7=250ms, 8=500ms
 ; a is 0,1,2,4
 iTimerif
       cmp  #cTimerLow                ; Do they want the low byte
@@ -38,11 +38,16 @@ iTimerif
       beq  iTimerParm                ; if not then get ack/nak and continue
       sei                            ; Disable the interupts
       jmp  iTimerAck                 ; get ack and exit
-      
+
 iTimerParm
       stx  timerinterface            ; Write the program value otherwise
+      lda  #0                        ; Clear the counter
+      sta  timercounter 
+      sta  timercounter+1
+      sta  timercounter+2
+      sta  timercounter+3
       cli                            ; enable the interupts, this is start/restart timer
-      
+
 iTimerAck
       lda  timerinterface            ; get the ack nak
       ldx  #0                        ; the ack value is single byte so pad with x

@@ -2,8 +2,12 @@
 ;
 ;=====================================================================
 ; Scan the loaded program just before running and insert memory locations of each
-; line number branched to. goto gosub, gofn
-; These have the format  in memory  example 81{key word token} 0000{pointer to memory location} A1{number type} 92 00{byte or integer value}
+; line number branched to. goto 100, gosub 100, fn10(), task(100)
+; These have the format  in memory  example 81{key word token} 0000{pointer to memory location} A1{number type} 92 00{byte or integer value line number value}
+; goto 100   : 07 0000 A2 64                    the tokenizer optimizes the literal values to byte or int depending on value
+; gosub 1000 : 08 0000 A4 E803
+; fn 100()   ; 37 0000 A2 64 40 41
+; task(1000) : 2F 0000 40 A4 E803 41
 Compile
                 lda      #0
                 sta      R0                           ; keep track of how many errors we find
@@ -116,7 +120,7 @@ CompileField:   sta     R0
                 cmp      #kTask                ; for a task it is the next byte after a bracket
                 bne      CompNoBracket
 
-                lda     (dpl),y                ; Lets make sure it is a )
+                lda     (dpl),y                ; Lets make sure it is a (
                 cmp     #oLeftBracket
                 bne     CompNoBracket          ; in case of error
                 iny                            ; skip the bracket
@@ -125,7 +129,7 @@ CompNoBracket
                 lda      #0                    ; In case the value is a byte
                 sta      R0+1
 
-                lda      (dpl),Y              ; get the type of the next byte t something or other
+                lda      (dpl),Y              ; get the type of the next byte txxx something or other
                 cmp      #tByte
                 beq      CompByteLoad
                 cmp      #tInteger

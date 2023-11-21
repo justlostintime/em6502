@@ -1,59 +1,71 @@
-10 goto 100 : rem skip the irq handler
-20 inc a
-30 ireturn
-
 100 print" test each of the types of function and task calls 2000 times"
-110 irq 20
-120  gosub 900(5)
+110  n = timer(1,6)            :rem start the timer, 100ms  ticks
 130  b=0:a=0
-140  inc b : if b < 2000 goto 140 
-145 z = a
-150  print "Total Time for goto using line number :";z
+140  inc b : if b < 2000 goto 140
+145  g = timer(2,0)
+150  print "Total Time for goto using line number :";fn1000(g);".";i
 
-160  b=0:a=0
+160  b=0
+165  n = timer(1,6)
 170  inc b : if b < 2000 goto .
-180  print "Total Time for goto using .           :";a
+175  z = timer(2,0)
+180  print "Total Time for goto using .           :";fn1000(z);".";i
 
-190  b=0:c=200: a=0
+190  b=0:c=200
+195  n = timer(1,6)
 200  inc b: if b < 2000 goto c
-210  print "Total Time for goto using Variable    :";a
+205  z = timer(2,0)
+210  print "Total Time for goto using Variable    :";fn1000(z)
 
 215  print "Begin gosub and fn test, adjusted times for goto loop"
-220  b=0:a=0
+220  b=0
+225  n = timer(1,6)
 230  inc b: if b < 2000 gosub 810 : goto 230
-240  print "Total Time for gosub using line number:";a-z
+235  z = timer(2,0)
+240  print "Total Time for gosub using line number:";fn1000(z-g);".";i
 
-250  b=0:c=810:a=0
+250  b=0:c=810
+255  n = timer(1,6)
 260  inc b: if b < 2000 gosub c :goto 260
-270  print "Total Time for gosub using Variable   :";a-z
+265  z = timer(2,0)
+270  print "Total Time for gosub using Variable   :";fn1000(z-g);".";i
 
-280  b=0:a=0
+280  b=0
+285  n = timer(1,6)
 290  inc b: if b < 2000 d = fn 840() : goto 290
-300  print "Total Time for fn no parm with line # :";a-z,d
+295  z = timer(2,0)
+300  print "Total Time for fn no parm with line # :";fn1000(z-g);".";i,d
 
-310  b=0:c=840:a=0
+310  b=0:c=840
+315  n = timer(2,0)
 320  inc b: if b < 2000 d = fn c() : goto 320
-330  print "Total Time for fn no parm with Var    :";a-z,d
+325  z = timer(2,0) - n
+330  print "Total Time for fn no parm with Var    :";fn1000(z-g);".";i,d
 
-340  b=0:c=840:a=0
+340  b=0:c=840
+345  n = timer(2,0)
 350  inc b: if b < 2000 d = fn 840(100) : goto 350
-360  print "Total Time for fn 1 parm using Line # :";a-z,d
+355  z = timer(2,0) - n
+360  print "Total Time for fn 1 parm using Line # :";fn1000(z-g);".";i,d
 
-370  b=0:c=840:a=0
+370  b=0:c=840
+375  n = timer(1,6)
 380  inc b: if b < 2000 d = fn c(100) : goto 380
-390  print "Total Time for fn 1 parm using Var    :";a-z,d
+385  z = timer(2,0)
+390  print "Total Time for fn 1 parm using Var    :";fn1000(z-g);".";i,d
 
-400  print "times to start and stop tasks 20 times, goto loop times removed"
-405  gosub 950
-410  b=0:a=0
-420  inc b : if b > 20 goto 430
-425  x = task(860,b) : print "Starting Task ";b;" ";
-427  taskw(x) 
-428  print "Task Exit Value :";x!^
+400  print "times to start and stop tasks 200 times, goto loop times removed"
+410  b=0
+415  n = timer(1,6)
+420  inc b : if b > 200 goto 435
+425  x = task(860,b)
+427  taskw(x)
 429  goto 420
-430  print "Total Time to start/stop Task 20x   :";a-z
+435  z = timer(2,0)
+437  print
+440  print "Total Time to start/stop Task 200x   :";%fn1000(z);".";i
 
-790  gosub 950
+790  z = timer(0,0)
 799  end
 
 800 Rem test to call a sub no return value
@@ -62,22 +74,16 @@
 830 Rem Test to call a sub that return a value
 840 return(1000)
 
+
 850 Rem Test task entry point
 860 inc a
-865 ?"Task Starts:";#[0]
+865 ?#[0];
 867 inc a : if a < 30 goto .
 870 return(#[0])
 880 print "Task exit error"
 890 end
 
-900 rem set the timeout  900(timeout length)
-910 poke(57360,30)        : rem cmd turn on/off
-920 poke(57360,#[0])      : rem value 9 = 1 second, 1-5 = value * 10ms 6 = 10ms, 7=250ms, 8=500ms
-925 a = peek(57360)       : rem get the ack or nak
-930 return
-
-950 rem set timeout off
-960 poke(57360,30)
-970 poke(57360,0)
-975 a = peek(57360)
-980 return
+1000 rem Time to seconds
+1010 h= #[0] / 100
+1015 i= #[0] - h*100
+1020 return(h)
