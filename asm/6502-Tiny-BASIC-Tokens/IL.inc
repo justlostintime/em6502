@@ -578,3 +578,10 @@
   Macro Timer
     db 114
   endm
+  
+  Macro JmpEndFalse  ; jump to end of block if false
+    db 115
+  endm
+  Macro JmpStart    ; Jump to start of block if exists
+    db 116
+  endm

@@ -1,0 +1,1905 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"#-#-#-#-#  #project.pot (em6502 3.19.90)  #-#-#-#-#\n"
+"Project-Id-Version: em6502 3.19.90\n"
+"POT-Creation-Date: 2024-04-10 23:33 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  Assembler.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  CPU6502.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2024-04-10 23:33 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  CliInterface.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  Computer.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  ComputerDef.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  CpuStatus.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  CreateDefaults.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  DISPHEX.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  DebugSource.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  DeviceDevelopement.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  DeviceTester.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  Disassembler.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  FMain.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  Group0r.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  Group1r.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  Group2r.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  Group3r.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  InfoOut.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  InstDef.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  ListingViewer.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  MemoryDumpOutput.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  MemoryMonitor.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  Profiler.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  ProfilerInfo.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  RamLoad.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  ScriptDef.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  ScriptManager.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  TestADC.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  TestDevices.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  TestTTY.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  WebInfoViewer.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  dbgFile.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  dbgInfo.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  watchMem.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  watchitem.pot ($(PACKAGE) $(VERSION))  #-#-#-#-#\n"
+"Project-Id-Version: $(PACKAGE) $(VERSION)\n"
+"POT-Creation-Date: 2023-11-21 20:47 UTC\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: .project:1
+msgid "6502/65C02 CPU Emulation"
+msgstr ""
+
+#: .project:2
+msgid ""
+"A fairly complete 6502/65C02 development environment with some sample "
+"computer configurations. Written entirely in Gambas.\n"
+"Using the JIT it runs at about simulated 3-4mhz. Not too bad!\n"
+"SEE https://github.com/justlostintime/em6502/wiki\n"
+"For Documentation/Help\n"
+"\n"
+"V1.2.7\n"
+"Many Speed improvement in emulator\n"
+"Many fixes in the concurrent tiny basic included with the project\n"
+"More fixes\n"
+"\n"
+"v1.2.5\n"
+"New Added description field to Computer definitions\n"
+"New allow to edit memory values from WATCH window\n"
+"Bug fixes and speed ups\n"
+"Re added original tiny basic v0.5, with concurrent tiny basic \n"
+"\n"
+"v1.2.4\n"
+"Many bug fixes and enhancement see git repository for details\n"
+"Added console computer definition runs in any terminal\n"
+"    running ctmon65 and tiny concurrent basic\n"
+"Added badge6502 emulation for 6502 badge by \n"
+"    Hardware design by Lee Hart\n"
+"    Software design by Daryl Rictor\n"
+"    The 6502 40th Anniversary Computer Badge\n"
+"    http://www.sunrise-ev.com/6502.htm\n"
+"\n"
+"v1.2.2\n"
+"many emulator fixes, some speed ups\n"
+"Added cc65 compliler interrface and libraries for ctmon65\n"
+"Added example c programs\n"
+"\n"
+"The tiny basic included in this project will run on the kim1 or ct65, it "
+"supports, IRQ handlers written in Basic. It allows mutiple Tasks to be "
+"spawned in your basic program. More fun.\n"
+"v1.2.1\n"
+"LT release.\n"
+"\n"
+"v1.1.22\n"
+" Bug fixes\n"
+"V1.1.20\n"
+" Updated MYTB to tokenize and compile  line addresses... startrek, and "
+"adventure now work  great, have fun!\n"
+" mytb is 60% faster\n"
+"Added ability to debug 6502 apps using source code debugger, uses .lst file "
+"as the source file. May open as many files as binary apps loaded. Just "
+"double click the .sym entry on the screen.\n"
+"Added ability to debug using souce code listing, with multiple binary "
+"sources.\n"
+"V1.1.16\n"
+"Many bug fixes and fun stuff see em6502 wiki\n"
+"V1.1.14\n"
+"Many bug fixes, spedd improvements, added Watch window\n"
+"\n"
+"TinyBasic is now Concurrent Basic, full ipc/task management\n"
+"\n"
+"V1.1.12\n"
+"Updated to multi task Basic language OS\n"
+"Improved em IDE to handle Upper lower case symbols correctly\n"
+"Numerous bug fixes\n"
+"\n"
+"V1.1.11\n"
+"Updated Memory mapping improves speed by 20%\n"
+"Update Tinybasic IL manages Tasks natively.\n"
+" Updated documentation for supported computer emulations\n"
+"    and devices.\n"
+"\n"
+"V1.1.9\n"
+"Fixed issues with lda abs,X instruction\n"
+"updated Tiny Basic to be fully able to run up to 10 tasks at a time, return "
+"stack limited to 16 levels \n"
+"\n"
+"V1.1.8\n"
+"Actually include 100doors\n"
+"updated Tiny Basic to support 1) array of variables, 2) added task "
+"management and support\n"
+"Fix 6502 ROL instruction\n"
+"\n"
+"V1.1.7\n"
+"Fix 6502 test and set bit instruction, added a tunnels and traps game\n"
+"Add function to tiny basic, multi line : , read text char to Variable\n"
+"Cleanup Error handling and create verbosity switch to command line\n"
+"Fixed SEi instruction\n"
+"v1.1.6\n"
+"updated tiny basic to support IRQ handlers written in basic\n"
+"updated PIA device to support realtime clock and irq timer\n"
+"added sample programs for clock and irq handler implementation\n"
+"Fixed update/create of intial files... was failing on first time create of "
+"root(6502) directory\n"
+"Update Such that new devices and Computer Defs are created upon new release\n"
+"without having to do a -d to update everything.\n"
+"Added New Device:  MMU Memory Management unit.\n"
+"\n"
+"Added more help/ better error messages.\n"
+"Update to work with new Wait implementation.\n"
+"\n"
+"Update to include 65C02 instructions,xa assembler into ~/asm directory\n"
+"Updated fo fix exit in fmain, when stoping or stepping from debugger "
+"screen.\n"
+"\n"
+"Updated name to em6502, to Match github source\n"
+"\n"
+"I am continually amazed by the power and flexibility of Gambas3 Created by  "
+"Benoît Minisini.\n"
+"\n"
+"Updated the Update process, More automatic\n"
+"\n"
+"Updated Device set with MMU memory management unit implementation\n"
+"\n"
+"Updated use the -d option to replace  your ~/6502 root directory content "
+"with latest information.\n"
+"\n"
+"Updated to provide cli interface example  '6502 -c Default' will start the "
+"default computer configuration. \n"
+"\n"
+"Updated to provide instruction level profiling, look under debug menu.\n"
+"\n"
+"Updated to improve device halt and cpu halt, added big reset button device. "
+"Improved the Basic device example.\n"
+"\n"
+"This was a little hobby project, and a lot of fun writing 6502 programs and "
+"getting some of the old tiny basic... yes more basic, running again. quite a "
+"few are included are part of the project.\n"
+"\n"
+"Have fun exploring the nostalgia of the  70's again...\n"
+"\n"
+"This requires the latest development copy of gambas, or 3.17 which ever "
+"comes first!\n"
+"\n"
+"V1.1.8\n"
+"Updated to better handle device, and user NMI,IRQ,RESET requests"
+msgstr ""
+
+#: Assembler.module:18
+msgid ""
+"xa not installed, If you require 65c02 extended instruction you must install "
+"XA, found in ~/6502/asm, do a make and make available"
+msgstr ""
+
+#: Assembler.module:19
+msgid ""
+"Using DASM Assembler \n"
+"Created by Mathew Dillion.\n"
+"Currently supported by Andrew Davie @ https://github.com/dasm-assembler/dasm"
+msgstr ""
+
+#: Assembler.module:21
+msgid "Xa found, 65c02 extensions will be executed correctly"
+msgstr ""
+
+#: Assembler.module:22
+msgid ""
+"Using xa from  http://www.floodgap.com/retrotech/xa/\n"
+"xa is Andre Fachat's open-source 6502 cross assembler. I, Cameron Kaiser "
+"(ckaiser@floodgap.com), am the current maintainer, and bug reports and "
+"questions should now go to me."
+msgstr ""
+
+#: Assembler.module:23
+msgid ""
+"xa Is Copyright © 1989-2021, André Fachat, Jolse Maginnis, David Weinehall "
+"and Cameron Kaiser. All rights reserved."
+msgstr ""
+
+#: Assembler.module:24
+msgid ""
+"Additional contributors: Fabien Nuñez, Mikkel Holm Olsen, Adam Sampson, "
+"Alessandro Gatti, Simon Rowe, Dan Horák, Frederic Cambus, Sam Falvo."
+msgstr ""
+
+#: Assembler.module:25
+msgid ""
+"xa is distributed under the GNU Public License v2. The current maintainer is "
+"Cameron Kaiser."
+msgstr ""
+
+#: Assembler.module:29
+msgid "Installing assembler to /tmp/gambasAsm"
+msgstr ""
+
+#: Assembler.module:60
+msgid "Listing available"
+msgstr ""
+
+#: Assembler.module:60
+msgid "Binary Generated"
+msgstr ""
+
+#: CPU6502.class:263
+msgid "Fail:"
+msgstr ""
+
+#: CPU6502.class:272
+msgid "Loading Image to address "
+msgstr ""
+
+#: CPU6502.class:279
+msgid "Fail Writing bytes:"
+msgstr ""
+
+#: CPU6502.class:696
+msgid "Invalid Memory Address"
+msgstr ""
+
+#: CPU6502.class:715
+msgid "Invalid Read Memory Address"
+msgstr ""
+
+#: CPU6502.class:736
+msgid "Invalid Write Memory Address"
+msgstr ""
+
+#: CPU6502.class:773
+msgid "PC Reset"
+msgstr ""
+
+#: CPU6502.class:1043
+msgid "Invalid Memory Address - Read"
+msgstr ""
+
+#: CPU6502.class:1060
+msgid "Invalid Memory Address - Write"
+msgstr ""
+
+#: CliInterface.module:9
+msgid ""
+"This application emulates a 6502/65C02, its default is ctmon65 with tinybasic"
+msgstr ""
+
+#: CliInterface.module:34
+msgid "Display the version Of the emulator"
+msgstr ""
+
+#: CliInterface.module:35
+msgid "Information about "
+msgstr ""
+
+#: CliInterface.module:36
+msgid ""
+"Developer Mode, removes ~/6502 directory and recreates all default "
+"settings(be carefull all your stuff will be gone!). Usefull to get new "
+"application updates."
+msgstr ""
+
+#: CliInterface.module:37
+msgid "Print Supported Instruction Matrix and exit"
+msgstr ""
+
+#: CliInterface.module:38
+msgid "Start the emulator in single step mode"
+msgstr ""
+
+#: CliInterface.module:39
+msgid "Provies the name of the computer to run, No GUI is started"
+msgstr ""
+
+#: CliInterface.module:40
+msgid "Update Device definitions no prompt"
+msgstr ""
+
+#: CliInterface.module:41
+msgid "Display Verbose messages"
+msgstr ""
+
+#: CliInterface.module:42
+msgid "List all available computer definitions"
+msgstr ""
+
+#: Computer.class:58
+msgid "Computer Definition contains invalid Device name"
+msgstr ""
+
+#: Computer.class:58
+msgid " Not Device or Service"
+msgstr ""
+
+#: Computer.class:62
+msgid ""
+" Unable To start computer Error found In configuration \n"
+"See Error display panel For details "
+msgstr ""
+
+#: Computer.class:62
+msgid " ok "
+msgstr ""
+
+#: Computer.class:84
+msgid "Reset Failed "
+msgstr ""
+
+#: Computer.class:84
+msgid "Continue"
+msgstr ""
+
+#: Computer.class:128
+msgid "Bad Breakpoint address format : "
+msgstr ""
+
+#: Computer.class:128
+msgid ""
+"\n"
+" Should be 4 hex digits\n"
+"Break Points Not Set!"
+msgstr ""
+
+#: Computer.class:128
+msgid "Ok"
+msgstr ""
+
+#: ComputerDef.class:69
+msgid "Definitions for computer "
+msgstr ""
+
+#: ComputerDef.class:69
+msgid " Updated "
+msgstr ""
+
+#: ComputerDef.class:71
+msgid " Created "
+msgstr ""
+
+#: ComputerDef.class:111
+msgid "Unknown Computer Definition : "
+msgstr ""
+
+#: CreateDefaults.module:260
+msgid "Create Defaults Error: "
+msgstr ""
+
+#: CreateDefaults.module:267
+msgid "Create Default :"
+msgstr ""
+
+#: CreateDefaults.module:270
+msgid "Unable to make directory "
+msgstr ""
+
+#: CreateDefaults.module:286
+msgid "Compare Files "
+msgstr ""
+
+#: CreateDefaults.module:289
+msgid "Warning: Unable to read file for copy compare/copy "
+msgstr ""
+
+#: CreateDefaults.module:302
+msgid "An Update Is available for "
+msgstr ""
+
+#: CreateDefaults.module:302
+msgid "Would you like to update?"
+msgstr ""
+
+#: CreateDefaults.module:302
+msgid "Yes"
+msgstr ""
+
+#: CreateDefaults.module:302
+msgid "No"
+msgstr ""
+
+#: CreateDefaults.module:302
+msgid "Yes to All"
+msgstr ""
+
+#: CreateDefaults.module:308
+msgid "Updating "
+msgstr ""
+
+#: CreateDefaults.module:308
+msgid "Current Version Dated "
+msgstr ""
+
+#: CreateDefaults.module:308
+msgid " Available Version Date "
+msgstr ""
+
+#: CreateDefaults.module:316
+msgid "Copy :"
+msgstr ""
+
+#: CreateDefaults.module:319
+msgid "Unable to copy file "
+msgstr ""
+
+#: CreateDefaults.module:319
+msgid "from"
+msgstr ""
+
+#: DebugSource.form:40 FMain.form:655
+msgid "Step"
+msgstr ""
+
+#: DebugSource.form:45
+msgid "Step Over"
+msgstr ""
+
+#: DebugSource.form:50 FMain.form:711
+msgid "Go"
+msgstr ""
+
+#: DebugSource.form:60
+msgid "Open Source File"
+msgstr ""
+
+#: DeviceDevelopement.form:23
+msgid "File"
+msgstr ""
+
+#: DeviceDevelopement.form:26 FMain.form:306
+msgid "New"
+msgstr ""
+
+#: DeviceDevelopement.form:30 FMain.form:447
+msgid "Open"
+msgstr ""
+
+#: DeviceDevelopement.form:34 FMain.form:324
+msgid "Save"
+msgstr ""
+
+#: DeviceDevelopement.form:38
+msgid "Save AS"
+msgstr ""
+
+#: DeviceDevelopement.form:43
+msgid "Edit"
+msgstr ""
+
+#: DeviceDevelopement.form:46
+msgid "Cut"
+msgstr ""
+
+#: DeviceDevelopement.form:50
+msgid "Paste"
+msgstr ""
+
+#: DeviceDevelopement.form:54
+msgid "Select All"
+msgstr ""
+
+#: DeviceDevelopement.form:59
+msgid "Compiler"
+msgstr ""
+
+#: DeviceDevelopement.form:62
+msgid "Do Compile"
+msgstr ""
+
+#: DeviceDevelopement.form:67
+msgid "Device Tester"
+msgstr ""
+
+#: DeviceDevelopement.form:70
+msgid "Begin Testing"
+msgstr ""
+
+#: DeviceDevelopement.form:77
+msgid ""
+"This is a gambas language source code file which will emulate a hardware "
+"device."
+msgstr ""
+
+#: DeviceTester.form:37
+msgid ""
+"This is the address the Device should be mapped to in memory. \n"
+"\n"
+"For the ct65mon the default io address block is e000-efff.\n"
+"                                                                Rom "
+"occupies  f000-ffff\n"
+"                                                                Ram  must "
+"0-01fff\n"
+"                                                                Ram other "
+"0200-dfff\n"
+msgstr ""
+
+#: DeviceTester.form:42
+msgid ""
+"The size of the memory window required by the devide.\n"
+"\n"
+"For ctmon65      ram can be 0-DFFF long aor any block size  in that range\n"
+"                                   io devices are expected to use at least "
+"16 bytes, but do not have to\n"
+msgstr ""
+
+#: DeviceTester.form:47
+msgid ""
+"This is a text string wich is passed to the device being loaded.\n"
+"Example:\n"
+"for ram : \"mytb.bin\"\n"
+"for rom: \"ctmon65.bin\"\n"
+"\n"
+"For a TTYSIM device : \"This is the dislayed intro text\""
+msgstr ""
+
+#: DeviceTester.form:53
+msgid "Write the Data to the device"
+msgstr ""
+
+#: DeviceTester.form:54
+msgid "Send Data"
+msgstr ""
+
+#: DeviceTester.form:59
+msgid ""
+"Enter the data to be sent.\n"
+"each character as a pair of hex digits followed by a space\n"
+"eg\n"
+"FF EA 20 31 32 33 34 35 36 37 38"
+msgstr ""
+
+#: DeviceTester.form:64
+msgid "4 digit Hex address to send data to"
+msgstr ""
+
+#: DeviceTester.form:69
+msgid "4 digit hex address to read data from"
+msgstr ""
+
+#: DeviceTester.form:74
+msgid "decimal number of bytes to read"
+msgstr ""
+
+#: DeviceTester.form:79
+msgid "Auto Increment on reading data"
+msgstr ""
+
+#: DeviceTester.form:84
+msgid "This will load your device into memory and begin to execute it."
+msgstr ""
+
+#: DeviceTester.form:85
+msgid "Load Device"
+msgstr ""
+
+#: DeviceTester.form:90
+msgid ""
+"This will Cause the address to be incremented after each byte is send to the "
+"device"
+msgstr ""
+
+#: DeviceTester.form:91
+msgid "Auto Increment on sending data"
+msgstr ""
+
+#: DeviceTester.form:96
+msgid "Device StartAdr"
+msgstr ""
+
+#: DeviceTester.form:102
+msgid "Mem Length"
+msgstr ""
+
+#: DeviceTester.form:107
+msgid "Device Specific parameters"
+msgstr ""
+
+#: DeviceTester.form:112
+msgid "Hex bytes to be send to Address"
+msgstr ""
+
+#: DeviceTester.form:118
+msgid "Hex Address"
+msgstr ""
+
+#: DeviceTester.form:130
+msgid "Number Bytes to read"
+msgstr ""
+
+#: DeviceTester.form:136
+msgid "The Name of the device being tested"
+msgstr ""
+
+#: DeviceTester.form:144
+msgid "The status of the device being tested."
+msgstr ""
+
+#: DeviceTester.form:151
+msgid "All Information is entered in hex format"
+msgstr ""
+
+#: DeviceTester.form:156
+msgid "This is the list of bytes written to the device"
+msgstr ""
+
+#: DeviceTester.form:163
+msgid "Written data"
+msgstr ""
+
+#: DeviceTester.form:169
+msgid "Read Data"
+msgstr ""
+
+#: DeviceTester.form:175
+msgid "This will actually do the read from your device"
+msgstr ""
+
+#: DeviceTester.form:181
+msgid "Status information about the current test being conducted."
+msgstr ""
+
+#: DeviceTester.form:182
+msgid "Nothing Yet."
+msgstr ""
+
+#: DeviceTester.form:188
+msgid "This lists the bytes received from the device"
+msgstr ""
+
+#: Disassembler.module:47
+msgid "Invalid OP Code definition at line"
+msgstr ""
+
+#: Disassembler.module:54
+msgid "Ignoring Invalid OP Code definition at line"
+msgstr ""
+
+#: Disassembler.module:60
+msgid "Dissasembler load mnemonics:"
+msgstr ""
+
+#: Disassembler.module:130
+msgid "Unknow Instruction"
+msgstr ""
+
+#: FMain.form:152
+msgid "Help"
+msgstr ""
+
+#: FMain.form:155
+msgid "Tools Included"
+msgstr ""
+
+#: FMain.form:158
+msgid "6502 assembler Dasm"
+msgstr ""
+
+#: FMain.form:162
+msgid "65C02 Assembler xa"
+msgstr ""
+
+#: FMain.form:167
+msgid "Sample Software"
+msgstr ""
+
+#: FMain.form:170
+msgid "CTmon65"
+msgstr ""
+
+#: FMain.form:174
+msgid "Tiny Basic"
+msgstr ""
+
+#: FMain.form:179
+msgid "6502 Emulation"
+msgstr ""
+
+#: FMain.form:184
+msgid "About/Credits"
+msgstr ""
+
+#: FMain.form:187
+msgid "About software"
+msgstr ""
+
+#: FMain.form:191
+msgid "Credits"
+msgstr ""
+
+#: FMain.form:196
+msgid "Device Management"
+msgstr ""
+
+#: FMain.form:199
+msgid "Develop  and Test"
+msgstr ""
+
+#: FMain.form:203
+msgid "Delete Device"
+msgstr ""
+
+#: FMain.form:208
+msgid "Performance"
+msgstr ""
+
+#: FMain.form:211
+msgid "Profiling"
+msgstr ""
+
+#: FMain.form:222
+msgid "Single Step/Trace Output..."
+msgstr ""
+
+#: FMain.form:227
+msgid ""
+"Display the disassembled instruction of the next\n"
+"instruction to be executed.\n"
+"Keeps a list of the last 1000 instructions executed."
+msgstr ""
+
+#: FMain.form:235
+msgid "                                         Flags      AC X  Y  SP"
+msgstr ""
+
+#: FMain.form:238
+msgid "Computers"
+msgstr ""
+
+#: FMain.form:249
+msgid ""
+"Double click a computer name here\n"
+"to display/edit its configuration"
+msgstr ""
+
+#: FMain.form:257
+msgid "Active Config"
+msgstr ""
+
+#: FMain.form:262
+msgid ""
+"If you select this then the computer\n"
+"will autostart at the provided address.\n"
+"if autostart is on and no address is provided\n"
+"then the computer will begin at the reset vector\n"
+"address."
+msgstr ""
+
+#: FMain.form:273
+msgid "Computer Name"
+msgstr ""
+
+#: FMain.form:278
+msgid "Starting Speed"
+msgstr ""
+
+#: FMain.form:284
+msgid ""
+"Sets the amount of time between instructions, Gambas is not\n"
+"able to get a time at a small enough time slot to make this\n"
+"more accurate. Hence the name speed not MHZ.\n"
+"This is use only when auto-start is com figured.\n"
+"It defaults to 500 otherwise. 1000 is the fastest speed"
+msgstr ""
+
+#: FMain.form:292
+msgid ""
+"Enter a name here if you are creating a new computer definition.\n"
+"This will also display the name  of  any selected computer to the left.\n"
+"If you want to make a copy of a computer, just click on it then change the "
+"name here and then click save.\n"
+" "
+msgstr ""
+
+#: FMain.form:293
+msgid "Auto Start @"
+msgstr ""
+
+#: FMain.form:299
+msgid ""
+"If an address is entered here, when the computer starts the program counter "
+"will be set to this address just before the cpu starts to execute."
+msgstr ""
+
+#: FMain.form:305
+msgid ""
+"Use this to create a new computer\n"
+"definition. This will clear all fields and\n"
+"wait for input"
+msgstr ""
+
+#: FMain.form:311
+msgid "Use this to delete the computer definition"
+msgstr ""
+
+#: FMain.form:312
+msgid "Delete"
+msgstr ""
+
+#: FMain.form:317
+msgid ""
+"Use this to make This computer\n"
+"definition the default used at\n"
+"startup."
+msgstr ""
+
+#: FMain.form:318
+msgid "Set As Default"
+msgstr ""
+
+#: FMain.form:323
+msgid ""
+"Use this to Save updated configuration\n"
+"or to save a new computer definition.\n"
+"if you cnagne the name of the displayed\n"
+"computer. The information will be saved as a new\n"
+"computer definition with the new name."
+msgstr ""
+
+#: FMain.form:331
+msgid "Displays the name of the currently executing computer definition"
+msgstr ""
+
+#: FMain.form:339
+msgid ""
+"Displays the name of the current system default computer definition. That is "
+"the computer displayed here will be automatically loaded and started when "
+"the em6502 is run."
+msgstr ""
+
+#: FMain.form:340
+msgid "Default"
+msgstr ""
+
+#: FMain.form:347
+msgid "Default Template"
+msgstr ""
+
+#: FMain.form:352
+msgid ""
+"Loads the currently selected computer into \n"
+"memory and begins execution."
+msgstr ""
+
+#: FMain.form:353
+msgid "Make Active"
+msgstr ""
+
+#: FMain.form:358
+msgid ""
+"Select your required device from the list. If it is the second or more "
+"device of this type you must add a  colon and index after the device type\n"
+"example     ttydev:1\n"
+"or your device will not be recognized. \n"
+"The second colum contains the starting address for the device and the next "
+"colum contains the length of memory required by the device.\n"
+"The forth colum contains device specific parameters.\n"
+"Example for a rom contains the binary file to be loaded.\n"
+"for ram it contains the if any the binary to load at boot.\n"
+"\n"
+msgstr ""
+
+#: FMain.form:367
+msgid "Device Management - Press enter after any change here"
+msgstr ""
+
+#: FMain.form:372
+msgid ""
+"To Remove a device click on an item in the row to me removed\n"
+"then click the remove device button. \n"
+"Changes are not permenant until the Computer Config is\n"
+"saved."
+msgstr ""
+
+#: FMain.form:373 watchMem.form:50
+msgid "Remove"
+msgstr ""
+
+#: FMain.form:379
+msgid ""
+"To add a device Click in an empty first Column and Select the Device from\n"
+" the dropdown. Changes are not permenant until Comp Config is saved."
+msgstr ""
+
+#: FMain.form:391
+msgid "Computer Description"
+msgstr ""
+
+#: FMain.form:401
+msgid "Edit/Asm"
+msgstr ""
+
+#: FMain.form:422
+msgid "Save an assembler source file"
+msgstr ""
+
+#: FMain.form:428
+msgid "Save the current Source  with a new name and possible location"
+msgstr ""
+
+#: FMain.form:429
+msgid "SaveAs"
+msgstr ""
+
+#: FMain.form:434
+msgid "Create a new empty assembler source file"
+msgstr ""
+
+#: FMain.form:440
+msgid ""
+"Invokes the assembler, and creats the binary output if there are no errors. "
+"See the AsmOuput tab for results. It should auto switch you to that tab "
+"after to complete the assembly.\n"
+"Defaults to the dasm assembler unless the xa assembler is installed.\n"
+"Dasm executable is included as part of this project. and is always available "
+"by default."
+msgstr ""
+
+#: FMain.form:441
+msgid "Assemble"
+msgstr ""
+
+#: FMain.form:446
+msgid "OPen an assembler source file"
+msgstr ""
+
+#: FMain.form:452
+msgid "Use dasm 6502"
+msgstr ""
+
+#: FMain.form:458
+msgid "Use xa 65C02"
+msgstr ""
+
+#: FMain.form:463
+msgid "Auto Select"
+msgstr ""
+
+#: FMain.form:468
+msgid "Coma Seperated Search Paths for included binary or Source Files\n"
+msgstr ""
+
+#: FMain.form:473
+msgid "Include Paths"
+msgstr ""
+
+#: FMain.form:477
+msgid "Asm output"
+msgstr ""
+
+#: FMain.form:481
+msgid "Displays the ouptput from the last assembly."
+msgstr ""
+
+#: FMain.form:492
+msgid ""
+"- Set the cpu to single step mode\n"
+"- Load the binary to  Rom memory  \n"
+"- First two bytes of the file contain the load address\n"
+"- reset the cpu"
+msgstr ""
+
+#: FMain.form:493
+msgid "Load To Rom Memory"
+msgstr ""
+
+#: FMain.form:498
+msgid ""
+"View the listing from the Last \n"
+"file assembled"
+msgstr ""
+
+#: FMain.form:499
+msgid "View Listing"
+msgstr ""
+
+#: FMain.form:504
+msgid ""
+"- Set Cpu to single Step Mode\n"
+"- Wait for instruction to compete\n"
+"- Load the binary to Ram memory \n"
+"- First two byte of the image contain the load address\n"
+"- Do not reset CPU"
+msgstr ""
+
+#: FMain.form:505
+msgid "Load To Ram Memory"
+msgstr ""
+
+#: FMain.form:521
+msgid "Must be selected/deselected  to enable/disable  breakpoints"
+msgstr ""
+
+#: FMain.form:522
+msgid "Enable Break Points"
+msgstr ""
+
+#: FMain.form:529
+msgid ""
+"The address of the next executable instruction. after a break point halts "
+"the cpu"
+msgstr ""
+
+#: FMain.form:537
+msgid "CPU Halted @"
+msgstr ""
+
+#: FMain.form:544
+msgid "Load Binary Image to Ram/Rom"
+msgstr ""
+
+#: FMain.form:550
+msgid "List of loaded Binary and rom images"
+msgstr ""
+
+#: FMain.form:556
+msgid ""
+"This will load a binary image into memory\n"
+"The binary image must contain the in the first two byte\n"
+"the address to which the image will be loaded.\n"
+"The included simple assembler DASM does this automatically.\n"
+"\n"
+"When a binary is loaded its symbol table is also loaded when\n"
+"found in ~/6502/asm with .sym extension.\n"
+"\n"
+"The start point is automatically set to the start of the binary\n"
+"\n"
+"History\n"
+"Matthew Dillon started dasm in 1987-1988.\n"
+"Olaf \"Rhialto\" Seibert extended dasm in 1995.\n"
+"Andrew \"Dr.Boo\" Davie maintained dasm in 2003-2008.\n"
+"Peter Fröhlich maintained dasm in 2008-2015.\n"
+"In 2019, the dasm source code and releases were moved to GitHub.\n"
+"dasm is distributed under the GNU General Public License.\n"
+"Site updated March 14, 2021\n"
+"\n"
+"https://dasm-assembler.github.io/"
+msgstr ""
+
+#: FMain.form:557
+msgid "Load Binary"
+msgstr ""
+
+#: FMain.form:563
+msgid "Enter Breakpoint address/Symbol above"
+msgstr ""
+
+#: FMain.form:569
+msgid "Enter Breakpoint address into this box"
+msgstr ""
+
+#: FMain.form:576
+msgid ""
+"List of symbols from any *.sym files found for the loaded binaries. This "
+"searches ~/6502/asm for these files"
+msgstr ""
+
+#: FMain.form:584
+msgid ""
+"Adds any selected break address to the break list. Don't forget to enable "
+"the breakpoints. These will only have an effect if the enable break points "
+"is selected."
+msgstr ""
+
+#: FMain.form:585
+msgid "<--"
+msgstr ""
+
+#: FMain.form:591
+msgid "-->"
+msgstr ""
+
+#: FMain.form:597
+msgid ""
+"This will allow you to load a symbol table in the\n"
+"format output from DASM assembler or any similar\n"
+"Format.\n"
+"\n"
+"Format:\n"
+"\n"
+"SymbolName  Address .......All other fields are ignored\n"
+"\n"
+"The symbol table for binary images are loaded automatically\n"
+"if found in ~/6502/asm with the .sym extension.\n"
+msgstr ""
+
+#: FMain.form:598
+msgid "Load Symbols"
+msgstr ""
+
+#: FMain.form:604
+msgid "Clear all symbol table entries"
+msgstr ""
+
+#: FMain.form:605
+msgid "Clear Symbols"
+msgstr ""
+
+#: FMain.form:611
+msgid ""
+"List of symbol tables loaded\n"
+"Double Click to open source code \n"
+"debbuger for a selected binary"
+msgstr ""
+
+#: FMain.form:617
+msgid "Clear All Break Point"
+msgstr ""
+
+#: FMain.form:618 ProfilerInfo.form:101 watchMem.form:57
+msgid "Clear"
+msgstr ""
+
+#: FMain.form:624
+msgid "Adds a location to watch to the watch window."
+msgstr ""
+
+#: FMain.form:625
+msgid "Watch"
+msgstr ""
+
+#: FMain.form:631
+msgid ""
+"Open a source code debugger\n"
+"You must select the listing file which matches the loaded binary.\n"
+"If you have a symbol table loaded then\n"
+"you can just select the sym entry and double click to open the source"
+msgstr ""
+
+#: FMain.form:632
+msgid "Src Debug"
+msgstr ""
+
+#: FMain.form:647
+msgid ""
+"Indicates that the CPU is in run mode\n"
+"when set"
+msgstr ""
+
+#: FMain.form:648
+msgid "Run"
+msgstr ""
+
+#: FMain.form:654
+msgid ""
+"Step to next instruction\n"
+"If in run mode stop cpu, enter sigle step mode\n"
+msgstr ""
+
+#: FMain.form:661
+msgid ""
+"This is on when dark,\n"
+"Click to turn Tracing on and off\n"
+"Turning this off will improve speed!"
+msgstr ""
+
+#: FMain.form:662
+msgid "Trace"
+msgstr ""
+
+#: FMain.form:668
+msgid ""
+"Enter the Address you want to begin execution at.\n"
+"if blank then it will start at the reset vector address."
+msgstr ""
+
+#: FMain.form:674
+msgid "Start Address"
+msgstr ""
+
+#: FMain.form:680
+msgid "Enable/Disables the computer for execution"
+msgstr ""
+
+#: FMain.form:681
+msgid "Start"
+msgstr ""
+
+#: FMain.form:687
+msgid "Resets the CPU and all devices"
+msgstr ""
+
+#: FMain.form:688
+msgid "Reset"
+msgstr ""
+
+#: FMain.form:693
+msgid "Send an NMI to the Computer/CPU"
+msgstr ""
+
+#: FMain.form:694
+msgid "NMI"
+msgstr ""
+
+#: FMain.form:701
+msgid ""
+"Control the execution speed of the cpu\n"
+"0 is slowest, Higher numbers are faster"
+msgstr ""
+
+#: FMain.form:702
+msgid "Speed Control"
+msgstr ""
+
+#: FMain.form:710
+msgid ""
+"Start cpu at address provided by Start Address \n"
+"if no address then start cpu at next instruction\n"
+"if in sigle step mode change to run mode and\n"
+"continue at next instruction"
+msgstr ""
+
+#: FMain.form:717
+msgid ""
+"On when dark\n"
+"Clicking this will turn on and off the status information\n"
+"Turning it off will speed up things quite a lot!"
+msgstr ""
+
+#: FMain.form:718
+msgid "Status"
+msgstr ""
+
+#: FMain.form:725
+msgid ""
+"When enabled The Cpu will report  invalid\n"
+"read and write memory access"
+msgstr ""
+
+#: FMain.form:726
+msgid "Report Access to Invalid Memory"
+msgstr ""
+
+#: FMain.form:732
+msgid "Send an IRQ to the Computer/CPU"
+msgstr ""
+
+#: FMain.form:733
+msgid "IRQ"
+msgstr ""
+
+#: FMain.form:747
+msgid ""
+"Indicates the cpu is in sigle step mode\n"
+"when set"
+msgstr ""
+
+#: FMain.form:748
+msgid "Single Step"
+msgstr ""
+
+#: FMain.form:755
+msgid ""
+"Restore the breakpoints from the last debug session. Keeps track of any "
+"address changes of symbols since last used. Any symbol that has disappeared "
+"from the new executable is dropped from the list. Except if addresses have "
+"been entered manually."
+msgstr ""
+
+#: FMain.form:756
+msgid "ReOpen last debug session"
+msgstr ""
+
+#: FMain.form:767
+msgid ""
+"Opens the dump output window\n"
+"and then displays the content of the \n"
+"memory. This is a staic display.\n"
+"Will not be updated.\n"
+"This can be used while a 6502 program is running to get a snap shot of the "
+"memory."
+msgstr ""
+
+#: FMain.form:768
+msgid "Dump Mem"
+msgstr ""
+
+#: FMain.form:773
+msgid "From Address "
+msgstr ""
+
+#: FMain.form:778
+msgid "To Address"
+msgstr ""
+
+#: FMain.form:783
+msgid ""
+"Enter the ending address as a hex value\n"
+"For example\n"
+"   FFF8 or  0100 etc\n"
+"Shoulds be a four digit hex number\n"
+"with no leading 0x or &h"
+msgstr ""
+
+#: FMain.form:788
+msgid ""
+"Enter the starting address as a hex value\n"
+"For example\n"
+"   FFF8 or  0100 etc\n"
+"Shoulds be a four digit hex number\n"
+"with no leading 0x or &h"
+msgstr ""
+
+#: FMain.form:793
+msgid ""
+"Opens the Monitor output window and the Watch Window\n"
+"and will then displays the content of the \n"
+"memory dynamically at the next instruction  cycle when the Watch is enabled "
+"or when in single step mode \n"
+"\n"
+"This will not show anything until the next single step or if\n"
+"Trace or Watch is enabled it will update after every instruction..\n"
+"**This is very very slow, the CPU will crawl**"
+msgstr ""
+
+#: FMain.form:794
+msgid "Monitor Mem"
+msgstr ""
+
+#: FMain.form:799
+msgid "Hides or shows the Watch Window"
+msgstr ""
+
+#: FMain.form:800
+msgid "Show  Watch Window"
+msgstr ""
+
+#: FMain.form:807
+msgid ""
+"Dynamically when status is enabled display the current status of the 6502 cpu"
+msgstr ""
+
+#: FMain.form:813
+msgid "Total Cycles"
+msgstr ""
+
+#: FMain.form:823
+msgid "SP"
+msgstr ""
+
+#: FMain.form:833
+msgid "AC"
+msgstr ""
+
+#: FMain.form:843
+msgid "X"
+msgstr ""
+
+#: FMain.form:853
+msgid "Y"
+msgstr ""
+
+#: FMain.form:865
+msgid "SR or P Flags"
+msgstr ""
+
+#: FMain.form:871
+msgid "Negative"
+msgstr ""
+
+#: FMain.form:877
+msgid "OverFlow"
+msgstr ""
+
+#: FMain.form:883
+msgid "Flag Not used ignored by cpu"
+msgstr ""
+
+#: FMain.form:884
+msgid "Ignored"
+msgstr ""
+
+#: FMain.form:890
+msgid "Brk instruction being processed"
+msgstr ""
+
+#: FMain.form:891
+msgid "Break"
+msgstr ""
+
+#: FMain.form:897
+msgid "Interupts are disabled. Except for NMI"
+msgstr ""
+
+#: FMain.form:898
+msgid "IRQ Disabled"
+msgstr ""
+
+#: FMain.form:904
+msgid "Flag Zer is set"
+msgstr ""
+
+#: FMain.form:905
+msgid "Zero"
+msgstr ""
+
+#: FMain.form:911
+msgid "Flag carry is set"
+msgstr ""
+
+#: FMain.form:912
+msgid "Carry"
+msgstr ""
+
+#: FMain.form:918
+msgid "The cpu is in bcd arithmatic mode"
+msgstr ""
+
+#: FMain.form:919
+msgid "Decimal(BCD Arithmatic)"
+msgstr ""
+
+#: FMain.form:924
+msgid "PC"
+msgstr ""
+
+#: FMain.form:929
+msgid "Displays the CPU flag register as a value"
+msgstr ""
+
+#: FMain.form:935
+msgid ""
+"Provides the number of cpu cycles since the last start of go is clicked."
+msgstr ""
+
+#: FMain.form:941
+msgid "Current contents of the address bus set by the cpu"
+msgstr ""
+
+#: FMain.form:947
+msgid ""
+"Current content of the data bus written by the CPU or provided by one of the "
+"RAM/ROM or peripheral devices"
+msgstr ""
+
+#: FMain.form:953
+msgid "Addr Bus"
+msgstr ""
+
+#: FMain.form:958
+msgid "Data Bus"
+msgstr ""
+
+#: FMain.form:964
+msgid "Total Instructions"
+msgstr ""
+
+#: FMain.form:971
+msgid "CPU Status Information"
+msgstr ""
+
+#: FMain.form:976
+msgid "Displays the estimated cpu performace. This is not very reliable."
+msgstr ""
+
+#: FMain.form:983
+msgid "Cycles/Sec"
+msgstr ""
+
+#: FMain.form:989
+msgid "Inst/Sec"
+msgstr ""
+
+#: FMain.form:994
+msgid ""
+"Displays the number of lapsed simulated clock cycles sine the cpu was last "
+"started. This is the sum of all clock cycles required by the exected 6502 "
+"instructions"
+msgstr ""
+
+#: FMain.form:1000
+msgid ""
+"This kind of gives you an idea of how many simulated clock cycles are "
+"happening every real world second."
+msgstr ""
+
+#: FMain.form:1006
+msgid ""
+"Displays the the emulated speed of the cpu\n"
+"this is calculated from the number of cpu cycles per\n"
+"second the emulateris able to execute.\n"
+"It seems to be able to run at a maximum speed\n"
+"of about 4.1MHZ on a 2GHZ computer.\n"
+"Your milage may vary!"
+msgstr ""
+
+#: FMain.form:1014
+msgid "Mhz"
+msgstr ""
+
+#: FMain.form:1020
+msgid ""
+"DIsplays the Status of the cpu ececution core\n"
+"Green   the cpu is running\n"
+"Red       the cpu is stopped"
+msgstr ""
+
+#: FMain.class:341
+msgid "The start address must be less than the en address"
+msgstr ""
+
+#: FMain.class:341
+msgid "OK"
+msgstr ""
+
+#: FMain.class:370
+msgid "The start address must be less than the end address"
+msgstr ""
+
+#: FMain.class:629
+msgid "Select the Binary File to load"
+msgstr ""
+
+#: FMain.class:637
+msgid "ErrorLoading memory "
+msgstr ""
+
+#: MemoryMonitor.class:52
+msgid "Monitoring Memory Address"
+msgstr ""
+
+#: MemoryMonitor.class:52
+msgid "To"
+msgstr ""
+
+#: MemoryMonitor.class:55
+msgid "Memory Dump Begins after next Step instruction. Or if Trace is active"
+msgstr ""
+
+#: ProfilerInfo.form:24
+msgid "Enable Profiling"
+msgstr ""
+
+#: ProfilerInfo.form:29
+msgid "Disable Profiling"
+msgstr ""
+
+#: ProfilerInfo.form:36
+msgid ""
+"Display Current profile Information\n"
+"You do not need to stop profiling to\n"
+"get the current information from the profiler.\n"
+msgstr ""
+
+#: ProfilerInfo.form:37
+msgid "Show/Update Profile Info"
+msgstr ""
+
+#: ProfilerInfo.form:42
+msgid "Profile From Address"
+msgstr ""
+
+#: ProfilerInfo.form:47
+msgid ""
+"Starting address in hex for profile reporting\n"
+"If ommitted then all traed address space is reported\n"
+"-1 mean everything"
+msgstr ""
+
+#: ProfilerInfo.form:48
+msgid "-1"
+msgstr ""
+
+#: ProfilerInfo.form:53
+msgid ""
+"The length in hex of address space to report for profile\n"
+"this is only valid if a start address is provided."
+msgstr ""
+
+#: ProfilerInfo.form:54
+msgid "0"
+msgstr ""
+
+#: ProfilerInfo.form:67
+msgid "length"
+msgstr ""
+
+#: ProfilerInfo.form:74
+msgid ""
+"Cycle Count\n"
+" in hex"
+msgstr ""
+
+#: ProfilerInfo.form:81
+msgid "Address"
+msgstr ""
+
+#: ProfilerInfo.form:89
+msgid "Sort by Address"
+msgstr ""
+
+#: ProfilerInfo.form:95
+msgid "Sort By Cycles"
+msgstr ""
+
+#: ScriptManager.class:61
+msgid "Unable to read Script file"
+msgstr ""
+
+#: ScriptManager.class:65
+msgid "Compile : Already have compiled Copy "
+msgstr ""
+
+#: ScriptManager.class:68
+msgid "Source does not match old one, Recompiling"
+msgstr ""
+
+#: ScriptManager.class:73
+msgid "Source is unchanged , Just returning class"
+msgstr ""
+
+#: ScriptManager.class:163
+msgid "Archiver error:"
+msgstr ""
+
+#: ScriptManager.class:193
+msgid "Compiler Error"
+msgstr ""
+
+#: ScriptManager.class:206
+msgid "Errors for"
+msgstr ""
+
+#: ScriptManager.class:210
+msgid "Script Compile completed with errors"
+msgstr ""
+
+#: ScriptManager.class:238
+msgid "Invalid Script name requested"
+msgstr ""
+
+#: ScriptManager.class:346
+msgid "Invalid Library name"
+msgstr ""
+
+#: ScriptManager.class:346
+msgid "Should look like \"vendor.libname:version\""
+msgstr ""
+
+#: ScriptManager.class:382
+msgid "Library"
+msgstr ""
+
+#: ScriptManager.class:382
+msgid "not found"
+msgstr ""
+
+#: WebInfoViewer.form:24
+msgid "<-"
+msgstr ""
+
+#: WebInfoViewer.form:29
+msgid "->"
+msgstr ""
+
+#: watchMem.form:15
+msgid ""
+"This watches memory locations selected from the symbol table.\n"
+"This is updated after each single step or whne trace is enabled.\n"
+"This deos not show anything until the first single step or trace \n"
+"after being selected."
+msgstr ""
+
+#: watchMem.form:16
+msgid "Watch Memory location - Disabled"
+msgstr ""
+
+#: watchMem.form:23
+msgid "This is a list of Watched items"
+msgstr ""
+
+#: watchMem.form:36
+msgid "The Address to be added to the watch list"
+msgstr ""
+
+#: watchMem.form:42
+msgid "Add the address to watch"
+msgstr ""
+
+#: watchMem.form:43
+msgid "Add"
+msgstr ""
+
+#: watchMem.form:49
+msgid "Remove the selected watch items"
+msgstr ""
+
+#: watchMem.form:56
+msgid "Clear all Watched memory"
+msgstr ""
+
+#: watchMem.form:63
+msgid ""
+"Enable or disable Memory monitoring\n"
+"Enabled - cpu is very slow"
+msgstr ""
+
+#: watchMem.form:64
+msgid "Disable"
+msgstr ""

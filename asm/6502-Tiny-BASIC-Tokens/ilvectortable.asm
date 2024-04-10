@@ -133,8 +133,8 @@ ILTBL2:
       dw  iShift        ;113      Shift left 0 or right 1
       dw  iTimer        ;114      Start/Stop/Set timer and enable disable system irq
       
-      dw  iBadOP        ;115      Invalid IL op code
-      dw  iBadOP        ;116      Invalid IL op code
+      dw  iJmpEndFalse  ;115      Jump end Block if top of math stack is false(0)
+      dw  iJmpStart     ;116      Jump to beginning of block in stack
       dw  iBadOP        ;117      Invalid IL op code
       dw  iBadOP        ;118      Invalid IL op code
       dw  iBadOP        ;119      Invalid IL op code
