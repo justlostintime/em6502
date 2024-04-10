@@ -40,17 +40,17 @@ Property SingleStep As Boolean Use $SingleStep                 '' Turn On single
 Property DisplayStatus As Boolean Use $DisplayStatus           '' Turn On the status screen
 Property DisplayInstruction As Boolean Use $DisplayInstruction '' Cause the instruction to be executed to be displayed to the trace screen
 Property DisplayMemory As Boolean Use $DisplayMemory           '' Causes the update of all memory monitor Watch list etc
-Private DisplayRequired As Boolean = False                    ' Used for faster check if anydisplay info needed
-Public LastTraceInstruction As String                         ' When trace is on this will contain the last data
-Public TotalInstructions As Long = 0                          ' Number of instructions executed
+Private DisplayRequired As Boolean = False                                                 ' Used for faster check if anydisplay info needed
+Public LastTraceInstruction As String                                                             ' When trace is on this will contain the last data
+Public TotalInstructions As Long = 0                                                               ' Number of instructions executed
 Property Read InstructionsPerSecond As Long Use $InstructionsPerSecond '' Number of instructions executed per second
 
-Public CpuClock As Timer                  ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
+Public CpuClock As Timer                                                                                    ' will run at 1 millisecond intervals       will have to do some sort of multiplyer
 
 Property Read CyclesPerSecond As Long Use $CyclesPerSecond          ' will track the actual number of cycles per second
-Property Read TotalCycles As Long Use $TotalCycles                  ' Total Number of Cycles executed
+Property Read TotalCycles As Long Use $TotalCycles                                 ' Total Number of Cycles executed
 
-Property SpeedScaler As Long Use $SpeedScaler                       ' use this as each cpu we run on may have a different clock
+Property SpeedScaler As Long Use $SpeedScaler                                         ' use this as each cpu we run on may have a different clock
 Property InteruptPending As Boolean Use $InteruptPending = False
 Property IRQPending As Boolean Use $IRQPending = False
 Property NMIPending As Boolean Use $NMIPending = False
@@ -134,7 +134,6 @@ Private Sub DisplayStatus_Read() As Boolean
 
 End
 
-
 Private Sub DisplayInstruction_write(value As Boolean)     ' Cause the instruction to be executed to be displayed to the trace screen
 
   If value Then
@@ -155,7 +154,6 @@ Private Sub DisplayInstruction_Read() As Boolean
   Return $DisplayInstruction
 
 End
-
 
 Private Sub DisplayMemory_write(value As Boolean)          ' Causes the update of all memory monitor Watch list etc
 
@@ -392,8 +390,8 @@ Public Sub Run()
     Endif
 
     If counter = $SpeedScaler Then   'This is also used to keep the GUI responsive to inputs
-      Wait 0                         'This is used to check the GUI and throttle the cpu speed
-      counter = 0                    'The larger the number the faster the cpu functions
+      Wait 0.0001                                       'This is used to check the GUI and throttle the cpu speed
+      counter = 0                                        'The larger the number the faster the cpu functions
     Else
       Inc counter
     Endif
@@ -415,7 +413,6 @@ Public Sub ResetOssilator()
   OssilatorCounter = $MillisecondTicks
 
 End
-
 
 FlagsOn As String[] = ["C", "Z", "I", "D", "B", "-", "V", "N"]
 FlagsOff As String[] = ["c", "z", "i", "d", "b", "-", "v", "n"]
@@ -1412,7 +1409,6 @@ Public Sub Group0(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
     .setsr(.AC)
     Return
 
-
   Grp0Case47: 'STZ ABS 65c02
     .DataBus = 0
     .Absolute()
@@ -1941,7 +1937,6 @@ Public Sub Group2(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
     .AbsX()
     Goto DoAsl
 
-
   Grp2Case04: 'ORA (ZeroPageIndirect) 65c02
     .ZeroPageIndirect()
     .ReadByte()
@@ -1997,8 +1992,6 @@ Public Sub Group2(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
     .ReadByte()
     .AndAc()
     Return
-
-
 
     '=============================================================================================
   Grp2Case2:
@@ -2352,7 +2345,6 @@ Public Sub Group3(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
   Grp3Case47:
     Return
 
-
     '------------------------------------------------------------------------------------------
   Grp3Case5:
     On addressmode Goto Grp3Case50, Grp3Case51, Grp3Case52, Grp3Case53, Grp3Case54, Grp3Case55, Grp3Case56, Grp3Case57
@@ -2400,4 +2392,3 @@ Public Sub Group3(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
   End With
 
 End
-
