@@ -1,10 +1,10 @@
 ' Gambas module file
 
-'Author  Westwood JustLostintime
-'Released Under:
-'  GNU GENERAL Public LICENSE
-'  Version 3, 29 June 2007
-'  See project license file.
+' Author  Westwood JustLostintime
+' Released Under:
+'   GNU GENERAL Public LICENSE
+'   Version 3, 29 June 2007
+'   See project license file.
 
 Public AppDescription As String = ("This application emulates a 6502/65C02, its default is ctmon65 with tinybasic")
 Public UpdateDevNoPrompt As Boolean = False
@@ -114,7 +114,6 @@ Public Sub List_computer_info()
 
 End
 
-
 Public Sub PrintMatrix()
 
   'With FMAIN
@@ -124,7 +123,6 @@ Public Sub PrintMatrix()
   ' End With
 
 End
-
 
 Public Sub RunComputer(ComputerName As String)
 
@@ -155,11 +153,3 @@ Public Sub The_computer_Autostart(Address As Long, speed As Integer)
   End With
 
 End
-
-
-
-
-
-
-
-
