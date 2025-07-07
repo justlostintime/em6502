@@ -10,7 +10,7 @@
 ;=====================================================
 ; Sets the pointers to the math,IL and gosub stacks
 ; Creates the initial Context for each task slot
-taskSetStacks
+taskSetStacks:
                 lda     #mathStack&$FF
                 sta     MATHSTACK
                 lda     #mathStack>>8
@@ -34,12 +34,12 @@ taskSetStacks
                 ldy     #0
                 jsr     ContextSave                ; Save the Task 0 context
 
-taskSetLoop     cpy     #TASKTABLELEN
+taskSetLoop:    cpy     #TASKTABLELEN
                 bcs     taskSetDone
 
                 lda     GOSUBSTACK
                 clc
-                adc     #GOSUBSTACKSIZE*4   ; must be less than 256
+                adc     #GOSUBSTACKSIZE*4           ; must be less than 256
                 sta     GOSUBSTACK
                 lda     GOSUBSTACK+1
                 adc     #0
@@ -71,7 +71,7 @@ taskSetLoop     cpy     #TASKTABLELEN
                 jsr     ContextSave
                 jmp     taskSetLoop
 
-taskSetDone
+taskSetDone:
                 ldy     #0                    ; reload the main loop context
                 jsr     ContextLoad
                 rts
@@ -80,7 +80,7 @@ taskSetDone
 ; Saves the io block to the context
 
 
-SaveIOblock     tya
+SaveIOblock:    tya
                 pha
                 txa
                 pha
@@ -104,7 +104,7 @@ taskResetStacks:
 ;
 ;=====================================================
 ; Clear all task entries and task stacks
-taskReset       tya                        ; Save Y
+taskReset:      tya                        ; Save Y
                 pha
                 lda     #1
                 sta     taskCounter         ; Set number of active tasks to 1
@@ -115,10 +115,10 @@ taskReset       tya                        ; Save Y
                 ldy     #0                  ; else we need to switch to the main context
                 sty     taskPtr
                 jsr     ContextLoad         ; load the System Task context
-taskResetCont
+taskResetCont:
                 ldy     #CONTEXTLEN         ; Start at the second task +1 account for task control byte
 
-taskResetLoop
+taskResetLoop:
                 lda     #TASKINACTIVE
                 sta     taskTable,y         ; Ensure that the task is made inactive
                 clc
@@ -128,7 +128,7 @@ taskResetLoop
                 cpy     #TASKTABLELEN       ; Are we at the end yet
                 bcc     taskResetLoop       ; Go for more
 
-taskResetComplete
+taskResetComplete:
 
                 pla                         ; Restore y
                 tay
@@ -140,7 +140,7 @@ taskResetComplete
 ;               count is exceded for task time slice gets here
 ;               when time slice has reached zero
 ;
-iTaskSwitch     tya
+iTaskSwitch:    tya
                 pha
 
                 lda     taskResetValue            ; Always reset the counter value
@@ -155,7 +155,7 @@ iTaskSwitch     tya
                 ora     taskIOPending             ; If set then don't switch
                 bne     iTaskSwitchDone           ; DO irq Higher priority than the Tasks
 
-iTaskMain       lda     taskCounter               ; Number of tasks
+iTaskMain:      lda     taskCounter               ; Number of tasks
                 cmp     #1                        ; if there is only one task must be main
                 bne     itasknext                 ; if it some other number continue to next
 
@@ -165,32 +165,32 @@ iTaskMain       lda     taskCounter               ; Number of tasks
 ;
 ; Save the current context this is moved from BASIC STMT LEVEL TO IL INSTRUCTION LEVEL
 ;
-itasknext
+itasknext:
                 ldy     taskPtr
                 jsr     ContextSave               ; Save the current context, y points to next context
-itaskLoop
+itaskLoop:
                 cpy     #TASKTABLELEN             ; Are we at end of task table
                 bcc     iTaskNextChk
 
-iTaskResetTop   ldy     #0                        ; reset to top of taskTable
+iTaskResetTop:  ldy     #0                        ; reset to top of taskTable
                 beq     iTaskLoadEntry            ; Go Ahead and just start this As we Can back and it is always active
 
-iTaskNextChk
+iTaskNextChk:
                 lda     taskTable,y               ; there is always at least one entry in table
                 bne     iTaskLoadEntry            ; get next slot if this one empty
-iTaskNext       clc
+iTaskNext:      clc
                 tya
                 adc     #CONTEXTLEN               ; Next Table entry
                 tay
                 jmp     itaskLoop                 ; Check for busy entry
 
-iTaskLoadEntry  lda     #TASKACTIVE
+iTaskLoadEntry: lda     #TASKACTIVE
                 eor     taskTable,y               ; Check for anything waiting io
                 bne     iTaskNext
                 jsr     ContextLoad               ; load the next context
                 sty     taskPtr                   ; update the task pointer
 
-iTaskSwitchDone
+iTaskSwitchDone:
                 pla
                 tay
                 rts
@@ -232,7 +232,7 @@ iTaskLineNum:
                 tay
                 jmp     iSetIrqErr  ; Bad line number provided
 
-iTaskCont
+iTaskCont:
                 jsr     TaskEmpty   ; Find an empty slot, y = new slot
                 bcc     iTaskNoEmpty; There are no more empty slots
 
@@ -270,7 +270,7 @@ iTaskCont
                 tya                    ; Save the new context offset to return to user
                 pha                                                                            ; push a
 
-itaskSetSave    jsr     ContextSave    ; save the updated context
+itaskSetSave:   jsr     ContextSave    ; save the updated context
                 inc     taskCounter    ; Update the number of Tasks running
 
                 ldy     taskPtr
@@ -285,7 +285,7 @@ itaskSetSave    jsr     ContextSave    ; save the updated context
                 tay
 
                 jmp     pushR0nextIl   ; Push R0 and continue
-iTaskNoEmpty
+iTaskNoEmpty:
                 ldy     taskPtr
                 jsr     ContextLoad
 
@@ -299,7 +299,7 @@ iTaskNoEmpty
 ;===============================================================
 ; Run the task whos PID is on the stack, preserve the stack
 ;
-iTaskEnable
+iTaskEnable:
                tya
                pha
                jsr      popR1
@@ -318,7 +318,7 @@ iTaskEnable
 ;===============================================================
 ; Suspend the task whos PID  is on the stack, preserve the stack
 ;
-iTaskSuspend
+iTaskSuspend:
                tya
                pha
                jsr      popR1
@@ -334,7 +334,7 @@ iTaskSuspend
 
 ;================================================================
 ; Returns task Status
-iTaskStat
+iTaskStat:
                 tya
                 pha
                 jsr     iTaskValid     ; returns pointer to task entry
@@ -343,7 +343,7 @@ iTaskStat
                 pla
                 tay
                 jmp     iTruth
-iTaskStatExit
+iTaskStatExit:
                 pla
                 tay
                 jmp     iFalse
@@ -353,31 +353,31 @@ iTaskStatExit
 ; Validate the task number on top of the stack
 ; on exit y points to the requested task entry
 ;
-iTaskValid      jsr     popR0            ; get result of the multiply
+iTaskValid:     jsr     popR0            ; get result of the multiply
                 lda     R0+1
                 bne     iTaskValidErr    ; high byte must be zero
                 lda     R0
                 cmp     #TASKTABLELEN
                 bcc     iTaskIsValid
 
-iTaskValidErr   pla     ;remove return address
+iTaskValidErr:  pla     ;remove return address
                 pla
                 ldx     #ERR_INVALID_PID
                 lda     #0
                 jmp     iErr2
 
-iTaskIsValid    tay
+iTaskIsValid:   tay
                 rts
 ;
 ;================================================================
 ; Kill a running task, do nothing if already stopped
-iTaskKill       jsr     iTaskValid
+iTaskKill:      jsr     iTaskValid
                 lda     #0
                 sta     taskTable,y     ; Fall thru to go to ntask - nexttask
 ;
 ;================================================================
 ;Skip to next task
-iNTask
+iNTask:
                 lda     #1
                 sta     taskCurrentCycles
                 sta     taskCurrentCycles+1
@@ -385,7 +385,7 @@ iNTask
 ;
 ;=======================================================
 ; Wait for a task to complete
-iWTASK
+iWTASK:
                 jsr     getILByte
                 sta     offset
 ;
@@ -394,7 +394,7 @@ iWTASK
                 jsr     iTaskValid      ; returns pointer to task entry from stack, y is offset
                 lda     taskTable,y
                 bne     iWTASKWAIT
-iWTASKEXITED
+iWTASKEXITED:
                 jmp     NextIL
 iWTASKWAIT:
                 jsr     pushR0                  ; Push R0 back onto the stack
@@ -406,19 +406,19 @@ iWTASKWAIT:
 ;
 ;=======================================================
 ; Set task io lock
-iStartIO        inc    taskIOPending
+iStartIO:       inc    taskIOPending
                 jmp    NextIL
 ;
 ;=======================================================
 ; Release the io lock
-iEndIO          lda   taskIOPending
+iEndIO:         lda   taskIOPending
                 beq   iEndIOExit
                 dec   taskIOPending
-iEndIOExit      jmp   NextIL
+iEndIOExit:     jmp   NextIL
 ;
 ;===============================================================
 ; Return the task PID
-iTASKPID
+iTASKPID:
                 lda     #0
                 sta     R0+1
                 lda     taskPtr
@@ -427,11 +427,11 @@ iTASKPID
 ;
 ;================================================================
 ; Terminate a task
-iETask          ldy     taskPtr
+iETask:         ldy     taskPtr
                 cpy     #0
                 bne     iETaskCont
                 jmp     iFIN                      ; if the main task does a ETASK then stop
-iETaskCont
+iETaskCont:
                 lda     #TASKINACTIVE
                 sta     taskTable,y               ; mark entry as free
                 dec     taskCounter               ; reduce the number of active tasks
@@ -439,13 +439,13 @@ iETaskCont
                 sta     taskCurrentCycles         ; Make it 1 as rtn will dec and check
                 sta     taskCurrentCycles+1
                 jsr     TaskSetExitCode
-iETaskExit
+iETaskExit:
                 jmp     NextIL
 ;================================================================
 ; make the current tasks math stack equal another tasks stack
 ; The task to get is stored on the math stack
 
-iTaskGetMathStack
+iTaskGetMathStack:
                 jsr     CopyStackR1             ; Get the top of stack to R1
                 jsr     ipc_getcontext          ; MQ now has the context address
                 ldy     #MATHSTACKPTRPOS
@@ -461,7 +461,7 @@ iTaskGetMathStack
 ;==================================================================
 ; Updates the tasks math stack pointer with contents of R2
 ; PID is on top of the stack
-iTaskPutMathPtr
+iTaskPutMathPtr:
                 jsr     CopyStackR1             ; Get the top of stack to R1
                 jsr     ipc_getcontext          ; MQ now has the context address
                 lda     R2                      ; R2 contains the number of parameters/offset
@@ -491,19 +491,19 @@ iTaskPutMathPtr
                 lda     #$FF                    ; Dummy field, not used
                 sta     (R1),y
                 iny
-                lda     #GOSUB_STACK_FRAME      ; Tell its a stck frame, ie identify param cnt etc
+                lda     #GOSUB_STACK_FRAME      ; Tell its a stack frame, ie identify param cnt etc
                 sta     (R1),y
                 iny
                 tya
                 ldy     #GOSUBPTRPOS
                 sta     (MQ),y                  ; update the new tasks gosub stk pointer
                 
-iTaskPutMathPtrExit
+iTaskPutMathPtrExit:
                 jmp     NextIL
 ;
 ;================================================================
 ; Set the time slice for each task
-iSLICE
+iSLICE:
                 jsr   popR0
                 lda   R0
                 sta   taskResetValue
@@ -514,7 +514,7 @@ iSLICE
                 lda   #1
                 sta   taskCurrentCycles
                 sta   taskCurrentCycles+1
-iSliceSet
+iSliceSet:
                 jmp   NextIL
 ;================================================================
 ; Find an empty slot in the taskTable
@@ -523,11 +523,11 @@ iSliceSet
 ;           c clear if not found
 ;================================================================
 ;
-TaskEmpty       lda     taskCounter
+TaskEmpty:      lda     taskCounter
                 cmp     #TASKCOUNT
                 bcs     TaskNoSlot
                 ldy     #CONTEXTLEN                 ;The first slot is always the main line SKIP
-TaskLoop
+TaskLoop:
                 lda     taskTable,y
                 beq     TaskEmptyFnd
                 tya
@@ -536,16 +536,16 @@ TaskLoop
                 tay
                 cpy     #TASKTABLELEN
                 bcc     TaskLoop          ; Y is never zero
-TaskNoSlot
+TaskNoSlot:
                 clc
                 rts
-TaskEmptyFnd
+TaskEmptyFnd:
                 sec
                 rts
 ;====================================================
 ; Set the task exit code called from the return command
 ; on entry stack top hold exit value
-TaskSetExitCode
+TaskSetExitCode:
                 tya
                 pha
                 jsr       popR0
@@ -565,9 +565,9 @@ TaskSetExitCode
 ; on entry y contains the task table entry to save to
 ; on exit y points to next task table entry
 ;         x contains the number of bytes copied
-ContextSave     ldx   #0
+ContextSave:    ldx   #0
                 iny             ;inc past the task flags
-ContextSvLoop   lda   CONTEXT,x
+ContextSvLoop:  lda   CONTEXT,x
                 sta   taskTable,y
                 iny
                 inx
@@ -579,11 +579,11 @@ ContextSvLoop   lda   CONTEXT,x
 ; on entry y contains the task table entry to transfer
 ; on exit y points to the original task table entry
 ;         x contains the number of bytes copied
-ContextLoad     tya
+ContextLoad:    tya
                 pha
                 ldx   #0
                 iny                 ;inc past the task flags
-ContextLDLoop   lda   taskTable,y
+ContextLDLoop:  lda   taskTable,y
                 sta   CONTEXT,x
                 iny
                 inx

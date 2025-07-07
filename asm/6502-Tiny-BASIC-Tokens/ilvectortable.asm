@@ -130,7 +130,7 @@ ILTBL2:
       dw  iSetBlock     ;110      Set a block or words or byte to a value 16 bit length
       dw  iCopyBlock    ;111      Copy a block or memory from one location to another 16 bit length
       dw  iCmpBlock     ;112      Compare to parts of memory
-      dw  iShift        ;113      Shift left 0 or right 1
+      dw  iShift        ;113      Shift left 0 or right 1 as parameters
       dw  iTimer        ;114      Start/Stop/Set timer and enable disable system irq
       
       dw  iJmpEndFalse  ;115      Jump end Block if top of math stack is false(0)

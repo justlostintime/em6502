@@ -16,7 +16,7 @@
 ;
 ; a = ipcs(<message-expression>,<task PID-expression>)
 ;
-iIPCS
+iIPCS:
                 tya
                 pha
                 jsr       ipc_enqueue
@@ -25,7 +25,7 @@ iIPCS
                 pla
                 tay
                 jmp       NextIL
-iIPC_BAD
+iIPC_BAD:
                 pla
                 tay
                 jsr       pushFalse
@@ -41,7 +41,7 @@ iIPC_BAD
 ;
 ; a = ipcr(<variable name>)
 ;
-iIPCR
+iIPCR:
                 tya
                 pha
                 jsr       ipc_dequeue
@@ -49,7 +49,7 @@ iIPCR
                 pla
                 tay
                 jmp       NextIL
-iIPCR_Q_Empty
+iIPCR_Q_Empty:
                 pla
                 tay
                 jsr       pushTrue                  ; puts -1 on the stack
@@ -61,7 +61,7 @@ iIPCR_Q_Empty
 ;
 ; a = ipcc()
 ;
-iIPCC
+iIPCC:
          tya
          pha
          jsr      ipc_queue_count
@@ -72,7 +72,7 @@ iIPCC
 
 ;=======================================================
 ;ipcio    Turns on the tasks wait ips if nothing in queue
-iIPCIO
+iIPCIO:
          tya
          pha
          jsr      ipc_queue_count
@@ -85,13 +85,15 @@ iIPCIO
          ora      taskTable,y
          sta      taskTable,y
 
-iIPCIO_No_Halt
+iIPCIO_No_Halt:
          pla
          tay
          jmp      NextIL
 ;======================================================
-;ipc_queue_count
-ipc_queue_count
+;ipc_queue_count returns number of entries on the queue
+; waiting to be recieved
+;======================================================
+ipc_queue_count:
          lda      MESSAGEPTR
          clc
          lsr                        ; divide by 4
@@ -113,7 +115,7 @@ ipc_queue_count
 ; on exit contains c set if failed
 ;                  c cleared if success
 ;                  PID's MSG Q PTR points to the message
-;
+;===========================================================
 ipc_enqueue:
               jsr     popR1                          ; Get the pid
               jsr     ipc_getcontext                 ; Get the PID's context into MQ
@@ -167,7 +169,7 @@ ipc_enq_full:
 ;  message into
 ;  on exit   math stack contains value of message
 ;                                Variable if provided is pid
-ipc_dequeue
+ipc_dequeue:
               jsr     popMQ                                  ; Variable address to put PID into
 
               ldy     MESSAGEPTR
@@ -200,18 +202,18 @@ ipc_dequeue
               iny
               lda    #0
               sta    (MQ),y
-ipc_deq_done
+ipc_deq_done:
               clc
               rts
 
-ipc_deq_empty
+ipc_deq_empty:
               sec
               rts
 
 ;=============================================
 ;  Get the context address into MQ from R1 with
 ;  context/index/pid
-ipc_getcontext
+ipc_getcontext:
               clc                                    ; Get pointer to Task context
               lda     #taskTable&$FF                 ; change ptr to address
               adc     R1
@@ -230,7 +232,7 @@ ipc_CONTEXTVALUES:
               db     (CONTEXTLEN*4),(CONTEXTLEN*5),(CONTEXTLEN*6),(CONTEXTLEN*7)
               db     (CONTEXTLEN*8),(CONTEXTLEN*9)
 
-ipc_ValidateContext
+ipc_ValidateContext:
               pha
               txa
               pha
@@ -260,7 +262,7 @@ ipc_Valid_Context:
 ;on entry y = next entry
 ;R0 points to the stack space
 ;on exit y points to next free byte
-ipc_pushR1
+ipc_pushR1:
               dey
               lda     R1+1                              ; PID first
               sta     (R0),y

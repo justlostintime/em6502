@@ -41,7 +41,7 @@ BasicStmts:
                 dw    ekCopyMem
 ;
 ; Logical operators
-BasicLogical    db    kOr,3
+BasicLogical:   db    kOr,3
                 dw    ekOr
                 dw    ekXor
                 dw    ekAnd
@@ -129,7 +129,7 @@ LETBE:
         NXT        CO                             ; AND SEQUENCE TO NEXT
         IJMP       STMT                           ; Next statement
 
-LETAssignByte
+LETAssignByte:
         CALL       EXPR                           ; PLACE EXPR VALUE ON MathSTK
         DONE                                      ; REPORT ERROR IF NOT NEXT
         SETR2      tByte                          ; Set to store a byte value
@@ -137,7 +137,7 @@ LETAssignByte
         NXT        CO                             ; AND SEQUENCE TO NEXT
         IJMP       STMT                           ; Next statement
 
-ERRMissingEquals
+ERRMissingEquals:
         ERRMSG     ERR_MISSINGEQUALSIGN           ; Missing asignment
 
 ERRVEC2:
@@ -226,7 +226,7 @@ ekRem:
 ;====================================================================================================================================
 ; Set the Task input output slot each slot is 16 byte starting at e000
 ; so 0,1,...
-ekSetTerm
+ekSetTerm:
         CALL      EXPR
         TSTB      ERRVEC,oComma
         CALL      EXPR
@@ -282,7 +282,7 @@ S7:
         HEXPRT
         IJMP       S5
 
-S7AUnsigned
+S7AUnsigned:
 
         TSTB        S7A,oPercent                ; Print the value as an unsigned number
         CALL        EXPR
@@ -297,7 +297,7 @@ S7A:
         PUTCHAR
         IJMP       S5
 
-S7B
+S7B:
         SETR2      tInteger                     ; Print the value as a signed number
         PRN                                     ; PRINT IT
         IJMP       S5                           ; IS THERE MORE?
@@ -314,7 +314,7 @@ ekTaske:
         ETASK
         DONE
         IJMP       STMT
-S8NoParm
+S8NoParm:
         LIT        0
         ETASK
         DONE                       ; Must be last thing on a line
@@ -348,7 +348,7 @@ S8aa:
 
 
 
-UNKNOWNLnk
+UNKNOWNLnk:
        iJMP       UNKNOWN
 
 ;
@@ -372,14 +372,14 @@ ekPoke:
 ;================================================================
 ; Set a block of memory to a value word or byte
 ; SetMem(Value, Length, Destination)
-ekSetMemB
+ekSetMemB:
         CALL       ekSetMem
         SETBLOCK   tByte                                ; set value as byte
         DONE
         NXT         CO
         IJMP        STMT
 
-ekSetMemW
+ekSetMemW:
         CALL        ekSetMem
         SETBLOCK    tInteger                                ; set value as byte
         DONE
@@ -657,7 +657,7 @@ ekShiftRight:
         RTN
 
 ;======================================================================
-EXPRLOGICAL
+EXPRLOGICAL:
         OnGoto     BasicLogical,iLOGExit
 ekAnd:
         Call       EXPR
@@ -715,7 +715,7 @@ T2:
         CALL       FACT               ; get right side QUOTIENT FACTOR.
         MODULO                        ; do division for remainder
         IJMP       T0                 ; check for more * or / or %
-T3                                    ; Finish processing the Term
+T3:                                   ; Finish processing the Term
         RTN
 
 UNKNOWNVEC:
@@ -757,14 +757,14 @@ ekGetch:
 ;====================================================================================
 ; addr(variable definition)
 ; Returns the address of a variable on top of the stack
-ekAddr
+ekAddr:
         TSTB        UNKNOWNVEC,oLeftBracket
         TSTV        ExpectedVariable
         CALL        FactVarPtrNoTst
         TSTB        UNKNOWNVEC,oRightBracket
         RTN
 
-ExpectedVariable
+ExpectedVariable:
        ERRMSG     ERR_SYNTAX      ;Expected Variable
 ;
 ;================================================================
@@ -837,7 +837,7 @@ F2AZLOOP:
         TSTB        F2AZEndParm,oComma              ;Parameters to be passed tp task
         IJMP        F2AZLOOP                        ;check for more
 
-F2AZEndParm
+F2AZEndParm:
         RESTOREMATHSTACK                            ;Back to normal stack
         TASKPUTMATHPTR                              ;Update the tasks stack pointer with parameter count
 
@@ -869,7 +869,7 @@ ekIpcr:
         TSTB        F2AZa1,oRightBracket
         LIT         0                               ;We dont want the pid returned to us
         IJMP        ekIpcrComplete
-F2AZa1
+F2AZa1:
         TSTV        UNKNOWNVEC                      ;must be a variable to return pid of message to
         TSTB        UNKNOWNVEC,oRightBracket
 
@@ -879,7 +879,7 @@ ekIpcrComplete:
         RTN
 ;===============================================================================
 ; IPCC ---- check if a message is available
-ekIpcc
+ekIpcc:
         TSTB       UNKNOWNVEC,oLeftBracket
         TSTB       UNKNOWNVEC,oRightBracket
         IPCCHECK
@@ -1016,7 +1016,7 @@ F2INTEGER:
 F2PTRLOADED:
         RTN
 
-FactVariableValue
+FactVariableValue:
         IND                                       ; YES, GET THE VALUE as word
         RTN
 
@@ -1074,7 +1074,7 @@ ReturnExpectBracket:
 ; End of return from gosub
 ;=============================================================
 ; Gosub can be both a Function and a Subroutine
-GOSUBSTATEMENT
+GOSUBSTATEMENT:
         TSTBRANCH  GOSUBCOMPILED                  ; if the two bytes after gosub are not zero then direct transfer
         CALL       EXPR                           ; GET DESTINATION
         CALL       GOSUBCONT
@@ -1095,10 +1095,10 @@ GOSUBLOOP:
         INCPARMCOUNT
         TSTB       GOSUBParmDONE,oComma
         IJMP       GOSUBLOOP
-GOSUBParmDONE
+GOSUBParmDONE:
         TSTB        ReturnExpectBracket,oRightBracket
         TMP2STK                                   ; Restore line to goto
-GOSUBDONE
+GOSUBDONE:
         RTN
 
 ILEND           equ     *

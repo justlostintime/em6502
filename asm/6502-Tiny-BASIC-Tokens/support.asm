@@ -15,7 +15,7 @@
 ; is advanced by two, and Y contains 0 on return.
 
 ;
-getILWord       jsr     getILByte           ;LSB
+getILWord:      jsr     getILByte           ;LSB
                 tax
 ;
 ;=====================================================
@@ -23,22 +23,22 @@ getILWord       jsr     getILByte           ;LSB
 ; returns it in A.  On return, X is unchanged but Y
 ; contains 0.
 ;
-getILByte       ldy     #0
+getILByte:      ldy     #0
                 lda     (ILPC),y          ;get byte
                 php                       ;save status
                 inc     ILPC              ;inc LSB
                 bne     getILb2           ;branch if no overflow
                 inc     ILPC+1            ;inc MSB
-getILb2         plp                       ;restore status
+getILb2:        plp                       ;restore status
                 rts
 ;
 ;=====================================================
 ; Decrement ILPC by one.
 ;
-decIL           lda     ILPC
+decIL:          lda     ILPC
                 bne     decIL2
                 dec     ILPC+1
-decIL2          dec     ILPC
+decIL2:         dec     ILPC
                 rts
 ;
 ;=====================================================
@@ -46,7 +46,7 @@ decIL2          dec     ILPC
 ; pushes the address of ILPC+2 since that's the next
 ; address to execute.
 ;
-pushILPC      ldy     ILSTACKPTR
+pushILPC:     ldy     ILSTACKPTR
               cpy     #ILSTACKSIZE<<1
               bcs     pushErr
               lda     ILPC
@@ -63,7 +63,7 @@ pushILPC      ldy     ILSTACKPTR
               sty     ILSTACKPTR
               clc
               rts
-pushErr
+pushErr:
               sec
               rts
 ;
@@ -71,7 +71,7 @@ pushErr
 ; Pull the top entry from return stack and put into
 ; ILPC.
 ;
-popILPC       ldy     ILSTACKPTR
+popILPC:      ldy     ILSTACKPTR
               beq     pushErr
               dey
               lda     (ILSTACK),y
@@ -110,7 +110,7 @@ popILPC       ldy     ILSTACKPTR
 ; A, X, and Y are all undefined on return.
 ;
 
-findLine
+findLine:
                 lda     ProgramStart         ;Start of program -> CURPTR
                 sta     CURPTR
                 lda     ProgramStart+1
@@ -118,7 +118,7 @@ findLine
 ;
 ; At end of code?
 ;
-iXFER1
+iXFER1:
                 lda     CURPTR                ; chk CURPTR = END PROGRAM
                 cmp     ProgramEnd            ; at end of program then stop run
                 bne     xfer2                 ; not end
@@ -135,7 +135,7 @@ iXFER1
 ;
 ; Check for an exact line number match
 ;
-xfer2           lda     R0
+xfer2:          lda     R0
                 ldy     #1                ; changed to skip extra length byte
                 cmp     (CURPTR),y
                 bne     xfernotit
@@ -151,7 +151,7 @@ xfer2           lda     R0
 ; See if this line is greater than the one we're
 ; searching for.
 ;
-xfernotit       ldy     #2              ;Changed from to skip leading length and least significat digit
+xfernotit:      ldy     #2              ;Changed from to skip leading length and least significat digit
                 lda     (CURPTR),y      ;compare MSB first
                 cmp     R0+1
                 bcc     xfer3
@@ -170,7 +170,7 @@ xfer4:          sec             ;We found a line number greater
 ; Not the line (or droid) we're looking for.  Move to
 ; the next line.
 ;
-xfer3           jsr     FindNextLine
+xfer3:          jsr     FindNextLine
                 jmp     iXFER1
 ;
 ;=====================================================
@@ -181,7 +181,7 @@ xfer3           jsr     FindNextLine
 ; pointer points to the two-byte line number.
 ; Update this points to the 1 byte line length  ****************
 ;
-FindNextLine
+FindNextLine:
                 ldy     #3                ;skip line number and length byte
                 sty     CUROFF            ;this is the new offset
                 ldy     #0
@@ -192,18 +192,18 @@ FindNextLine
                 lda     CURPTR+1
                 adc     #0
                 sta     CURPTR+1
-FindNext4       rts
+FindNext4:      rts
 ;
 ;=====================================================
 ; This compares CURPTR to PROGRAMEND and returns Z set
 ; if they are equal, Z clear if not.
 ;
-AtEnd           lda     CURPTR
+AtEnd:          lda     CURPTR
                 cmp     ProgramEnd
                 bne     atendexit
                 lda     CURPTR+1
                 cmp     ProgramEnd+1
-atendexit       rts
+atendexit:      rts
 ;
 
 ;
@@ -216,7 +216,7 @@ atendexit       rts
 ; a value like "123456789" will produce something,
 ; but not what you had expected.
 ;
-getDecimal      lda     #0
+getDecimal:     lda     #0
                 sta     R0
                 sta     R0+1
                 sta     dpl             ;temporary negative flag
@@ -229,7 +229,7 @@ getDecimal      lda     #0
                 bne     getDecLoop
                 inc     dpl             ;it's negative
 ;
-getDecLoop      lda     (CURPTR),y
+getDecLoop:     lda     (CURPTR),y
                 beq     getDdone         ;Added this incase we hit eol JUSTLOSTINTIME
                 cmp     #'0
                 bcc     getDdone
@@ -271,14 +271,14 @@ getDecLoop      lda     (CURPTR),y
 ;
 ; Move to next character
 ;
-getD2           iny
+getD2:          iny
                 bne     getDecLoop
 ;
 ; All done with digits, so now deal with it being
 ; negative.  If zero, then don't check for negative
 ; flag.  Ie, -0 is stored as 0.
 ;
-getDdone        lda     R0
+getDdone:       lda     R0
                 ora     R0+1
                 beq     getDone2            ;zero
                 lda     dpl
@@ -296,7 +296,7 @@ getDdone        lda     R0
                 inc     R0
                 bne     getDone2
                 inc     R0+1
-getDone2
+getDone2:
 ; removed next few lines as no idea why they are here JUSTLOSTINTIME
                 ;lda     R0
                 ;sta     $0010
@@ -321,7 +321,7 @@ getDone2
 ;    Y has offset to first non-space character
 ;    CURROFF has the same as Y.
 ;
-GetLine         jsr     ReadPrompt
+GetLine:        jsr     ReadPrompt
                 cpx     #0
                 beq     GetLineRetry
                 ldx     taskPtr
@@ -336,7 +336,7 @@ GetLine         jsr     ReadPrompt
 ;
 ; Now read a line and wait for the CR
 ;
-GetLineRetry
+GetLineRetry:
                 lda     #0                ;Wait for input to complete
                 jsr     ReadLine
 
@@ -344,7 +344,7 @@ GetLineRetry
 ; Point to the line we just read
 ; Set the current pointer to point to the input line
 ;
-ReadComplete    ldy     #0
+ReadComplete:   ldy     #0
                 sty     CUROFF
                 ldx     #LINBUF&$ff
                 stx     CURPTR
@@ -367,12 +367,12 @@ ReadComplete    ldy     #0
                 bne     taskWaitingIO
                 jmp     GetLineRetry           ;If the IO is wait then jump to start
 
-GetLineDone
+GetLineDone:
                 ldx     taskPtr
                 lda     #TASKACTIVE
                 sta     taskTable,x          ;IO is complete
 
-taskWaitingIO
+taskWaitingIO:
                 rts
 
 ;
@@ -383,22 +383,22 @@ taskWaitingIO
 ; On exit
 ;          The readbuffer index is reset to 0
 ;
-ReadPrompt      sta     promptChar
+ReadPrompt:             sta     promptChar
 
 ;
 ; Prompt
 ;
 
-ReadPromptRetry lda     promptChar
-                ora     #0                ;any prompt?
-                beq     getlinenp
-                jsr     VOUTCH
-                lda     #$20
-                jsr     VOUTCH             ;Space after prompt
+ReadPromptRetry:        lda     promptChar
+                        ora     #0                ;any prompt?
+                        beq     getlinenp
+                        jsr     VOUTCH
+                        lda     #$20
+                        jsr     VOUTCH             ;Space after prompt
 ;
-getlinenp       ldx     #0                ;offset into LINBUF
-                stx     getlinx
-                rts
+getlinenp:              ldx     #0                ;offset into LINBUF
+                        stx     getlinx
+                        rts
 ;
 ;===============================================================
 ; This fuction is the driver for the line input
@@ -408,13 +408,13 @@ getlinenp       ldx     #0                ;offset into LINBUF
 ;                     c clear if not complete line
 ;                     c set if it was a complete line
 
-ReadLine
+ReadLine:
                 sta     inputNoWait
                 cmp     #0
                 beq     getline1
                 jsr     ISCHAR           ; if there is no character just get out
                 beq     GetLineNoWait
-getline1        jsr     VGETCH
+getline1:       jsr     VGETCH
         if  CTMON65
                 pha
                 jsr     VOUTCH              ;echo echo echo
@@ -434,27 +434,27 @@ getline1        jsr     VGETCH
 ;
 ; CR was hit
 ;
-getlind         lda     #0                  ; set the end pf buffer
+getlind:        lda     #0                  ; set the end pf buffer
                 ldx     getlinx
                 sta     LINBUF,x
 
                 sec                         ; Carry set then cr received
                 rts
 
-GetLineNoWait
+GetLineNoWait:
                 clc                         ; Carry clear no end of line
                 rts
 ;
 ; Backspace was hit
 ;
-getlinebs       ldx     getlinx
+getlinebs:      ldx     getlinx
                 beq     getlineEOL          ;at start of line
                 dex
                 stx     getlinx
-getlinepbs      jsr     puts
+getlinepbs:     jsr     puts
                 db      27,"[K",0
                 jmp     getline1
-getlineEOL      lda     #SPACE
+getlineEOL:     lda     #SPACE
                 jsr     VOUTCH
                 bne     getlinepbs
 ;
@@ -466,14 +466,14 @@ getlineEOL      lda     #SPACE
 ; extra bytes for where the line number will be.
 ; Update must now include leading length byte not the null at end ****************
 ;
-getLineLength
+getLineLength:
 		ldx	#0	;size
-getLineL2	lda	LINBUF,y
+getLineL2:	lda	LINBUF,y
 		beq	getLineL3
 		iny
 		inx
 		bne	getLineL2
-getLineL3	inx		;count null at end
+getLineL3:	inx		;count null at end
 		inx		;line number LSB
 		inx		;MSB
 		inx             ;change: count new leading line length
@@ -507,7 +507,7 @@ getLineL3	inx		;count null at end
 ; This saves ILPC.  This saves to a single save area,
 ; so it can't be called more than once.
 ;
-saveIL		lda	ILPC
+saveIL:		lda	ILPC
 		sta	tempIL
 		lda	ILPC+1
 		sta	tempIL+1
@@ -516,7 +516,7 @@ saveIL		lda	ILPC
 ;=====================================================
 ; This restores ILPC.
 ;
-restoreIL	lda	tempIL
+restoreIL:      lda	tempIL
 		sta	ILPC
 		lda	tempIL+1
 		sta	ILPC+1
@@ -525,7 +525,7 @@ restoreIL	lda	tempIL
 ;=====================================================
 ; This pushes R0 onto the stack.
 ;
-pushR0          sty     rtemp1
+pushR0:         sty     rtemp1
                 ldy     MATHSTACKPTR
                 cpy     #MATHSTACKSIZE<<1
                 bcs     pusherr
@@ -544,7 +544,7 @@ pushR0          sty     rtemp1
 ; This pushes curptr basic current line onto the call stack.
 ; and CUROFF. Also marks entry type as 1 = GOSUB
 
-pushLN
+pushLN:
                 STA     rtemp1+1                ; Store type of push being done
                 sty     rtemp1
                 lda     MESSAGEPTR              ; stack and msg Q grow together see if they cross!
@@ -552,7 +552,7 @@ pushLN
                 bcc     pusherr                 ; No error
                 ldy     GOSUBSTACKPTR           ; Get the Go Stack Pointer
                 ldx     #0                      ; Start of bytes to copy
-pushLoop
+pushLoop:
                 lda     CURPTR,x                ; Get the current pointer Start address
                 sta     (GOSUBSTACK),y          ; put it onto the stack
                 iny                             ; Next destination
@@ -560,7 +560,7 @@ pushLoop
                 cpx     #3                      ; 4 bytes per entry on the stack
                 bne     pushLoop                ; Jump if not done for next byte
 
-pushDone        lda     rtemp1+1                ; Type of stack entry
+pushDone:       lda     rtemp1+1                ; Type of stack entry
                 sta     (GOSUBSTACK),y          ; Store Type of stack entry
                 iny                             ; Next entry
 
@@ -579,7 +579,7 @@ pusherr:
 ; until it finds the next return. Allowing
 ; a return from within a for/next
 ; on exit a contains the type of return from, gosub_rtn, gosub_rtn_value....
-popLN           sty     rtemp1
+popLN:          sty     rtemp1
                 ldy     GOSUBSTACKPTR         ; Get the Gosub/for stack pointer
                 ldx     #3                    ; each stack entry is 3 bytes
 
@@ -622,7 +622,7 @@ popSkipEntry:   dey
 ;=====================================================
 ; This pushes R1 onto the stack
 ;
-pushR1          sty     rtemp1
+pushR1:         sty     rtemp1
                 ldy     MATHSTACKPTR
                 cpy     #MATHSTACKSIZE<<1
                 bcs     poperr
@@ -640,7 +640,7 @@ pushR1          sty     rtemp1
 ;=====================================================
 ; This pops Top Of Stack and places it in R0.
 ;
-popR0           sty     rtemp1
+popR0:          sty     rtemp1
                 ldy     MATHSTACKPTR
                 beq     poperr
                 dey
@@ -658,7 +658,7 @@ popR0           sty     rtemp1
 ;=====================================================
 ; This pops TOS and places it in R1.
 ;
-popR1           sty     rtemp1
+popR1:          sty     rtemp1
                 ldy     MATHSTACKPTR
                 beq     poperr
                 dey
@@ -674,7 +674,7 @@ popR1           sty     rtemp1
 ;=====================================================
 ; This pops TOS and places it in MQ.
 ;
-popMQ         sty     rtemp1
+popMQ:        sty     rtemp1
               ldy     MATHSTACKPTR
               beq     poperr
               dey
@@ -696,7 +696,7 @@ popMQ         sty     rtemp1
 ; positive.  If the signs were different then 'signs'
 ; will be non-zero.
 ;
-SaveSigns     lda     #0
+SaveSigns:    lda     #0
               sta     sign      ;assume positive
               lda     R0+1      ;MSB
               bpl     SaveSigns1
@@ -709,7 +709,7 @@ SaveSigns     lda     #0
               inc     R0
               bne     SaveSigns1
               inc     R0+1
-SaveSigns1    lda     R1+1
+SaveSigns1:   lda     R1+1
               bpl     SaveSigns2
               pha
               lda     sign
@@ -724,20 +724,20 @@ SaveSigns1    lda     R1+1
               inc     R1
               bne     SaveSigns2
               inc     R1+1
-SaveSigns2    rts
+SaveSigns2:   rts
 ;
 ;=====================================================
 ; This looks at the value of 'signs' and will convert
 ; both R0 and R1 to negative if set.
 ;
-RestoreSigns
+RestoreSigns:
               lda     sign
               beq     restoresigns2
 ;
               lda     R0
               bne     restoresigns3
               dec     R0+1
-restoresigns3
+restoresigns3:
               dec     R0
               lda     R0
               eor     #$ff
@@ -749,7 +749,7 @@ restoresigns3
               lda     R1
               bne     restoresigns4
               dec     R1+1
-restoresigns4
+restoresigns4:
               dec     R1
               lda     R1
               eor     #$ff
@@ -758,7 +758,7 @@ restoresigns4
               eor     #$ff
               sta     R1+1
 ;
-restoresigns2
+restoresigns2:
               rts
 ;
 ;=====================================================
@@ -767,17 +767,17 @@ restoresigns2
 ; non-space character.
 ;
 
-skipsp2         iny
-SkipSpaces      lda     (CURPTR),y
+skipsp2:        iny
+SkipSpaces:     lda     (CURPTR),y
                 beq     Skip3               ;end of line
                 cmp     #SPACE
                 beq     skipsp2
-Skip3           rts
+Skip3:          rts
 ;*********************************************************
 ; Output a CR/LF combination to the console.  Preserves
 ; all registers.
 ;
-tbcrlf          pha
+tbcrlf:         pha
                 lda     #CR
                 jsr     VOUTCH
                 lda     #LF
@@ -787,7 +787,7 @@ tbcrlf          pha
 ;
 ;=====================================================
 ; Some logic to print the Line of basic code being executed
-idbgBasic       bit     ILTrace
+idbgBasic:      bit     ILTrace
                 bvc     dbgBasicNone
                 tya
                 pha
@@ -806,7 +806,7 @@ idbgBasic       bit     ILTrace
                 jsr     SetInDebug
                 jsr     puts
                 db      "Press s - Stop",CR,LF,"d - display Vars",CR,LF,"anything else to step",CR,LF," > ",0
-dbgBasicLoop
+dbgBasicLoop:
                 jsr     VGETCH
                 jsr     CRLF
                 jsr     SetInDebugEnd
@@ -821,12 +821,12 @@ dbgBasicLoop
                 clc
                 bcc     dbgBasicLoop        ; Next char
 
-dbgBasicDone    jsr     SetOutDebugEnd
+dbgBasicDone:   jsr     SetOutDebugEnd
                 pla
                 tay
-dbgBasicNone    jmp     NextIL
+dbgBasicNone:   jmp     NextIL
 
-dbgBasicStop
+dbgBasicStop:
                 jsr     SetOutDebugEnd
                 pla
                 tay
@@ -836,10 +836,10 @@ dbgBasicStop
 ; This is some debug logic which displays the current
 ; value of the ILPC and the line buffer.
 ;
-dbgLine         bit     ILTrace
+dbgLine:        bit     ILTrace
                 bmi     dbgPrt
                 rts
-dbgPrt
+dbgPrt:
                 jsr     SetOutDebug
                 jsr     puts
                 db      "ILPC:",0
@@ -884,7 +884,7 @@ dbgPrt
                 clc
                 rts
 
-dbgLineErr
+dbgLineErr:
                 jsr     SetOutDebug
                 jsr     puts
                 db      "Outside Valid IL Address Range",CR,LF,0
@@ -892,7 +892,7 @@ dbgLineErr
                 sec
                 rts
 
-ILChkRange      lda   ILPC+1
+ILChkRange:     lda   ILPC+1
                 cmp   #IL>>8
                 bcc   ILBadRange
                 bne   ILChkHigh
@@ -901,7 +901,7 @@ ILChkRange      lda   ILPC+1
                 cmp   #IL&$ff
                 bcc   ILBadRange
 
-ILChkHigh       lda   ILPC+1
+ILChkHigh:      lda   ILPC+1
                 cmp   #ILEND>>8
                 bcc   ILGoodRange
                 bne   ILBadRange
@@ -910,9 +910,9 @@ ILChkHigh       lda   ILPC+1
                 cmp   #ILEND&$ff
                 bcs   ILBadRange
 
-ILGoodRange     clc
+ILGoodRange:    clc
                 rts
-ILBadRange
+ILBadRange:
                 sec
                 rts
 
@@ -920,7 +920,7 @@ ILBadRange
 ;=====================================================
 ; Set output vector to the console output function
 ;
-SetOutConsole
+SetOutConsole:
                 pha
                 lda     #OUTCH&$ff
                 sta     BOutVec
@@ -929,7 +929,7 @@ SetOutConsole
                 pla
                 rts
 
-SetInConsole
+SetInConsole:
                 pha
                 lda     #GETCH&$ff
                 sta     BInVec
@@ -943,25 +943,25 @@ SetInConsole
 ;====================================================
 ;Clear the terminal assume it is ansii or vt100
 ;
-iCLEARSCREEN
+iCLEARSCREEN:
                 jsr     puts
                 db      $1b,'[,'2,'J,$1b,'[,'1,';,'1,'H,$1b,'[,'?,'2,'5,'h,0
                 jmp     NextIL
 
 ;====================================================
 ; Push true and false onto math stack
-pushTrue
+pushTrue:
                 lda    #$ff
-pushTF          sta    R0
+pushTF:         sta    R0
                 sta    R0+1
                 jsr    pushR0
                 rts
-pushFalse       lda    #0
+pushFalse:      lda    #0
                 beq    pushTF
 
 ;======================================================
 ; Copy stack top to R1
-CopyStackR1
+CopyStackR1:
                 tya
                 pha
                 ldy    MATHSTACKPTR
@@ -980,7 +980,7 @@ CopyStackR1
 ;Swap the out debug call for standard calls
 DebugIOSave     ds     2
 DebugInSave     ds     2
-SetOutDebug
+SetOutDebug:
                 lda    BOutVec
                 sta    DebugIOSave
                 lda    BOutVec+1
@@ -990,7 +990,7 @@ SetOutDebug
                 lda    #OUTDEBUG>>8
                 sta    BOutVec+1
                 rts
-SetInDebug
+SetInDebug:
                 lda    BInVec
                 sta    DebugInSave
                 lda    BInVec+1
@@ -1000,13 +1000,13 @@ SetInDebug
                 lda    #INDEBUG>>8
                 sta    BInVec+1
                 rts
-SetOutDebugEnd
+SetOutDebugEnd:
                 lda    DebugIOSave
                 sta    BOutVec
                 lda    DebugIOSave+1
                 sta    BOutVec+1
                 rts
-SetInDebugEnd
+SetInDebugEnd:
                 lda    DebugInSave
                 sta    BInVec
                 lda    DebugInSave+1
@@ -1018,7 +1018,7 @@ SetInDebugEnd
 ; The math stack stack byte is the output io slot
 ; The math stack  is the input io slot
 
-iSetTerminal
+iSetTerminal:
                 jsr   popR0                              ; Process the output io addresses
                 jsr   CalcSlot
                 lda   R0
@@ -1042,7 +1042,7 @@ iSetTerminal
 ; Calculate the slot address the the slot number
 ; R0 contains the slot number 0-255
 
-CalcSlot
+CalcSlot:
                 txa
                 pha
 

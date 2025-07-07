@@ -51,9 +51,9 @@ input            processor 6502
 ; 11/20/2023 v1.1.3 Justlostintime@gmail.com
 ;               * Many improvment, bug fixes
 ;
-; www.corshamtech.com
-; bob@corshamtech.com
-; JustLostInTime@gmail.com
+; www.corshamtech.com Now defunct
+; bob@corshamtech.com Bob sadly passed away
+; JustLostInTime@gmail.com Active development
 ;
 ;=====================================================
 ;
@@ -135,19 +135,6 @@ taskIOinPort        equ     [[[VARIABLESSIZE - 10]*2]+4+5]   ;Offset into the io
 taskIOoutPort       equ     [[[VARIABLESSIZE - 10]*2]+4+1]   ;Offset into the ioblock
 taskIOstatusPort    equ     [[[VARIABLESSIZE - 10]*2]+4+12]   ;Offset into the ioblock
 ;
-; Gosub entry types
-
-GOSUB_RTN         equ    $01      ; This is a simple gosub return
-GOSUB_RTN_VALUE   equ    $81      ; subroutine will return a value
-GOSUB_FOR         equ     2       ; Jump point for a for function
-GOSUB_NEXT        equ     3       ; Next interation and jump point
-GOSUB_MSG         equ     4       ; this identifies the entry as an IPC message
-GOSUB_STACK_FRAME equ     5       ; used to contain the gosubs stackframe info when passing parameters
-                                  ; 0 byte is the original stack offset, byte 1 is the parameter count
-                                  ; 2 byte  is unused, 3 byte  is the type GOSUB_STACK_FRAME
-GOSUB_STACK_SAVE  equ     6       ; SAVES THE FULL MATH STACK INFORMATION
-GOSUB_SCRATCH_PAD equ     7       ; Used when a work space is needed in il code
-;
 ; Common ASCII constants
 ;
 BEL             equ     $07
@@ -164,33 +151,33 @@ DOLLAR          equ     '$
 ;
 ; These are error codes
 ;
-ERR_NONE                equ     0       ;No Errror
-ERR_EXPR                equ     1       ;expression error
-ERR_UNDER               equ     2       ;The Math stack underflow
-ERR_OVER                equ     3       ;The Math stack overflow
-ERR_EXTRA_STUFF         equ     4       ;Stuff at end of line
-ERR_SYNTAX              equ     5       ;various syntax errors
-ERR_DIVIDE_ZERO         equ     6       ;divide by zero
-ERR_READ_FAIL           equ     7       ;error loading file
-ERR_WRITE_FAIL          equ     8       ;error saving file
-ERR_NO_FILENAME         equ     9       ;Forgot to include the file name
-ERR_FILE_NOT_FOUND      equ     10      ;The file name provided not found
-ERR_STACK_UNDER_FLOW    equ     11      ;the gosub stack underflow
-ERR_STACK_OVER_FLOW     equ     12      ;the gosub Stack overflow
-ERR_BAD_LINE_NUMBER     equ     13      ;Bad line number specified Not found
-ERR_NO_EMPTY_TASK_SLOT  equ     14      ;Unable to create a new task no/slots
-ERR_INDEX_OUT_OF_RANGE  equ     15      ;Subscript out of range
-ERR_INVALID_PID         equ     16      ;Invalid PID provided
-ERR_OUT_OF_MSG_SPACE    equ     17      ;Out of space for new messsages
-ERR_INVALID_STK_FRAME   equ     18      ;The stack frame was expected not found
-ERR_NO_RETURN_VALUE_PROVIDED equ 19     ;No value returned by a gofn call
-ERR_LINE_NOT_FOUND      equ     20      ;Gosub/goto/gofn line number not found
-ERR_IL_STACK_OVER_FLOW  equ     21      ;The IL return stack has overflowed
-ERR_EXPECTVAR           equ     22      ;Expected a variable name or definition
-ERR_CLOSINGBRACKET      equ     23      ;Expected a closing bracket
-ERR_MISSINGEQUALSIGN     equ     24     ;Expected an equal sign for assignment
-ERR_FUNCTION_EXPECTED_PARAMETERS equ 25 ;Function expected parameters
-ERR_EXPECTED_OPENING_BRACKET  equ 26   ;Expected opening bracket [ or (
+ERR_NONE                  equ     0       ;No Errror
+ERR_EXPR                  equ     1       ;expression error
+ERR_UNDER                 equ     2       ;The Math stack underflow
+ERR_OVER                  equ     3       ;The Math stack overflow
+ERR_EXTRA_STUFF           equ     4       ;Stuff at end of line
+ERR_SYNTAX                equ     5       ;various syntax errors
+ERR_DIVIDE_ZERO           equ     6       ;divide by zero
+ERR_READ_FAIL             equ     7       ;error loading file
+ERR_WRITE_FAIL            equ     8       ;error saving file
+ERR_NO_FILENAME           equ     9       ;Forgot to include the file name
+ERR_FILE_NOT_FOUND        equ     10      ;The file name provided not found
+ERR_STACK_UNDER_FLOW      equ     11      ;the gosub stack underflow
+ERR_STACK_OVER_FLOW       equ     12      ;the gosub Stack overflow
+ERR_BAD_LINE_NUMBER       equ     13      ;Bad line number specified Not found
+ERR_NO_EMPTY_TASK_SLOT    equ     14      ;Unable to create a new task no/slots
+ERR_INDEX_OUT_OF_RANGE    equ     15      ;Subscript out of range
+ERR_INVALID_PID           equ     16      ;Invalid PID provided
+ERR_OUT_OF_MSG_SPACE      equ     17      ;Out of space for new messsages
+ERR_INVALID_STK_FRAME     equ     18      ;The stack frame was expected not found
+ERR_NO_RETURN_VALUE_PROVIDED equ 19       ;No value returned by a gofn call
+ERR_LINE_NOT_FOUND        equ     20      ;Gosub/goto/gofn line number not found
+ERR_IL_STACK_OVER_FLOW    equ     21      ;The IL return stack has overflowed
+ERR_EXPECTVAR             equ     22      ;Expected a variable name or definition
+ERR_CLOSINGBRACKET        equ     23      ;Expected a closing bracket
+ERR_MISSINGEQUALSIGN      equ     24      ;Expected an equal sign for assignment
+ERR_FUNCTION_EXPECTED_PARAMETERS equ 25   ;Function expected parameters
+ERR_EXPECTED_OPENING_BRACKET  equ 26      ;Expected opening bracket [ or (
 ;
 ;=====================================================
 ; Zero page storage.
@@ -326,7 +313,7 @@ ISCHAR          equ     cstatus
 puts            equ     tbputs
           endif
 ;
-cold2           jsr     SetOutConsole
+cold2:          jsr     SetOutConsole
                 jsr     SetInConsole
                 jsr     puts
                 db      CR,LF
@@ -335,7 +322,7 @@ cold2           jsr     SetOutConsole
 ;
                 jsr     MemInit                     ;setup the free space available
 
-calcstack       lda     #1
+calcstack:      lda     #1
                 sta     taskCounter                 ; Initialize number of tasks to 1
                 lda     #TASKACTIVE                 ; bit 7 is set
                 sta     taskTable                   ; mark the main task as active
@@ -377,7 +364,7 @@ calcstack       lda     #1
 ;
 ; This is the warm start entry point
 ;
-warm2           jsr     SetOutConsole
+warm2:          jsr     SetOutConsole
                 jsr     SetInConsole
                 jsr     CRLF
                 lda     errGoto
@@ -387,7 +374,7 @@ warm2           jsr     SetOutConsole
 ;
 ; And continue with both starts here
 ;
-coldtwo
+coldtwo:
 ;
 ; The ILTrace flag is now run-time settable.
 ;
@@ -417,7 +404,7 @@ coldtwo
 ; by ILPC and adjusts ILPC to point to the next
 ; instruction to execute.
 ;
-NextIL
+NextIL:
                 tsx                           ; Get the stack pointer value
                 cpx     #$FF                  ; Should be empty
                 bne     ILbad                 ; Halt and catch fire now!
@@ -425,12 +412,12 @@ NextIL
                 dec     taskCurrentCycles
                 bne     NextIlNow
                 jsr     iTaskSwitch           ;check for a task switch
-NextIlNow       lda     ILTrace               ;Do we need to trace this
+NextIlNow:      lda     ILTrace               ;Do we need to trace this
                 beq     NextIL2               ;Skip if no bits set
 
                 jsr     dbgLine               ;Print the IL trace information
 
-NextIL2         ldy     CUROFF
+NextIL2:        ldy     CUROFF
 ;                jsr     SkipSpaces           ; no longer needed as tokenizer takes care of this
 ;                sty     CUROFF
 ;Task IO Management
@@ -440,7 +427,7 @@ NextIL2         ldy     CUROFF
                 bcc     NextILStr             ; if carry is clear then no end of line yet
                 dec     taskRDPending         ; Carry is set if CR has been recieved
 ;
-NextILStr       jsr     getILByte
+NextILStr:      jsr     getILByte
 ;
 ; When the handler is called, these are the conditions
 ; of several important items:
@@ -466,8 +453,8 @@ NextILStr       jsr     getILByte
 ; This handles an illegal IL opcode.  This is serious
 ; and there's no way to recover.
 ;
-iBadOP
-ILbad           jsr     puts
+iBadOP:
+ILbad:          jsr     puts
                 db      CR,LF
                 db      "Illegal IL "
                 db      0
@@ -493,7 +480,7 @@ ILbad           jsr     puts
 ; Just jump to the address (ILPC),y.  Have to do
 ; some goofy stuff.
 ;
-ILgood          tay                    ;move index into Y
+ILgood:         tay                    ;move index into Y
                 lda     ILTBL,y
                 sta     dpl
                 lda     ILTBL+1,y
@@ -522,7 +509,7 @@ ILTBLend	equ	*
 ;=====================================================
 ;
 ;
-iINIT           lda     #0                           ; clear IL stack pointer,gosub stack
+iINIT:          lda     #0                           ; clear IL stack pointer,gosub stack
                 sta     ILSTACKPTR
                 sta     MATHSTACKPTR
                 sta     GOSUBSTACKPTR
@@ -552,13 +539,13 @@ iINIT           lda     #0                           ; clear IL stack pointer,go
 ; This initializes for the start of the next line of
 ; BASIC text.
 ;
-iXINIT          sei                          ; ensure interupts are off
+iXINIT:         sei                          ; ensure interupts are off
                 jsr       taskReset          ; Clear the task table
                 lda       #0                 ; Clear the irq flags
                 sta       IRQPending         ; reset the irq pending
                 sta       IRQStatus          ; Make sure irqs are off
 
-goodExit        jmp       NextIL
+goodExit:       jmp       NextIL
 ;
 ;=====================================================
 ; This check if the escape key has been entered
@@ -579,7 +566,7 @@ BreakNo:
 ; Verify there is nothing else on this input line.
 ; If there is, generate an error.
 ;
-iDONE           ldy     CUROFF
+iDONE:          ldy     CUROFF
                 lda     (CURPTR),y
                 beq     doneadv
                 cmp     #oColon           ; is it a  ':' or eol
@@ -587,14 +574,14 @@ iDONE           ldy     CUROFF
 ;                sty     CUROFF
                 jmp     NextIL           ; continue on this line
 
-idoneErr
+idoneErr:
                 ldx     #ERR_EXTRA_STUFF
                 lda     #0
                 jmp     iErr2
 ;
 ; Advance to the next line
 ;
-doneadv
+doneadv:
                 jmp     NextIL
 ;
 ;=====================================================
@@ -619,7 +606,7 @@ iPRN:
 ; keep track of which column the output is on, so
 ; just print a tab.
 ;
-iSPC
+iSPC:
                 lda     #TAB
                 jsr     VOUTCH
                 jmp     NextIL
@@ -629,14 +616,14 @@ iSPC
 ; the NXT instruction.  Else move to the next line of
 ; user code and continue.
 ;
-iNXT            lda     RunMode
+iNXT:           lda     RunMode
                 bne     iNxtRun     ;in run mode
 ;
 ; Get address and jump to it.
 ;
                 jmp     iJMP
 ;
-iNxtRun
+iNxtRun:
                 ldy     CUROFF
                 lda     (CURPTR),y
                 cmp     #oColon
@@ -645,7 +632,7 @@ iNxtRun
                 sty     CUROFF
                 jmp     iNxtRun2
 
-iNxtRunGo
+iNxtRunGo:
                 jsr     FindNextLine
                 jsr     AtEnd
                 bne     iNxtRun2          ;not at end
@@ -653,9 +640,9 @@ iNxtRunGo
 ; At the end of the program.  Pretend an END statement
 ; was found.
 ;
-iFINv           jmp     iFIN
+iFINv:          jmp     iFIN
 ;
-iNxtRun2        jsr     getILWord     ;ignore next word
+iNxtRun2:       jsr     getILWord     ;ignore next word
                 jmp     NextIL
 ;=====================================================
 ;Repeat the same line against
@@ -669,24 +656,24 @@ iRepeatLine:    ldy     #3
 ; higher.  Ie, if it's 1 but there is no line 1, then
 ; find the next one after that.
 ;
-iFastXfer
+iFastXfer:
                 jsr     popR1                ; get type of transfer
                 lda     R1
                 beq     iXFER
 
                 jsr     popR0                ; get where to transfer
-FastFastXfer
+FastFastXfer:
                 lda     R0
                 sta     CURPTR
                 lda     R0+1
                 sta     CURPTR+1
                 jmp     iXFER2
 
-iXFER
+iXFER:
                 jsr     popR0
                 jsr     findLine
 
-iXFER2
+iXFER2:
                 jsr     AtEnd           ;at end of user program?
                 beq     iFINv
 
@@ -707,7 +694,7 @@ iXFER2
 ;
 ; Run
 ;
-iXferok
+iXferok:
                 lda     #$ff
                 sta     RunMode       ;we're running
 ;
@@ -722,17 +709,17 @@ iXferok
 ;=====================================================
 ; Save the pointer to the next line to the call stack.
 ;
-iSAV            jsr     getILByte                      ; load type of gosub
+iSAV:           jsr     getILByte                      ; load type of gosub
                 jsr     pushLN                         ; Type passed in A
                 bcs     iSAVErr
                 jmp     NextIL
 
-iSAVErr         ldx     #ERR_STACK_OVER_FLOW
-iSAVErr2        lda     #0
+iSAVErr:        ldx     #ERR_STACK_OVER_FLOW
+iSAVErr2:       lda     #0
                 jmp     iErr2
 ;====================================================
 ; Move stack top to and from temp area
-iStk2Tmp
+iStk2Tmp:
                 jsr     popR0
                 lda     R0
                 ldy     #TASKEXITCODE                     ; can also be used as temp
@@ -742,7 +729,7 @@ iStk2Tmp
                 sta     (VARIABLES),y
                 jmp     NextIL
 
-iTmp2Stk        ldy     #TASKEXITCODE
+iTmp2Stk:       ldy     #TASKEXITCODE
                 lda     (VARIABLES),y
                 sta     R0
                 iny
@@ -754,7 +741,7 @@ iTmp2Stk        ldy     #TASKEXITCODE
 ;=====================================================
 ; Pop the next line from the call stack. IRQ return
 ;
-iRET            jsr     popLN
+iRET:           jsr     popLN
                 bcs     iSAVErr
                 ldy     #3
                 sty     CUROFF
@@ -794,11 +781,11 @@ iRET            jsr     popLN
 ; next line and continue.  If true, continue executing
 ; on this line.
 ;
-REL_LT          equ     %001
-REL_EQUAL       equ     %010
-REL_GT          equ     %100
+REL_LT         equ     %001
+REL_EQUAL      equ     %010
+REL_GT         equ     %100
 ;
-iCMPR           jsr   popR1
+iCMPR:          jsr   popR1
                 jsr   popMQ                      ;operator in MQ
                 jsr   popR0
                 jsr   iCMPRsub
@@ -807,7 +794,7 @@ iCMPR           jsr   popR1
 ;
 ; See if they are equal or not
 ;
-iCMPRsub                                         ; Called by internal functions
+iCMPRsub:                                         ; Called by internal functions
 
                 lda       R0
                 cmp       R1
@@ -824,7 +811,7 @@ iCMPRsub                                         ; Called by internal functions
 ; See if EXPR1 (R0) < EXPR2 (R1)
 ; See www.6502.org/tutorials/compare_beyond.html
 ;
-iCMPRnoteq
+iCMPRnoteq:
                 lda       R0
                 cmp       R1                ; Sets the carry flag
                 lda       R0+1
@@ -833,27 +820,27 @@ iCMPRnoteq
                 bvc       iCMPR_2           ; branch if N eor V
                 eor       #$80
 
-iCMPR_2         bmi       iCMPlt
+iCMPR_2:        bmi       iCMPlt
                 lda       #REL_GT
                 bne       iCMPcom
 
-iCMPlt          lda       #REL_LT      ; R0 < R1
+iCMPlt:         lda       #REL_LT           ; R0 < R1
 
-iCMPcom         ;ora       MQ+1         ; or with original mask MQ+1 is always zero
+iCMPcom:        ;ora       MQ+1             ; or with original mask MQ+1 is always zero
 ;
 ; Now compare the end result with what the caller
 ; was looking for.
 ;
                 and       MQ
-                beq       iCMPno     ; no match
-                lda       #$FF       ; true is $ffff
+                beq       iCMPno            ; no match
+                lda       #$FF              ; true is $ffff
                 sta       R0
                 sta       R0+1
                 bne       iCMPDone
 ;
 ; R0 > R1
 ;
-iCMPgt          lda       #REL_GT
+iCMPgt:         lda       #REL_GT
                 bne       iCMPcom
 iCMPno:
                 lda       #0
@@ -879,7 +866,7 @@ iBranchFalse:
 ;
 ;=====================================================
 ; Start a read of data in background
-iReadStart
+iReadStart:
                 lda    #'?          ; Prompt with question mark
                 ldx    1            ; Indicate to start read in background
                 jsr    GetLine      ; Call the getline to start read
@@ -887,12 +874,12 @@ iReadStart
 ;
 ;=====================================================
 ; Complete the read and return the curptr, curoff pointing to data
-iReadComplete
+iReadComplete:
                 lda     #GOSUB_RTN
                 jsr     pushLN
                 bcc     iReadOk
-iReadErr        jmp     ErrStkOver     ; Check if there was an error
-iReadOk
+iReadErr:       jmp     ErrStkOver     ; Check if there was an error
+iReadOk:
                 jsr     ReadComplete
                 jmp     NextIL
                 jsr     popLN
@@ -901,7 +888,7 @@ iReadOk
 ; Get a line of text from the user, convert to a
 ; number, leave on top of stack.
 ;
-iINNUM
+iINNUM:
                 lda     #GOSUB_RTN
                 jsr     pushLN
                 bcs     iReadErr       ; Stack over flow error
@@ -919,7 +906,7 @@ iINNUM
 ; Get a line of text from the user, convert to a
 ; character value , leave on top of stack. up to 2 characters
 ;
-iINSTR
+iINSTR:
                 lda     #GOSUB_RTN
                 jsr     pushLN
                 bcs     iReadErr     ; Stack overflow error
@@ -931,7 +918,7 @@ iINSTR
                 lda     #0
                 sta     R0+1
                 jsr     pushR0        ;put onto stack
-ExitIn
+ExitIn:
                 jsr     popLN
                 jmp     NextIL
 ;
@@ -941,7 +928,7 @@ ExitIn
 ; simple to do... clear the RunMode flag, then set the
 ; ILPC to the standard handler and continue running.
 ;
-iFIN            lda     #0
+iFIN:           lda     #0
                 sta     RunMode
                 jsr     taskReset
 ;
@@ -957,7 +944,7 @@ iFIN            lda     #0
 ; if we're in run mode, print the line number.  Stop
 ; program execution and return to the initial state.
 ;
-iERR            lda   taskIOPending
+iERR:           lda   taskIOPending
                 beq   iErrNext
                 dec   taskIOPending
 
@@ -967,7 +954,7 @@ iErrNext:       jsr     getILWord       ;get err code
 ;
 ; Enter here with the error code in X (LSB) and A (MSB).
 ;
-DisplayError
+DisplayError:
                 stx     R0
                 sta     R0+1
 ;
@@ -980,7 +967,7 @@ DisplayError
                 jsr     puts
                 db      " at line ",0
                 ldy     #1               ;Changed: Skip the leading length byte
-iErr2a
+iErr2a:
                 lda     (CURPTR),y
                 sta     R0
                 iny
@@ -1006,7 +993,7 @@ iERR3:
                 jsr     CRLF
                 rts
 
-iErr2
+iErr2:
                 jsr     DisplayError
 
 iErrComplete:
@@ -1019,7 +1006,7 @@ iErrComplete:
 ; clear variables so the user can see what state
 ; the program is in.
 ;
-ResetIL         lda     #0
+ResetIL:        lda     #0
                 sta     CURPTR
                 sta     CUROFF
                 sta     ILSTACKPTR
@@ -1036,7 +1023,7 @@ ResetIL         lda     #0
 ; Pop two items off stack, add them, then place the
 ; result back onto the stack.
 ;
-iADD            jsr     popR0
+iADD:           jsr     popR0
                 jsr     popR1
 iADDfast:
                 clc
@@ -1052,7 +1039,7 @@ iADDfast:
 ; Pop two items off the stack.  Subtract the top of
 ; stack from the lower entry.
 ;
-iSUB            jsr     popR1
+iSUB:           jsr     popR1
                 jsr     popR0
                 sec
                 lda     R0
@@ -1066,7 +1053,7 @@ iSUB            jsr     popR1
 ;=====================================================
 ; Negate the top of stack.
 ;
-iNEG            jsr     popR0
+iNEG:           jsr     popR0
                 lda     R0
                 eor     #$ff
                 sta     R0
@@ -1076,7 +1063,7 @@ iNEG            jsr     popR0
                 inc     R0
                 bne     iNEG2
                 inc     R0+1
-iNEG2           jmp     pushR0nextIl
+iNEG2:          jmp     pushR0nextIl
 ;
 ;=====================================================
 ; Multiply top two items on the stack, put the results
@@ -1084,10 +1071,10 @@ iNEG2           jmp     pushR0nextIl
 ; 115 of "Microprocessor Programming for Computer
 ; Hobbyists" by Neill Graham.
 ;
-iMUL            jsr     iMultiply
+iMUL:           jsr     iMultiply
                 jmp     NextIL
 
-iMultiply
+iMultiply:
                 jsr     popR0               ;AC
                 jsr     popR1               ;OP
 ;
@@ -1100,7 +1087,7 @@ iMultiply
                 sta     R0+1
 ;
                 ldx     #16               ;number of bits in value
-multloop        asl     R0
+multloop:       asl     R0
                 rol     R0+1
                 asl     MQ
                 rol     MQ+1
@@ -1116,12 +1103,12 @@ multloop        asl     R0
                 adc     R1+1
                 sta     R0+1
 ;
-multno          dex                      ;did all bits yet?
+multno:         dex                      ;did all bits yet?
                 bne     multloop
                 jsr     pushR0           ;OP
                 rts
 ;
-pushR0nextIl
+pushR0nextIl:
                 jsr     pushR0           ;OP
                 jmp     NextIL
 ;
@@ -1133,11 +1120,11 @@ pushR0nextIl
 ; R0 = R0 / R1
 ; Remainder is in MQ
 ;
-iDIV            jsr     iDoDiv
+iDIV:           jsr     iDoDiv
                 jsr     RestoreSigns
                 jmp     pushR0nextIl
 
-iMOD            jsr     iDoDiv
+iMOD:           jsr     iDoDiv
                 jsr     RestoreSigns
                 lda     MQ
                 sta     R0
@@ -1152,7 +1139,7 @@ iDoDiv:
 ; Check for divide by zero
 ;
 
-iDivNoPop
+iDivNoPop:
                 lda     R1
                 ora     R1+1
                 beq     divby0
@@ -1162,7 +1149,7 @@ iDivNoPop
                 sta     MQ
                 sta     MQ+1
                 ldx     #16             ;repeat for each bit: ...
-divloop
+divloop:
                 asl     R0              ;dividend lb & hb*2, msb -> Carry
                 rol     R0+1
                 rol     MQ              ;remainder lb & hb * 2 + msb from carry
@@ -1179,13 +1166,13 @@ divloop
                 sty     MQ
                 inc     R0              ;and INCrement result cause divisor fit in 1 times
 
-skip            dex
+skip:           dex
                 bne     divloop
                 rts
 ;
 ; Indicate divide-by-zero error
 ;
-divby0          pla                            ; remove the reyurn from the stack
+divby0:         pla                            ; remove the reyurn from the stack
                 pla
                 ldx     #ERR_DIVIDE_ZERO       ; do the error
                 lda     #0
@@ -1196,7 +1183,7 @@ divby0          pla                            ; remove the reyurn from the stac
 ; item is a data value and the other is an ABSOLUTE address.
 ; Save the value into that address.
 ;
-iSTORE          tya
+iSTORE:         tya
                 pha
                 jsr     popR0       ;data
                 jsr     popR1       ;Storage location
@@ -1204,10 +1191,10 @@ iSTORE          tya
                 lda     R2
                 cmp     #tByte
                 beq     iStoreB
-iStoreW
+iStoreW:
                 lda     R0+1
                 sta     (R1),y
-iStoreB
+iStoreB:
                 lda     R0
                 dey
                 sta     (R1),y
@@ -1220,19 +1207,19 @@ iStoreB
 ; of the variable  whose absolute address it represents.
 ;
 
-iIND            tya
+iIND:           tya
                 pha
                 jsr     popR1
                 ldy     #1
                 lda     R2
                 cmp     #tInteger
                 beq     iINDW
-iINDB
+iINDB:
                 lda    #0
                 BEQ    iINDC
-iINDW
+iINDW:
                 lda     (R1),y
-iINDC
+iINDC:
                 sta     R0+1
                 dey
                 lda     (R1),y
@@ -1245,7 +1232,7 @@ iINDC
 ;=====================================================
 ; Check which type of index to use byte or word and jmp to correct
 ; function
-iArray          tya
+iArray:         tya
                 pha
 
                 jsr     popR0             ; Get the array index
@@ -1260,7 +1247,7 @@ iArray          tya
                 beq    iArrayB            ; yes so branch to process a byte
 ;=====================================================
 ; Process 32 bit index into memory
-iArrayL         cmp     #tLong            ; Are we working with 32 bit integers
+iArrayL:        cmp     #tLong            ; Are we working with 32 bit integers
                 bne     iArrayW           ; Process with sigle shift
                 asl     R0                ; Do the multiply by 2
                 rol     R0+1              ; Indexes can by up to max memory
@@ -1269,7 +1256,7 @@ iArrayL         cmp     #tLong            ; Are we working with 32 bit integers
 ; Get the array index from top of stack get Current variable
 ; address from next on stack, add the offset
 ; push the result back onto the stack
-iArrayW                                   ; pointers, arrays etc all use 16 bit unsigned integers
+iArrayW:                                  ; pointers, arrays etc all use 16 bit unsigned integers
                 asl     R0                ; Do the multiply by 2
                 rol     R0+1              ; Indexes can by up to max memory
                 bcs     iArrayError       ; if the carry is set we have an error
@@ -1308,7 +1295,7 @@ iArrayCheckVar: lda     VARIABLES
                 bcc     iArrayExit         ; if it is less it is valid
 
 ; Get here if array index is out of range
-iArrayError     pla
+iArrayError:    pla
                 tya
                 lda     #0
                 ldx     #ERR_INDEX_OUT_OF_RANGE
@@ -1338,8 +1325,8 @@ iArrayFNparm:   jsr    GosubFindParms       ; Get a pointer to the current funct
 ; List the current BASIC program in memory.  Uses R0,
 ; tempIly, and dpl.
 ;
-iLST            jsr     SetOutConsole
-iLST2           lda     ProgramStart
+iLST:           jsr     SetOutConsole
+iLST2:          lda     ProgramStart
                 sta     dpl
                 lda     ProgramStart+1
                 sta     dpl+1
@@ -1347,14 +1334,14 @@ iLST2           lda     ProgramStart
 ; dpl/dph point to the current line.  See if we're at
 ; the end of the program.
 ;
-iLSTloop        lda      dpl
+iLSTloop:       lda      dpl
                 cmp     ProgramEnd
                 bne     iLstNotEnd
                 lda     dpl+1
                 cmp     ProgramEnd+1
                 beq     iLstdone
 ;
-iLstNotEnd       jsr     PrintProgramLine
+iLstNotEnd:      jsr     PrintProgramLine
 ;                ldy     #1              ;Change:  Skip first byte length
 ;                lda     (dpl),y         ;line number LSB
 ;                sta     R0
@@ -1378,7 +1365,7 @@ iLstNotEnd       jsr     PrintProgramLine
 ; End of this line.  Print CR/LF, then move to the
 ; next line.
 ;
-iLST3           ldy     #0              ;Move to next line
+iLST3:           ldy     #0              ;Move to next line
                 lda     (dpl),y         ;Current line length
                 clc                     ;Clear the carry flag
 ;                tya
@@ -1397,14 +1384,14 @@ iLST3           ldy     #0              ;Move to next line
 ;                jsr     VOUTCH
                 jmp     iLSTloop        ;do next line
 ;
-iLstdone        jsr     SetOutConsole
+iLstdone:       jsr     SetOutConsole
                 jmp     NextIL
 ;
 ;=====================================================
 ; Get a line of text into LINBUF.  Terminate with a
 ; null byte.
 ;
-iGETLINE
+iGETLINE:
                 lda     #'>            ;prompt character
                 ldx     0              ;Wait for read to complete
                 jsr     GetLine
@@ -1431,7 +1418,7 @@ iGetParseLine:
 ; Insert the line into the program or delete the line
 ; if there is nothing after the line number,
 ;
-iINSRT          ; On entry here the TOKEBUFFER contains the Parsed input line completely
+iINSRT:         ; On entry here the TOKEBUFFER contains the Parsed input line completely
                 lda     TOKENBUFFER+1   ; Get the first byte of the line number
                 sta     R0              ; place the number into R0
                 lda     TOKENBUFFER+2   ; Get hi byte of line number
@@ -1480,7 +1467,7 @@ iINSRT          ; On entry here the TOKEBUFFER contains the Parsed input line co
 ;
 ; See if we're at the end.
 ;
-InsDelChk       lda     R1                       ;Compare the copy dest to end of memory to check if we are finished copy
+InsDelChk:      lda     R1                       ;Compare the copy dest to end of memory to check if we are finished copy
                 cmp     ProgramEnd
                 bne     InsDelLoop
                 lda     R1+1
@@ -1489,7 +1476,7 @@ InsDelChk       lda     R1                       ;Compare the copy dest to end o
 ;
 ; Move one byte, move to next location.
 ;
-InsDelLoop      ldy     lineLength    ;Move a byte up to remove the space
+InsDelLoop:     ldy     lineLength    ;Move a byte up to remove the space
                 beq     insert2       ;if this is zero it is a big oops
                 lda     (R1),y
                 ldy     #0
@@ -1502,7 +1489,7 @@ InsDelLoop      ldy     lineLength    ;Move a byte up to remove the space
 ; Deletion is done.
 ; If the new line is empty we're done.  Now we have to open a space for the line we are inserting
 ;
-insert2        ; ldy     offset               ; get back ptr  Get the current offset
+insert2:      ; ldy     offset               ; get back ptr  Get the current offset
                 lda     TOKENBUFFER          ; Get the length
                 cmp     #4                   ; empty lines only have 4 bytes { len(1), linenum(2) ,null(1) }
 ;               lda     LINBUF,y             ;next byte     Get the next byte to be stored
@@ -1520,7 +1507,7 @@ insert2        ; ldy     offset               ; get back ptr  Get the current of
                 lda     ProgramEnd+1
                 sta     FROM+1
 ;
-mvup1           ldy     #0              ;always zero from From copy position to use indirect addressing
+mvup1:          ldy     #0              ;always zero from From copy position to use indirect addressing
                 lda     (FROM),y
                 ldy     lineLength      ;Now load y with new offset downward to store the byte
                 sta     (FROM),y        ;Save the new byte
@@ -1534,15 +1521,15 @@ mvup1           ldy     #0              ;always zero from From copy position to 
 ;
 ; Not done yet
 ;
-mvUpMore        lda     FROM            ;decrement FROM to copy the next byte
+mvUpMore:       lda     FROM            ;decrement FROM to copy the next byte
                 bne     mvUpMore2
                 dec     FROM+1
-mvUpMore2       dec     FROM
+mvUpMore2:      dec     FROM
                 jmp     mvup1           ;Loop until everything is moved
 ;
 ; All done with copy.
 ;
-mvUpDone
+mvUpDone:
                 clc                     ;Ok, We are now ready to copy the new line to the program
                 lda     lineLength      ;Number of bytes to copy from line buff
                 adc     ProgramEnd      ;Now pdate the end of program address for space we just opened
@@ -1566,7 +1553,7 @@ mvUpDone
 ;
 ;                ldx     offset         ; Load the offset into line buffer in page zero
                 ldx     #0              ; the token buffer is ready to copy
-mvUpLoop2
+mvUpLoop2:
 ;                lda     LINBUF,x       ;get a byte
                 lda     TOKENBUFFER,x       ;get a byte
                 sta     (CURPTR),y     ;Store into Space opened, copies the closing null as well
@@ -1577,37 +1564,37 @@ mvUpLoop2
                 iny
                 bne     mvUpLoop2      ;in case y wraps past 256 bytes stop
 ;
-mvUpFini        jmp     NextIL
+mvUpFini:       jmp     NextIL
 ;
 ;=====================================================
 ; Pops the top value of the ILPC stack and stores it
 ; in ILPC.  Ie, return from an IL subroutine.
 ;
-iRTN            jsr     popILPC
+iRTN:           jsr     popILPC
                 jmp     NextIL
 ;
 ;=====================================================
 ; NLINE print a newline
 ;
-iNLINE          jsr     CRLF                ;user supplied sub
+iNLINE:         jsr     CRLF                ;user supplied sub
                 jmp     NextIL
 ;
 ;=====================================================
 ; This saves the current ILPC value on the stack, then
 ; jumps to the address specified by the next two bytes.
 ;
-iCALL         jsr   pushILPC                    ;save ILPC
+iCALL:        jsr   pushILPC                    ;save ILPC
               bcc   iJMP
 
 ;If the push failed not enough stack space
-ErrILStkOver    ldx     #ERR_IL_STACK_OVER_FLOW          ; Flag any error in line number
+ErrILStkOver:   ldx     #ERR_IL_STACK_OVER_FLOW          ; Flag any error in line number
                 lda     #0                               ; stop the execution
                 jmp     iErr2
 ;
 ; Jmp to a specific location in the IL code.  The new
 ; address immediately follows the opcode.
 ;
-iJMP            jsr     getILWord
+iJMP:           jsr     getILWord
                 stx     ILPC
                 sta     ILPC+1
                 jmp     NextIL
@@ -1617,14 +1604,14 @@ iJMP            jsr     getILWord
 ;=====================================================
 ; Push the next two bytes onto the arithmetic stack.
 ;
-iSetR2          jsr     getILByte
+iSetR2:         jsr     getILByte
                 sta     R2
                 jmp     NextIL
 ;
 ;=====================================================
 ; Push the next two bytes onto the arithmetic stack.
 ;
-iLIT            jsr     getILWord
+iLIT:           jsr     getILWord
                 stx     R0
                 sta     R0+1
                 jsr     pushR0
@@ -1634,12 +1621,12 @@ iLIT            jsr     getILWord
 ; Initialize all variables for a single task.  Ie, set to zero.
 ; And internal stack pointers
 ;
-subVINIT        tya
+subVINIT:       tya
                 pha
 
                 lda     #0
                 ldy     #0
-Vinit2          sta     (VARIABLES),y
+Vinit2:         sta     (VARIABLES),y
                 iny
                 cpy     #[[VARIABLESSIZE * 2] - 2]                     ; skip the old exit code
                 bcc     Vinit2
@@ -1652,7 +1639,7 @@ Vinit2          sta     (VARIABLES),y
                 tay
                 rts
 
-iVINIT
+iVINIT:
                 jsr     subVINIT
                 jsr     Compile                                        ; compile line numbers to memory pointers
                 jmp     NextIL
@@ -1661,7 +1648,7 @@ iVINIT
 ; Set the address of the error handler.  After any
 ; error, set to the ILPC to the specified location.
 ;
-iERRGOTO        jsr     getILWord
+iERRGOTO:       jsr     getILWord
                 stx     errGoto
                 sta     errGoto+1
                 jmp     NextIL
@@ -1673,14 +1660,14 @@ iERRGOTO        jsr     getILWord
 ; strings match, continue executing the next IL
 ; opcode.  Else, add the offset to ILPC.
 ;
-iTST            jsr     getILByte       ;Get the relative jump address
+iTST:           jsr     getILByte       ;Get the relative jump address
                 sta     offset          ;save it to use if test faile
                 jsr     saveIL          ;in case of failure, to restore before jump calculation
 
                 ldy     CUROFF
                 sty     dpl             ;save for later
 ;
-iTSTloop        jsr     getILByte       ;get next char
+iTSTloop:       jsr     getILByte       ;get next char
                 beq     iTSTm           ;match!
                 ldy     dpl
                 cmp     (CURPTR),y
@@ -1688,18 +1675,18 @@ iTSTloop        jsr     getILByte       ;get next char
                 ora     #$20            ; lets allow lowercase as well
                 cmp     (CURPTR),y
                 bne     iTSTfail        ;mismatch
-iTSTUpper       iny
+iTSTUpper:      iny
                 sty     dpl
                 bne     iTSTloop
 ;
 ; It's a match!  Clean up a bit.
 ;
-iTSTm           ldy     dpl
+iTSTm:          ldy     dpl
                 sty     CUROFF
                 jmp     NextIL
 
 ; Test for a single quote string
-iTSTStr         jsr     getILByte
+iTSTStr:        jsr     getILByte
                 sta     offset
                 jsr     saveIL
                 ldy     CUROFF
@@ -1713,12 +1700,12 @@ iTSTStr         jsr     getILByte
 ; Not a match, reset ILPC and then move to the
 ; offset.
 ;
-iTSTfail        jsr     restoreIL
+iTSTfail:       jsr     restoreIL
                 jmp     tstBranch
 ;
 ;=================================================JLIT=
 ; Test if we have a let statement without the let keyword
-iTSTLET         jsr     getILByte     ; Get the relative offset byte
+iTSTLET:        jsr     getILByte     ; Get the relative offset byte
                 sta     offset        ; Save the jump offset for fails
                 jsr     saveIL        ; save to restore when done if fail
 
@@ -1732,17 +1719,17 @@ iTSTLET         jsr     getILByte     ; Get the relative offset byte
                 bcc    iTSTGOODVAR    ; No it failed get out Fast
                 bcs     iTSTfail      ; return it failed
 
-iTSTLETGOOD
+iTSTLETGOOD:
                 iny
                 sty     CUROFF        ; If it was a let then inc past the let word
-iTSTGOODVAR
+iTSTGOODVAR:
                 jmp     NextIL        ; Then next instruction
 
 ;=================================================JLIT=
 ; Test a byte at an indirect address
 ; fails if byte is not equal to the value at the address
 ; The tests an indirect byte and branches if true
-iTSTBYTE        jsr     getILByte     ; Get the relative offset byte
+iTSTBYTE:       jsr     getILByte     ; Get the relative offset byte
                 sta     offset        ; Save the jump offset for fails
                 jsr     saveIL        ; save to restore when done if fail
                 jsr     getILWord     ; Get a word into RO
@@ -1754,12 +1741,12 @@ iTSTBYTE        jsr     getILByte     ; Get the relative offset byte
                 bne     iTSTByteNotEqual
                 jmp     iTSTfail
 
-iTSTByteNotEqual
+iTSTByteNotEqual:
                jmp     NextIL        ; Then next instruction
 
 ;=================================================JLIT=
 ; Test a byte  branch if it fails
-iTSTB           jsr     getILByte     ; Get the relative offset byte
+iTSTB:          jsr     getILByte     ; Get the relative offset byte
                 sta     offset        ; Save the jump offset for fails
                 jsr     saveIL        ; save to restore when done if fail
                 jsr     getILByte     ; Get a byte into Acc
@@ -1768,14 +1755,14 @@ iTSTB           jsr     getILByte     ; Get the relative offset byte
                 beq     iTSTBMatch    ; Yes it matched move on
                 jmp     iTSTfail      ; REcover and move on to next test
 
-iTSTBMatch
+iTSTBMatch:
                iny
                sty     CUROFF         ; Point to the next byte
                jmp     NextIL         ; Then next instruction
 
 ;=================================================JLIT=
 ; Test a byte  branch if it fails
-iTSTW           jsr     getILByte     ; Get the relative offset byte
+iTSTW:          jsr     getILByte     ; Get the relative offset byte
                 sta     offset        ; Save the jump offset for fails
                 jsr     saveIL        ; save to restore when done if fail
                 jsr     getILWord     ; Get a word into RO
@@ -1792,7 +1779,7 @@ iTSTWM1:        iny
                 beq     iTSTWMatch
                 jmp     iTSTfail
 
-iTSTWMatch
+iTSTWMatch:
                 iny
                 sty     CUROFF
                 jmp     NextIL        ; Then next instruction
@@ -1816,10 +1803,10 @@ iTSTDONE:
 ;
 ; Advance to the next line
 ;
-iTSTDONEtrue
+iTSTDONEtrue:
                 jmp	NextIL
 
-tstBranchLink   jmp   tstBranch
+tstBranchLink:  jmp   tstBranch
 ;
 ;=====================================================
 ; Inc and dec a variable , faster than a = a + 1
@@ -1860,16 +1847,16 @@ iDECVAR:
 ; offset to ILPC. Converted to use actual absolute memory addresses
 ; TSTVT Looks for the task context
 ;
-iTSTVT          jsr     popR1                 ; The task top has the context id(PID)
+iTSTVT:         jsr     popR1                 ; The task top has the context id(PID)
                 lda     #0
                 sta     R2
                 beq     iTSTVV
 
 ; Test for simple variable
-iTSTV           lda     #1                    ; set a process Flag
+iTSTV:          lda     #1                    ; set a process Flag
                 sta     R2
 
-iTSTVV          jsr     getILByte             ;offset
+iTSTVV:         jsr     getILByte             ;offset
                 sta     offset
 ;
                 ldy     CUROFF                ; Get the pointer into the program
@@ -1929,25 +1916,25 @@ iTSTVGOODPID:
                 sta     R0+1
                 jmp     iTSTVAddOffset
 
-iTSTVLocalValue
+iTSTVLocalValue:
                 lda     VARIABLES             ; Get the local tasks variables
                 sta     R0
                 lda     VARIABLES+1
                 sta     R0+1
 
-iTSTVAddOffset
+iTSTVAddOffset:
                 pla
                 sta     R1
                 lda     #0
                 sta     R1+1
 
-iTSTVcontinue
+iTSTVcontinue:
 
                 jmp     iADDfast              ; Fast add for value/place on stack
 
 ; When we get here then we are using the root address of the Lowest addresses free bytes as
 ; an array of integer values or byte.
-iTSTVat
+iTSTVat:
                 iny
                 sty     CUROFF                 ;it is a valid variable
                 lda     ProgramEnd             ;set flag to let evaluator to use PROGRAMEND as the root
@@ -1958,7 +1945,7 @@ iTSTVat
 
 ; When we get parameters passed we can access them using the # variable with[]
 ; example #[0] #[1] etc, we dont check yet if there is too many
-iTSTVParm       iny
+iTSTVParm:      iny
                 sty    CUROFF                 ;it is a valid variable
 
 ; upon return the y register  point to the gosub Parms entry value entry
@@ -1987,7 +1974,7 @@ iTSTVindex0:
                 jmp     pushR0nextIl
 
 
-iTSTMissingParms
+iTSTMissingParms:
                 lda     #0
                 ldx     #ERR_FUNCTION_EXPECTED_PARAMETERS
                 jmp     iErr2
@@ -1998,7 +1985,7 @@ iTSTMissingParms
 ; value in R0 instead of pushing onto stack.
 ; This tests for a valid line number
 ;
-iTSTL           jsr     getILByte
+iTSTL:          jsr     getILByte
                 sta     offset
 ;
                 ldy     CUROFF
@@ -2023,7 +2010,7 @@ iTSTLNotLineNo:
 ; if the character is a digit, assume it's a number.
 ; Convert to a number and push it onto the stack.
 ;
-iTSTN           jsr     getILByte
+iTSTN:          jsr     getILByte
                 sta     offset
 ;
                 lda     #0
@@ -2061,7 +2048,7 @@ chkInteger:
 ;
 ; Check if it is negative and make it so
 ;
-iTSTN_1
+iTSTN_1:
                 sty     CUROFF
 
                 lda     dpl
@@ -2091,12 +2078,12 @@ iTSTN_2:
 ; fail to meet the requirements.  This takes the
 ; offset and adds/subtracts to/from ILPC.
 ;
-tstBranch       lda     offset          ;get signed offset
+tstBranch:      lda     offset          ;get signed offset
                 bpl     tstPositive
 ;
 ; Do negative branch.  Do sign extension.
 ;
-tstNegative     clc
+tstNegative:    clc
                 adc     ILPC
                 sta     ILPC
 ;                bcc     tstBothDone
@@ -2108,12 +2095,12 @@ tstNegative     clc
                 sta     ILPC+1
                 jmp     NextIL      ;keep going
 ;
-tstPositive     clc
+tstPositive:    clc
                 adc     ILPC
                 sta     ILPC
                 bcc     tstBothDone
                 inc     ILPC+1
-tstBothDone
+tstBothDone:
                 jmp     NextIL
 
 ;
@@ -2121,9 +2108,9 @@ tstBothDone
 ; Test for IRQ pending, and test if a break key pressed
 ; Yes I know but this handles all sorts of irq/break issues
 ;
-iTstIrq         jsr     getILByte      ; get the offset to next instruction when not in irq
+iTstIrq:        jsr     getILByte      ; get the offset to next instruction when not in irq
                 sta     offset         ; Store the not true jump address offset
-irqNo           lda     IRQPending     ; Check if the pending value is set
+irqNo:          lda     IRQPending     ; Check if the pending value is set
                 beq     tstBreak       ; if no irq then check for an escape key pressed
                 cmp     #1             ; only do this if set to first time
                 bne     tstBreak       ; We are in a irq service already
@@ -2141,15 +2128,15 @@ iTSTProcessIRQ:
                 sta     CUROFF
                 jmp     NextIL         ; Execute the next instruction should jmp statement
 
-tstBreak
+tstBreak:
                 jsr     BreakSet       ; Check if the escape key was pressed
                 bne     tstBranch      ; z not set of no break found
                 lda     taskIOPending
                 beq     tstBrkComplete
                 dec     taskIOPending
-tstBrkComplete  jmp     iFIN           ; Exit out of run mode
+tstBrkComplete: jmp     iFIN           ; Exit out of run mode
 
-ErrStkOver      ldx     #ERR_STACK_OVER_FLOW          ; Flag any error in line number
+ErrStkOver:     ldx     #ERR_STACK_OVER_FLOW          ; Flag any error in line number
                 lda     #0                            ; stop the execution
                 jmp     iErr2
 ;
@@ -2158,7 +2145,7 @@ ErrStkOver      ldx     #ERR_STACK_OVER_FLOW          ; Flag any error in line n
 ; This places the number of free bytes on top of the
 ; stack.
 ;
-iFREE           jsr     MemFree
+iFREE:          jsr     MemFree
                 jmp     pushR0nextIl
 ;
 ;=====================================================
@@ -2166,7 +2153,7 @@ iFREE           jsr     MemFree
 ; it with the value on top of stack.  Leaves number on
 ; stack
 ;
-iRANDOM         jsr     popR1                   ;mod value
+iRANDOM:        jsr     popR1                   ;mod value
 ;
 ; If the value is zero, just return a one.
 ;
@@ -2213,7 +2200,7 @@ iRANDOM         jsr     popR1                   ;mod value
                 lda     MQ+1
                 sta     R0+1
                 jmp     pushR0nextIl
-irandom1
+irandom1:
                 lda     #0
                 sta     R0+1
                 lda     #1
@@ -2259,7 +2246,7 @@ irandom1
 ;		jmp	NextIL
 ;
 ; Poke a value into a memory location
-iPOKEMEMORY     sty     tempy
+iPOKEMEMORY:    sty     tempy
                 jsr     popR0
                 jsr     popR1
                 ldy     #0
@@ -2270,7 +2257,7 @@ iPOKEMEMORY     sty     tempy
 ;
 ; Get a value from a memory location
 ;
-iPEEKMEMORY     sty     tempy
+iPEEKMEMORY:    sty     tempy
                 jsr     popR0
                 ldy     #0
                 lda     (R0),y
@@ -2282,14 +2269,14 @@ iPEEKMEMORY     sty     tempy
 ;
 ; Call to address return what ever is in a to the stack
 ; func2 will load a value into a before the call
-iCallFunc       jsr     popR1
+iCallFunc:      jsr     popR1
                 lda     R1
                 jsr     iCallRtn
                 sta     R0
                 lda     #0
                 sta     R0+1
                 jsr     pushR0nextIl
-iCallRtn
+iCallRtn:
                 jsr     popR0
                 jmp     (R0)
 
@@ -2320,12 +2307,12 @@ iPUTCHAR:       jsr     popR0
                 jmp     NextIL
 ;=====================================================
 ; Put the number on the stack out as hex, suppress leading 0
-iHexOut
+iHexOut:
                 jsr     popR0
                 lda     R0+1
                 beq     iHexSecondByte
                 jsr     OUTHEX
-iHexSecondByte
+iHexSecondByte:
                 lda     R0
                 jsr     OUTHEX
                 jmp     NextIL
@@ -2333,7 +2320,7 @@ iHexSecondByte
 ;=====================================================
 ; Replace TOS with its absolute value.
 ;
-iABS            jsr     popR0
+iABS:           jsr     popR0
                 lda     R0+1
                 bpl     iABS_1        ;already positive
                 eor     #$ff
@@ -2344,12 +2331,12 @@ iABS            jsr     popR0
                 inc     R0
                 bne     iABS_1
                 inc     R0+1
-iABS_1          jmp     pushR0nextIl
+iABS_1:         jmp     pushR0nextIl
 
 ;
 ;================================================================
 ; The set of logical operators
-iLogAnd
+iLogAnd:
                 jsr     popR0
                 jsr     popR1
                 lda     R0
@@ -2360,7 +2347,7 @@ iLogAnd
                 sta     R0+1
                 jmp     pushR0nextIl
 
-iLogOr
+iLogOr:
                 jsr     popR0
                 jsr     popR1
                 lda     R0
@@ -2370,7 +2357,7 @@ iLogOr
                 ora     R1+1
                 sta     R0+1
                 jmp     pushR0nextIl
-iLogXor
+iLogXor:
                 jsr     popR0
                 jsr     popR1
                 lda     R0
@@ -2380,7 +2367,7 @@ iLogXor
                 eor     R1+1
                 sta     R0+1
                 jmp     pushR0nextIl
-iLogNot
+iLogNot:
                 jsr     popR0
                 lda     R0
                 eor     #$FF
@@ -2390,20 +2377,20 @@ iLogNot
                 sta     R0+1
                 jmp     pushR0nextIl
 
-iTruth
+iTruth:
                 lda     #$FF
                 sta     R0
                 sta     R0+1
                 jmp     pushR0nextIl
-iFalse
+iFalse:
                 lda     #$00
                 sta     R0
                 sta     R0+1
                 jmp     pushR0nextIl
 ;===============================================================
-;Shift instruction right 1, left 0
+;Shift instruction a is set to right = 1, left = 0
 ;
-iShift          txa
+iShift:         txa
                 pha
                 jsr     popR0          ; number of places to shift 0 to 16 really
                 jsr     popR1          ; value to shift
@@ -2437,7 +2424,7 @@ iShiftExit:
 ;================================================================
 ;Set the IRQ service rtn line number
 ;
-iSetIrq         sei                 ; disable the interupts
+iSetIrq:        sei                 ; disable the interupts
                 lda     #0          ; Zero the Status flag
                 sta     IRQStatus
                 jsr     popR0       ; get the line number
@@ -2448,7 +2435,7 @@ iSetIrq         sei                 ; disable the interupts
                 jsr     pushLN      ; Save the current line pointer
                 bcc     iSetIrqOk   ; Check if there was an error
                 jmp     ErrStkOver     ; Check if there was an error
-iSetIrqOk
+iSetIrqOk:
                 jsr     findLine    ; Find the IRQ func Line Pointer
                 bne     iSetIrqErr  ; Error if exact line not found
                 lda     CURPTR+1    ; Copy it to the Entry pointer
@@ -2459,14 +2446,14 @@ iSetIrqOk
                 sta     IRQStatus
                 jsr     popLN       ; Restore the old line number
                 cli                 ; Enable the interupts
-iSetExt         jmp     NextIL
+iSetExt:        jmp     NextIL
 
-iSetIrqErr      jsr     popLN
+iSetIrqErr:     jsr     popLN
                 ldx     #ERR_BAD_LINE_NUMBER
                 lda     #0
                 jmp     iErr2
 ;
-iTRACEPROG      jsr     popR0
+iTRACEPROG:     jsr     popR0
                 lda     R0
                 sta     ILTrace
                 jmp     NextIL
@@ -2486,6 +2473,7 @@ iTRACEPROG      jsr     popR0
                 include  "compile.asm"
                 include  "print.asm"
                 include  "mem.asm"
+                include  "gosub_def.inc"
                 include  "gosub.asm"
                 include  "tasks.asm"
                 include  "ipc.asm"
@@ -2543,7 +2531,8 @@ STACKSTART      equ     *
 mathStack       ds      [MATHSTACKSIZE * 2 * TASKCOUNT]                ; Stack used for math expressions
 ilStack         ds      [ILSTACKSIZE * 2 * TASKCOUNT]                  ; stack used by the IL for calls and returns
 gosubStack      ds      [GOSUBSTACKSIZE * 4 * TASKCOUNT]               ; stack size for gosub stacks
-variableStack   ds      [VARIABLESSIZE * 2 * TASKCOUNT]                ; Stack of variables, 26 A-Z-task exit code,taskio block stdin,stdout,stdstat,iostatus
+variableStack   ds      [VARIABLESSIZE * 2 * TASKCOUNT]                ; Stack of variables, 26 A-Z-task exit code,taskio block
+;                                                                        stdin,stdout,stdstat,iostatus
 TASKEXITCODE    equ     [[VARIABLESSIZE * 2]  - 2]                     ; Offset to exit code location
 STACKEND        equ     *
 STACKLEN        equ     STACKEND-STACKSTART                        ; total space used for stacks
@@ -2591,7 +2580,7 @@ FreeMem         ds      2         ; amount of free memory
 ;=====================================================
 ; This is the start of the user's BASIC program space.
 ;
-; PERSONAL GOAL: This should be no larger than $0DFF.
+; PERSONAL GOAL: This should be no larger than $0DFF. *JustLostInTim abandoned, just for fun
 ;                0200-05FF = 1K
 ;                0200-09FF = 2K
 ;                0200-0DFF = 3K

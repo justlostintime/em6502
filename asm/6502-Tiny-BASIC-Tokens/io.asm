@@ -90,24 +90,24 @@ DeviceIoBlocks
 ;======================================================================
 ; This is the Basic IRQ handler, works with task manager, assumes timer interupt
 ;
-ServiceIrq      pha
+ServiceIrq:     pha
                 txa
                 pha
                 ldx     #0
-ServiceLoop
+ServiceLoop:
                 inc     timercounter,x
                 bne     ServiceCont
                 inx
                 cpx     #4
                 bne     ServiceLoop
-ServiceCont
+ServiceCont:
                 lda     IRQStatus
                 beq     RetIrq
                 lda     IRQPending
                 bne     RetIrq
                 lda     #1
                 sta     IRQPending
-RetIrq          
+RetIrq:          
                 pla
                 tax
                 pla
@@ -124,12 +124,12 @@ VSTAT           jmp     (BStatVec)
 ; Validate the device index and set x to offest in table
 ; does not return to ioInterface if invalid, returns to original caller
 ; should be called immediatly after entering the ioInterface call
-ioValidateDevice
+ioValidateDevice:
                 cpx    #IO_MAX_DEVICES
                 bcc    ioValidIndex
                 ldx    #IO_DEVICE_INVALID
                 bcs    ioInvalidDevice
-ioValidIndex
+ioValidIndex:
                 txa
                 asl                           ; Multiply by 8
                 asl
@@ -142,13 +142,13 @@ ioValidIndex
                 bne     ioValidDevice         ; The device is active and valid index
                 ldx     #IO_DEVICE_CLOSED
 
-ioInvalidDevice
+ioInvalidDevice:
                 pla                           ; Remove return address of IO interface
                 pla
                 sec                           ; ensure that carry is set
                 rts
 
-ioValidDevice
+ioValidDevice:
                 clc
                 rts
 ;
@@ -156,7 +156,7 @@ ioValidDevice
 ; Set the io device jmp vectors
 ; input x contains the vector to the active Device IO Block
 ; output a, x undefined y unchanged
-ioSetDeviceVectors
+ioSetDeviceVectors:
                 cpx     BActiveDevice         ; Check if already set
                 beq     ioSetDevExit          ; if already set then do nothing
 
@@ -167,7 +167,7 @@ ioSetDeviceVectors
                 ldy     DeviceIoBlocks+2,x   ; Get the device driver index
                 sty     BActiveDriver        ; Pointer to active Device driver
                 ldx     #0                   ; Transfer the 6 pointers to the Vectors
-ioSetDevLoop
+ioSetDevLoop:
                 lda     DeviceDriverBlocks+2,y
                 sta     BInVec,x
                 inx
@@ -177,7 +177,7 @@ ioSetDevLoop
 
                 pla
                 tay
-ioSetDevExit
+ioSetDevExit:
                 rts
 ;
 ;======================================================================
@@ -187,7 +187,7 @@ ioSetDevExit
 ; all other parameters are dependant upon the actual device interface
 ;
 ; ioPutCH  a contains the character to send
-ioPutCH       jsr ioValidateDevice
+ioPutCH:      jsr ioValidateDevice
               pha
               jsr ioSetDeviceVectors
               pla
@@ -196,7 +196,7 @@ ioPutCH       jsr ioValidateDevice
               rts
 
 ; io Getch returns the character read from device
-ioGetCH       jsr   ioValidateDevice
+ioGetCH:      jsr   ioValidateDevice
 
               rts
 ;
@@ -205,26 +205,26 @@ ioGetCH       jsr   ioValidateDevice
 ;      a contains the character to send
 ;      x contains the Device ID (equals index into io blocks)  of the io block to used
 ;
-SerialIn
+SerialIn:
 
-SerialOut
+SerialOut:
 
-SerialStatus
+SerialStatus:
            rts
 ;
 ;======================================================================
 ; Date/Time clock interface
-ClockRead
+ClockRead:
 
-ClockWrite
+ClockWrite:
           rts
 ;
 ;======================================================================
 ;
-TimerStart
+TimerStart:
 
-TimerStop
+TimerStop:
 
-TimerStatus
+TimerStatus:
          rts
 

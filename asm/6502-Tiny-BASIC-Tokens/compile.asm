@@ -8,7 +8,7 @@
 ; gosub 1000 : 08 0000 A4 E803
 ; fn 100()   ; 37 0000 A2 64 40 41
 ; task(1000) : 2F 0000 40 A4 E803 41
-Compile
+Compile:
                 lda      #0
                 sta      R0                           ; keep track of how many errors we find
                 lda      RunMode
@@ -125,7 +125,7 @@ CompileField:   sta     R0
                 bne     CompNoBracket          ; in case of error
                 iny                            ; skip the bracket
 
-CompNoBracket
+CompNoBracket:
                 lda      #0                    ; In case the value is a byte
                 sta      R0+1
 

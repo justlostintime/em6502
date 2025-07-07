@@ -26,12 +26,10 @@ Public Sub _new(SymbolName As String, StartAddress As String, RowNumber As Integ
   MemLength = length
   Symbol = SymbolName
 
-
   Fmain.MyComputer.MonitorList.Add([Eval("&H0" & StartAddress), EndAddress], StartAddress)
   Fmain.MemoryMonitors.Add(Me, StartAddress)
 
 End
-
 
 Public Sub ShutDown()
 

@@ -48,7 +48,7 @@ MemInitEnd:
 ; It has some ties to the operating environment that
 ; will need to be customized for the target system.
 ;
-GetSizes
+GetSizes:
 ;
 ; Here is machine specific code to get the highest
 ; memory location that can be used by BASIC.
@@ -99,7 +99,7 @@ MemUsed:
 ;
 ;=====================================================
 ; Set a block of memory to a value
-iSetBlock       txa
+iSetBlock:      txa
                 pha
                 tya
                 pha
@@ -119,7 +119,7 @@ iSetBlock       txa
                 stx     R0
                 sta     R0+1
 
-memset
+memset:
                 ldy     #0                    ; Set for length of block to copy
                 ldx     #0                    ; set for number of block of 256 to copy
 
@@ -146,7 +146,7 @@ iSetBlockComplete:
 ;
 ; Check if we have reached the end of the initialization/Copy
 ;
-iSetBlockEnd    iny
+iSetBlockEnd:   iny
                 bne     iSetBlockEndChk
                 inx
                 inc     dpl+1
@@ -160,7 +160,7 @@ iSetBlockEndExit:
 ;================================================================
 ; Copy a block of memory from one location to another
 ;
-iCopyBlock      txa
+iCopyBlock:     txa
                 pha
                 tya
                 pha
@@ -171,7 +171,7 @@ iCopyBlock      txa
                 lda     R1+1
                 sta     dpl+1
                 jsr     popR1           ; Number of bytes to copy
-memcpy
+memcpy:
                 ldx     #0
                 ldy     #0
 iCopyBlockLoop:
@@ -199,7 +199,7 @@ iCopyBlockDone:
 ; 0 - equals
 ; -1 - s1  <  s2
 ; 1   s1  >  s2
-iCmpBlock       txa
+iCmpBlock:      txa
                 pha
                 tya
                 pha

@@ -16,7 +16,7 @@ cTimerHigh      equ 4
 
 ; il interface to the timer
 
-iTimer
+iTimer:
       jsr     popR0
       ldx     R0            ; Set time parameter
       jsr     popR0
@@ -29,7 +29,7 @@ iTimer
 ; Actual system interface to the timer
 ; x is value 9 = 1 second, 1-5 = value * 10ms 6 = 100ms, 7=250ms, 8=500ms, 0 = stop timer
 ; a is 0,1,2,4
-iTimerif
+iTimerif:
 
       cmp  #cTimerLow                ; Do they want the low byte
       bcs  iTimerValue               ; Just get the value we need
@@ -50,12 +50,12 @@ iTimerif
       sta  timercounter+3
       cli                            ; enable the interupts, this is start/restart timer
 
-iTimerAck
+iTimerAck:
       lda  timerinterface            ; get the ack nak
       ldx  #0                        ; the ack value is single byte so pad with x
       rts                            ; Get out of here
 
-iTimerValue                          ; get the value from the offsets provided
+iTimerValue:                         ; get the value from the offsets provided
       php                            ; Save the flags so we can restore irq setting later
       sei                            ; turn off the interupts
       tax                            ; the control is also the value
