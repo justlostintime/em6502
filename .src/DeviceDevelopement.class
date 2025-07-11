@@ -94,7 +94,6 @@ Public Sub Selectalldev_Click()
 
 End
 
-
 Public Sub Form_Resize()
 
   DeviceEditor.height = DeviceDevelopement.Height - (DeviceEditor.Top + 50)
@@ -136,7 +135,5 @@ Public Sub DoTesting_Click()
   Wait 0.001
 
   DeviceTester.SetDevice(CurrentFile)
-
-
 
 End

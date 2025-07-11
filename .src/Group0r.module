@@ -267,7 +267,6 @@ Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
     .setsr(.AC)
     Return
 
-
   Grp0Case47: 'STZ ABS 65c02
     .DataBus = 0
     .Absolute()
@@ -417,4 +416,3 @@ Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
   End With
 
 End
-

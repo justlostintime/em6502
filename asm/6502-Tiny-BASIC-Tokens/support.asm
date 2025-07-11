@@ -603,7 +603,6 @@ popLoop:
                 cpx     #0
                 bne     popLoop               ; Loop until all moved
 
-
 PopDone:        sty     GOSUBSTACKPTR
                 ldy     rtemp1
                 lda     rtemp1+1               ; get the type of return
@@ -808,9 +807,12 @@ idbgBasic:      bit     ILTrace
                 db      "Press s - Stop",CR,LF,"d - display Vars",CR,LF,"anything else to step",CR,LF," > ",0
 dbgBasicLoop:
                 jsr     VGETCH
+                pha
                 jsr     CRLF
                 jsr     SetInDebugEnd
 
+                pla
+dbgTestPoint:
                 cmp     #'s                 ; Quit program
                 beq     dbgBasicStop
 
@@ -916,7 +918,6 @@ ILBadRange:
                 sec
                 rts
 
-
 ;=====================================================
 ; Set output vector to the console output function
 ;
@@ -937,8 +938,6 @@ SetInConsole:
                 sta     BInVec+1
                 pla
                 rts
-
-
 
 ;====================================================
 ;Clear the terminal assume it is ansii or vt100
@@ -974,7 +973,6 @@ CopyStackR1:
                 pla
                 tay
                 rts
-
 
 ;====================================================
 ;Swap the out debug call for standard calls
@@ -1171,19 +1169,3 @@ IncR0:
 IncR0Done:
                 pla
                 rts
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

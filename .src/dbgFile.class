@@ -18,6 +18,4 @@ Modules As Collection             ' mod has a file number it relates to
 
 Public Sub _new(fileNum As String, debugInfo As Collection)
 
-
-
 End

@@ -157,7 +157,6 @@ Public Sub UnRegisterForStep(Debugs As DebugSource)
 
 End
 
-
 Public Sub The_Computer_NextInst(info As String)
 
   Disassembly.Print(info & "\n\r")
@@ -705,7 +704,6 @@ Sub GetSymbols(filename As String)
 
 End
 
-
 Public Sub GetDebugInfo(filename As String)
 
   If Not Exist(filename) Then
@@ -780,8 +778,6 @@ Public Sub SaveDebugList()
   Settings["debugbreaks"] = debugbreaks
 
 End
-
-
 
 Public Sub LoadedList_DblClick()
 
@@ -954,7 +950,6 @@ Sub ChangeComputerdef(NewDef As String)
 
 End
 
-
 Public Sub MakeActive_Click()
 
   Dim NewDef As String
@@ -1126,7 +1121,6 @@ Public Sub RestoreBreakpoints_Click()
 
 End
 
-
 Public Sub ShowWatchWindow_Click()
 
   If watchMem.Visible Then
@@ -1215,4 +1209,3 @@ Public Sub addbreak_KeyRelease()
   Endif
 
 End
-

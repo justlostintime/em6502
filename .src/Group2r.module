@@ -46,7 +46,6 @@ Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
     .AbsX()
     Goto DoAsl
 
-
   Grp2Case04: 'ORA (ZeroPageIndirect) 65c02
     .ZeroPageIndirect()
     .ReadByte()
@@ -102,8 +101,6 @@ Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
     .ReadByte()
     .AndAc()
     Return
-
-
 
     '=============================================================================================
   Grp2Case2:

@@ -1,57 +1,58 @@
             seg Code
 ILTBL1:
-      dw    iXINIT        ;0
-      dw    iDONE         ;1
-      dw    iPRS          ;2
-      dw    iPRN          ;3
-      dw    iSPC          ;4
-      dw    iNLINE        ;5
-      dw    iNXT          ;6
-      dw    iXFER         ;7
-      dw    iSAV          ;8
-      dw    iRSTR         ;9
-      dw    iCMPR         ;10
-      dw    iINNUM        ;11
-      dw    iFIN          ;12
-      dw    iERR          ;13
-      dw    iADD          ;14
+      dw    iXINIT        ;0  Initialize the IL
+      dw    iDONE         ;1  Verify nothing left on statement line, return error if is
+      dw    iPRS          ;2  Print string until closing quote
+      dw    iPRN          ;3  Pop the top off the stack and print it as a signed decimal number.
+      dw    iSPC          ;4  Space to next zone. Otherwise print a tab
+      dw    iNLINE        ;5  Print a newline
+      dw    iNXT          ;6  CMD MODE: Jump inst following NXT inst., Else move to next line of user code
+      dw    iXFER         ;7  Get line number from top of stack, transfer to it or next higher if not found
+      dw    iSAV          ;8  Save a pointer to the next basic code line to the CAll stack
+      dw    iRSTR         ;9  Return from gosub or function, pops the line pointer from stack and sets pc
+      dw    iCMPR         ;10 Compares top two entries on stach an pushes true or false onto stack, stack enries expected = val1, cmp type, val2
+      dw    iINNUM        ;11 Read line of text, convert to number and puch onto stack
+      dw    iFIN          ;12 Stop program, enter command mode
+      dw    iERR          ;13 Print error code, stop program, enter command mode
+      dw    iADD          ;14 Add the two value at top of stack push answer to top of stack
       dw    iSUB          ;15
       dw    iNEG          ;16
       dw    iMUL          ;17
       dw    iDIV          ;18
-      dw    iSTORE        ;19
-      dw    iIND          ;20
-      dw    iLST          ;21
-      dw    iINIT         ;22
-      dw    iGETLINE      ;23
-      dw    iINSRT        ;24
-      dw    iRTN          ;25
-      dw    MONITOR       ;26
-      dw    iLIT          ;27
-      dw    iCALL         ;28
-      dw    iJMP          ;29
-      dw    iVINIT        ;30
-      dw    iERRGOTO      ;31
-      dw    iTST          ;32
-      dw    iTSTV         ;33
-      dw    iTSTL         ;34
-      dw    iTSTN         ;35
-      dw    iFREE         ;36
-      dw    iRANDOM       ;37
-      dw    iABS          ;38
+      dw    iSTORE        ;19 Pops two entries off stack, first is value, second is address where to store it
+      dw    iIND          ;20 Indirect fetch, byte or word, pop address from stack, use address to get value and push onto stack
+      dw    iLST          ;21 List the current user program in memory
+      dw    iINIT         ;22 Initialize the IL virtual machine
+      dw    iGETLINE      ;23 Read a line from the terminal, terminate with a null byte
+      dw    iINSRT        ;24 Insert a line of user code into a program at correct location
+      dw    iRTN          ;25 POP value from IL stack and place into ip program counter, then continue executing from there
+      dw    MONITOR       ;26 Exit basic and return to system monitor
+      dw    iLIT          ;27 Push a literal value onto the math stack
+      dw    iCALL         ;28 Call and IL function, push nextil onto il stach and branch to provided address
+      dw    iJMP          ;29 Immeadiate jump to provided address
+      dw    iVINIT        ;30 Initialize all variables for a single task.  Ie, set to zero. And internal stack pointers
+      dw    iERRGOTO      ;31 Sets the error HAndler Address
+      dw    iTST          ;32 compare string, if match continue else jump to provided address
+      dw    iTSTV         ;33 Test if next is a variable name, if it is then continue, else branch to provided address
+      dw    iTSTL         ;34 Test for valid line number and leave it in r0, branch to provided address if not
+      dw    iTSTN         ;35 Check for number, if it is then convert push onto math stack and continue, if not then branch to provided address
+      dw    iFREE         ;36 Push the number of free bytes available for user programs into the math stack
+      dw    iRANDOM       ;37 push a random number onto the math stack
+      dw    iABS          ;38 pop math stack, push asbsolute value onto stack
 ;
 ; Disk functions.  There must be pointers
 ; to functions even if no disk is supported.
 ; Makes things easier in IL.inc.
-;
+; Life, universe, everything(hitch hiker)
+; Did you remember your towel?
     if    DISK_ACCESS
-      dw    iOPENREAD    ;39
-      dw    iOPENWRITE   ;40
-      dw    iDCLOSE      ;41
-      dw    iDGETLINE    ;42 Life, universe, everything(hitch hiker)
-      dw    iDLIST       ;43 Did you remember your towel?
-      dw    iDDIR        ;44
-      dw    iRMFILE      ;45
+      dw    iOPENREAD    ;39  OPen a file for reading
+      dw    iOPENWRITE   ;40  Open a file for writing
+      dw    iDCLOSE      ;41  Close an open file
+      dw    iDGETLINE    ;42  Read a line from an open file
+      dw    iDLIST       ;43  List the content of the user program to an open disk file... basically save
+      dw    iDDIR        ;44  List the content of the directory on disk
+      dw    iRMFILE      ;45  Delete as file from disk
     else
       dw    NextIL       ;39
       dw    NextIL       ;40
@@ -62,14 +63,14 @@ ILTBL1:
       dw    NextIL       ;45
     endif
 ;
-      dw  iCLEARSCREEN  ;46
-      dw  iPOKEMEMORY   ;47
-      dw  iPEEKMEMORY   ;48
+      dw  iCLEARSCREEN  ;46       Clear the terminal of text
+      dw  iPOKEMEMORY   ;47       Put a byte value into memory location, pop value from stack, pop memory address from stack.
+      dw  iPEEKMEMORY   ;48       Get a byte from memory, pop memory address from stack
       dw  iTSTLET       ;49       Test if the let with no LET keyword
       dw  iTSTDONE      ;50       Test if we are at the end of a line
       dw  iGETCHAR      ;51       Get a character from the terminal
       dw  iPUTCHAR      ;52       Put a char to the terminal
-      dw  iCallFunc     ;53       call a machine rtn accumulator
+      dw  iCallFunc     ;53       call a machine func rtn accumulator
       dw  iBranch       ;54       if value on stack is 0 then next line, else next instuction
       dw  iTSTStr       ;55       Test Specifically for the start of a quoted string
       dw  iSetIrq       ;56       sets the irq handler
@@ -132,12 +133,12 @@ ILTBL2:
       dw  iCmpBlock     ;112      Compare to parts of memory
       dw  iShift        ;113      Shift left 0 or right 1 as parameters
       dw  iTimer        ;114      Start/Stop/Set timer and enable disable system irq
-      
-      dw  iJmpEndFalse  ;115      Jump end Block if top of math stack is false(0)
-      dw  iJmpStart     ;116      Jump to beginning of block in stack
-      dw  iBadOP        ;117      Invalid IL op code
-      dw  iBadOP        ;118      Invalid IL op code
-      dw  iBadOP        ;119      Invalid IL op code
+
+      dw  iJmpEnd       ;115      Point PC to end of Block if top of math stack is true(0)
+      dw  iJmpStart     ;116      Point the PC to beginning of block in stack
+      dw  iBeginBlock   ;117      Puts an entry onto the gosub stack for some type of block
+      dw  iIfTrue       ;118      Pops the top off math stack and branches if true
+      dw  iIfFalse      ;119      Pops the top off math stack and branches if false
       dw  iBadOP        ;120      Invalid IL op code
       dw  iBadOP        ;121      Invalid IL op code
       dw  iBadOP        ;122      Invalid IL op code
@@ -146,7 +147,3 @@ ILTBL2:
       dw  iBadOP        ;125      Invalid IL op code
       dw  iBadOP        ;126      Invalid IL op code
       dw  iBadOP        ;127      Invalid IL op code
-
-
-
-

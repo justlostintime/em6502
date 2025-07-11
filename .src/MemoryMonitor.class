@@ -30,7 +30,6 @@ Static Public Sub ReOpenAllMonitors() As MemoryMonitor[]
 
 End
 
-
 Public Sub _new(StartAddress As String, EndAddress As String)
 
   FMain.MyComputer.MemoryUpdates = True
@@ -74,7 +73,6 @@ Public Sub ShutDown()
 
 End
 
-
 Public Sub MyForm_Close()
 
   If ShuttingDown Then
@@ -103,4 +101,3 @@ Public Sub MyForm_Resize()
   MonitorWindow.MemDumpOut.h = MonitorWindow.h - 2
 
 End
-

@@ -29,7 +29,6 @@ Public Sub reset()
 
 End
 
-
 Public Sub count(address As Long, cycles As Integer)
 
   profile[Hex(address, 4)] += cycles

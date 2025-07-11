@@ -14,7 +14,6 @@ Public Addressing As String
 Public assembler As String
 Public Bytes As Integer
 
-
 Public Sub _new(bOpc As Byte, OpName As String, opAddressing As String, opAssembler As String, opBytes As Integer, opCycles As Integer, Optional opDescription As String = "")
 
   opc = bOpc
@@ -26,4 +25,3 @@ Public Sub _new(bOpc As Byte, OpName As String, opAddressing As String, opAssemb
   Description = opDescription
 
 End
-

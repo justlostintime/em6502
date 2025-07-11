@@ -17,7 +17,6 @@ Property ReturnResult As Boolean Use $ReturnResult = False    'if true it will n
 Property ScriptDirectory As String Use $ScriptDirectory
 Property PluginPath As String Use $sPluginPath
 
-
 Public Sub _new(Optional bReturnClasses As Boolean = False, DefaultSourceDirectory As String = User.home &/ ".gambasscripts")
 
   '$sPluginPath = Settings["PluginPath", User.name & Application.name & "GambasScript/plugins"]
@@ -35,7 +34,6 @@ Public Sub _free()
   Settings["ScriptDirectory"] = $ScriptDirectory
 
 End
-
 
 '' Take simple Gambas source code and create a component project from it. Load
 '' that component and return the class object of the given source file's code.
@@ -162,7 +160,6 @@ Public Function _Call(sname As String, Optional newParms As Variant[] = [], Comp
   Shell scmd To sRes
   If Process.LastValue Then Error.Raise(Subst$((("Archiver error:") & "\n&1"), sRes))
 
-
   If Not CompileOnly Then
     Component.Load(sArchive)
     cobject.iClass = Class.Load(sname)
@@ -180,7 +177,6 @@ Public Function _Call(sname As String, Optional newParms As Variant[] = [], Comp
       SubsAndClasses[cname] = cObject
       Return cObject.iClass
     Endif
-
 
   Endif
 
@@ -273,7 +269,6 @@ Public Sub FileName(Index As String) As String
   Return SubsAndClasses[index].sFileName
 
 End
-
 
 Public Sub changed(index As String) As Boolean
 
@@ -403,5 +398,3 @@ Private Sub CheckLibVersions(sPath As String, Version As String) As String
   Endif
 
 End
-
-

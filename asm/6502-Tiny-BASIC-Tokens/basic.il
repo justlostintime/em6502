@@ -39,6 +39,11 @@ BasicStmts:
                 dw    ekSetMemB
                 dw    ekSetMemW
                 dw    ekCopyMem
+                dw    ekWhile
+                dw    ekWend
+                dw    ekFor
+                dw    ekNext
+                dw    ekStep
 ;
 ; Logical operators
 BasicLogical:   db    kOr,3
@@ -71,6 +76,7 @@ BasicFuncs:     db    kBeginFunc,kFuncCount
                 dw    ekAddr
                 dw    ekCmpMem
                 dw    eKTimer
+;
 ;====================================================
 ; file constants
 OPEN_APPEND     equ    0             ; append to file
@@ -112,7 +118,7 @@ STMT:
 ; Process a let statement implied or explicit.
 ;
 notirq:
-        DEBUGBASIC                                ;Check if we are doing a debug for this session
+        DEBUGBASIC                                ; Check if we are doing a debug for this session
         TSTLET      DoVector                      ; Test if Let keyword or a variable
 ekLet:
         TSTV        DoVector                      ; Test for variable
@@ -186,12 +192,11 @@ ekIreturn:
 ;==============================================================================================================================
 ;Process if statement, if true then process all statements until end of line reached
 ;S1S1:
-;        TSTB       S1Z,kIf                        ; IF STATEMENT
+;        TSTB       S1Z,kIf                          ; IF STATEMENT
 ekIf:
-        CALL       EXPR                           ; GET EXPRESSION rel ops now valid expression 0 false, everything else true
-        TSTB       S1W,kThen                      ; (This line originally omitted) not required
+        CALL       EXPR                              ; GET EXPRESSION rel ops now valid expression 0 false, everything else true
+        TSTB       ekThen,kThen                      ; (This line originally omitted) not required
 ekThen:
-S1W:
         IBRANCH                                   ; PERFORM COMPARISON -- PERFORMS NXT IF FALSE calls iBranch
         IJMP       STMT
 ;===============================================================================================================================
@@ -213,7 +218,6 @@ ekGotoLine:
 ekGotoCompiled:
         lit        1                              ; tell it that mempointer on the stack
         FASTXFER                                  ; put top of stack into curptr
-
 
 ;==================================================================================================================================
 ; Process REM statement
@@ -345,8 +349,6 @@ S8aa:
        DONE
        NXT        CO
        IJMP       STMT            ;Next Statement
-
-
 
 UNKNOWNLnk:
        iJMP       UNKNOWN
@@ -528,7 +530,7 @@ ekSlice:
         NXT         CO
         IJMP        STMT
 ;==========================================================================
-; Turn off and on the thrace functions
+; Turn off and on the trace functions
 ; a debug terminal needs to be available
 ; Trace( Trace flag expression)
 ;      128 trace IL code, 64 trace basic code, 1 turn on interactive debug
@@ -614,7 +616,7 @@ ekNot:
 EXPRLOGS:
         Call       EXPR2               ; get the left first expression
         TSTRELOP   EXPSHIFT            ; Exit level if no rel ops found
-;        TSTB       iR0,oEqual 
+;        TSTB       iR0,oEqual
 ;        LIT        2               ;=
 ;        IJMP       iRFound
 ;iR0:
@@ -945,7 +947,6 @@ F2B2A:
         CALLFUNC
         RTN
 
-
 ;=================================================================================
 ;Check for a number !
 ;
@@ -1025,6 +1026,33 @@ FactMissingRightBracket:
 FactExpectedOpeningBracket:
         ERRMSG     ERR_EXPECTED_OPENING_BRACKET
 ;===============================================================================================================================
+;
+;===============================================================================================================================
+;while .. wend statement
+;
+ekWhile:
+                   BeginBlock kWhile,kWend    ; push the info to stack as a while loop
+xWhileTest:
+                   CALL EXPR                  ; test if condition is true
+                   DONE                       ; should be nothing else on the line
+                   IFFALSE xWhileCleanup      ; if false goto end of block
+                   NXT        CO              ; next line or exit
+                   IJMP   STMT                ; do the next statement
+
+ekWend:            DONE                       ; should be only thing on the line
+                   JmpStart     kWhile        ; always set user program PC to beginning of the block
+                   IJMP         xWhileTest
+xWhileCleanup:
+                   JmpEnd       kWhile
+                   NXT          CO
+                   IJMP  STMT                 ; next statement after the while block
+;
+;==========================for next step interface =============================================================================
+;
+ekFor:
+ekNext:
+ekStep:
+;
 ;========================= Gosub and function interface ========================================================================
 ; Process gosub 1000(Parm1, ...) no return value
 ;

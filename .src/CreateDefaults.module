@@ -14,7 +14,6 @@ Public Sub _call()
       Try Shell.MkDir(.AsmComputerDefinitions)
     Endif
 
-
     Dim Comp As New ComputerDef
     Comp.Name = "Default"
     Comp.Speed = 999
@@ -24,6 +23,7 @@ Public Sub _call()
     Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
     Comp["TTYSIM"] = [&h0E000, 16, "Concurrent Tiny Basic running with CTMON65 monitor", "rw"]
     Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+    Comp["IrqTimer"] = [&h0E020, 5, "1000", "rw"]
     Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
     Comp["ShowMhz"] = [0, 0, "3000", "na"]
     Comp.Description = "Default\n Concurrent tiny basic, Can be used as template"
@@ -33,7 +33,6 @@ Public Sub _call()
     Else
       Comp.merge(.AsmComputerDefinitions)
     Endif
-
 
     Comp = New ComputerDef
     Comp.Name = "TwinScreen"
@@ -47,13 +46,13 @@ Public Sub _call()
     Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
     Comp["ShowMhz"] = [0, 0, "3000", "na"]
     Comp["TTYSIM:1"] = [&h0E020, 16, "Tiny Basic Debug Console", "rw"]
+    Comp["IrqTimer"] = [&h0E030, 5, "1000", "rw"]
     Comp.Description = "Twin Screen\nThis machine has two terminals. the primary is used to run tinybasic.\nThe secondary is the output from the Tinybasic trace system"
     If Not Exist(.AsmComputerDefinitions &/ "TwinScreen") Then
       Comp.Save(.AsmComputerDefinitions)
     Else
       Comp.merge(.AsmComputerDefinitions)
     Endif
-
 
     Comp = New ComputerDef
     Comp.Name = "CTMON2Rams"
@@ -65,6 +64,7 @@ Public Sub _call()
     Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
     Comp["TTYSIM"] = [&h0E000, 16, "CTMON2Ram Concurrent Tiny Basic running with CTMON65 monitor", "rw"]
     Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+    Comp["IrqTimer"] = [&h0E020, 5, "1000", "rw"]
     Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
     Comp.Description = "CTMON2Rams\nThis is an example of using independent ram segments in a machine"
     If Not Exist(.AsmComputerDefinitions &/ "CTMON2Rams") Then
@@ -72,7 +72,6 @@ Public Sub _call()
     Else
       Comp.merge(.AsmComputerDefinitions)
     Endif
-
 
     Comp = New ComputerDef
     Comp.Name = "CTMONMMU"
@@ -84,6 +83,7 @@ Public Sub _call()
     Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
     Comp["TTYSIM"] = [&h0E000, 16, "CTMONMMU and Concurrent Tiny Basic running with CTMON65 monitor", "rw"]
     Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+    Comp["IrqTimer"] = [&h0E020, 5, "1000", "rw"]
     Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
     Comp.Description = "CTMONMMU\nThis machine demonstrates the use of an mmu in the ram space"
     If Not Exist(.AsmComputerDefinitions &/ "CTMONMMU") Then
@@ -91,7 +91,6 @@ Public Sub _call()
     Else
       Comp.merge(.AsmComputerDefinitions)
     Endif
-
 
     Comp = New ComputerDef
     Comp.Name = "CTMON65"
@@ -102,6 +101,7 @@ Public Sub _call()
     Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
     Comp["TTYSIM"] = [&h0E000, 16, "CTMON65 Running with Concurrent Basic Loaded  at $0200", "rw"]
     Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+    Comp["IrqTimer"] = [&h0E020, 5, "1000", "rw"]
     Comp["ResetButton"] = [0, 0, "Reset button", "na"]
     Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
     Comp.Description = "CTMON65\nthis machine loads tinybasic and ctmon65, starts at ctmon prompt\nstart tinbasic with a ' j 0200 ' from monitor"
@@ -110,7 +110,6 @@ Public Sub _call()
     Else
       Comp.merge(.AsmComputerDefinitions)
     Endif
-
 
     Comp = New ComputerDef
     Comp.Name = "CTMONTIMER"
@@ -135,7 +134,6 @@ Public Sub _call()
       Comp.merge(.AsmComputerDefinitions)
     Endif
 
-
     Comp = New ComputerDef
     Comp.Name = "C-Example"
     Comp.Speed = 999
@@ -145,6 +143,7 @@ Public Sub _call()
     Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
     Comp["TTYSIM"] = [&h0E000, 16, "cc65 c program hello.c running with CTMON65 monitor", "rw"]
     Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+    Comp["IrqTimer"] = [&h0E020, 5, "1000", "rw"]
     Comp["HaltButton"] = [0, 0, "Quit Button", "na"]
     Comp["ShowMhz"] = [0, 0, "3000", "na"]
     Comp.Description = "C-Example\nThis is a machine that runs a simple C program created with cc65. The ctmon clib is included as part of this project"
@@ -153,7 +152,6 @@ Public Sub _call()
     Else
       Comp.merge(.AsmComputerDefinitions)
     Endif
-
 
     Comp = New ComputerDef
     Comp.Name = "console"
@@ -165,6 +163,7 @@ Public Sub _call()
     Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
     Comp["Console"] = [&h0E000, 16, "Concurrent TinyBasic and ctmon65 on the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI", "rw"]
     Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+    Comp["IrqTimer"] = [&h0E020, 5, "1000", "rw"]
     Comp["NOTE"] = [0, 0, "NOTES: \n All services Should be declared before they are used by a Device or other service", "na"]
     Comp.Description = "console\nThis machine can only be run from the shell prompt : em6502 -c console. Tiny basic will run in the terminal session"
     If Not Exist(.AsmComputerDefinitions &/ "console") Then
@@ -172,7 +171,6 @@ Public Sub _call()
     Else
       Comp.merge(.AsmComputerDefinitions)
     Endif
-
 
     Comp = New ComputerDef
     Comp.Name = "badge6502"
@@ -201,6 +199,7 @@ Public Sub _call()
       Comp["RomMemory"] = [&h0F000, &h01000, .AsmBinaryDirectory &/ "ctmon65.bin", "ro"]
       Comp["Console"] = [&h0E000, 16, "Concurrent TinyBasic running in the console only\n\rF2:Quit Emulator F3:RESET CPU F4:NMI", "rw"]
       Comp["PiaDisk"] = [&h0E010, 16, .AsmDrivesDirectory & ":disk0:disk1:disk2:disk3", "rw"]
+      Comp["IrqTimer"] = [&h0E020, 5, "1000", "rw"]
       Comp["NOTE"] = [0, 0, "NOTES: \n All services Should be declared before they are used by a Device or other service", "na"]
       Comp.Description = "tinybasic\nthis is an interactive console version of tinybasic Tasks/Advanced, only runs in a terminal emulation form the shell prompt\nem6502 -c tinybasic"
       Comp.Save(.AsmComputerDefinitions)
@@ -321,5 +320,3 @@ Sub copyDirectory(path As String, topath As String)
   Next
 
 End
-
-

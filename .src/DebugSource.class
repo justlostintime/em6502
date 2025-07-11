@@ -14,7 +14,6 @@ CommentArray As String[]
 
 StepOver As String = ""
 
-
 '' Create the form and set the cpu and computer running
 '' The file name must be the full path to a listing file
 Public Sub _new(TheComputer As Computer, TheListing As String)
@@ -30,7 +29,6 @@ Public Sub _new(TheComputer As Computer, TheListing As String)
 
 End
 
-
 Sub OpenDebugFile(FileName As String)
 
   Try ListingFileText = File.Load(FileName)
@@ -45,7 +43,6 @@ Sub OpenDebugFile(FileName As String)
   Me.title = "Debugging File : " & Quote(FileName)
 
 End
-
 
 Public Sub Form_Open()
 
@@ -99,14 +96,12 @@ Public Sub Step(Address As String)
 
 End
 
-
 Sub MakeFileReady()
 
   Dim SourceLine As String[]
   Dim SourceAddress As String[]
   Dim Comment As String[]
   Dim CommentArray As String[]
-
 
   SourceArray = Split(ListingFileText, "\n", "", False, True)
   CommentArray = New String[SourceArray.count]
@@ -124,7 +119,6 @@ Sub MakeFileReady()
       Endif
     Endif
   Next
-
 
   For i = 0 To SourceArray.Max
     Dim s As String = SourceArray[i]
@@ -174,7 +168,6 @@ Sub ConvertTabs(source As String, tablen As Integer) As String
   Return dest
 
 End
-
 
 Public Sub SourceFileOpen_Click()
 
@@ -236,7 +229,6 @@ Public Sub Form_Resize()
   ButtonPanel.top = SourceCodeTracking.height + 2
 
 End
-
 
 Public Sub SourceStep_Click()
 
@@ -307,4 +299,3 @@ Sub NextValidLine(lineno As Integer) As Integer
   Return lineno
 
 End
-

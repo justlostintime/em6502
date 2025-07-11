@@ -28,6 +28,7 @@ Public Sub main()
     Wait 0.01
     KeyboardInput = getchar()
     If KeyboardInput <> -1 Then
+     flush #file.err
       Write #File.out, Chr(KeyboardInput), 1
       Flush #File.out
     Endif

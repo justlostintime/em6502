@@ -87,7 +87,6 @@ Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
   Grp3Case47:
     Return
 
-
     '------------------------------------------------------------------------------------------
   Grp3Case5:
     On addressmode Goto Grp3Case50, Grp3Case51, Grp3Case52, Grp3Case53, Grp3Case54, Grp3Case55, Grp3Case56, Grp3Case57

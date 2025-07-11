@@ -92,7 +92,6 @@ Public Sub _new(dbgFileName As String)
 
 End
 
-
 Private Function ValidFile_Read() As Boolean
 
   Return $ValidFile

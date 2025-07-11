@@ -9,7 +9,7 @@ iPushMathStack:
                 tya
                 pha
                 ldy     GOSUBSTACKPTR
-                lda     MATHSTACKPTR 
+                lda     MATHSTACKPTR
                 sta     (GOSUBSTACK),y        ; place the current Math stack ptr onto the stack
                 lda     #0
                 iny
@@ -72,7 +72,6 @@ iPopMathStackNoFrame:
                 pla
                 tay
                 rts
-
 
 ;==========================================================
 ; Push the current math stack information onto the gosub stack
@@ -190,7 +189,6 @@ iRSTRExit:
 
 iRSTRNORETURNVALUE:
 
-
 iRSTRErr:       lda     taskPtr               ; Check if this is task zero
                 beq     taskZeroEnd           ; this is task zero just stop with error
                 lda     MQ
@@ -223,10 +221,10 @@ GosubFindLoop:  cpy     #0                     ;If we reach the top of the stack
 
                 cmp     #GOSUB_RTN_VALUE       ;Parameters with the gosub call
                 beq     GosubParmFnd           ;Skip any non Gosub related entries
-                
+
                 cmp     #GOSUB_STACK_FRAME     ;Stack frame pointer So should contain the start position of Variables
                 beq     GosubParmSkip          ;We have a stackframe good
-                
+
                 dey
                 dey
                 dey
@@ -251,30 +249,175 @@ GosubParmSkip:
 
 GosubNotFunc:   clc
                 rts
-                
+
 ;==========================================================================
 ; This section support while..wend, for x = <expr> to <expr> [ step <expr> ] ... next
 ;
 ;===========================================================================
-;Jump end Block if top of math stack is false(0)
+; Begin a block of code, while, if endif, for next etc
+; on entry x contains the type of block being created
+; format WendPtr.wendptr,curptr,curptr+1,curoff,type
+iBeginBlock:
+                tya
+                pha
+                jsr     getILByte             ; get the type of block we are starting
+                sta     R1
+                jsr     getILByte             ; get the closing block marker
+                sta     R1+1
+                jsr     FindEndBlock          ; push the endblock onto the stack
+
+                ldy     GOSUBSTACKPTR         ; get the top of stack
+                lda     CURPTR                ; get the first byte of the program line
+                sta     (GOSUBSTACK),y        ; place the current Math stack ptr onto the stack
+                iny                           ; Next byte to save
+                lda     CURPTR+1              ; get the second byte of the program line
+                sta     (GOSUBSTACK),y        ; place the current Math stack ptr onto the stack
+                iny
+                lda     CUROFF                ; get the offset on the line
+                sta     (GOSUBSTACK),y        ; place a zero for the number of current parameters
+                iny
+                lda     R1                    ; get the type of block to save
+                sta     (GOSUBSTACK),y        ; store the type of entry on the stack as the last byte
+                iny
+                sty     GOSUBSTACKPTR         ; save the pointer into the gosub stack
+                pla
+                tay
+                jmp   NextIL
+;=================================================================================
+;find the end block, account for nested begin types
+;stores the address of the memory location to the next two byte on the gosub stack
+;return cleared carry if good, sets the carry if failed
+;R1 = begin block value, R1+1 = end block value, r2 is the balanced counter
 ;
-iJmpEndFalse:  jsr popR0                       ; get the top of the math stack
-               lda R0
-               ora R0+1                        ; check if they are zero
-               beq  JmpEndBlock                 ; it is zero so we are done in the Loops
+FindEndBlock:   lda   CURPTR        ; preserve the current line number
+                pha
+                lda   CURPTR+1
+                pha
+                lda   CUROFF
+                pha
+                lda   #0
+                sta   R2
+FindEndBlkLoop:
+                jsr   FindNextLine    ; CURPTR now points to the next line, CUROFF is location of first char
+                jsr   AtEnd           ; At end of program
+                beq   FindEof         ; Branch out if at end of program
+                ldy   CUROFF          ; this is where the kwhend or kwhile will be stored for example
+                lda   R1              ; get the start block value
+                cmp   (CURPTR),y      ; test for a match
+                beq   Findincr2       ; inc it and continue
+                lda   R1+1            ; get the end of block value
+                cmp   (CURPTR),y      ; is it end block
+                bne   FindEndBlkLoop  ; check the next line
+                lda   R2              ; check if we are at level 0
+                cmp   #0
+                beq   FindFound
+                dec   R2              ; reduce it by one
+                jmp   FindEndBlkLoop  ; do the next one
+Findincr2:
+                inc   R2
+                jmp   FindEndBlkLoop
+FindFound:
+                ldy   GOSUBSTACKPTR   ; place the location of end block onto the gosub stack
+                lda   CURPTR
+                sta   (GOSUBSTACK),y
+                iny
+                lda   CURPTR+1
+                sta   (GOSUBSTACK),y
+                iny
+                sty   GOSUBSTACKPTR
+          
+                pla
+                sta   CUROFF
+                pla                 ; restore the original line pointer
+                sta   CURPTR+1
+                pla
+                sta   CURPTR
+
+                rts
+FindEof:                         ; the matching closing block id not found
+                ldx     #ERR_NO_MATCHING_END_BLOCK
+                jmp     iSAVErr2
+;
+;==================================================================================
+;Find end of block and set the user pc to it
+;
+iJmpEnd:       jsr getILByte                   ; get the type of loop
+               pha
+               ldy GOSUBSTACKPTR               ; get the top of stack
+               cpy #0                          ; empty stack?
+               beq iJmpErrNoEntry
+               dey
+               pla
+               cmp (GOSUBSTACK),y              ; check if it is the correct type of entry
+               bne iJmpErrInvalid              ; Wrong type of entry
+               dey                             ; remove the entry from the stack
+               dey
+               dey
+               dey
+               lda  (GOSUBSTACK),y             ; get the byte of curptr
+               sta  CURPTR+1
+               dey
+               lda  (GOSUBSTACK),y             ; get the byte of curptr
+               sta  CURPTR
+               sty  GOSUBSTACKPTR
+               lda  #3
+               sta  CUROFF
+
                jmp NextIL                      ; if true then
-JmpEndBlock: 
-               jmp NextIL                      ; ignore for now
-               
-               
+
 ;===========================================================================
-; Jump back to the start of a block
-; next or wend encountered
-iJmpStart:      jsr popR0                       ; get the top of the math stack
-                lda R0
-                ora R0+1                        ; check if they are zero
-                beq JmpStartBlock               ; it is zero so we are done in the Loops
-                jmp NextIL                      ; if true then
-JmpStartBlock: 
-                jmp NextIL                      ; ignore for now
-               
+; Jump back to the start of a block, look onto gosub stack for the while entry
+; get the next il byte to determin which kind of block to process, while,for,if endif
+iJmpStart:      tya
+                pha
+                jsr     getILByte               ; get the type of block we are looking for
+                pha
+                ldy     GOSUBSTACKPTR           ; the single byte offset to be used
+                cpy     #0                      ; if it is zero bad juju
+                beq     iJmpErrNoEntry          ; if it is zero then stack is empty get out
+                dey                             ; point to entry type on the stack
+                pla                             ; get type we are looking for
+                cmp     (GOSUBSTACK),y          ; Check if it is the correct type of entry
+                BNE     iJmpErrInvalid          ; not the expected block type
+                dey
+                lda     (GOSUBSTACK),y          ; get the correct offset of user program
+                sta     CUROFF                  ; offset on text line
+                dey
+                lda     (GOSUBSTACK),y          ; get line start
+                sta     CURPTR+1
+                dey
+                lda     (GOSUBSTACK),y          ; part of line start
+                sta     CURPTR
+                pla
+                tay
+                jmp     NextIL                  ; ignore for now
+
+iJmpErrInvalid: ldx     #ERR_NO_MATCHING_BEGIN_BLOCK
+                jmp     iSAVErr2
+
+iJmpErrNoEntry: pla
+                pla
+                tay
+                ldx     #ERR_STACK_UNDER_FLOW
+                jmp     iSAVErr2
+;
+;=======================================================================================
+;Branch types
+iIfTrue:
+          jsr       getILByte
+          sta       offset
+          jsr       popR0
+          lda       R0
+          ora       R0+1
+          beq       iftestfailed
+          jmp       tstBranch
+iIfFalse:
+          jsr       getILByte
+          sta       offset
+          jsr       popR0
+          lda       R0
+          ora       R0+1
+          bne       iftestfailed
+          jmp       tstBranch
+iftestfailed:
+          jmp       NextIL

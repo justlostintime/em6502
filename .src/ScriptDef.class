@@ -15,4 +15,3 @@ Public OldSOurce As String
 Public bUSEIncluded As Boolean
 Public bGuiNeeded As Boolean
 Public sFileName As String
-

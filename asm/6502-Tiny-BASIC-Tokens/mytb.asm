@@ -51,6 +51,9 @@ input            processor 6502
 ; 11/20/2023 v1.1.3 Justlostintime@gmail.com
 ;               * Many improvment, bug fixes
 ;
+; 07/11/2025 v1.1.4 Justlostintime@gmail.com
+;                * Added While..wend speed improvement
+;
 ; www.corshamtech.com Now defunct
 ; bob@corshamtech.com Bob sadly passed away
 ; JustLostInTime@gmail.com Active development
@@ -178,6 +181,9 @@ ERR_CLOSINGBRACKET        equ     23      ;Expected a closing bracket
 ERR_MISSINGEQUALSIGN      equ     24      ;Expected an equal sign for assignment
 ERR_FUNCTION_EXPECTED_PARAMETERS equ 25   ;Function expected parameters
 ERR_EXPECTED_OPENING_BRACKET  equ 26      ;Expected opening bracket [ or (
+ERR_NO_MATCHING_BEGIN_BLOCK   equ 27      ;expected a while,for, if endif statement, was not found
+ERR_NO_MATCHING_END_BLOCK     equ 28      ;expected a closing block value wend, next, endif
+
 ;
 ;=====================================================
 ; Zero page storage.
@@ -203,10 +209,8 @@ ILPC                    ds      2                         ; IL program counter
 ILSTACK                 ds      2                         ; IL call stack
 ILSTACKPTR              ds      1
 
-
 MATHSTACK               ds      2                         ; MATH Stack pointer
 MATHSTACKPOS            equ     MATHSTACK - CONTEXT + 1
-
 
 MATHSTACKPTR            ds      1
 MATHSTACKPTRPOS         equ     MATHSTACKPTR - CONTEXT + 1
@@ -214,10 +218,8 @@ MATHSTACKPTRPOS         equ     MATHSTACKPTR - CONTEXT + 1
 GOSUBSTACK              ds      2                         ; pointer to gosub stack
 GOSUBSTKPOS             equ     GOSUBSTACK - CONTEXT + 1  ; Get the offset to the gosub/msg stack
 
-
 GOSUBSTACKPTR           ds      1                         ; current offset in the stack, moved to task table
 GOSUBPTRPOS             equ     GOSUBSTACKPTR - CONTEXT+1 ; Pointer to gosub stack pointer
-
 
 MESSAGEPTR              ds      1                         ; Pointer to active message, from bottom of gosub stack
 MSGPTRPOS               equ     MESSAGEPTR - CONTEXT+1    ; Pointer to the message counter
@@ -317,7 +319,7 @@ cold2:          jsr     SetOutConsole
                 jsr     SetInConsole
                 jsr     puts
                 db      CR,LF
-                db      "Concurrent Tiny BASIC v1.1.30  IRQs/Tasks/Tokens"
+                db      "Concurrent Tiny BASIC v1.1.40"
                 db      CR,LF,0
 ;
                 jsr     MemInit                     ;setup the free space available
@@ -851,7 +853,7 @@ iCMPDone:
                 rts
 
 ;
-; if Not a match, so jump to the next line of code.
+; if Not a match, so jump to the next line of user program code.
 ; Branches based upon value on top of the stack
 iBranch:
                 jsr  popR0
@@ -1599,7 +1601,6 @@ iJMP:           jsr     getILWord
                 sta     ILPC+1
                 jmp     NextIL
 
-
 ;
 ;=====================================================
 ; Push the next two bytes onto the arithmetic stack.
@@ -1838,7 +1839,6 @@ iDECVAR:
                sta     (R0),y
                jmp     NextIL
 
-
 ;
 ;=====================================================
 ; TSTV is followed by an 8 bit signed offset.  If the
@@ -1882,7 +1882,6 @@ iTSTV_A2Z:
                 bcc     tstBranchLink
                 cmp     #tVz+1
                 bcs     tstBranchLink
-
 
 ;
 ; The condition is true, so convert to an index, push
@@ -1973,7 +1972,6 @@ iTSTVindex0:
                 sta     R2                      ; Set the data type as a parameter to a function
                 jmp     pushR0nextIl
 
-
 iTSTMissingParms:
                 lda     #0
                 ldx     #ERR_FUNCTION_EXPECTED_PARAMETERS
@@ -1993,7 +1991,6 @@ iTSTL:          jsr     getILByte
                 iny
                 ora     (CURPTR),y
                 beq     iTSTLNotLineNo
-
 
 ; In Both cases we need to point to the first usefull byte to process.
                 iny
@@ -2280,7 +2277,6 @@ iCallRtn:
                 jsr     popR0
                 jmp     (R0)
 
-
 ;===========================================jlit======
 ;Get a character from the terminal convert to value
 ;leave the number on top of the stack
@@ -2490,7 +2486,6 @@ iTRACEPROG:     jsr     popR0
             include       "basic.il"
 PROGEND         equ       *
 
-
 ;=====================================================
 ; Define start of non page zero data
                 seg.u     TBData
@@ -2551,7 +2546,6 @@ rtemp1          ds      2         ;Temp for x and y
 random          ds      2
 tempy           ds      1         ;temp y storage
 
-
 ; Moved from page zero as one clock cycle diff gives more space on page zero
 tempIL                  ds      2       ;Temp IL programcounter storage
 tempIlY                 ds      1       ;Temp IL Y register storage
@@ -2600,4 +2594,3 @@ FreeMemStart      equ *
   endif
 */
                 end
-

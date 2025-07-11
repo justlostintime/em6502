@@ -169,9 +169,11 @@ fast unsafe Public Sub _get(address As Long) As Byte
       TTYForm.Show()
       $hidden = false
   endif
- If address = MemoryStart + 1 Then          'Then Read A byte
+ If address = MemoryStart + 1 Then                   'Then Read A byte
         if DataBuffer.count > 0 Then
-           Return DataBuffer.Pop()
+           dim char as byte = DataBuffer.Pop()
+           ' print "Got Char";;quote(chr(char));;"Value=";char
+           Return char
         Else
            Return 0
         Endif
@@ -195,6 +197,7 @@ fast unsafe Public Sub KeyPress(bkeypress As Byte)
 
  if bkeypress = 127 then bKeyPress = 8
  DataBuffer.Add(bKeypress, 0)
+ ' print "Keypress=";quote(chr(bKeyPress));;"VAlue=";bKeypress
  If EchoChar Then
     write #$WrPipe, Chr(bKeyPress)
     If bkeypress = 13 Then
@@ -224,13 +227,13 @@ Sub openTTYWindow()
   Termlog.height = 25
   TermLog.Width  = 100
   TermLog.Text = "Start Recording"
-  
+
   TermMsg  = new textbox(TTYForm)
   TermMsg.font = font["Arial,12,bold"]
   TermMsg.x = TermLog.x+TermLog.w + 5
   TermMsg.y = TermLog.y
   TermMsg.height = TermLog.Height
-  
+
   TermMsg.Width = TTYForm.width - TermMsg.x - 5
   TermMsg.ReadOnly = true
   TermMsg.show()
@@ -254,7 +257,6 @@ Sub openTTYWindow()
   TermMsg.ReadOnly = true
 
   TTYFORM.show()
-
 
   try TermOut.ConnectTo($tWrPipe, $tRdPipe,me)
   if error then
@@ -369,5 +371,3 @@ Public Sub PreProcess(ByRef data As Variant, ByRef len As Variant) As Boolean
  Return True
 
 End
-
-

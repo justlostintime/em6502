@@ -88,7 +88,6 @@ oDollar           equ     $E7
 oBang             equ     $E8
 oPeriod           equ     $E9
 
-
 oPlus             equ     $EA
 oMinus            equ     $EB
 oDivide           equ     $EC
@@ -148,14 +147,19 @@ kSetTerm     equ     kDir+1
 kSetMemB     equ     kSetTerm+1
 kSetMemW     equ     kSetMemB+1
 kCopyMem     equ     kSetMemW+1
+kWhile       equ     kCopyMem+1
+kWend        equ     kWhile+1
+kFor         equ     kWend+1
+kNext        equ     kFor+1
+kStep        equ     kNext+1
 ;
 ; End of actual key words
 ;
-kKeyCount    equ     kCopyMem-kBeginKey
+kKeyCount    equ     kStep-kBeginKey
 ;
 ; Logical operators
 ;
-kNot         equ     kCopyMem+1
+kNot         equ     kStep+1
 kOr          equ     kNot+1
 kXor         equ     kOr+1
 kAnd         equ     kXor+1
@@ -235,6 +239,8 @@ KeyWordTable:
             db      kSetMemB, "setmemB"
             db      kSetMemW, "setmemW"
             db      kCopyMem, "copymeM"
+            db      kWhile,   "whilE"
+            db      kWend,    "wenD"
 
 ; Shift operators
              db     kShr,"shR"
@@ -249,8 +255,6 @@ KeyWordTable:
 ; Truth values
              db     kTrue,"truE"
              db     kFalse,"falsE"
-
-
 
 ;functions returning values
 
@@ -710,7 +714,6 @@ printHexDone:
             rts
   endif
 
-
 ;=========================================================================================================
 ; Parse for variables A-Z @, ^  x!x x[op]
 ParseForVariable:
@@ -759,7 +762,6 @@ ParseVarInvalid:
                 sec
                 rts
 
-
 ;=========================================================================================================
 ; Transfer R0 to the TOKENBUFFER
 ;
@@ -797,7 +799,6 @@ DPL2R0:
                 dex
                 sta     R0+1
                 rts
-
 
 ;=========================================================================
 ; Read an IL byte lookit up in the table, of words
@@ -919,13 +920,3 @@ iTSTBRANCHNoCompile:
               pla
 iTSTBRANCHErr:
               jmp       NextIL
-
-
-
-
-
-
-
-
-
-

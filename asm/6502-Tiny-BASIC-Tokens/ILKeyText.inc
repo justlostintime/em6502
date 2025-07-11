@@ -40,6 +40,8 @@ ILTEXTTABLE:
   db    36,23,"iFREE               ",0
   db    37,23,"iRANDOM             ",0
   db    38,23,"iABS                ",0
+;
+  if    DISK_ACCESS
   db    39,23,"iOPENREAD           ",0
   db    40,23,"iOPENWRITE          ",0
   db    41,23,"iDCLOSE             ",0
@@ -47,6 +49,7 @@ ILTEXTTABLE:
   db    43,23,"iDLIST              ",0
   db    44,23,"iDDIR               ",0
   db    45,23,"iRMFILE             ",0
+  else
   db    39,23,"NextIL              ",0
   db    40,23,"NextIL              ",0
   db    41,23,"NextIL              ",0
@@ -54,6 +57,8 @@ ILTEXTTABLE:
   db    43,23,"NextIL              ",0
   db    44,23,"NextIL              ",0
   db    45,23,"NextIL              ",0
+  endif
+;
   db    46,23,"iCLEARSCREEN        ",0
   db    47,23,"iPOKEMEMORY         ",0
   db    48,23,"iPEEKMEMORY         ",0
@@ -123,6 +128,11 @@ ILTEXTTABLE:
   db    112,23,"iCmpBlock           ",0
   db    113,23,"iShift              ",0
   db    114,23,"iTimer              ",0
+  db    115,23,"iJmpEnd             ",0
+  db    116,23,"iJmpStart           ",0
+  db    117,23,"iBeginBlock         ",0
+  db    118,23,"iIfTrue             ",0
+  db    119,23,"iIfFalse            ",0
   db    $FF,23,"0                   ",0
 
  ; Search for the il instruction and print the correct text for it
@@ -134,7 +144,7 @@ ILSTA           ds    1
 
                 Seg     Code
 
-PrintILText     sta     ILSTA
+PrintILText:    sta     ILSTA
                 tya
                 pha
                 txa
@@ -148,7 +158,7 @@ PrintILText     sta     ILSTA
                 LDA     #ILTEXTTABLE>>8
                 sta     R0+1
 ;Loop Here for each entry
-PrintILLoop     ldy     #0
+PrintILLoop:    ldy     #0
                 lda     (R0),y
                 cmp     #$FF
                 beq     PrintILNotFound
@@ -164,7 +174,7 @@ PrintILLoop     ldy     #0
                 sta     R0+1
                 jmp     PrintILLoop
 ; The text was discovered
-PrintILFound    iny                    ; point to length of instruction
+PrintILFound:   iny                    ; point to length of instruction
                 iny                    ; Point to start of text
                 tya
                 clc
@@ -177,10 +187,10 @@ PrintILFound    iny                    ; point to length of instruction
                 jsr     PrtStr         ; print the string
                 jmp     PrintILDone
 
-PrintILNotFound lda     ILSTA
+PrintILNotFound:lda     ILSTA
                 jsr     HexToOut
 
-PrintILDone     lda     R0TempIL
+PrintILDone:    lda     R0TempIL
                 sta     R0
                 lda     R0TempIL+1
                 sta     R0

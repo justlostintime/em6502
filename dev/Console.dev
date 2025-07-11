@@ -51,7 +51,7 @@ Public Sub _new(Start As Long, len As Long, StartMessage As string)
   wait 0.01
   Write #File.out, "\e[32m"&StartMessage&"\n\r"
   flush #File.out
-  
+
   Catch
     print "Console Device error :" ; Error.text, Error.where,"\n\r";
 End
@@ -159,7 +159,6 @@ Public Sub mytask_read(bkeypress As string)
     DataBuffer.Add(asc(bKeypress), 0)
  endif
 
-
  If $EchoChar Then
     print bKeyPress;
     flush
@@ -200,8 +199,3 @@ fast unsafe Public Sub _InRange(Address As Long) As Boolean
   Return False
 
 End
-
-
-
-
-

@@ -26,7 +26,6 @@ Event MemMonitor(address As Long, memDump As String)
 Event BinaryLoaded(address As Long, BinName As String, info As String)
 Event AutoStart(address As Long, speed As Integer)
 
-
 Public Devices As ScriptManager
 Public Services As ScriptManager
 
@@ -34,7 +33,6 @@ Property Read Config As ComputerDef Use $Config
 Property SpeedScaler As Long
 Property Read CyclesPerSecond As Long
 Property Read DevicePath As String Use $DevicePath
-
 
 Public Sub Configure(Configuration As ComputerDef)
 
@@ -117,7 +115,6 @@ Public Sub Shutdown()
 
 End
 
-
 Public Sub SetBreakPoints(Breaks As String[])
 
   Dim BrkList As New Long[]
@@ -134,13 +131,11 @@ Public Sub SetBreakPoints(Breaks As String[])
 
 End
 
-
 Public Sub LoadMemory(BinFile As String)
 
   MyCpu.LoadMemory(BinFile)
 
 End
-
 
 Public Sub Reset()
 
@@ -164,7 +159,6 @@ Public Sub IRQ()
 
 End
 
-
 Public Sub StatusOn()
 
   MyCpu.DisplayStatus = True
@@ -176,7 +170,6 @@ Public Sub StatusOff()
   MyCpu.DisplayStatus = False
 
 End
-
 
 Public Sub A_CPU_StatusInfo(info As Cpustatus)
 
@@ -197,7 +190,6 @@ Public Sub A_CPU_MemUpdated()
 
 End
 
-
 Public Sub A_CPU_BreakPoint(pc As Long)
 
   Raise Breakpoint(pc)
@@ -209,7 +201,6 @@ Public Sub A_CPU_BinaryLoaded(address As Long, BinName As String, info As String
   Raise BinaryLoaded(Address, BinName, info)
 
 End
-
 
 Public Sub DisplayCurrentInst()
 
@@ -223,7 +214,6 @@ Public Sub StopRun()
   Running = False
 
 End
-
 
 Public Sub run()
 
@@ -257,7 +247,6 @@ Sub DisplayMemory()
   Next
 
 End
-
 
 Public Sub DumpMem(fromAdr As Long, toAdr As Long, Optional linelen As Integer = 15) As String
 
@@ -319,7 +308,6 @@ Private Sub SpeedScaler_Write(Value As Long)
 
 End
 
-
 Private Function CyclesPerSecond_Read() As Long
 
   Return MyCpu.CyclesPerSecond
@@ -362,7 +350,6 @@ Private Sub SetMemoryProtection_Write(Value As Boolean)
 
 End
 
-
 Private Function Profiling_Read() As Boolean
 
   Return MyCpu.Profiling
@@ -398,7 +385,6 @@ Public Sub ProfileReset()
   MyCpu.ProfileReset()
 
 End
-
 
 Private Function MemoryUpdates_Read() As Boolean
 

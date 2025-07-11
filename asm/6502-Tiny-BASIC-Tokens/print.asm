@@ -38,7 +38,6 @@ PrintDo
                 lda     R0+1              ;MSB has sign
                 bpl     PrintPos          ;it's a positive number;
 
-
 ; Negative numbers need more work.  Invert all the bits,
 ; then add one.
 
@@ -197,7 +196,6 @@ PrtTerm         equ     tempy
 ;       x =     addr high
 ;       a =     termination string
 
-
 PrtQuoted                                     ; Print a quoted string from the current program space
                 lda     #'"
                 ldy     CUROFF
@@ -242,39 +240,32 @@ PrtEnd          iny                           ;return byte after the write
 ; Print all Variables
 PrintAllVars
                 ldy     #0
-                lda     #'A
+                sty     R2
 PrintAllVarsLoop
-                pha
-                lda     (VARIABLES),y
+                lda     (VARIABLES),y   ; get the value into R0
                 sta     R0
                 iny
                 lda     (VARIABLES),y
                 sta     R0+1
-
-                pla     ;get the current letter
+                tya                     ; get the count
                 pha
+                lsr
+                clc
+                adc     #'A
                 jsr     VOUTCH
                 jsr     puts
                 db      "=",0
-                pla
-                tax
-                inx
-                txa
-                pha                           ;
-
-                tya
-                pha
+                
                 jsr     PrintDecimal
                 jsr     puts
                 db      " ",0
                 pla
                 tay
                 iny
-                cpy     #26<<1                  ; A-Z 2 bytes each
-                bcc     PrintAllVarsLoop
+                cpy     #52                   ; A-Z 2 bytes each
+                bne     PrintAllVarsLoop
                 jsr     CRLF
 
-                pla
                 rts
 ;==========================================================================================================
 ;Debug   Print a Program Line from compile buffer
@@ -436,7 +427,6 @@ PrintKeySkipped:
                 lda    #KeyWordTable>>8
                 sta    R1+1
 
-
 PrintKeyLoop
                 ldy    #0                    ; Index into the keyword entry
                 lda   (R1),y                 ; Get token value for this entry
@@ -548,7 +538,6 @@ PrintProgVarLetter:
 PrintTheVar:
                 jsr   VOUTCH
                 jmp   PrintProgNext
-
 
 ;==================================================================================================
 ; Size of print functions

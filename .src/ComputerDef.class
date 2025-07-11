@@ -15,7 +15,6 @@ Property AutoStartActive As Boolean Use $AutoStartActive = False                
 Property SourceDirectory As String Use $SourceDirectory = FMain.AsmComputerDefinitions  ' where the definition is located
 Property Description As String Use $Description                                                                                        'This is a description of the computer
 
-
 Public Sub _get(Index As String) As Variant
 
   If Not Devices.Exist(Index) Then Return Null
@@ -33,8 +32,6 @@ Public Sub Clear()
   Devices.Clear()
 
 End
-
-
 
 Public Sub _next() As Variant
 
@@ -78,10 +75,7 @@ End
 
 Public Sub Merge(Name As String, Optional Directory As String = FMain.AsmComputerDefinitions)
 
-
-
 End
-
 
 Public Sub _new(Optional Directory As String = "", ComputerName As String = "")
 

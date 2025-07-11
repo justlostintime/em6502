@@ -339,4 +339,3 @@ Public Sub _call(TheCpu As Cpu6502, aaa As Integer, addressmode As Integer)
   End With
 
 End
-
