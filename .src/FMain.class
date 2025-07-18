@@ -69,6 +69,32 @@ Public Sub Form_Open()
 
   FMain.Text = Application.Title & " " & Application.Version & " Computer Name : " & CurrentComputerDefinition
 
+  Try TextHighlighter.Register("asm6502", "asm6502", "highlight/asm6502.highlight")
+  If Error Then
+    Print Error.Text
+    Stop
+  Else
+    ' Print TextHighlighterTheme.List.Join(";")
+    Dim MyTheme As TextHighlighterTheme
+    ' Dim txtTheme As String = Split(File.Load(".../themes/thm6502"), "\n", "\"", True, False).Join(";")
+    ' Try MyTheme = New TextHighlighterTheme
+    ' Try MyTheme.FromString(txtTheme)
+    Try MyTheme = TextHighlighterTheme.Load(".../themes/thm6502")
+    If Error Then
+      Print "Highlighting ignored :"; Error.Text
+    Else
+      Try EditProg.Highlight = "asm6502"
+      If Error Then
+        Print "Error loading highlight :"; Error.text
+      Else
+        Try EditProg.theme = MyTheme
+        If Error Then
+          Print "Unable to load highlight theme :"; Error.text
+        Endif
+      Endif
+    Endif
+  Endif
+
   FMain.Show()
 
   MyComputer.Configure(Comp)
@@ -420,6 +446,7 @@ Public Sub SetEditDefaults()
     If Error Then
       CurrentlyOpenFile = ""
     Else
+      EditingFileName.text = CurrentlyOpenFile
       OriginalSource = EditProg.text
       AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
     Endif
@@ -459,6 +486,7 @@ Public Sub OpenProg_Click()
   OriginalSource = EditProg.text
   CurrentlyOpenFile = Dialog.Path
   AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
+  EditingFileName.text = CurrentlyOpenFile
   Dim sp As String[] = Split(SearchPaths.text)
 
   If sp.count = 0 Or If Not sp.Exist(AsmSourceDirectory) Then
@@ -485,14 +513,19 @@ Public Sub SaveProg_Click()
     SaveAsProg_Click()
     Return
   Endif
-  EditProg.Save(CurrentlyOpenFile)
+
+  If OriginalSource <> EditProg.text Then
+    EditProg.Save(CurrentlyOpenFile)
+    OriginalSource = EditProg.text
+  Endif
 
 End
 
 Public Sub NewProg_Click()
 
   CurrentlyOpenFile = ""
-  Try EditProg.Load("Template.asm")
+  EditingFileName.text = ""
+  Try EditProg.Load(".../Template.asm")
   OriginalSource = EditProg.text
 
 End
@@ -1207,5 +1240,29 @@ Public Sub addbreak_KeyRelease()
   If Key.code = Key.Return Then
     BreakPointList_Add()
   Endif
+
+End
+
+Public Sub AsmOutputClear_Click()
+
+  AsmOutput.Clear()
+
+End
+
+Public Sub AsmAutoSelect_Click()
+
+
+
+End
+
+Public Sub AsmDasmSelect_Click()
+
+
+
+End
+
+Public Sub AsmXaSelect_Click()
+
+
 
 End

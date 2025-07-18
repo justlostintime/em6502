@@ -1,5 +1,5 @@
 ------- FILE mytb.asm LEVEL 1 PASS 6
-      1 U4426				   input      processor	6502
+      1 U4426				   input      processor	65c02
       2 U4426 ????						;=====================================================
       3 U4426 ????						; Concurrent Tiny Basic, no longer Tiny
       4 U4426 ????						; Derived from Bob's Tiny Basic, and Lots of

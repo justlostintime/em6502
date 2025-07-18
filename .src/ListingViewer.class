@@ -4,6 +4,8 @@ Public Sub Form_Open()
 
   Me.x = Settings["ListingWin/x", Me.x]
   Me.y = Settings["ListingWin/y", Me.y]
+  AsmListing.Theme = FMain.EditProg.theme
+  AsmListing.Highlight = FMain.EditProg.Highlight
 
 End
 

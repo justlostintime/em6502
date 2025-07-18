@@ -402,6 +402,7 @@ End
 
 '' Create an event with all the information needed to display the next Instruction with status
 Sub StepInfo()
+  ''@NOTE: add highlighting
 
   LastTraceInstruction = Left(Disassembler.Inst(Me, pc) & Space(40), 40) & "->[" & SRText() & "] " & Hex(ac, 2) & " " & Hex(X, 2) & " " & Hex(Y, 2) & " " & "1" & Hex(sp, 2)
   Raise NextInst(LastTraceInstruction)

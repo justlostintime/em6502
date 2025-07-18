@@ -1,11 +1,12 @@
 # Gambas Form File 3.0
 
 { Form Form
-  MoveScaled(0,0,122,110)
-  { AsmListing TextEditor
+  MoveScaled(0,0,128,110)
+  { !AsmListing TextEditor
     MoveScaled(1,1,120,107)
+    #Public = True
     Font = Font["Monospace"]
-    Highlight = "Gambas"
+    Highlight = "Custom"
     Mode = "Sh"
     ReadOnly = True
     TabIndent = True

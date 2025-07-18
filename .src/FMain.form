@@ -9,9 +9,6 @@
       { Dasminfo Menu
         Text = ("6502 assembler Dasm")
       }
-      { M65C02Assemblerxa Menu
-        Text = ("65C02 Assembler xa")
-      }
     }
     { SampleSoftware Menu
       Text = ("Sample Software")
@@ -216,9 +213,10 @@
     Index = 2
     Text = ("Edit/Asm")
     { !EditProg TextEditor
-      MoveScaled(1,1,79,74)
+      MoveScaled(1,1,79,75)
       #Public = True
       Expand = True
+      Highlight = "Custom"
       Mode = "Custom"
       TabIndent = True
       ShowCurrent = True
@@ -229,7 +227,7 @@
       CloseStrings = True
     }
     { EditorButtons Panel
-      MoveScaled(1,76,79,16)
+      MoveScaled(1,78,79,16)
       Background = Color.SelectedBackground
       { SaveProg Button
         MoveScaled(13,1,12,3)
@@ -256,29 +254,22 @@
         ToolTip = ("OPen an assembler source file")
         Text = ("Open")
       }
-      { !AsmDasmSelect RadioButton
-        MoveScaled(3,5,22,3)
-        #Public = True
-        Text = ("Use dasm 6502")
-        Value = True
-      }
-      { !AsmXaSelect RadioButton
-        MoveScaled(26,5,23,3)
-        #Public = True
-        Text = ("Use xa 65C02")
-      }
-      { AsmAutoSelect RadioButton
-        MoveScaled(49,5,23,3)
-        Text = ("Auto Select")
-      }
       { !SearchPaths TextBox
-        MoveScaled(18,9,59,4)
+        MoveScaled(18,5,59,4)
         #Public = True
         ToolTip = ("Coma Seperated Search Paths for included binary or Source Files\n")
       }
       { Label28 Label
-        MoveScaled(2,9,14,4)
+        MoveScaled(2,5,14,4)
         Text = ("Include Paths")
+      }
+      { Label25 Label
+        MoveScaled(2,10,15,3)
+        Text = ("Editing File:")
+      }
+      { EditingFileName TextBox
+        MoveScaled(18,10,59,4)
+        ReadOnly = True
       }
     }
     Index = 3
@@ -288,25 +279,30 @@
       #Public = True
       ToolTip = ("Displays the ouptput from the last assembly.")
       AutoResize = False
+      Limit = 2000
       ShowScrollBar = True
       ReadOnly = True
     }
     { AsmOutputButtons Panel
       MoveScaled(1,88,80,5)
       { LoadToRome Button
-        MoveScaled(27,1,22,3)
+        MoveScaled(26,1,22,3)
         ToolTip = ("- Set the cpu to single step mode\n- Load the binary to  Rom memory  \n- First two bytes of the file contain the load address\n- reset the cpu")
         Text = ("Load To Rom Memory")
       }
       { OpenListing Button
-        MoveScaled(52,1,26,3)
+        MoveScaled(50,1,18,3)
         ToolTip = ("View the listing from the Last \nfile assembled")
         Text = ("View Listing")
       }
       { LoadToRam Button
-        MoveScaled(3,1,22,3)
+        MoveScaled(2,1,22,3)
         ToolTip = ("- Set Cpu to single Step Mode\n- Wait for instruction to compete\n- Load the binary to Ram memory \n- First two byte of the image contain the load address\n- Do not reset CPU")
         Text = ("Load To Ram Memory")
+      }
+      { AsmOutputClear Button
+        MoveScaled(69,1,10,3)
+        Text = ("Clear")
       }
     }
     Index = 0
