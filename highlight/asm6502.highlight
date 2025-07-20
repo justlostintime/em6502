@@ -8,7 +8,7 @@ documentation:
 comment:
   from ; to "\n"
 preprocessor:
-  word processor include incbin incdir ifconst ifnconst endif if else eif endif
+  word(ignorecase) processor include incbin incdir ifconst ifnconst endif if else eif endif
   preprocessor.escape{Preprocessor}:
     match "\\\n"
 string:
@@ -34,7 +34,7 @@ number:
 
 keyword:
   keyword(ignorecase) mac macro endm mexit set setstr repeat repend equ eqm subroutine org rorg rend seg align echo err list .org .force
-  keyword(ignorecase,upper=firstletter) @opcodes.keyword
+  keyword(ignorecase) @opcodes.keyword
   symbol =
 
 constant:
