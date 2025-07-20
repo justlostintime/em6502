@@ -91,8 +91,7 @@ DeviceIoBlocks
 ; This is the Basic IRQ handler, works with task manager, assumes timer interupt
 ;
 ServiceIrq:     pha
-                txa
-                pha
+                phx
                 ldx     #0
 ServiceLoop:
                 inc     timercounter,x
@@ -107,9 +106,8 @@ ServiceCont:
                 bne     RetIrq
                 lda     #1
                 sta     IRQPending
-RetIrq:          
-                pla
-                tax
+RetIrq:
+                plx
                 pla
                 rti
 ;======================================================================
@@ -161,8 +159,7 @@ ioSetDeviceVectors:
                 beq     ioSetDevExit          ; if already set then do nothing
 
                 stx     BActiveDevice         ; set the active device vector
-                tya
-                pha
+                phy
 
                 ldy     DeviceIoBlocks+2,x   ; Get the device driver index
                 sty     BActiveDriver        ; Pointer to active Device driver
@@ -175,8 +172,7 @@ ioSetDevLoop:
                 cpx     #IO_VECT_LEN         ; Transfer the vector length to copy
                 bne     ioSetDevLoop
 
-                pla
-                tay
+                ply
 ioSetDevExit:
                 rts
 ;

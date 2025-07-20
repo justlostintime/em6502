@@ -53,6 +53,8 @@ input            processor 65c02
 ;
 ; 07/11/2025 v1.1.4 Justlostintime@gmail.com
 ;                * Added While..wend speed improvement
+;                * Updated all code to use 65c02 instructions
+;                * Added macros for old 6502 version if needed
 ;
 ; www.corshamtech.com Now defunct
 ; bob@corshamtech.com Bob sadly passed away
@@ -87,18 +89,12 @@ TRUE            equ     ~FALSE
 KIM             equ     FALSE           ;Basic KIM-1, no extensions
 XKIM            equ     FALSE           ;Corsham Tech xKIM monitor
 CTMON65         equ     TRUE            ;Corsham Tech CTMON65
-IL_DEBUG_TEXT   equ     TRUE            ;Print out as text IL instructions
+IL_DEBUG_TEXT   equ     TRUE           ;Print out as text IL instructions
+ILTRACEACTIVE   equ     TRUE           ;enable il debugging
 ;
 ;   Need to define some macros for the dasm assembler
 ;
-    MACRO dw
-        .word {0}
-    ENDM
-
-    MACRO db
-        .byte {0}
-    ENDM
-
+  include "TB_macros.inc"
 ;
 ; If set, include disk functions.
 ;
@@ -109,6 +105,7 @@ DISK_ACCESS       equ     TRUE
 ; 0 = off, 7=IL trace, 6 = Basic Prog Trace, 7+6 = both
 ;
 ILTRACE           equ      %00000000  ;%0100000 = Basic STMT Trace, %10000000 = il trace etc
+
 ;
 ; If FIXED is set, put the IL code and the user
 ; program space at fixed locations in memory.  This is
@@ -407,21 +404,27 @@ coldtwo:
 ; instruction to execute.
 ;
 NextIL:
-                tsx                           ; Get the stack pointer value
+ 
+                tsx                           ; Get the stack pointer value, only for debugging
                 cpx     #$FF                  ; Should be empty
                 bne     ILbad                 ; Halt and catch fire now!
 
                 dec     taskCurrentCycles
                 bne     NextIlNow
                 jsr     iTaskSwitch           ;check for a task switch
-NextIlNow:      lda     ILTrace               ;Do we need to trace this
+NextIlNow:  
+    
+
+                lda     ILTrace               ;Do we need to trace this
                 beq     NextIL2               ;Skip if no bits set
 
                 jsr     dbgLine               ;Print the IL trace information
 
-NextIL2:        ldy     CUROFF
+      
+NextIL2:         ldy     CUROFF
 ;                jsr     SkipSpaces           ; no longer needed as tokenizer takes care of this
 ;                sty     CUROFF
+
 ;Task IO Management
                 lda     taskRDPending         ; if it is zero then Nothing pending
                 beq     NextILStr
@@ -445,8 +448,9 @@ NextILStr:      jsr     getILByte
                asl                          ; valid for 0-127
                bcs     ILbad                ; Out of range
                tax                          ; Move value to x
-               db      $7c                  ; jmp (ILTBL,X) ; dasm does not support 65c02 inst
-               dw      ILTBL                ; Actual IL table address
+;               db      $7c                  ; jmp (ILTBL,X) ; dasm does not support 65c02 inst
+;               dw      ILTBL                ; Actual IL table address
+              jmp       (ILTBL,x)
 
 ;              asl
 ;              cmp     #ILTBLend-ILTBL+2
@@ -482,12 +486,12 @@ ILbad:          jsr     puts
 ; Just jump to the address (ILPC),y.  Have to do
 ; some goofy stuff.
 ;
-ILgood:         tay                    ;move index into Y
-                lda     ILTBL,y
-                sta     dpl
-                lda     ILTBL+1,y
-                sta     dpl+1
-                jmp     (dpl)          ;go to handler
+;ILgood:         tay                    ;move index into Y
+;                lda     ILTBL,y
+;                sta     dpl
+;                lda     ILTBL+1,y
+;                sta     dpl+1
+;                jmp     (dpl)          ;go to handler
 ;
 ;=====================================================
 ; This is the IL jump table.  The IL opcode is
@@ -647,7 +651,7 @@ iFINv:          jmp     iFIN
 iNxtRun2:       jsr     getILWord     ;ignore next word
                 jmp     NextIL
 ;=====================================================
-;Repeat the same line against
+;Repeat the same line again
 iRepeatLine:    ldy     #3
                 sty     CUROFF
                 jmp     NextIL
@@ -658,12 +662,19 @@ iRepeatLine:    ldy     #3
 ; higher.  Ie, if it's 1 but there is no line 1, then
 ; find the next one after that.
 ;
+iFasterXfer:
+                jsr     getILByte             ; get the type of transfer
+                beq     iXFER                 ; if it is zero then it must be a line number
+                jsr     popMath               ; put the path stack top into curptr
+                bra     iXFER3                ; Thats it we are done
+                
+; This entry point is used by the gosub
 iFastXfer:
-                jsr     popR1                ; get type of transfer
+                jsr     popR1                 ; get type of transfer
                 lda     R1
                 beq     iXFER
-
-                jsr     popR0                ; get where to transfer
+                jsr     popR0                 ; get where to transfer
+                
 FastFastXfer:
                 lda     R0
                 sta     CURPTR
@@ -678,7 +689,7 @@ iXFER:
 iXFER2:
                 jsr     AtEnd           ;at end of user program?
                 beq     iFINv
-
+iXFER3:                                 ; we dont need to check for end in this case as it was a compiled goto
                 ldy     #3              ;Change: 2->3 to skip length byte, point to start of text
                 sty     CUROFF
 
@@ -1185,8 +1196,7 @@ divby0:         pla                            ; remove the reyurn from the stac
 ; item is a data value and the other is an ABSOLUTE address.
 ; Save the value into that address.
 ;
-iSTORE:         tya
-                pha
+iSTORE:         phy
                 jsr     popR0       ;data
                 jsr     popR1       ;Storage location
                 ldy     #1
@@ -1200,8 +1210,7 @@ iStoreB:
                 lda     R0
                 dey
                 sta     (R1),y
-                pla
-                tay
+                ply
                 jmp     NextIL
 ;
 ;=====================================================
@@ -1209,8 +1218,7 @@ iStoreB:
 ; of the variable  whose absolute address it represents.
 ;
 
-iIND:           tya
-                pha
+iIND:           phy
                 jsr     popR1
                 ldy     #1
                 lda     R2
@@ -1226,16 +1234,14 @@ iINDC:
                 dey
                 lda     (R1),y
                 sta     R0
-                pla
-                tay
+                ply
                 jmp     pushR0nextIl
 
 ;
 ;=====================================================
 ; Check which type of index to use byte or word and jmp to correct
 ; function
-iArray:         tya
-                pha
+iArray:         phy
 
                 jsr     popR0             ; Get the array index
                 jsr     popR1             ; Get the Variable address
@@ -1279,8 +1285,7 @@ iArrayB:
 iArrayExit:
                 jsr     pushR0            ; Push R0 assume it is correct
 
-                pla
-                tay
+                ply
                 jmp     NextIL
 ; Check for valis variable and valid index to use
 iArrayCheckVar: lda     VARIABLES
@@ -1297,8 +1302,7 @@ iArrayCheckVar: lda     VARIABLES
                 bcc     iArrayExit         ; if it is less it is valid
 
 ; Get here if array index is out of range
-iArrayError:    pla
-                tya
+iArrayError:    ply
                 lda     #0
                 ldx     #ERR_INDEX_OUT_OF_RANGE
                 jmp     iErr2
@@ -1622,8 +1626,7 @@ iLIT:           jsr     getILWord
 ; Initialize all variables for a single task.  Ie, set to zero.
 ; And internal stack pointers
 ;
-subVINIT:       tya
-                pha
+subVINIT:       phy
 
                 lda     #0
                 ldy     #0
@@ -1636,8 +1639,7 @@ Vinit2:         sta     (VARIABLES),y
                 lda     #[[GOSUBSTACKSIZE - 2] * 4]                    ; Reset the message queue
                 STA     MESSAGEPTR
 
-                pla
-                tay
+                ply
                 rts
 
 iVINIT:
@@ -2386,8 +2388,7 @@ iFalse:
 ;===============================================================
 ;Shift instruction a is set to right = 1, left = 0
 ;
-iShift:         txa
-                pha
+iShift:         phx
                 jsr     popR0          ; number of places to shift 0 to 16 really
                 jsr     popR1          ; value to shift
                 ldx     R0             ; get number of times to shift
@@ -2412,8 +2413,7 @@ iShiftRloop:    lsr     R1+1
                 dex
                 bne     iShiftRloop
 iShiftExit:
-                pla
-                tax
+                plx
                 jsr     pushR1
                 jmp     NextIL
 

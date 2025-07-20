@@ -441,6 +441,7 @@ Public Sub SetEditDefaults()
 
   DefaultTemplate = Settings["DefaultTemplate", "Template.asm"]
   CurrentlyOpenFile = Settings["CurrentlyOpenFile", ""]
+
   If CurrentlyOpenFile <> "" Then
     Try EditProg.Load(CurrentlyOpenFile)
     If Error Then
@@ -504,6 +505,7 @@ Public Sub SaveAsProg_Click()
   EditProg.Save(Dialog.path)
   CurrentlyOpenFile = Dialog.path
   AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
+  EditingFileName.text = CurrentlyOpenFile
 
 End
 

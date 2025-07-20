@@ -1,4 +1,7 @@
-adc ahx anc and ane arr asl asr axs bcc bcs beq bit bmi bne bpl brk bvs clc cld cli 
-clv cmp cpx cpy dcp dec dex dey eor inc inx iny isb jmp jsr kil las lax lda ldx ldy 
+adc ahx anc and ane arr asl asr axs bcc bcs beq bit bmi bne bpl brk bvs clc cld cli
+clv cmp cpx cpy dcp dec dex dey eor inc inx iny isb jmp jsr kil las lax lda ldx ldy
 lsr lxa nop ora pha php pla plp rla rol ror rra rti rts sax sbc sbx sec sed sei sha
-shs shx shy slo sre sta stx sty tax tay tsx txa txs tya lda
+shs shx shy slo sre sta stx sty tax tay tsx txa txs tya lda 
+phy phx ply plx bra stz trb tsb bbr0 bbr1 bbr2 bbr3 bbr4 bbr5 bbr6 bbr7 bbs0 bbs1
+bbs2 bbs3 bbs4 bbs5 bbs6 bbs7 rmb0 rmb1 rmb2 rmb3 rmb4 rmb5 rmb6 rmb7 smb0 smb1
+smb2 smb3 smb4 smb5 smb6 smb7 stp wai

@@ -80,17 +80,11 @@ taskSetDone:
 ; Saves the io block to the context
 
 
-SaveIOblock:    tya
-                pha
-                txa
-                pha
+SaveIOblock:    pushxy
 
+; what the heck.... did i forget something
 
-
-                pla
-                tax
-                pla
-                tay
+                pullxy
                 rts
 
 ;
@@ -104,8 +98,7 @@ taskResetStacks:
 ;
 ;=====================================================
 ; Clear all task entries and task stacks
-taskReset:      tya                        ; Save Y
-                pha
+taskReset:      phy
                 lda     #1
                 sta     taskCounter         ; Set number of active tasks to 1
                 ldy     taskPtr             ; Set the active task to 0 MAIN
@@ -130,8 +123,7 @@ taskResetLoop:
 
 taskResetComplete:
 
-                pla                         ; Restore y
-                tay
+                ply
                 rts
 
 ;
@@ -140,8 +132,7 @@ taskResetComplete:
 ;               count is exceded for task time slice gets here
 ;               when time slice has reached zero
 ;
-iTaskSwitch:    tya
-                pha
+iTaskSwitch:    phy
 
                 lda     taskResetValue            ; Always reset the counter value
                 sta     taskCurrentCycles         ; Update the counter with the new value
@@ -191,8 +182,7 @@ iTaskLoadEntry: lda     #TASKACTIVE
                 sty     taskPtr                   ; update the task pointer
 
 iTaskSwitchDone:
-                pla
-                tay
+                ply
                 rts
 ;
 ;================================================================
@@ -202,8 +192,7 @@ iTaskSwitchDone:
 ;    byte 0    -   Active inactive
 ;    byte 1-2  -   Basic code line pointer
 ;    byte 3    -   Offset on current line
-iTaskSet:       tya                 ;preserve Y
-                pha                                                                          ; push a
+iTaskSet:       phy                                                                        ; push a
                 jsr     popR1       ; Get if compiled or line number expression
                 jsr     popR0       ; Get the line number to be saved
 
@@ -228,8 +217,7 @@ iTaskLineNum:
                 ldy     taskPtr     ; Restore the original Context Error Exit
                 jsr     ContextLoad
 
-                pla                                                                         ; pop a - exit
-                tay
+                ply
                 jmp     iSetIrqErr  ; Bad line number provided
 
 iTaskCont:
@@ -267,30 +255,27 @@ iTaskCont:
                 lda     #STMT>>8       ; set ilpc to point to the STATEMENT processor
                 sta     ILPC+1
 
-                tya                    ; Save the new context offset to return to user
-                pha                                                                            ; push a
-
+                phy                    ; Save the new context offset to return to user
+            
 itaskSetSave:   jsr     ContextSave    ; save the updated context
                 inc     taskCounter    ; Update the number of Tasks running
 
                 ldy     taskPtr
                 jsr     ContextLoad    ; restore the original context
 
-                lda     #0             ; Set the R0 upper to zero
-                sta     R0+1
+                ;lda     #0             ; Set the R0 upper to zero
+                stz     R0+1
                 pla                    ; Get the task pid we stored                            ; pop a
                 sta     R0             ; Get the table entry value
 
-                pla                    ; Restore the y register we saved                       ; pop a   - exit
-                tay
+                ply                    ; Restore the y register we saved                       ; pop a   - exit
 
                 jmp     pushR0nextIl   ; Push R0 and continue
 iTaskNoEmpty:
                 ldy     taskPtr
                 jsr     ContextLoad
 
-                pla                                                                           ; pop a    -- exit
-                tay
+                ply
 
                 ldx     #ERR_NO_EMPTY_TASK_SLOT
                 lda     #0
@@ -300,8 +285,7 @@ iTaskNoEmpty:
 ; Run the task whos PID is on the stack, preserve the stack
 ;
 iTaskEnable:
-               tya
-               pha
+               phy
                jsr      popR1
                jsr      pushR1
                jsr      ipc_getcontext         ; get context pointer into mq
@@ -310,8 +294,7 @@ iTaskEnable:
                eor      #TASKRUNPENDING        ; Turn off the Suspend flags
                ora      #TASKACTIVE
                sta      (MQ),y
-               pla
-               tay
+               ply
                jmp      NextIL
 
 ;
@@ -319,8 +302,7 @@ iTaskEnable:
 ; Suspend the task whos PID  is on the stack, preserve the stack
 ;
 iTaskSuspend:
-               tya
-               pha
+               phy
                jsr      popR1
                jsr      pushR1
                jsr      ipc_getcontext         ; get context pointer into mq
@@ -328,8 +310,7 @@ iTaskSuspend:
                lda      (MQ),y
                ora      #TASKRUNPENDING        ; Turn off the Suspend flags
                ora      #TASKACTIVE
-               pla
-               tay
+               ply
                jmp      NextIL
 
 ;================================================================
@@ -546,8 +527,7 @@ TaskEmptyFnd:
 ; Set the task exit code called from the return command
 ; on entry stack top hold exit value
 TaskSetExitCode:
-                tya
-                pha
+                phy
                 jsr       popR0
                 ldy       #TASKEXITCODE
                 lda       R0
@@ -555,8 +535,7 @@ TaskSetExitCode:
                 iny
                 lda       R0+1
                 sta       (VARIABLES),y
-                pla
-                tya
+                ply
                 rts
 
 ;

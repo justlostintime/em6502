@@ -15,10 +15,7 @@
 ; -----------------------------------------------------------------
 
 PrintDecimal:
-                TXA
-                pha
-                tya
-                pha
+                pushxy
                 lda     #0
                 sta     pad
                 LDY     #21                                   ; Offset to powers of ten
@@ -103,10 +100,7 @@ PrDec24Next:
                 DEY
                 beq PrDec24LastDigit
                 BPL PrDec24Lp1                             ; Loop for next digit
-                pla
-                tay
-                pla
-                tax
+                pullxy
                 RTS
 PrDec24LastDigit
                 LDX #'0
@@ -255,7 +249,7 @@ PrintAllVarsLoop
                 jsr     VOUTCH
                 jsr     puts
                 db      "=",0
-                
+
                 jsr     PrintDecimal
                 jsr     puts
                 db      " ",0
@@ -417,10 +411,7 @@ PrintKeyBranch:
 PrintKeySkipped:
                 iny                          ; Inc y to point to the next char to be printed
                 dex                          ; Reduce number of bytes to print
-                tya                          ; Save y and x for the return
-                pha
-                txa
-                pha
+                pushxy
 
                 lda    #KeyWordTable&$FF     ; R1 to point to the entry in the keyword table
                 sta    R1
@@ -459,10 +450,7 @@ PrintKeyFound:
                 and   #%00100000            ; Check if it was last char in keyword
                 bne   PrintKeyFound         ; Yes, then goto all done printing
 
-                pla                         ; Restore the x and y values
-                tax
-                pla
-                tay
+                pullxy
 
 PrintChkRem:
                 lda   #kRem

@@ -133,6 +133,7 @@ ILTEXTTABLE:
   db    117,23,"iBeginBlock         ",0
   db    118,23,"iIfTrue             ",0
   db    119,23,"iIfFalse            ",0
+  db    120,23,"iFasterXfer         ",0
   db    $FF,23,"0                   ",0
 
  ; Search for the il instruction and print the correct text for it
@@ -145,10 +146,8 @@ ILSTA           ds    1
                 Seg     Code
 
 PrintILText:    sta     ILSTA
-                tya
-                pha
-                txa
-                pha
+                phy
+                phx
                 lda     R0
                 sta     R0TempIL
                 lda     R0+1
@@ -194,9 +193,7 @@ PrintILDone:    lda     R0TempIL
                 sta     R0
                 lda     R0TempIL+1
                 sta     R0
-                pla
-                tax
-                pla
-                tay
+                plx
+                ply
                 rts
   endif

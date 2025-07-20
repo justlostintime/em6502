@@ -125,7 +125,7 @@ ILTBL2:
       dw  iTSTRELOP     ;104      Test relop, push mask onto stack if true, branch otherwise
       dw  iRepeatLine   ;105      Repeat the same line again, start execution from beginning of the same line
       dw  iTSTBRANCH    ;106      Test for compiled branch, take branch if is, skip two bytes and following integer value(line number) goto, gosub, gofn
-      dw  iFastXfer     ;107      move top of stack to curptr
+      dw  iFastXfer     ;107      move top of stack to curptr, it contains an address
       dw  iSetTerminal  ;108      Set the Io Terminal to be used by print and input statements
       dw  iINDB         ;109      fetch a single byte from memory indirect
       dw  iSetBlock     ;110      Set a block or words or byte to a value 16 bit length
@@ -139,7 +139,7 @@ ILTBL2:
       dw  iBeginBlock   ;117      Puts an entry onto the gosub stack for some type of block
       dw  iIfTrue       ;118      Pops the top off math stack and branches if true
       dw  iIfFalse      ;119      Pops the top off math stack and branches if false
-      dw  iBadOP        ;120      Invalid IL op code
+      dw  iFasterXfer   ;120      MOves the pc directly from stack to curptr
       dw  iBadOP        ;121      Invalid IL op code
       dw  iBadOP        ;122      Invalid IL op code
       dw  iBadOP        ;123      Invalid IL op code

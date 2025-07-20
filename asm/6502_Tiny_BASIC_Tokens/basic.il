@@ -118,7 +118,9 @@ STMT:
 ; Process a let statement implied or explicit.
 ;
 notirq:
+
         DEBUGBASIC                                ; Check if we are doing a debug for this session
+
         TSTLET      DoVector                      ; Test if Let keyword or a variable
 ekLet:
         TSTV        DoVector                      ; Test for variable
@@ -213,11 +215,12 @@ ekGoto:
 
 ekGotoLine:
         CALL       EXPR                           ; GET LABEL
-        lit        0                              ; Place indicator for line num on stack
-        FASTXFER
+;        lit        0                             ; Place indicator for line num on stack
+        FASTERXFER    0
+        
 ekGotoCompiled:
-        lit        1                              ; tell it that mempointer on the stack
-        FASTXFER                                  ; put top of stack into curptr
+;        lit        1                              ; tell it that mempointer on the stack
+        FASTERXFER     1                           ; put top of stack into curptr
 
 ;==================================================================================================================================
 ; Process REM statement

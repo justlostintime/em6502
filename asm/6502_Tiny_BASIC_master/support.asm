@@ -393,29 +393,29 @@ getDone2
 ; http://www.6502.org/source/io/primm.htm
 ;
 	if KIM
-puts		sty	putsy
-		pla		;low part of "return" address
-           			;(data start address)
-		sta	dpl
-		pla
-		sta	dpl+1	;high part of "return" address
-             			;(data start address)
-             			;Note: we're pointing one short
-psinb       	ldy	#1
-		lda	(dpl),y	;Get next string character
-		inc	dpl	;update the pointer
-		bne	psinc	;if not, we're pntng to next char
-		inc	dpl+1	;account for page crossing
-psinc		ora	#0	;Set flags according to contents of
-             			;   Accumulator
-		beq	psix1	;don't print the final NULL
-		jsr	OUTCH	;write it out
-		jmp	psinb	;back around
+puts		  sty	putsy
+		    pla		            ;low part of "return" address
+           			            ;(data start address)
+		    sta	dpl
+		    pla
+		    sta	dpl+1	        ;high part of "return" address
+             			          ;(data start address)
+             			          ;Note: we're pointing one short
+psinb   ldy	#1
+		    lda	(dpl),y	      ;Get next string character
+		    inc	dpl	          ;update the pointer
+		    bne	psinc	        ;if not, we're pntng to next char
+		    inc	dpl+1	        ;account for page crossing
+psinc		ora	#0             ;Set flags according to contents of
+             			          ;   Accumulator
+		    beq	psix1	;don't print the final NULL
+		    jsr	OUTCH	;write it out
+		    jmp	psinb	;back around
 psix1		inc	dpl
-		bne	psix2
-		inc	dpl+1	;account for page crossing
+		    bne	psix2
+		    inc	dpl+1	;account for page crossing
 psix2		ldy	putsy
-		jmp	(dpl)	;return to byte following NULL
+		    jmp	(dpl)	;return to byte following NULL
 	endif
 ;
 ;=====================================================
@@ -617,20 +617,20 @@ popR0		ldx	mathStackPtr
 		rts
 ;=====================================================
 ; This pops Top Of gosub call Stack and
-; laces it in CURPTR.
+; places it in CURPTR.
 ;
 popLN		sty	rtemp1
-                ldy	GoSubStackPtr
-		dey
-		tya
-		cmp	#$FF
-		beq	poperr
-		lda	(GOSUBSTACK),y
-		sta	CURPTR+1
-		dey
-		lda	(GOSUBSTACK),y
-		sta	CURPTR
-		sty	GoSubStackPtr
+         ldy	GoSubStackPtr
+		    dey
+		    tya
+		    cmp	#$FF
+		    beq	poperr
+		    lda	(GOSUBSTACK),y
+		    sta	CURPTR+1
+		    dey
+		    lda	(GOSUBSTACK),y
+		    sta	CURPTR
+		    sty	GoSubStackPtr
 		ldy	rtemp1
 		clc
 		rts

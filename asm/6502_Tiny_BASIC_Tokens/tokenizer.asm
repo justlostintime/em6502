@@ -299,10 +299,7 @@ ParseInputLine:
  endif
                 lda    CUROFF
                 pha
-                txa
-                pha
-                tya
-                pha
+                pushxy
                 ldx     #1                 ; point to beginning of Token buffer + 1 reserve space for length byte
                 jsr     getDecimal         ; Check for a line number, none is ok too
                 sty     CUROFF
@@ -344,15 +341,13 @@ ParseKeepChar:                             ; if it does not parse just keep it s
                 bne    ParseInputLoop
 
 ParseComplete:
-                lda     #0
-                sta     TOKENBUFFER,x      ; null terminate the line of tokens
+                ;lda     #0
+                ;sta     TOKENBUFFER,x      ; null terminate the line of tokens
+                stz      TOKENBUFFER,x      ; null terminate the line of tokens
                 inx
                 stx     TOKENBUFFER        ; Place size including null into buffer start
 
-                pla
-                tay
-                pla
-                tax
+                pullxy
                 pla
                 sta     CUROFF
 
@@ -640,8 +635,7 @@ ParseOpNotFound
 ;Print the text of a keyword
 ;Input R1    = offset into table
 DebugKeyword:
-            tya
-            pha
+            phy
             ldy     #1
 DebugKeyLoop
             lda     (R1),y
@@ -653,8 +647,7 @@ DebugKeyLoop
 
 DebugKeyDone:
             jsr     CRLF
-            pla
-            tay
+            ply
             rts
 ;========================================
 DebugPrintOP:
@@ -671,8 +664,7 @@ DbgPrtOpDone:
             rts
 ;=======================================
 DebugClearBuffer:
-            txa
-            pha
+            phx
             ldx     #$FF
             lda     #0
 DebugClrLoop:
@@ -680,8 +672,7 @@ DebugClrLoop:
             dex
             bne    DebugClrLoop
             sta   TOKENBUFFER,x
-            pla
-            tax
+            plx
             rts
 
 ;=====================================================
@@ -918,5 +909,11 @@ iTSTBRANCHVALID:
 
 iTSTBRANCHNoCompile:
               pla
+              cmp #kGoto                        ; check here if the destination is . then just do it
+              bne iTSTBRANCHErr
+              lda (CURPTR),y
+              cmp  #oPeriod                     ; check if the goto is back to this line, then just do it
+              bne  iTSTBRANCHErr
+              jmp  iXFER3
 iTSTBRANCHErr:
               jmp       NextIL

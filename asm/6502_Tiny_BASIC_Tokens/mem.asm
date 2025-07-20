@@ -99,10 +99,7 @@ MemUsed:
 ;
 ;=====================================================
 ; Set a block of memory to a value
-iSetBlock:      txa
-                pha
-                tya
-                pha
+iSetBlock:      pushxy
                 jsr     popR0                 ; the address to write to
                 lda     R0
                 sta     dpl
@@ -138,10 +135,7 @@ iSetBlockB:     lda     R0+1
                 bne     iSetBlockLoop
 
 iSetBlockComplete:
-                pla
-                tay
-                pla
-                tax
+                pullxy
                 jmp     NextIL
 ;
 ; Check if we have reached the end of the initialization/Copy
@@ -160,10 +154,7 @@ iSetBlockEndExit:
 ;================================================================
 ; Copy a block of memory from one location to another
 ;
-iCopyBlock:     txa
-                pha
-                tya
-                pha
+iCopyBlock:     pushxy
                 jsr     popR0           ; get the source address
                 jsr     popR1           ; Destination address
                 lda     R1
@@ -187,10 +178,7 @@ iCopyChkEnd:    cpy     R1
                 cpx     R1+1
                 bne     iCopyBlockLoop
 iCopyBlockDone:
-                pla
-                tay
-                pla
-                tax
+                pullxy
                 jmp     NextIL
 ;
 ;=============================================================================
@@ -199,10 +187,7 @@ iCopyBlockDone:
 ; 0 - equals
 ; -1 - s1  <  s2
 ; 1   s1  >  s2
-iCmpBlock:      txa
-                pha
-                tya
-                pha
+iCmpBlock:      pushxy
                 jsr     popR1              ; Get the Source 2 pointer
                 lda     R1
                 sta     dpl                ; store the secon source in dpl
@@ -229,10 +214,7 @@ iCmpCheckEnd:
                 sta     R0+1
                 sta     R0
 iCmpReturn:
-                pla
-                tay
-                pla
-                tax
+                pullxy
                 jmp     pushR0nextIl
 
 iCmpDone:

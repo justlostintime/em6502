@@ -6,8 +6,7 @@
 ;   the frame is really just the information about the area on the
 ;   math stack that contains the passed values as parameters
 iPushMathStack:
-                tya
-                pha
+                phy
                 ldy     GOSUBSTACKPTR
                 lda     MATHSTACKPTR
                 sta     (GOSUBSTACK),y        ; place the current Math stack ptr onto the stack
@@ -21,15 +20,13 @@ iPushMathStack:
                 sta     (GOSUBSTACK),y        ; store the type of entry on the stack as the last byte
                 iny
                 sty     GOSUBSTACKPTR         ; save the pointer into the gosub stack
-                pla
-                tay
+                ply
                 jmp   NextIL
 ;
 ;==========================================================
 ; Increment parameter count. Assume Stack frame is top of stack
 iIncParmCount:
-                tya
-                pha
+                phy
 
                 ldy     GOSUBSTACKPTR        ; get the pointer to update the stack entry
                 dey                          ; point to the type of entry #GOSUB_STACK_FRAME
@@ -40,8 +37,7 @@ iIncParmCount:
                 adc     #1                   ; increment the count
                 sta     (GOSUBSTACK),y       ; save the updated count
 
-                pla
-                tay
+                ply
                 jmp     NextIL
 ;
 ;==========================================================
@@ -52,8 +48,7 @@ iPopMathStack:    jsr      PopMathStackNow
                   jmp      NextIL
 
 PopMathStackNow:
-                tya
-                pha
+                phy
 
                 ldy       GOSUBSTACKPTR
                 dey
@@ -69,15 +64,13 @@ PopMathStackNow:
 
 iPopMathStackNoFrame:
 
-                pla
-                tay
+                ply
                 rts
 
 ;==========================================================
 ; Push the current math stack information onto the gosub stack
 iSaveMathStack:
-                tya
-                pha
+                phy
 
                 ldy     GOSUBSTACKPTR
                 lda     MATHSTACKPTR
@@ -98,15 +91,13 @@ iSaveMathStack:
 
                 sty     GOSUBSTACKPTR
 
-                pla
-                tay
+                ply
                 jmp   NextIL
 ;
 ;==========================================================
 ;Restore the math stack information from the gosub stack
 iRestoreMathStack:
-                tya
-                pha
+                phy
 
                 lda   MATHSTACKPTR
                 sta   R2                              ; save the current offset for whatever task to R2
@@ -127,13 +118,11 @@ iRestoreMathStack:
                 sta   MATHSTACKPTR
                 sty   GOSUBSTACKPTR
 
-                pla
-                tay
+                ply
                 jmp      NextIL
 
 iPopMathStack_Err:
-                pla
-                tay
+                ply
                 lda     #0
                 ldx     #ERR_INVALID_STK_FRAME
                 jmp     iErr2
@@ -258,8 +247,7 @@ GosubNotFunc:   clc
 ; on entry x contains the type of block being created
 ; format WendPtr.wendptr,curptr,curptr+1,curoff,type
 iBeginBlock:
-                tya
-                pha
+                phy
                 jsr     getILByte             ; get the type of block we are starting
                 sta     R1
                 jsr     getILByte             ; get the closing block marker
@@ -280,8 +268,7 @@ iBeginBlock:
                 sta     (GOSUBSTACK),y        ; store the type of entry on the stack as the last byte
                 iny
                 sty     GOSUBSTACKPTR         ; save the pointer into the gosub stack
-                pla
-                tay
+                ply
                 jmp   NextIL
 ;=================================================================================
 ;find the end block, account for nested begin types
@@ -325,7 +312,7 @@ FindFound:
                 sta   (GOSUBSTACK),y
                 iny
                 sty   GOSUBSTACKPTR
-          
+
                 pla
                 sta   CUROFF
                 pla                 ; restore the original line pointer
@@ -368,8 +355,7 @@ iJmpEnd:       jsr getILByte                   ; get the type of loop
 ;===========================================================================
 ; Jump back to the start of a block, look onto gosub stack for the while entry
 ; get the next il byte to determin which kind of block to process, while,for,if endif
-iJmpStart:      tya
-                pha
+iJmpStart:      phy
                 jsr     getILByte               ; get the type of block we are looking for
                 pha
                 ldy     GOSUBSTACKPTR           ; the single byte offset to be used
@@ -388,16 +374,14 @@ iJmpStart:      tya
                 dey
                 lda     (GOSUBSTACK),y          ; part of line start
                 sta     CURPTR
-                pla
-                tay
+                ply
                 jmp     NextIL                  ; ignore for now
 
 iJmpErrInvalid: ldx     #ERR_NO_MATCHING_BEGIN_BLOCK
                 jmp     iSAVErr2
 
 iJmpErrNoEntry: pla
-                pla
-                tay
+                ply
                 ldx     #ERR_STACK_UNDER_FLOW
                 jmp     iSAVErr2
 ;

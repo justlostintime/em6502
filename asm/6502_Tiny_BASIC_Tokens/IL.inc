@@ -606,3 +606,8 @@
     db 119
     db ({1}-*)-1
   endm
+  
+  Macro FASTERXFER
+     db 120
+     db {1}
+  endm

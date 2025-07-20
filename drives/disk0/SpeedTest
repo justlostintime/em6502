@@ -1,3 +1,4 @@
+1 cls
 100 print " Test each of the types of function and task calls 2000 times"
 105 print " Timer ticks are 100ms each, slow if timing a modern computer"
 
@@ -19,7 +20,15 @@
 205  z = timer(2,0)
 210  print "Total Time for goto using Variable    :";fn1000(z);".";i
 
-215  print "Begin gosub and fn test, adjusted times for goto loop"
+211  b=0
+212  n = timer(1,6)
+213  while b < 2000
+214     inc b
+215  wend
+216  z = timer(2,0)
+217  print "Total Time for while using Variable   :";fn1000(z);".";i
+
+219  print: print "Begin gosub and fn test, adjusted times for goto loop"
 220  b=0
 225  n = timer(1,6)
 230  inc b: if b < 2000 gosub 810 : goto 230
@@ -32,31 +41,32 @@
 265  z = timer(2,0)
 270  print "Total Time for gosub using Variable   :";fn1000(z-g);".";i
 
+275  print:print "Times for fucntion calls"
 280  b=0
 285  n = timer(1,6)
 290  inc b: if b < 2000 d = fn 840() : goto 290
 295  z = timer(2,0)
-300  print "Total Time for fn no parm with line # :";fn1000(z-g);".";i,d
+300  print "Total Time for fn no parm with line # :",fn1000(z-g);".";i;fn2000(50)
 
 310  b=0:c=840
 315  n = timer(2,0)
 320  inc b: if b < 2000 d = fn c() : goto 320
 325  z = timer(2,0) - n
-330  print "Total Time for fn no parm with Var    :";fn1000(z-g);".";i,d
+330  print "Total Time for fn no parm with Var    :",fn1000(z-g);".";i;fn2000(50)
 
 340  b=0:c=840
 345  n = timer(2,0)
 350  inc b: if b < 2000 d = fn 840(100) : goto 350
 355  z = timer(2,0) - n
-360  print "Total Time for fn 1 parm using Line # :";fn1000(z-g);".";i,d
+360  print "Total Time for fn 1 parm using Line # :",fn1000(z-g);".";i;fn2000(50)
 
 370  b=0:c=840
 375  n = timer(1,6)
 380  inc b: if b < 2000 d = fn c(100) : goto 380
 385  z = timer(2,0)
-390  print "Total Time for fn 1 parm using Var    :";fn1000(z-g);".";i,d
+390  print "Total Time for fn 1 parm using Var    :",fn1000(z-g);".";i;fn2000(50)
 
-400  print "times to start and stop tasks 200 times, goto loop times removed"
+400  print: print "times to start and stop tasks 200 times, goto loop times removed"
 410  b=0
 415  n = timer(1,6)
 420  inc b : if b > 200 goto 435
@@ -88,3 +98,7 @@
 1010 h= #[0] / 10
 1015 i= #[0] % 10
 1020 return(h)
+
+2000 rem position cursor at specific column
+2010 print 27$;"[";#[0];"G";"Returns value : ";
+2020 return(d)

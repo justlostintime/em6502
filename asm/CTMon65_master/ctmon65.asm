@@ -1013,10 +1013,10 @@ DumpRegisters
 ; indicating the flag name in X, see if the flag is set or
 ; not.  Output upper case if set, lower case if not.
 ;
-testbit        and    SaveC    ;is bit set?
-            bne    testbit1    ;yes
+testbit     and    SaveC          ;is bit set?
+            bne    testbit1       ;yes
             txa
-            ora    #$20    ;make lower case
+            ora    #$20           ;make lower case
             jmp    cout
 testbit1    txa
             jmp    cout
@@ -1067,21 +1067,21 @@ getHex        jsr    getNibble
 ; value from 0-F in A and returns C clear.  If not a
 ; valid hex character, return C set.
 ;
-getNibble    jsr    redirectedGetch
-            ldx    #nibbleHexEnd-nibbleHex-1
+getNibble     jsr    redirectedGetch
+              ldx    #nibbleHexEnd-nibbleHex-1
 getNibble1    cmp    nibbleHex,x
-            beq    getNibF    ;got match
-            dex
-            bpl    getNibble1
-getNibBad    sec
-            rts
+              beq    getNibF                      ;got match
+              dex
+              bpl    getNibble1
+getNibBad     sec
+              rts
 
-getNibF        txa        ;index is value
-            clc
-            rts
+getNibF       txa                                ;index is value
+              clc
+              rts
 ;
-nibbleHex    db    "0123456789ABCDEF"
-nibbleHexEnd    equ    *
+nibbleHex     db    "0123456789ABCDEF"
+nibbleHexEnd  equ    *
 ;
 ;=====================================================
 ; Gets a four digit hex address amd places it in
@@ -1169,13 +1169,11 @@ showHelpLoop    lda    (sptr),y    ;get command
         iny
         lda    (sptr),y
         sta    INH
-        tya
-        pha
+        phy
         jsr    space2
         jsr    puts    ;print description
         jsr    crlf
-        pla
-        tay
+        ply
         iny        ;point to next entry
         bne    showHelpLoop
 showHelpDone    rts

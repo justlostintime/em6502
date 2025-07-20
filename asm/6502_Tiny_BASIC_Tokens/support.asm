@@ -571,6 +571,28 @@ pushDone:       lda     rtemp1+1                ; Type of stack entry
 pusherr:
                 sec
                 rts
+                
+;Pop an absolute address from the  Math Stack
+popMath  phy
+         ldy  MATHSTACKPTR
+         dey
+		    tya
+		    cmp	#$FF
+		    beq	poperr
+		    lda	(MATHSTACK),y
+		    sta	CURPTR+1
+		    dey
+		    lda	(MATHSTACK),y
+		    sta	CURPTR
+		    sty  MATHSTACKPTR
+		    ply
+		    clc
+		    rts
+poperr1:      
+        ply  
+        sec
+        rts
+         
 ;=====================================================
 ; This pops Top Off gosub call Stack and
 ; places it in CURPTR/CUROFF.
@@ -579,6 +601,8 @@ pusherr:
 ; until it finds the next return. Allowing
 ; a return from within a for/next
 ; on exit a contains the type of return from, gosub_rtn, gosub_rtn_value....
+
+         
 popLN:          sty     rtemp1
                 ldy     GOSUBSTACKPTR         ; Get the Gosub/for stack pointer
                 ldx     #3                    ; each stack entry is 3 bytes
@@ -786,10 +810,10 @@ tbcrlf:         pha
 ;
 ;=====================================================
 ; Some logic to print the Line of basic code being executed
-idbgBasic:      bit     ILTrace
+idbgBasic:      
+                bit     ILTrace
                 bvc     dbgBasicNone
-                tya
-                pha
+                phy
                 jsr     SetOutDebug
 
                 lda     CURPTR
@@ -824,21 +848,23 @@ dbgTestPoint:
                 bcc     dbgBasicLoop        ; Next char
 
 dbgBasicDone:   jsr     SetOutDebugEnd
-                pla
-                tay
+                ply
+
 dbgBasicNone:   jmp     NextIL
 
 dbgBasicStop:
                 jsr     SetOutDebugEnd
-                pla
-                tay
+                ply
                 jmp     iFIN
+
 ;
 ;=====================================================
 ; This is some debug logic which displays the current
 ; value of the ILPC and the line buffer.
 ;
-dbgLine:        bit     ILTrace
+dbgLine:        
+
+                bit     ILTrace
                 bmi     dbgPrt
                 rts
 dbgPrt:
@@ -911,9 +937,10 @@ ILChkHigh:      lda   ILPC+1
                 lda   ILPC
                 cmp   #ILEND&$ff
                 bcs   ILBadRange
-
+  endif
 ILGoodRange:    clc
                 rts
+
 ILBadRange:
                 sec
                 rts
@@ -961,8 +988,7 @@ pushFalse:      lda    #0
 ;======================================================
 ; Copy stack top to R1
 CopyStackR1:
-                tya
-                pha
+                phy
                 ldy    MATHSTACKPTR
                 dey
                 lda    (MATHSTACK),y
@@ -970,8 +996,7 @@ CopyStackR1:
                 dey
                 lda    (MATHSTACK),y
                 sta    R1
-                pla
-                tay
+                ply
                 rts
 
 ;====================================================
@@ -1041,8 +1066,7 @@ iSetTerminal:
 ; R0 contains the slot number 0-255
 
 CalcSlot:
-                txa
-                pha
+                phx
 
                 ldx     #4
 CalcSlotLoop:
@@ -1055,9 +1079,7 @@ CalcSlotLoop:
                 lda     #$E0
                 ora     R0+1
                 sta     R0+1
-                pla
-
-                tax
+                plx
                 rts
 ;
 ;====================================================

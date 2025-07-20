@@ -17,8 +17,7 @@
 ; a = ipcs(<message-expression>,<task PID-expression>)
 ;
 iIPCS:
-                tya
-                pha
+                phy
                 jsr       ipc_enqueue
                 bcs       iIPC_BAD
                 jsr       pushTrue
@@ -26,8 +25,7 @@ iIPCS:
                 tay
                 jmp       NextIL
 iIPC_BAD:
-                pla
-                tay
+                ply
                 jsr       pushFalse
                 jmp       NextIL
 
@@ -42,16 +40,14 @@ iIPC_BAD:
 ; a = ipcr(<variable name>)
 ;
 iIPCR:
-                tya
-                pha
+                phy
                 jsr       ipc_dequeue
                 bcs       iIPCR_Q_Empty
                 pla
                 tay
                 jmp       NextIL
 iIPCR_Q_Empty:
-                pla
-                tay
+                ply
                 jsr       pushTrue                  ; puts -1 on the stack
                 jmp       NextIL
 
@@ -62,19 +58,16 @@ iIPCR_Q_Empty:
 ; a = ipcc()
 ;
 iIPCC:
-         tya
-         pha
+         phy
          jsr      ipc_queue_count
          jsr      pushR0            ; return the count
-         pla
-         tay
+         ply
          jmp      NextIL
 
 ;=======================================================
 ;ipcio    Turns on the tasks wait ips if nothing in queue
 iIPCIO:
-         tya
-         pha
+        phy
          jsr      ipc_queue_count
          lda      R0
          bne      iIPCIO_No_Halt
@@ -86,8 +79,7 @@ iIPCIO:
          sta      taskTable,y
 
 iIPCIO_No_Halt:
-         pla
-         tay
+         ply
          jmp      NextIL
 ;======================================================
 ;ipc_queue_count returns number of entries on the queue
@@ -234,8 +226,7 @@ ipc_CONTEXTVALUES:
 
 ipc_ValidateContext:
               pha
-              txa
-              pha
+              phx
               lda      R1+1
               bne      ipc_Validate_Fail
               ldx      #0
@@ -248,8 +239,7 @@ ipc_ValidateLoop:
               bcc      ipc_ValidateLoop
 
 ipc_Validate_Fail:
-              pla
-              tax
+              plx
               pla
               rts
 

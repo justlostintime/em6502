@@ -112,8 +112,7 @@ CompileStrDone2:
 ; on exit y points to line number type
 
 CompileField:   sta     R0
-                tya                            ; save the y pointer to store the memory value
-                pha
+                phy                            ; save the y pointer to store the memory value
                 iny                            ; Skip over the memory vector
                 iny
                 lda      R0
@@ -165,15 +164,13 @@ CompFindLine:
                 jsr     DisplayError
                 jsr     PrintProgramLine
 
-                pla
-                tay
+                ply
                 iny
                 iny
                 jmp     CompileLoop
 
 CompFoundLine:
-                pla
-                tay
+                ply
                 lda     CURPTR
                 sta     (dpl),y
                 iny

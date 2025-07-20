@@ -1,6 +1,5 @@
 @include _number.regexp
 @word /[A-Za-z_.][A-Za-z0-9_.]*/
-@ignorecase true
 
 documentation:
   from ;** to "\n"
@@ -27,26 +26,26 @@ label:
   match /^[A-Za-z_.][A-Za-z_0-9]*[\s\n]/
   between /j[sm][rp]\s*/ and /[\s\n]/
   between /b[
-  
+
 number:
   match /$(NUMBER)/
   match /$(NUMBER_HEXA)/
   match /$(NUMBER_BOOL)/
 
 keyword:
-  keyword mac macro endm mexit set setstr repeat repend equ eqm subroutine org rorg rend seg align echo err list .org .force
-  keyword @opcodes.keyword
+  keyword(ignorecase) mac macro endm mexit set setstr repeat repend equ eqm subroutine org rorg rend seg align echo err list .org .force
+  keyword(ignorecase,upper=firstletter) @opcodes.keyword
   symbol =
-  
+
 constant:
   keyword FALSE NULL TRUE
-  
+
 datatype:
   word dc ds dv hex res byte word long .byte .byte.b .word .word.w .long .long.w
   from /dc(.b|.w|.l)/
   from /dv(.b|.w|.l)/
   from /ds(.b|.w|.l)/
-  
+
 operator:
   symbol * / % + - >> << > >= < <= == != & ^ | && || ? [ ] , # { }
 
