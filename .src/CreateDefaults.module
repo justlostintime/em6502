@@ -243,15 +243,15 @@ Public Sub _call()
       Comp.merge(.AsmComputerDefinitions)
     Endif
 
-    copyDirectory("dev", .AsmDeviceDirectory)
-    copyDirectory("asm", .AsmSourceDirectory)
-    copyDirectory("cc65", .Cc65SourceDirectory)
-    copyDirectory("lst", .AsmLstDirectory)
-    copyDirectory("sym", .AsmSymDirectory)
-    copyDirectory("map", .AsmMapDirectory)
-    copyDirectory("bin", .AsmBinaryDirectory)
-    copyDirectory("drives", .AsmDrivesDirectory)
-    copyDirectory("doc", .ASMDocumentDirectory)
+    copyDirectory("dev")
+    copyDirectory("asm")
+    copyDirectory("cc65")
+    copyDirectory("lst")
+    copyDirectory("sym")
+    copyDirectory("map")
+    copyDirectory("bin")
+    copyDirectory("drives")
+    copyDirectory("doc")
 
   End With
 
@@ -260,7 +260,11 @@ Catch
 
 End
 
-Sub copyDirectory(path As String, topath As String)
+Sub copyDirectory(path As String, Optional topath As String = "")
+
+  If topath = "" Then
+    topath = User.home &/ "6502" &/ path
+  Endif
 
   If Not Exist(toPath) Then
     If FMain.Verbose Then Error "" & ("Create Default :");; toPath;; "From";; path

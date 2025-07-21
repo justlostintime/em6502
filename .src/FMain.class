@@ -144,6 +144,10 @@ Public Sub WriteConfig()
 
   Settings["AsmRootDirectory"] = AsmRootDirectory
   Settings["AsmSourceDirectory"] = AsmSourceDirectory
+
+  If Cc65SourceDirectory Like User.home &/ "6502/asm" Then
+    Cc65SourceDirectory = User.home &/ "6502/cc65" 'fix this bug
+  Endif
   Settings["Cc65SourceDirectory"] = Cc65SourceDirectory
   Settings["AsmBinaryDirectory"] = AsmBinaryDirectory
   Settings["AsmLstDirectory"] = AsmLstDirectory
