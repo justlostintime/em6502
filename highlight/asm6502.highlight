@@ -13,7 +13,7 @@ preprocessor:
     match "\\\n"
 string:
   from " to "
-  from ' to '
+  match /'[A-Za-z0-9,.';:<>\[\]\)\("{}*&^%$#@!~`][\s\n;]/
   escape:
     match /\\[fnrtv0'"\\]/
     match /\\c[A-Za-z]/
@@ -24,8 +24,8 @@ string:
 label:
   match /^[A-Za-z_.][A-Za-z_0-9]*[:]/
   match /^[A-Za-z_.][A-Za-z_0-9]*[\s\n]/
-  between /j[sm][rp]\s*/ and /[\s\n]/
-  between /b[
+  between /\s*j[sm][rp]\s*/ and /[\s\n;]/
+  between /\s*b(cc|cs|eq|mt|ne|pl|vc|vs)\s*/ and /[\s\n;]/
 
 number:
   match /$(NUMBER)/

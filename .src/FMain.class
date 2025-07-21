@@ -74,11 +74,7 @@ Public Sub Form_Open()
     Print Error.Text
     Stop
   Else
-    ' Print TextHighlighterTheme.List.Join(";")
     Dim MyTheme As TextHighlighterTheme
-    ' Dim txtTheme As String = Split(File.Load(".../themes/thm6502"), "\n", "\"", True, False).Join(";")
-    ' Try MyTheme = New TextHighlighterTheme
-    ' Try MyTheme.FromString(txtTheme)
     Try MyTheme = TextHighlighterTheme.Load(".../themes/thm6502")
     If Error Then
       Print "Highlighting ignored :"; Error.Text
@@ -450,6 +446,7 @@ Public Sub SetEditDefaults()
       EditingFileName.text = CurrentlyOpenFile
       OriginalSource = EditProg.text
       AsmSourceDirectory = File.Dir(CurrentlyOpenFile)
+      SearchPaths.text = AsmSourceDirectory
     Endif
   Endif
 
@@ -480,7 +477,7 @@ Public Sub OpenProg_Click()
 
   VerifyProgSaved()
 
-  Dialog.Filter = ["*.asm", "Assembler 6502", "*.c", "cc65", "*", "All Files"]
+  Dialog.Filter = ["*.asm", "Assembler 6502", "*.inc", "*.c", "cc65", "*", "All Files"]
   Dialog.path = AsmSourceDirectory & "/"
   If Dialog.OpenFile() Then Return
   EditProg.load(Dialog.path, True)
@@ -499,7 +496,7 @@ End
 
 Public Sub SaveAsProg_Click()
 
-  Dialog.Filter = ["*.asm", "Assembler65", "*.c", "cc65", "*", "All Files"]
+  Dialog.Filter = ["*.asm", "Assembler65", "*.inc", "*.c", "cc65", "*", "All Files"]
   Dialog.path = AsmSourceDirectory & "/"
   If Dialog.SaveFile() Then Return
   EditProg.Save(Dialog.path)
@@ -554,6 +551,7 @@ Public Sub AsmbProg_Click()
   Dim InputPath As String = File.Dir(CurrentlyOpenFile)
   Dim FileName As String = File.Name(CurrentlyOpenFile)
   Dim FileBase As String = File.BaseName(CurrentlyOpenFile)
+  
   If Exist(LstPath &/ FileBase & ".lst") Then
     Kill LstPath &/ FileBase & ".lst"
   Endif
