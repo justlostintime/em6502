@@ -126,7 +126,7 @@ Public Sub ReadConfig()
 
   AsmRootDirectory = Settings["AsmRootDirectory", User.home &/ "6502"]
   AsmSourceDirectory = Settings["AsmSourceDirectory", User.home &/ "6502/asm"]
-  Cc65SourceDirectory = Settings["AsmSourceDirectory", User.home &/ "6502/cc65"]
+  Cc65SourceDirectory = Settings["Cc65SourceDirectory", User.home &/ "6502/cc65"]
   AsmBinaryDirectory = Settings["AsmBinaryDirectory", User.home &/ "6502/bin"]
   AsmLstDirectory = Settings["AsmLstDirectory", User.home &/ "6502/lst"]
   AsmMapDirectory = Settings["AsmMapDirectory", User.home &/ "6502/map"]
@@ -551,7 +551,7 @@ Public Sub AsmbProg_Click()
   Dim InputPath As String = File.Dir(CurrentlyOpenFile)
   Dim FileName As String = File.Name(CurrentlyOpenFile)
   Dim FileBase As String = File.BaseName(CurrentlyOpenFile)
-  
+
   If Exist(LstPath &/ FileBase & ".lst") Then
     Kill LstPath &/ FileBase & ".lst"
   Endif
