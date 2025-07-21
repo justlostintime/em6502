@@ -30,9 +30,9 @@ endif
 $(PROGRAM): $(SOURCES:.c=.o)
 	$(CC) $(LDFLAGS) -o ../../../bin/$@.raw $<
 
-%.hex:%.o
+%.hex:%.raw
 $(PROGRAM): $(SOURCES:.o=.raw)
-	$(O2HEX) ../../../bin/$@.raw $(HEXFLAGS) -o $@.hex -Intel $^
+	$(O2HEX) ../../../bin/$@.raw $(HEXFLAGS) -o $@.hex -Intel
 
 
 clean:

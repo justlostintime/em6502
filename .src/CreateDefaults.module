@@ -320,6 +320,16 @@ Sub copyDirectory(path As String, Optional topath As String = "")
     Try Copy path &/ s To ToPath &/ s
     If Error Then
       If FMain.Verbose Then Error "" & ("Unable to copy file ");; ToPath &/ s;; ("from");; path &/ s;; ":";; Error.text
+    Else
+      ' Check if this file sould be executable in elf format
+      Dim mystream As File
+      Try mystream = Open ToPath &/ s For Read
+      Dim mybuffer As New Byte[20]
+      mybuffer.Read(mystream, 0, 4)
+      Close mystream
+      If mybuffer[0] = &h7f And If mybuffer[1] = Asc("E") And If mybuffer[2] = Asc("L") And If mybuffer[3] = Asc("F") Then
+        Chmod ToPath &/ s To "rwxr-xr-x"
+      Endif
     Endif
   Next
 
