@@ -2,8 +2,8 @@ SOURCES = hello.c
 PROGRAM = hello
 DESTROOT = ../../../
 CC65ROOT = ../../cc65Integration/
-CC65_TARGET=kim
-CC      = cl65
+CC65_TARGET=kim1
+CC      = ~/6502/cc65/bin/cl65
 CFLAGS  = -v -L $(CC65ROOT)lib -g -T -Oi -l $(DESTROOT)lst/$(PROGRAM).lst --cpu 65c02 -Ln $(DESTROOT)sym/$(PROGRAM).sym -I $(CC65ROOT)include  -t $(CC65_TARGET) \
           --create-dep $(<:.c=.d) -O --asm-include-dir $(CC65ROOT)asminc --cfg-path $(CC65ROOT)cfg
 
